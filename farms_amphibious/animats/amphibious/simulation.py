@@ -4,7 +4,7 @@ import time
 import numpy as np
 import pybullet
 
-from farms_bullet.simulations.simulation import Simulation, SimulationElements
+from farms_bullet.simulations.simulation import Simulation, SimulationModels
 from farms_bullet.simulations.simulation_options import SimulationOptions
 from farms_bullet.arenas.arena import FlooredArena, ArenaWater
 from farms_bullet.interface.interface import Interfaces
@@ -28,7 +28,7 @@ class AmphibiousSimulation(Simulation):
                 else FlooredArena()
             )
         super(AmphibiousSimulation, self).__init__(
-            elements=SimulationElements(
+            models=SimulationModels(
                 animat=animat,
                 arena=kwargs.pop("arena", arena)
             ),
@@ -39,7 +39,7 @@ class AmphibiousSimulation(Simulation):
         if not self.options.headless:
             self.interface.init_camera(
                 target_identity=(
-                    self.elements.animat.identity
+                    self.models.animat.identity
                     if not self.options.free_camera
                     else None
                 ),
@@ -47,12 +47,12 @@ class AmphibiousSimulation(Simulation):
                 rotating_camera=self.options.rotating_camera,
                 top_camera=self.options.top_camera
             )
-            self.interface.init_debug(animat_options=self.elements.animat.options)
+            self.interface.init_debug(animat_options=self.models.animat.options)
 
         if self.options.record and not self.options.headless:
             skips = int(2e-2/simulation_options.timestep)  # 50 fps
             self.interface.init_video(
-                target_identity=self.elements.animat.identity,
+                target_identity=self.models.animat.identity,
                 simulation_options=simulation_options,
                 fps=1./(skips*simulation_options.timestep),
                 pitch=simulation_options.video_pitch,
@@ -72,15 +72,15 @@ class AmphibiousSimulation(Simulation):
     @property
     def animat(self):
         """Salamander animat"""
-        return self.elements.animat
+        return self.models.animat
 
     def pre_step(self, sim_step):
         """New step"""
         play = True
         # if not(sim_step % 10000) and sim_step > 0:
         #     pybullet.restoreState(self.simulation_state)
-        #     state = self.elements.animat.data.state
-        #     state.array[self.elements.animat.data.iteration] = (
+        #     state = self.models.animat.data.state
+        #     state.array[self.models.animat.data.iteration] = (
         #         state.default_initial_state()
         #     )
         if not self.options.headless:
@@ -99,14 +99,14 @@ class AmphibiousSimulation(Simulation):
         if not self.options.headless:
 
             # Drive changes depending on simulation time
-            if self.elements.animat.options.transition:
+            if self.models.animat.options.transition:
                 self.interface.user_params.drive_speed.value = (
                     1+4*sim_step/self.options.n_iterations
                 )
                 self.interface.user_params.drive_speed.changed = True
 
             # # Switch drive based on position
-            # distance = self.elements.animat.data.sensors.gps.com_position(
+            # distance = self.models.animat.data.sensors.gps.com_position(
             #     iteration=sim_step-1 if sim_step else 0,
             #     link_i=0
             # )[0]
@@ -126,11 +126,11 @@ class AmphibiousSimulation(Simulation):
             self.animat_interface()
 
         # Animat sensors
-        self.elements.animat.sensors.update(sim_step)
+        self.models.animat.sensors.update(sim_step)
 
         # Physics step
         if sim_step < self.options.n_iterations-1:
-            physics_options = self.elements.animat.options.physics
+            physics_options = self.models.animat.options.physics
             # Swimming
             if (
                     physics_options.resistive
@@ -140,31 +140,31 @@ class AmphibiousSimulation(Simulation):
                 water_surface = (
                     np.inf
                     if physics_options.sph or not physics_options.water_surface
-                    else self.elements.arena.water_surface
+                    else self.models.arena.water_surface
                 )
                 if physics_options.viscous:
-                    self.elements.animat.viscous_swimming_forces(
+                    self.models.animat.viscous_swimming_forces(
                         sim_step,
                         water_surface=water_surface,
                         coefficients=physics_options.viscous_coefficients,
                         buoyancy=physics_options.buoyancy,
                     )
                 if physics_options.resistive:
-                    self.elements.animat.resistive_swimming_forces(
+                    self.models.animat.resistive_swimming_forces(
                         sim_step,
                         water_surface=water_surface,
                         coefficients=physics_options.resistive_coefficients,
                         buoyancy=physics_options.buoyancy,
                     )
-                self.elements.animat.apply_swimming_forces(
+                self.models.animat.apply_swimming_forces(
                     sim_step,
                     water_surface=water_surface
                 )
-            if self.elements.animat.options.show_hydrodynamics:
-                self.elements.animat.draw_hydrodynamics(sim_step)
+            if self.models.animat.options.show_hydrodynamics:
+                self.models.animat.draw_hydrodynamics(sim_step)
 
             # Control animat
-            self.elements.animat.controller.control()
+            self.models.animat.controller.control()
 
             # Physics step
             pybullet.stepSimulation()
@@ -199,33 +199,33 @@ class AmphibiousSimulation(Simulation):
             )
         # Body offset
         if self.interface.user_params.body_offset.changed:
-            self.elements.animat.options.control.network.joints.set_body_offsets(
+            self.models.animat.options.control.network.joints.set_body_offsets(
                 self.interface.user_params.body_offset.value
             )
-            self.elements.animat.controller.network.update(
-                self.elements.animat.options
+            self.models.animat.controller.network.update(
+                self.models.animat.options
             )
             self.interface.user_params.body_offset.changed = False
         # Drives
         if self.interface.user_params.drive_speed.changed:
-            self.elements.animat.options.control.drives.forward = (
+            self.models.animat.options.control.drives.forward = (
                 self.interface.user_params.drive_speed.value
             )
-            self.elements.animat.controller.network.update(
-                self.elements.animat.options
+            self.models.animat.controller.network.update(
+                self.models.animat.options
             )
-            # if self.elements.animat.options.control.drives.forward > 3:
+            # if self.models.animat.options.control.drives.forward > 3:
             #     pybullet.setGravity(0, 0, -0.01*self.options.units.gravity)
             # else:
             #     pybullet.setGravity(0, 0, -9.81*self.options.units.gravity)
             self.interface.user_params.drive_speed.changed = False
         # Turning
         if self.interface.user_params.drive_turn.changed:
-            self.elements.animat.options.control.drives.turning = (
+            self.models.animat.options.control.drives.turning = (
                 self.interface.user_params.drive_turn.value
             )
-            self.elements.animat.controller.network.update(
-                self.elements.animat.options
+            self.models.animat.controller.network.update(
+                self.models.animat.options
             )
             self.interface.user_params.drive_turn.changed = False
 
@@ -267,7 +267,7 @@ def main(simulation_options=None, animat_options=None):
     if simulation_options.log_path:
         np.save(
             simulation_options.log_path+"/hydrodynamics.npy",
-            sim.elements.animat.data.sensors.hydrodynamics.array
+            sim.models.animat.data.sensors.hydrodynamics.array
         )
 
     sim.end()

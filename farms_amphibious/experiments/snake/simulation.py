@@ -59,7 +59,7 @@ def main(simulation_options=None, animat_options=None):
     if simulation_options.log_path:
         np.save(
             simulation_options.log_path+"/hydrodynamics.npy",
-            sim.elements.animat.data.sensors.hydrodynamics.array
+            sim.models.animat.data.sensors.hydrodynamics.array
         )
 
     sim.end()

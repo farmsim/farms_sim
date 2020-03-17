@@ -2,7 +2,7 @@
 
 import numpy as np
 import pybullet
-from farms_bullet.simulations.element import SimulationElement
+from farms_bullet.simulations.model import SimulationModel
 
 
 def joint_type_str(joint_type):
@@ -17,7 +17,7 @@ def joint_type_str(joint_type):
     )
 
 
-class Animat(SimulationElement):
+class Animat(SimulationModel):
     """Animat"""
 
     def __init__(self, identity=None, options=None):
