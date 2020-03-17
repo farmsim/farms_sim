@@ -163,7 +163,7 @@ def main():
         sdf=sdf,
         options=animat_options,
         timestep=simulation_options.timestep,
-        iterations=simulation_options.n_iterations,
+        iterations=simulation_options.n_iterations(),
         units=simulation_options.units,
     )
 

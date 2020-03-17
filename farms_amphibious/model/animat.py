@@ -124,7 +124,7 @@ class Amphibious(Animat):
                 lineColorRGB=[0, 0, 0],
                 lineWidth=3*self.units.meters,
                 lifeTime=0,
-                parentObjectUniqueId=self.identity,
+                parentObjectUniqueId=self.identity(),
                 parentLinkIndex=i
             )
             for i in range(self.options.morphology.n_links_body())
@@ -139,19 +139,19 @@ class Amphibious(Animat):
             globalScaling=1
         )[0]
         initial_pose(self._identity, self.options.spawn, self.units)
-        n_joints = pybullet.getNumJoints(self.identity)
+        n_joints = pybullet.getNumJoints(self.identity())
         joints_names = [None for _ in range(n_joints)]
         joint_index = 0
         for joint_i in range(n_joints):
             joint_info = pybullet.getJointInfo(
-                self.identity,
+                self.identity(),
                 joint_i
             )
             joints_names[joint_index] = joint_info[1].decode("UTF-8")
             joint_index += 1
         for joint_index in range(n_joints):
             joint_info = pybullet.getJointInfo(
-                self.identity,
+                self.identity(),
                 joint_index
             )
             joints_names[joint_index] = joint_info[1].decode("UTF-8")
@@ -261,7 +261,7 @@ class Amphibious(Animat):
         self.sensors.add({
             "links": AmphibiousGPS(
                 array=self.data.sensors.gps.array,
-                animat_id=self.identity,
+                animat_id=self.identity(),
                 links=links,
                 options=self.options,
                 units=self.units
@@ -272,7 +272,7 @@ class Amphibious(Animat):
         """Set body properties"""
         # Masses
         for i in range(self.options.morphology.n_links()):
-            self.masses[i] = pybullet.getDynamicsInfo(self.identity, i-1)[0]
+            self.masses[i] = pybullet.getDynamicsInfo(self.identity(), i-1)[0]
         # Deactivate collisions
         links_no_collisions = [
             "link_body_{}".format(body_i)
@@ -321,7 +321,7 @@ class Amphibious(Animat):
         """Setup controller"""
         if self.options.control.kinematics_file:
             self.controller = AmphibiousController.from_kinematics(
-                self.identity,
+                self.identity(),
                 animat_options=self.options,
                 animat_data=self.data,
                 timestep=self.timestep,
@@ -330,7 +330,7 @@ class Amphibious(Animat):
             )
         else:
             self.controller = AmphibiousController.from_data(
-                self.identity,
+                self.identity(),
                 animat_options=self.options,
                 animat_data=self.data,
                 timestep=self.timestep,
@@ -381,7 +381,7 @@ class Amphibious(Animat):
         swimming_motion(
             iteration,
             self.data.sensors.hydrodynamics.array,
-            self.identity,
+            self.identity(),
             [
                 [i, self.links["link_body_{}".format(i)]]
                 for i in range(self.options.morphology.n_links_body())
@@ -412,7 +412,7 @@ class Amphibious(Animat):
                 lineToXYZ=np.array(force),
                 lineColorRGB=[0, 0, 1],
                 lineWidth=7*self.units.meters,
-                parentObjectUniqueId=self.identity,
+                parentObjectUniqueId=self.identity(),
                 parentLinkIndex=i-1,
                 replaceItemUniqueId=line
             )

@@ -88,28 +88,23 @@ cdef class OscillatorArrayCy(NetworkArray2D):
         """From each parameter"""
         return cls(np.array([freqs, rates, amplitudes]))
 
-    @property
     def freqs(self):
         """Frequencies"""
         return self.array[0]
 
-    @freqs.setter
-    def freqs(self, value):
+    def set_freqs(self, value):
         """Frequencies"""
         self.array[0, :] = value
 
-    @property
     def amplitudes_rates(self):
         """Amplitudes rates"""
         return self.array[1]
 
-    @property
     def amplitudes_desired(self):
         """Amplitudes desired"""
         return self.array[2]
 
-    @amplitudes_desired.setter
-    def amplitudes_desired(self, value):
+    def set_amplitudes_desired(self, value):
         """Amplitudes desired"""
         self.array[2, :] = value
 
@@ -122,17 +117,14 @@ cdef class ConnectivityArrayCy(NetworkArray2D):
         """From each parameter"""
         return cls(np.stack([connections, weights, desired_phases], axis=1))
 
-    @property
     def connections(self):
         """Connections"""
         return self.array[:][0, 1]
 
-    @property
     def weights(self):
         """Weights"""
         return self.array[:][2]
 
-    @property
     def desired_phases(self):
         """Weights"""
         return self.array[:][3]
@@ -146,12 +138,10 @@ cdef class JointsArrayCy(NetworkArray2D):
         """From each parameter"""
         return cls(np.array([offsets, rates]))
 
-    @property
     def offsets(self):
         """Joints angles offsets"""
         return self.array[0]
 
-    @property
     def rates(self):
         """Joints angles offsets rates"""
         return self.array[1]

@@ -70,56 +70,50 @@ class AmphibiousNetworkODE:
         # )[-1]
         # self.iteration += 1
 
-    @property
     def phases(self):
         """Oscillators phases"""
         return self.animat_data.state.array[:, 0, :self._n_oscillators]
 
-    @property
     def dphases(self):
         """Oscillators phases velocity"""
         return self.animat_data.state.array[:, 1, :self._n_oscillators]
 
-    @property
     def amplitudes(self):
         """Amplitudes"""
         return self.animat_data.state.array[:, 0, self._n_oscillators:2*self._n_oscillators]
 
-    @property
     def damplitudes(self):
         """Amplitudes velocity"""
         return self.animat_data.state.array[:, 1, self._n_oscillators:2*self._n_oscillators]
 
-    @property
     def offsets(self):
         """Offset"""
         return self.animat_data.state.array[:, 0, 2*self._n_oscillators:]
 
-    @property
     def doffsets(self):
         """Offset velocity"""
         return self.animat_data.state.array[:, 1, 2*self._n_oscillators:]
 
     def get_outputs(self):
         """Outputs"""
-        return self.amplitudes[self.animat_data.iteration]*(
-            1 + np.cos(self.phases[self.animat_data.iteration])
+        return self.amplitudes()[self.animat_data.iteration]*(
+            1 + np.cos(self.phases()[self.animat_data.iteration])
         )
 
     def get_outputs_all(self):
         """Outputs"""
-        return self.amplitudes*(
-            1 + np.cos(self.phases)
+        return self.amplitudes()*(
+            1 + np.cos(self.phases())
         )
 
     def get_doutputs(self):
         """Outputs velocity"""
-        return self.damplitudes[self.animat_data.iteration]*(
-            1 + np.cos(self.phases[self.animat_data.iteration])
+        return self.damplitudes()[self.animat_data.iteration]*(
+            1 + np.cos(self.phases()[self.animat_data.iteration])
         ) - (
-            self.amplitudes[self.animat_data.iteration]
-            *np.sin(self.phases[self.animat_data.iteration])
-            *self.dphases[self.animat_data.iteration]
+            self.amplitudes()[self.animat_data.iteration]
+            *np.sin(self.phases()[self.animat_data.iteration])
+            *self.dphases()[self.animat_data.iteration]
         )
 
     def get_doutputs_all(self):
@@ -133,7 +127,7 @@ class AmphibiousNetworkODE:
         outputs = self.get_outputs()
         return (
             0.5*(outputs[self.groups[0]] - outputs[self.groups[1]])
-            + self.offsets[self.animat_data.iteration]
+            + self.offsets()[self.animat_data.iteration]
         )
 
     def get_position_output_all(self):
@@ -149,7 +143,7 @@ class AmphibiousNetworkODE:
         outputs = self.get_doutputs()
         return (
             0.5*(outputs[self.groups[0]] - outputs[self.groups[1]])
-            + self.doffsets[self.animat_data.iteration]
+            + self.doffsets()[self.animat_data.iteration]
         )
 
     def get_velocity_output_all(self):
@@ -166,7 +160,7 @@ class AmphibiousNetworkODE:
         predicted_positions = (positions+3*self._timestep*velocities)
         cmd_positions = self.get_position_output()
         cmd_velocities = self.get_velocity_output()
-        positions_rest = np.array(self.offsets[self.animat_data.iteration])
+        positions_rest = np.array(self.offsets()[self.animat_data.iteration])
         cmd_kp = 1e1  # Nm/rad
         cmd_kd = 1e-2  # Nm*s/rad
         spring = 1e0  # Nm/rad
