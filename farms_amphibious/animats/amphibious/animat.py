@@ -4,20 +4,19 @@ import re
 import numpy as np
 import pybullet
 
+from farms_bullet.model.animat import Animat
+from farms_bullet.sensors.sensors import (
+    Sensors,
+    JointsStatesSensor,
+    ContactsSensors
+)
 from farms_bullet.plugins.swimming import (
     viscous_forces,
     resistive_forces,
     swimming_motion,
     swimming_debug
 )
-from farms_bullet.sensors.sensors import (
-    Sensors,
-    JointsStatesSensor,
-    ContactsSensors
-)
 import farms_pylog as pylog
-
-from ..animat import Animat
 from .convention import AmphibiousConvention
 from .animat_data import (
     AmphibiousOscillatorNetworkState,
