@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from ...simulations.simulation_options import SimulationOptions
+from ...simulation.simulation_options import SimulationOptions
 from ...animats.amphibious.simulation import AmphibiousSimulation
 from ...animats.amphibious.animat_options import AmphibiousOptions
 from .animat import Snake

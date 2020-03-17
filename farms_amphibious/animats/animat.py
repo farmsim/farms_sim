@@ -2,7 +2,7 @@
 
 import numpy as np
 import pybullet
-from farms_bullet.simulations.model import SimulationModel
+from farms_bullet.simulation.model import SimulationModel
 
 
 def joint_type_str(joint_type):
