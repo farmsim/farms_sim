@@ -5,9 +5,9 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 from farms_models.utils import get_sdf_path
-from farms_amphibious.animats.amphibious.animat import Amphibious
-from farms_amphibious.animats.amphibious.simulation import AmphibiousSimulation
-from farms_amphibious.animats.amphibious.animat_options import AmphibiousOptions
+from farms_amphibious.model.animat import Amphibious
+from farms_amphibious.model.simulation import AmphibiousSimulation
+from farms_amphibious.model.animat_options import AmphibiousOptions
 from farms_bullet.simulation.options import SimulationOptions
 from farms_bullet.simulation.model import (
     SimulationModels,

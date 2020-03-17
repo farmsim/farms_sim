@@ -1,6 +1,6 @@
 """Control"""
 
-from ...controllers.control import AnimatController
+from ..controllers.control import AnimatController
 from .network import AmphibiousNetworkODE
 from .kinematics import AmphibiousKinematics
 
