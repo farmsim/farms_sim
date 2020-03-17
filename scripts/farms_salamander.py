@@ -13,6 +13,7 @@ from farms_bullet.simulation.model import (
     SimulationModels,
     DescriptionFormatModel
 )
+import farms_pylog as pylog
 
 
 def get_animat_options():
@@ -112,13 +113,19 @@ def main():
     simulation_options = get_simulation_options()
 
     # Creating arena
-    animat_options.physics.water_surface = None
-    animat_options.physics.viscous = False
-    animat_options.physics.sph = False
-    animat_options.physics.resistive = False
-    arena = flat_arena()
-    # animat_options.physics.water_surface = -0.1
-    # arena = water_arena(water_surface=animat_options.physics.water_surface)
+    # animat_options.physics.water_surface = None
+    # animat_options.physics.viscous = False
+    # animat_options.physics.sph = False
+    # animat_options.physics.resistive = False
+    # arena = flat_arena()
+    animat_options.physics.water_surface = -0.1
+    arena = water_arena(water_surface=animat_options.physics.water_surface)
+
+    # Model sdf
+    sdf = get_sdf_path(name='salamander', version='v1')
+    # sdf = get_sdf_path(name='pleurobot', version='0')
+    # sdf = get_sdf_path(name='salamandra_robotica', version='2')
+    pylog.info('Model SDF: {}'.format(sdf))
 
     # Salamander options
     animat_options.morphology.n_dof_legs = 4
@@ -153,7 +160,7 @@ def main():
 
     # Creating animat
     salamander = Amphibious(
-        sdf=get_sdf_path(name='salamander', version='v1'),
+        sdf=sdf,
         options=animat_options,
         timestep=simulation_options.timestep,
         iterations=simulation_options.n_iterations,
@@ -161,7 +168,7 @@ def main():
     )
 
     # Setup simulation
-    print("Creating simulation")
+    pylog.info("Creating simulation")
     sim = AmphibiousSimulation(
         simulation_options=simulation_options,
         animat=salamander,
@@ -169,16 +176,17 @@ def main():
     )
 
     # Run simulation
-    print("Running simulation")
+    pylog.info("Running simulation")
+    # sim.run(show_progress=show_progress)
     # contacts = sim.models.animat.data.sensors.contacts
     for iteration in sim.iterator(show_progress=show_progress):
-        # print(np.asarray(
+        # pylog.info(np.asarray(
         #     contacts.reaction(iteration, 0)
         # ))
         assert iteration >= 0
 
     # Analyse results
-    print("Analysing simulation")
+    pylog.info("Analysing simulation")
     sim.postprocess(
         iteration=sim.iteration,
         plot=simulation_options.plot,
@@ -221,4 +229,4 @@ if __name__ == '__main__':
     # main()
     profile()
     # pycall()
-    print("Total simulation time: {} [s]".format(time.time() - TIC))
+    pylog.info("Total simulation time: {} [s]".format(time.time() - TIC))

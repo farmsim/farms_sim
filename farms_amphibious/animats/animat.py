@@ -3,6 +3,7 @@
 import numpy as np
 import pybullet
 from farms_bullet.simulation.model import SimulationModel
+import farms_pylog as pylog
 
 
 def joint_type_str(joint_type):
@@ -60,7 +61,7 @@ class Animat(SimulationModel):
 
     def print_information(self):
         """Print information"""
-        print("Links ids:\n{}".format(
+        pylog.debug("Links ids:\n{}".format(
             "\n".join([
                 "  {}: {}".format(
                     name,
@@ -69,7 +70,7 @@ class Animat(SimulationModel):
                 for name in self.links
             ])
         ))
-        print("Joints ids:\n{}".format(
+        pylog.debug("Joints ids:\n{}".format(
             "\n".join([
                 "  {}: {} (type: {})".format(
                     name,
@@ -88,7 +89,7 @@ class Animat(SimulationModel):
     def print_dynamics_info(self, links=None):
         """Print dynamics info"""
         links = links if links is not None else self.links
-        print("Dynamics:")
+        pylog.debug("Dynamics:")
         for link in links:
             dynamics_msg = (
                 "\n      mass: {}"
@@ -103,14 +104,14 @@ class Animat(SimulationModel):
                 "\n      contact stiffness: {}"
             )
 
-            print("  - {}:{}".format(
+            pylog.debug("  - {}:{}".format(
                 link,
                 dynamics_msg.format(*pybullet.getDynamicsInfo(
                     self.identity,
                     self.links[link]
                 ))
             ))
-        print("Model mass: {} [kg]".format(self.mass()))
+        pylog.debug("Model mass: {} [kg]".format(self.mass()))
 
     def mass(self):
         """Print dynamics"""

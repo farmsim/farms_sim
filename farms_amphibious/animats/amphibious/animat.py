@@ -15,8 +15,7 @@ from farms_bullet.sensors.sensors import (
     JointsStatesSensor,
     ContactsSensors
 )
-
-from farms_sdf.sdf import ModelSDF, Link, Joint
+import farms_pylog as pylog
 
 from ..animat import Animat
 from .convention import AmphibiousConvention
@@ -51,9 +50,6 @@ def initial_pose(identity, spawn_options, units):
         linearVelocity=np.array(spawn_options.velocity_lin)*units.velocity,
         angularVelocity=np.array(spawn_options.velocity_ang)/units.seconds
     )
-    # print(spawn_options.velocity_lin)
-    # print(spawn_options.velocity_ang)
-    # raise Exception
     if (
             spawn_options.joints_positions is not None
             or spawn_options.joints_velocities is not None
@@ -137,7 +133,7 @@ class Amphibious(Animat):
 
     def spawn_sdf(self, verbose=False):
         """Spawn sdf"""
-        print(self.sdf)
+        pylog.debug(self.sdf)
         self._identity = pybullet.loadSDF(
             self.sdf,
             useMaximalCoordinates=0,

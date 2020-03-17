@@ -7,6 +7,7 @@ from farms_bullet.simulation.simulation import Simulation, SimulationModels
 from farms_bullet.simulation.options import SimulationOptions
 from farms_bullet.interface.interface import Interfaces
 from farms_bullet.simulation.simulator import real_time_handing
+import farms_pylog as pylog
 
 from .animat import Amphibious
 from .animat_options import AmphibiousOptions
@@ -228,7 +229,7 @@ def main(simulation_options=None, animat_options=None):
         animat_options = AmphibiousOptions()
 
     # Setup simulation
-    print("Creating simulation")
+    pylog.debug("Creating simulation")
     sim = AmphibiousSimulation(
         simulation_options=simulation_options,
         animat=Amphibious(
@@ -240,11 +241,11 @@ def main(simulation_options=None, animat_options=None):
     )
 
     # Run simulation
-    print("Running simulation")
+    pylog.debug("Running simulation")
     sim.run()
 
     # Analyse results
-    print("Analysing simulation")
+    pylog.debug("Analysing simulation")
     sim.postprocess(
         iteration=sim.iteration,
         plot=simulation_options.plot,
@@ -273,7 +274,7 @@ def main_parallel():
 
     # Run simulation
     pool.map(main, [sim_options, sim_options])
-    print("Done")
+    pylog.debug("Done")
 
 
 if __name__ == '__main__':

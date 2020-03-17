@@ -3,7 +3,6 @@
 import sys
 import numpy as np
 
-from .convention import AmphibiousConvention
 from farms_amphibious.data.animat_data import (
     OscillatorNetworkState,
     AnimatData,
@@ -17,6 +16,8 @@ from farms_amphibious.data.animat_data import (
     GpsArray,
     HydrodynamicsArray
 )
+import farms_pylog as pylog
+from .convention import AmphibiousConvention
 
 
 class AmphibiousOscillatorNetworkState(OscillatorNetworkState):
@@ -134,7 +135,7 @@ class AmphibiousOscillatorArray(OscillatorArray):
                     2*n_body + 2*leg_i*n_dof_legs + i,
                     2*n_body + 2*leg_i*n_dof_legs + i + n_dof_legs
                 ]] = osc_options.legs_nominal_amplitudes[i].value(drives)
-        # print("Amplitudes along body: abs({})".format(amplitudes[:11]))
+        # pylog.debug("Amplitudes along body: abs({})".format(amplitudes[:11]))
         return np.abs(freqs), np.abs(rates), np.abs(amplitudes)
 
     @classmethod
@@ -421,7 +422,7 @@ class AmphibiousOscillatorConnectivityArray(ConnectivityArray):
                             ])
         if verbose:
             with np.printoptions(suppress=True, precision=3, threshold=sys.maxsize):
-                print("Oscillator connectivity:\n{}".format(np.array(connectivity)))
+                pylog.debug("Oscillator connectivity:\n{}".format(np.array(connectivity)))
         return connectivity
 
     @staticmethod
@@ -605,7 +606,7 @@ class AmphibiousContactsConnectivityArray(ConnectivityArray):
                                     weight
                                 ])
         if verbose:
-            print("Contacts connectivity:\n{}".format(np.array(connectivity)))
+            pylog.debug("Contacts connectivity:\n{}".format(np.array(connectivity)))
         if not connectivity:
             connectivity = [[]]
         return cls(np.array(connectivity, dtype=np.float64))
@@ -633,7 +634,7 @@ class AmphibiousHydroConnectivityArray(ConnectivityArray):
                     options_conn.weight_sens_hydro_amp
                 ])
         if verbose:
-            print("Hydro connectivity:\n{}".format(np.array(connectivity)))
+            pylog.debug("Hydro connectivity:\n{}".format(np.array(connectivity)))
         return cls(np.array(connectivity, dtype=np.float64))
 
 
