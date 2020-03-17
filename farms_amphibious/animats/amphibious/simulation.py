@@ -13,6 +13,69 @@ from .animat import Amphibious
 from .animat_options import AmphibiousOptions
 
 
+def swimming_step(sim_step, animat):
+    """Swimming step"""
+    physics_options = animat.options.physics
+    if (
+            physics_options.resistive
+            or physics_options.viscous
+            or physics_options.sph
+    ):
+        water_surface = (
+            np.inf
+            if physics_options.sph
+            else physics_options.water_surface
+        )
+        if physics_options.viscous:
+            animat.viscous_swimming_forces(
+                sim_step,
+                water_surface=water_surface,
+                coefficients=physics_options.viscous_coefficients,
+                buoyancy=physics_options.buoyancy,
+            )
+        if physics_options.resistive:
+            animat.resistive_swimming_forces(
+                sim_step,
+                water_surface=water_surface,
+                coefficients=physics_options.resistive_coefficients,
+                buoyancy=physics_options.buoyancy,
+            )
+        animat.apply_swimming_forces(
+            sim_step,
+            water_surface=water_surface
+        )
+        if animat.options.show_hydrodynamics:
+            animat.draw_hydrodynamics(sim_step)
+
+
+def time_based_drive(sim_step, n_iterations, interface):
+    """Switch drive based on time"""
+    interface.user_params.drive_speed.value = (
+        1+4*sim_step/n_iterations
+    )
+    interface.user_params.drive_speed.changed = True
+
+
+def gps_based_drive(sim_step, animat, interface):
+    """Switch drive based on position"""
+    distance = animat.data.sensors.gps.com_position(
+        iteration=sim_step-1 if sim_step else 0,
+        link_i=0
+    )[0]
+    swim_distance = 3
+    value = interface.user_params.drive_speed.value
+    if distance < -swim_distance:
+        interface.user_params.drive_speed.value = 4 - (
+            0.05*(swim_distance+distance)
+        )
+        if interface.user_params.drive_speed.value != value:
+            interface.user_params.drive_speed.changed = True
+    else:
+        if interface.user_params.drive_speed.value != value:
+            interface.user_params.drive_speed.changed = True
+
+
+
 class AmphibiousSimulation(Simulation):
     """Amphibious simulation"""
 
@@ -90,27 +153,14 @@ class AmphibiousSimulation(Simulation):
 
             # Drive changes depending on simulation time
             if self.models.animat.options.transition:
-                self.interface.user_params.drive_speed.value = (
-                    1+4*sim_step/self.options.n_iterations
+                time_based_drive(
+                    sim_step,
+                    self.options.n_iterations,
+                    self.interface
                 )
-                self.interface.user_params.drive_speed.changed = True
 
-            # # Switch drive based on position
-            # distance = self.models.animat.data.sensors.gps.com_position(
-            #     iteration=sim_step-1 if sim_step else 0,
-            #     link_i=0
-            # )[0]
-            # swim_distance = 3
-            # value = self.interface.user_params.drive_speed.value
-            # if distance < -swim_distance:
-            #     self.interface.user_params.drive_speed.value = 4 - (
-            #         0.05*(swim_distance+distance)
-            #     )
-            #     if self.interface.user_params.drive_speed.value != value:
-            #         self.interface.user_params.drive_speed.changed = True
-            # else:
-            #     if self.interface.user_params.drive_speed.value != value:
-            #         self.interface.user_params.drive_speed.changed = True
+            # GPS based drive
+            # gps_based_drive(sim_step, self.models.animat, self.interface)
 
             # Update interface
             self.animat_interface()
@@ -120,38 +170,8 @@ class AmphibiousSimulation(Simulation):
 
         # Physics step
         if sim_step < self.options.n_iterations-1:
-            physics_options = self.models.animat.options.physics
             # Swimming
-            if (
-                    physics_options.resistive
-                    or physics_options.viscous
-                    or physics_options.sph
-            ):
-                water_surface = (
-                    np.inf
-                    if physics_options.sph
-                    else physics_options.water_surface
-                )
-                if physics_options.viscous:
-                    self.models.animat.viscous_swimming_forces(
-                        sim_step,
-                        water_surface=water_surface,
-                        coefficients=physics_options.viscous_coefficients,
-                        buoyancy=physics_options.buoyancy,
-                    )
-                if physics_options.resistive:
-                    self.models.animat.resistive_swimming_forces(
-                        sim_step,
-                        water_surface=water_surface,
-                        coefficients=physics_options.resistive_coefficients,
-                        buoyancy=physics_options.buoyancy,
-                    )
-                self.models.animat.apply_swimming_forces(
-                    sim_step,
-                    water_surface=water_surface
-                )
-            if self.models.animat.options.show_hydrodynamics:
-                self.models.animat.draw_hydrodynamics(sim_step)
+            swimming_step(sim_step, self.models.animat)
 
             # Control animat
             self.models.animat.controller.control()
