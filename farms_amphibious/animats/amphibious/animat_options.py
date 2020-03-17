@@ -3,7 +3,7 @@
 import numpy as np
 from scipy import interpolate
 
-from farms_bullet.simulation.simulation_options import Options
+from farms_bullet.simulation.options import Options
 
 
 class AmphibiousOptions(Options):

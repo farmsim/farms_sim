@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from farms_amphibious.experiments.salamander.simulation import main as run_sim
 from farms_amphibious.animats.amphibious.animat_options import AmphibiousOptions
-from farms_bullet.simulation.simulation_options import SimulationOptions
+from farms_bullet.simulation.options import SimulationOptions
 
 
 def main():

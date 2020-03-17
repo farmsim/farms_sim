@@ -5,7 +5,7 @@ import numpy as np
 import pybullet
 
 from farms_bullet.simulation.simulation import Simulation, SimulationModels
-from farms_bullet.simulation.simulation_options import SimulationOptions
+from farms_bullet.simulation.options import SimulationOptions
 from farms_bullet.interface.interface import Interfaces
 from farms_bullet.simulation.simulator import real_time_handing
 from farms_amphibious.arenas.arena import FlooredArena, ArenaWater
