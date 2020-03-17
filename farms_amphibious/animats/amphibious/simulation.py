@@ -8,7 +8,6 @@ from farms_bullet.simulation.simulation import Simulation, SimulationModels
 from farms_bullet.simulation.options import SimulationOptions
 from farms_bullet.interface.interface import Interfaces
 from farms_bullet.simulation.simulator import real_time_handing
-from farms_amphibious.arenas.arena import FlooredArena, ArenaWater
 
 from .animat import Amphibious
 from .animat_options import AmphibiousOptions
@@ -17,20 +16,11 @@ from .animat_options import AmphibiousOptions
 class AmphibiousSimulation(Simulation):
     """Amphibious simulation"""
 
-    def __init__(self, simulation_options, animat, **kwargs):
-        if "arena" not in kwargs:
-            arena = (
-                ArenaWater(
-                    ramp_angle=-10,
-                    units=animat.units
-                )
-                if simulation_options.arena == "water"
-                else FlooredArena()
-            )
+    def __init__(self, simulation_options, animat, arena):
         super(AmphibiousSimulation, self).__init__(
             models=SimulationModels(
                 animat=animat,
-                arena=kwargs.pop("arena", arena)
+                arena=arena,
             ),
             options=simulation_options
         )
@@ -139,8 +129,8 @@ class AmphibiousSimulation(Simulation):
             ):
                 water_surface = (
                     np.inf
-                    if physics_options.sph or not physics_options.water_surface
-                    else self.models.arena.water_surface
+                    if physics_options.sph
+                    else physics_options.water_surface
                 )
                 if physics_options.viscous:
                     self.models.animat.viscous_swimming_forces(

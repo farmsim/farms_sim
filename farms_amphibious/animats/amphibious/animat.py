@@ -81,7 +81,7 @@ def initial_pose(identity, spawn_options, units):
 class Amphibious(Animat):
     """Amphibious animat"""
 
-    def __init__(self, options, timestep, iterations, units, sdf=None):
+    def __init__(self, sdf, options, timestep, iterations, units):
         super(Amphibious, self).__init__(options=options)
         self.sdf = sdf
         self.timestep = timestep
