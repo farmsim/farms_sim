@@ -2,7 +2,6 @@
 
 import time
 import numpy as np
-import pybullet
 
 from farms_bullet.simulation.simulation import Simulation, SimulationModels
 from farms_bullet.simulation.options import SimulationOptions
@@ -156,9 +155,8 @@ class AmphibiousSimulation(Simulation):
             # Control animat
             self.models.animat.controller.control()
 
-            # Physics step
-            pybullet.stepSimulation()
-            sim_step += 1
+    def post_step(self, sim_step):
+        """Post step"""
 
         # Camera
         if not self.options.headless:
