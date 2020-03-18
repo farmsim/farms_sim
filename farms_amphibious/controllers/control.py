@@ -3,15 +3,16 @@
 import pybullet
 import numpy as np
 
+
 class AnimatController:
     """AnimatController"""
 
-    def __init__(self, model, network, joints_order, units):
+    def __init__(self, identity, network, joints_order, units):
         super(AnimatController, self).__init__()
-        self.model = model
+        self.identity = identity
         self.network = network
         self.joint_list = joints_order
-        n_joints = pybullet.getNumJoints(self.model)
+        n_joints = len(self.joint_list)
         # Commands
         self.positions = None
         self.velocities = None
@@ -26,24 +27,27 @@ class AnimatController:
         self.gain_velocity = 1e0*np.ones(n_joints)*(
             self.units.torques*self.units.seconds
         )
+        self.reset()
+
+    def reset(self):
+        """Reset controllers"""
         # Reset controllers
-        joint_list = np.arange(n_joints)
-        zeros = np.zeros(n_joints)
+        zeros = np.zeros_like(self.joint_list)
         pybullet.setJointMotorControlArray(
-            self.model,
-            joint_list,
+            self.identity,
+            self.joint_list,
             pybullet.POSITION_CONTROL,
             forces=zeros
         )
         pybullet.setJointMotorControlArray(
-            self.model,
-            joint_list,
+            self.identity,
+            self.joint_list,
             pybullet.VELOCITY_CONTROL,
             forces=zeros
         )
         pybullet.setJointMotorControlArray(
-            self.model,
-            joint_list,
+            self.identity,
+            self.joint_list,
             pybullet.TORQUE_CONTROL,
             forces=zeros
         )
@@ -65,7 +69,7 @@ class AnimatController:
         # if not all(np.abs(self.velocities) < 2*np.pi*3):
         #     print("Velocities too fast:\n{}".format(self.velocities/(2*np.pi)))
         pybullet.setJointMotorControlArray(
-            self.model,
+            self.identity,
             self.joint_list,
             pybullet.POSITION_CONTROL,
             targetPositions=self.positions,
@@ -82,7 +86,7 @@ class AnimatController:
         )
         # for joint_i, joint in enumerate(self.joint_list):
         #     pybullet.setJointMotorControl2(
-        #         self.model,
+        #         self.identity,
         #         joint,
         #         pybullet.POSITION_CONTROL,
         #         targetPosition=self.positions[joint_i],
@@ -93,7 +97,7 @@ class AnimatController:
         #         maxVelocity=2*np.pi*3
         #     )
         # pybullet.setJointMotorControlArray(
-        #     self.model,
+        #     self.identity,
         #     self.joint_list,
         #     pybullet.TORQUE_CONTROL,
         #     forces=self.torques*self.units.torques,

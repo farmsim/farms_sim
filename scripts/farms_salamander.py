@@ -5,15 +5,20 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 from farms_models.utils import get_sdf_path
-from farms_amphibious.model.animat import Amphibious
-from farms_amphibious.model.simulation import AmphibiousSimulation
-from farms_amphibious.model.animat_options import AmphibiousOptions
 from farms_bullet.simulation.options import SimulationOptions
 from farms_bullet.simulation.model import (
     SimulationModels,
     DescriptionFormatModel
 )
 import farms_pylog as pylog
+from farms_amphibious.model.animat import Amphibious
+from farms_amphibious.model.simulation import AmphibiousSimulation
+from farms_amphibious.model.animat_options import AmphibiousOptions
+from farms_amphibious.model.network import AmphibiousNetworkODE
+from farms_amphibious.model.animat_data import (
+    AmphibiousOscillatorNetworkState,
+    AmphibiousData
+)
 
 
 def get_animat_options():
@@ -127,14 +132,14 @@ def main():
     # sdf = get_sdf_path(name='salamandra_robotica', version='2')
     pylog.info('Model SDF: {}'.format(sdf))
 
-    # Salamander options
+    # Animat options
     animat_options.morphology.n_dof_legs = 4
     animat_options.morphology.n_legs = 4
 
     # Animat sensors
 
     # Animat data
-    # salamander_data = AmphibiousData.from_options(
+    # animat_data = AmphibiousData.from_options(
     #     AmphibiousOscillatorNetworkState.default_state(iterations, options),
     #     options,
     #     iterations
@@ -159,9 +164,23 @@ def main():
     # )
 
     # Creating animat
-    salamander = Amphibious(
+    animat_data = AmphibiousData.from_options(
+        AmphibiousOscillatorNetworkState.default_state(
+            simulation_options.n_iterations(),
+            animat_options
+        ),
+        animat_options,
+        simulation_options.n_iterations()
+    )
+    animat_network = AmphibiousNetworkODE(
+        animat_options=animat_options,
+        animat_data=animat_data,
+        timestep=simulation_options.timestep
+    )  # AmphibiousKinematics(animat_options, animat_data, timestep),
+    animat = Amphibious(
         sdf=sdf,
         options=animat_options,
+        network=animat_network,
         timestep=simulation_options.timestep,
         iterations=simulation_options.n_iterations(),
         units=simulation_options.units,
@@ -171,7 +190,7 @@ def main():
     pylog.info("Creating simulation")
     sim = AmphibiousSimulation(
         simulation_options=simulation_options,
-        animat=salamander,
+        animat=animat,
         arena=arena,
     )
 

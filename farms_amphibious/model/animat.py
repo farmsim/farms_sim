@@ -17,12 +17,9 @@ from farms_bullet.plugins.swimming import (
     swimming_debug
 )
 import farms_pylog as pylog
+from ..controllers.control import AnimatController
 from .convention import AmphibiousConvention
-from .animat_data import (
-    AmphibiousOscillatorNetworkState,
-    AmphibiousData
-)
-from .control import AmphibiousController
+# from .control import AmphibiousController
 from .sensors import AmphibiousGPS
 
 
@@ -76,7 +73,7 @@ def initial_pose(identity, spawn_options, units):
 class Amphibious(Animat):
     """Amphibious animat"""
 
-    def __init__(self, sdf, options, timestep, iterations, units):
+    def __init__(self, sdf, options, network, timestep, iterations, units):
         super(Amphibious, self).__init__(options=options)
         self.sdf = sdf
         self.timestep = timestep
@@ -92,11 +89,8 @@ class Amphibious(Animat):
             for side_i in range(2)
         ]
         self.joints_order = None
-        self.data = AmphibiousData.from_options(
-            AmphibiousOscillatorNetworkState.default_state(iterations, options),
-            options,
-            iterations
-        )
+        self.network = network
+        self.data = network.animat_data
         # Hydrodynamic forces
         self.masses = np.zeros(options.morphology.n_links())
         self.hydrodynamics = None
@@ -319,24 +313,12 @@ class Amphibious(Animat):
 
     def setup_controller(self):
         """Setup controller"""
-        if self.options.control.kinematics_file:
-            self.controller = AmphibiousController.from_kinematics(
-                self.identity(),
-                animat_options=self.options,
-                animat_data=self.data,
-                timestep=self.timestep,
-                joints_order=self.joints_order,
-                units=self.units
-            )
-        else:
-            self.controller = AmphibiousController.from_data(
-                self.identity(),
-                animat_options=self.options,
-                animat_data=self.data,
-                timestep=self.timestep,
-                joints_order=self.joints_order,
-                units=self.units
-            )
+        self.controller = AnimatController(
+            identity=self.identity(),
+            network=self.network,
+            joints_order=self.joints_order,
+            units=self.units,
+        )
 
     def viscous_swimming_forces(self, iteration, water_surface, **kwargs):
         """Animat swimming physics"""
