@@ -9,8 +9,8 @@ from farms_bullet.interface.interface import Interfaces
 from farms_bullet.simulation.simulator import real_time_handing
 import farms_pylog as pylog
 
-from .animat import Amphibious
-from .animat_options import AmphibiousOptions
+from ..model.animat import Amphibious
+from ..model.options import AmphibiousOptions
 
 
 def swimming_step(sim_step, animat):

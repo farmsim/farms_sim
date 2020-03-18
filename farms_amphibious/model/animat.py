@@ -18,9 +18,8 @@ from farms_bullet.plugins.swimming import (
 )
 import farms_pylog as pylog
 from ..controllers.control import AnimatController
+from ..sensors.sensors import AmphibiousGPS
 from .convention import AmphibiousConvention
-# from .control import AmphibiousController
-from .sensors import AmphibiousGPS
 
 
 def links_ordering(text):

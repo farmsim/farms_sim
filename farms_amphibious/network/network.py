@@ -3,7 +3,7 @@
 import numpy as np
 from scipy import integrate
 from ..controllers.controller import ode_oscillators_sparse
-from .convention import AmphibiousConvention
+from ..model.convention import AmphibiousConvention
 
 
 class AmphibiousNetworkODE:
