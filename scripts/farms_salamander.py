@@ -139,11 +139,31 @@ def main():
     # Animat sensors
 
     # Animat data
-    # animat_data = AmphibiousData.from_options(
-    #     AmphibiousOscillatorNetworkState.default_state(iterations, options),
-    #     options,
-    #     iterations
-    # )
+    animat_data = AmphibiousData.from_options(
+        AmphibiousOscillatorNetworkState.default_state(
+            simulation_options.n_iterations(),
+            animat_options
+        ),
+        animat_options,
+        simulation_options.n_iterations()
+    )
+
+    # Animat network
+    animat_network = AmphibiousNetworkODE(
+        animat_options=animat_options,
+        animat_data=animat_data,
+        timestep=simulation_options.timestep
+    )  # AmphibiousKinematics(animat_options, animat_data, timestep),
+
+    # Creating animat
+    animat = Amphibious(
+        sdf=sdf,
+        options=animat_options,
+        network=animat_network,
+        timestep=simulation_options.timestep,
+        iterations=simulation_options.n_iterations(),
+        units=simulation_options.units,
+    )
 
     # Animat controller
     # controller = AmphibiousController.from_data(
@@ -162,29 +182,6 @@ def main():
     #     joints_order=self.joints_order,
     #     units=self.units
     # )
-
-    # Creating animat
-    animat_data = AmphibiousData.from_options(
-        AmphibiousOscillatorNetworkState.default_state(
-            simulation_options.n_iterations(),
-            animat_options
-        ),
-        animat_options,
-        simulation_options.n_iterations()
-    )
-    animat_network = AmphibiousNetworkODE(
-        animat_options=animat_options,
-        animat_data=animat_data,
-        timestep=simulation_options.timestep
-    )  # AmphibiousKinematics(animat_options, animat_data, timestep),
-    animat = Amphibious(
-        sdf=sdf,
-        options=animat_options,
-        network=animat_network,
-        timestep=simulation_options.timestep,
-        iterations=simulation_options.n_iterations(),
-        units=simulation_options.units,
-    )
 
     # Setup simulation
     pylog.info("Creating simulation")

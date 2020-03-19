@@ -5,6 +5,7 @@ import numpy as np
 import pybullet
 
 from farms_bullet.model.animat import Animat
+from farms_bullet.model.control import ModelController
 from farms_bullet.sensors.sensors import (
     Sensors,
     JointsStatesSensor,
@@ -17,7 +18,6 @@ from farms_bullet.plugins.swimming import (
     swimming_debug
 )
 import farms_pylog as pylog
-from ..controllers.control import AnimatController
 from ..sensors.sensors import AmphibiousGPS
 from .convention import AmphibiousConvention
 
@@ -312,7 +312,7 @@ class Amphibious(Animat):
 
     def setup_controller(self):
         """Setup controller"""
-        self.controller = AnimatController(
+        self.controller = ModelController(
             identity=self.identity(),
             network=self.network,
             joints_order=self.joints_order,
