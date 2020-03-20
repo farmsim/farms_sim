@@ -37,6 +37,7 @@ def get_animat_options():
     animat_options.physics.viscous = True
     animat_options.physics.buoyancy = True
     animat_options.physics.water_surface = True
+
     # Swiming
     # animat_options.spawn.position = [-10, 0, 0]
     # animat_options.spawn.orientation = [0, 0, np.pi]
@@ -84,7 +85,7 @@ def flat_arena():
 
 def water_arena(water_surface):
     """Water arena"""
-    return SimulationModels(models=[
+    return SimulationModels([
         DescriptionFormatModel(
             path=get_sdf_path(
                 name='arena_ramp',
@@ -148,8 +149,8 @@ def main():
         simulation_options.n_iterations()
     )
 
-    # Animat network
-    animat_network = AmphibiousNetworkODE(
+    # Animat controller
+    animat_controller = AmphibiousNetworkODE(
         animat_options=animat_options,
         animat_data=animat_data,
         timestep=simulation_options.timestep
@@ -159,29 +160,11 @@ def main():
     animat = Amphibious(
         sdf=sdf,
         options=animat_options,
-        network=animat_network,
+        controller=animat_controller,
         timestep=simulation_options.timestep,
         iterations=simulation_options.n_iterations(),
         units=simulation_options.units,
     )
-
-    # Animat controller
-    # controller = AmphibiousController.from_data(
-    #     self.identity,
-    #     animat_options=self.options,
-    #     animat_data=self.data,
-    #     timestep=self.timestep,
-    #     joints_order=self.joints_order,
-    #     units=self.units
-    # )
-    # controller = AmphibiousController.from_kinematics(
-    #     self.identity,
-    #     animat_options=self.options,
-    #     animat_data=self.data,
-    #     timestep=self.timestep,
-    #     joints_order=self.joints_order,
-    #     units=self.units
-    # )
 
     # Setup simulation
     pylog.info("Creating simulation")

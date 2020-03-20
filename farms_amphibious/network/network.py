@@ -2,15 +2,21 @@
 
 import numpy as np
 from scipy import integrate
+from farms_bullet.model.control import ModelController
 from ..controllers.controller import ode_oscillators_sparse
 from ..model.convention import AmphibiousConvention
 
 
-class AmphibiousNetworkODE:
+class AmphibiousNetworkODE(ModelController):
     """Amphibious network"""
 
     def __init__(self, animat_options, animat_data, timestep):
-        super(AmphibiousNetworkODE, self).__init__()
+        convention = AmphibiousConvention(animat_options)
+        super(AmphibiousNetworkODE, self).__init__(
+            joints=convention.joint_names(),
+            use_position=True,
+            use_torque=False,
+        )
         self.ode = ode_oscillators_sparse
         self.animat_options = animat_options
         self.animat_data = animat_data
@@ -19,7 +25,6 @@ class AmphibiousNetworkODE:
         n_body = self.animat_options.morphology.n_joints_body
         n_legs_dofs = self.animat_options.morphology.n_dof_legs
         self.groups = [None, None]
-        convention = AmphibiousConvention(animat_options)
         self.groups = [
             [
                 convention.bodyosc2index(
@@ -182,3 +187,11 @@ class AmphibiousNetworkODE:
         """Update drives"""
         self.animat_data.network.oscillators.update(options)
         self.animat_data.joints.update(options)
+
+    def positions(self):
+        """Postions"""
+        return self.get_position_output()
+
+    def velocities(self):
+        """Postions"""
+        return self.get_velocity_output()

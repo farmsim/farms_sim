@@ -72,7 +72,7 @@ def initial_pose(identity, spawn_options, units):
 class Amphibious(Animat):
     """Amphibious animat"""
 
-    def __init__(self, sdf, options, network, timestep, iterations, units):
+    def __init__(self, sdf, options, controller, timestep, iterations, units):
         super(Amphibious, self).__init__(options=options)
         self.sdf = sdf
         self.timestep = timestep
@@ -88,8 +88,8 @@ class Amphibious(Animat):
             for side_i in range(2)
         ]
         self.joints_order = None
-        self.network = network
-        self.data = network.animat_data
+        self.controller = controller
+        self.data = controller.animat_data
         # Hydrodynamic forces
         self.masses = np.zeros(options.morphology.n_links())
         self.hydrodynamics = None
@@ -103,8 +103,6 @@ class Amphibious(Animat):
         """Spawn amphibious"""
         # Spawn
         self.spawn_sdf()
-        # Controller
-        self.setup_controller()
         # Sensors
         self.add_sensors()
         # Body properties
@@ -308,15 +306,6 @@ class Amphibious(Animat):
             rollingFriction=small,
             # contactStiffness=1e3,
             # contactDamping=1e6
-        )
-
-    def setup_controller(self):
-        """Setup controller"""
-        self.controller = ModelController(
-            identity=self.identity(),
-            network=self.network,
-            joints_order=self.joints_order,
-            units=self.units,
         )
 
     def viscous_swimming_forces(self, iteration, water_surface, **kwargs):
