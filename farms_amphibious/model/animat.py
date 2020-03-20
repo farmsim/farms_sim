@@ -89,7 +89,11 @@ class Amphibious(Animat):
         ]
         self.joints_order = None
         self.controller = controller
-        self.data = controller.animat_data
+        self.data = (
+            controller.animat_data
+            if controller is not None
+            else None
+        )
         # Hydrodynamic forces
         self.masses = np.zeros(options.morphology.n_links())
         self.hydrodynamics = None
@@ -104,7 +108,8 @@ class Amphibious(Animat):
         # Spawn
         self.spawn_sdf()
         # Sensors
-        self.add_sensors()
+        if self.data:
+            self.add_sensors()
         # Body properties
         self.set_body_properties()
         # Debug
@@ -152,7 +157,7 @@ class Amphibious(Animat):
             for i, name in enumerate(joints_names)
         }
         self.joints_order = [
-            joints_names_dict[name]
+            joints_names_dict.get(name, None)
             for name in [
                 self.convention.bodyjoint2name(i)
                 for i in range(self.options.morphology.n_joints_body)

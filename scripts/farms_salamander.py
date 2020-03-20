@@ -119,13 +119,13 @@ def main():
     simulation_options = get_simulation_options()
 
     # Creating arena
-    # animat_options.physics.water_surface = None
-    # animat_options.physics.viscous = False
-    # animat_options.physics.sph = False
-    # animat_options.physics.resistive = False
-    # arena = flat_arena()
-    animat_options.physics.water_surface = -0.1
-    arena = water_arena(water_surface=animat_options.physics.water_surface)
+    animat_options.physics.water_surface = None
+    animat_options.physics.viscous = False
+    animat_options.physics.sph = False
+    animat_options.physics.resistive = False
+    arena = flat_arena()
+    # animat_options.physics.water_surface = -0.1
+    # arena = water_arena(water_surface=animat_options.physics.water_surface)
 
     # Model sdf
     sdf = get_sdf_path(name='salamander', version='v1')
@@ -155,6 +155,7 @@ def main():
         animat_data=animat_data,
         timestep=simulation_options.timestep
     )  # AmphibiousKinematics(animat_options, animat_data, timestep),
+    # animat_controller = None
 
     # Creating animat
     animat = Amphibious(

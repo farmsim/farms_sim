@@ -171,7 +171,8 @@ class AmphibiousSimulation(Simulation):
             swimming_step(sim_step, self.animat())
 
             # Update animat controller
-            self.animat().controller.control_step()
+            if self.animat().controller is not None:
+                self.animat().controller.control_step()
 
     def post_step(self, sim_step):
         """Post step"""
