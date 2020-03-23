@@ -5,6 +5,7 @@ import numpy as np
 import pybullet
 
 from farms_bullet.model.animat import Animat
+from farms_bullet.model.control import ModelController
 from farms_bullet.sensors.sensors import (
     Sensors,
     JointsStatesSensor,
@@ -17,7 +18,6 @@ from farms_bullet.plugins.swimming import (
     swimming_debug
 )
 import farms_pylog as pylog
-from ..controllers.control import AnimatController
 from ..sensors.sensors import AmphibiousGPS
 from .convention import AmphibiousConvention
 
@@ -72,7 +72,7 @@ def initial_pose(identity, spawn_options, units):
 class Amphibious(Animat):
     """Amphibious animat"""
 
-    def __init__(self, sdf, options, network, timestep, iterations, units):
+    def __init__(self, sdf, options, controller, timestep, iterations, units):
         super(Amphibious, self).__init__(options=options)
         self.sdf = sdf
         self.timestep = timestep
@@ -88,8 +88,12 @@ class Amphibious(Animat):
             for side_i in range(2)
         ]
         self.joints_order = None
-        self.network = network
-        self.data = network.animat_data
+        self.controller = controller
+        self.data = (
+            controller.animat_data
+            if controller is not None
+            else None
+        )
         # Hydrodynamic forces
         self.masses = np.zeros(options.morphology.n_links())
         self.hydrodynamics = None
@@ -103,10 +107,9 @@ class Amphibious(Animat):
         """Spawn amphibious"""
         # Spawn
         self.spawn_sdf()
-        # Controller
-        self.setup_controller()
         # Sensors
-        self.add_sensors()
+        if self.data:
+            self.add_sensors()
         # Body properties
         self.set_body_properties()
         # Debug
@@ -154,7 +157,7 @@ class Amphibious(Animat):
             for i, name in enumerate(joints_names)
         }
         self.joints_order = [
-            joints_names_dict[name]
+            joints_names_dict.get(name, None)
             for name in [
                 self.convention.bodyjoint2name(i)
                 for i in range(self.options.morphology.n_joints_body)
@@ -264,8 +267,11 @@ class Amphibious(Animat):
     def set_body_properties(self):
         """Set body properties"""
         # Masses
-        for i in range(self.options.morphology.n_links()):
+        n_links = pybullet.getNumJoints(self.identity())+1
+        self.masses = np.zeros(n_links)
+        for i in range(n_links):
             self.masses[i] = pybullet.getDynamicsInfo(self.identity(), i-1)[0]
+        pylog.debug('Body mass: {} [kg]'.format(np.sum(self.masses)))
         # Deactivate collisions
         links_no_collisions = [
             "link_body_{}".format(body_i)
@@ -308,15 +314,6 @@ class Amphibious(Animat):
             rollingFriction=small,
             # contactStiffness=1e3,
             # contactDamping=1e6
-        )
-
-    def setup_controller(self):
-        """Setup controller"""
-        self.controller = AnimatController(
-            identity=self.identity(),
-            network=self.network,
-            joints_order=self.joints_order,
-            units=self.units,
         )
 
     def viscous_swimming_forces(self, iteration, water_surface, **kwargs):

@@ -105,3 +105,15 @@ class AmphibiousConvention:
         assert 0 <= leg_i < n_legs, "Leg must be < {}, got {}".format(n_legs//2, leg_i)
         assert 0 <= side_i < 2, "Body side must be < 2, got {}".format(side_i)
         return 2*leg_i + side_i
+
+    def joint_names(self):
+        """Joint names"""
+        return [
+            self.bodyjoint2name(i)
+            for i in range(self.animat_options.morphology.n_joints_body)
+        ] + [
+            self.legjoint2name(leg_i, side_i, joint_i)
+            for leg_i in range(self.animat_options.morphology.n_legs)
+            for side_i in range(2)
+            for joint_i in range(self.animat_options.morphology.n_dof_legs)
+        ]

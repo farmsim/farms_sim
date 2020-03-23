@@ -3,10 +3,11 @@
 import time
 import numpy as np
 
-from farms_bullet.simulation.simulation import Simulation, SimulationModels
+from farms_bullet.simulation.simulation import Simulation
 from farms_bullet.simulation.options import SimulationOptions
-from farms_bullet.interface.interface import Interfaces
 from farms_bullet.simulation.simulator import real_time_handing
+from farms_bullet.model.model import SimulationModels
+from farms_bullet.interface.interface import Interfaces
 import farms_pylog as pylog
 
 from ..model.animat import Amphibious
@@ -81,10 +82,7 @@ class AmphibiousSimulation(Simulation):
 
     def __init__(self, simulation_options, animat, arena):
         super(AmphibiousSimulation, self).__init__(
-            models=SimulationModels(
-                animat=animat,
-                arena=arena,
-            ),
+            models=SimulationModels([animat, arena]),
             options=simulation_options
         )
         # Interface
@@ -92,7 +90,7 @@ class AmphibiousSimulation(Simulation):
         if not self.options.headless:
             self.interface.init_camera(
                 target_identity=(
-                    self.models.animat.identity()
+                    self.animat().identity()
                     if not self.options.free_camera
                     else None
                 ),
@@ -100,12 +98,12 @@ class AmphibiousSimulation(Simulation):
                 rotating_camera=self.options.rotating_camera,
                 top_camera=self.options.top_camera
             )
-            self.interface.init_debug(animat_options=self.models.animat.options)
+            self.interface.init_debug(animat_options=self.animat().options)
 
         if self.options.record and not self.options.headless:
             skips = int(2e-2/simulation_options.timestep)  # 50 fps
             self.interface.init_video(
-                target_identity=self.models.animat.identity(),
+                target_identity=self.animat().identity(),
                 simulation_options=simulation_options,
                 fps=1./(skips*simulation_options.timestep),
                 pitch=simulation_options.video_pitch,
@@ -124,15 +122,15 @@ class AmphibiousSimulation(Simulation):
 
     def animat(self):
         """Salamander animat"""
-        return self.models.animat
+        return self.models[0]
 
     def pre_step(self, sim_step):
         """New step"""
         play = True
         # if not(sim_step % 10000) and sim_step > 0:
         #     pybullet.restoreState(self.simulation_state)
-        #     state = self.models.animat.data.state
-        #     state.array[self.models.animat.data.iteration] = (
+        #     state = self.animat().data.state
+        #     state.array[self.animat().data.iteration] = (
         #         state.default_initial_state()
         #     )
         if not self.options.headless:
@@ -151,7 +149,7 @@ class AmphibiousSimulation(Simulation):
         if not self.options.headless:
 
             # Drive changes depending on simulation time
-            if self.models.animat.options.transition:
+            if self.animat().options.transition:
                 time_based_drive(
                     sim_step,
                     self.options.n_iterations(),
@@ -159,21 +157,22 @@ class AmphibiousSimulation(Simulation):
                 )
 
             # GPS based drive
-            # gps_based_drive(sim_step, self.models.animat, self.interface)
+            # gps_based_drive(sim_step, self.animat, self.interface)
 
             # Update interface
             self.animat_interface()
 
         # Animat sensors
-        self.models.animat.sensors.update(sim_step)
+        self.animat().sensors.update(sim_step)
 
         # Physics step
         if sim_step < self.options.n_iterations()-1:
             # Swimming
-            swimming_step(sim_step, self.models.animat)
+            swimming_step(sim_step, self.animat())
 
-            # Control animat
-            self.models.animat.controller.control()
+            # Update animat controller
+            if self.animat().controller is not None:
+                self.animat().controller.control_step()
 
     def post_step(self, sim_step):
         """Post step"""
@@ -205,35 +204,38 @@ class AmphibiousSimulation(Simulation):
             self.interface.camera.set_zoom(
                 self.interface.user_params.zoom().value
             )
+
         # Body offset
         if self.interface.user_params.body_offset().changed:
-            self.models.animat.options.control.network.joints.set_body_offsets(
+            self.animat().options.control.network.joints.set_body_offsets(
                 self.interface.user_params.body_offset().value
             )
-            self.models.animat.controller.network.update(
-                self.models.animat.options
+            self.animat().controller.update(
+                self.animat().options
             )
             self.interface.user_params.body_offset().changed = False
+
         # Drives
         if self.interface.user_params.drive_speed().changed:
-            self.models.animat.options.control.drives.forward = (
+            self.animat().options.control.drives.forward = (
                 self.interface.user_params.drive_speed().value
             )
-            self.models.animat.controller.network.update(
-                self.models.animat.options
+            self.animat().controller.update(
+                self.animat().options
             )
-            # if self.models.animat.options.control.drives.forward > 3:
+            # if self.animat().options.control.drives.forward > 3:
             #     pybullet.setGravity(0, 0, -0.01*self.options.units.gravity)
             # else:
             #     pybullet.setGravity(0, 0, -9.81*self.options.units.gravity)
             self.interface.user_params.drive_speed().changed = False
+
         # Turning
         if self.interface.user_params.drive_turn().changed:
-            self.models.animat.options.control.drives.turning = (
+            self.animat().options.control.drives.turning = (
                 self.interface.user_params.drive_turn().value
             )
-            self.models.animat.controller.network.update(
-                self.models.animat.options
+            self.animat().controller.update(
+                self.animat().options
             )
             self.interface.user_params.drive_turn().changed = False
 

@@ -151,8 +151,8 @@ class AmphibiousOscillatorArray(OscillatorArray):
 
         """
         freqs, _, amplitudes = self.set_options(options)
-        self.freqs[:] = freqs
-        self.amplitudes_desired[:] = amplitudes
+        self.freqs()[:] = freqs
+        self.amplitudes_desired()[:] = amplitudes
 
 
 class AmphibiousOscillatorConnectivityArray(ConnectivityArray):
@@ -552,7 +552,7 @@ class AmphibiousJointsArray(JointsArray):
 
         """
         offsets, _ = self.set_options(options)
-        self.offsets[:] = offsets
+        self.offsets()[:] = offsets
 
 
 class AmphibiousContactsArray(ContactsArray):

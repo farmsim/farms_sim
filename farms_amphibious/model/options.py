@@ -53,12 +53,7 @@ class AmphibiousMorphologyOptions(Options):
         self.density = options.pop("density", 1000.0)
         self.n_joints_body = options.pop("n_joints_body", 11)
         self.n_dof_legs = options.pop("n_dof_legs", 4)
-        self.legs_parents = options.pop("legs_parents", [0, 4])
-        assert len(self.legs_parents) == self.n_dof_legs//2
         self.n_legs = options.pop("n_legs", 4)
-        self.leg_offset = options.pop("leg_offset", 0.03)
-        self.leg_length = options.pop("leg_length", 0.06)
-        self.leg_radius = options.pop("leg_radius", 0.015)
 
     def n_joints(self):
         """Number of joints"""
