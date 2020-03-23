@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Run salamander simulation with bullet"""
 
-import time
+import pstats
+import cProfile
 import numpy as np
-import matplotlib.pyplot as plt
 from farms_models.utils import get_sdf_path
 from farms_bullet.simulation.options import SimulationOptions
 from farms_bullet.model.model import (
@@ -21,7 +21,7 @@ from farms_amphibious.simulation.simulation import AmphibiousSimulation
 from farms_amphibious.network.network import AmphibiousNetworkODE
 
 
-def get_animat_options():
+def get_animat_options(swimming=False):
     """Get animat options - Should load a config file in the future"""
     scale = 1
     animat_options = AmphibiousOptions(
@@ -31,16 +31,18 @@ def get_animat_options():
     )
     # animat_options.control.drives.forward = 4
 
-    # Walking
-    animat_options.spawn.position = [0, 0, scale*0.1]
-    animat_options.spawn.orientation = [0, 0, 0]
-    animat_options.physics.viscous = True
-    animat_options.physics.buoyancy = True
-    animat_options.physics.water_surface = True
+    if swimming:
+        # Swiming
+        animat_options.spawn.position = [-10, 0, 0]
+        animat_options.spawn.orientation = [0, 0, np.pi]
+    else:
+        # Walking
+        animat_options.spawn.position = [0, 0, scale*0.1]
+        animat_options.spawn.orientation = [0, 0, 0]
+        animat_options.physics.viscous = True
+        animat_options.physics.buoyancy = True
+        animat_options.physics.water_surface = True
 
-    # Swiming
-    # animat_options.spawn.position = [-10, 0, 0]
-    # animat_options.spawn.orientation = [0, 0, np.pi]
 
     return animat_options
 
@@ -115,7 +117,7 @@ def simulation(sdf, use_controller=False, water_arena=False):
 
     # Get options
     show_progress = True
-    animat_options = get_animat_options()
+    animat_options = get_animat_options(swimming=False)
     simulation_options = get_simulation_options()
 
     # Creating arena
@@ -198,49 +200,20 @@ def simulation(sdf, use_controller=False, water_arena=False):
             sim.models.animat.data.sensors.hydrodynamics.array
         )
 
+    # Terminate simulation
     sim.end()
 
-    # Show results
-    plt.show()
 
-
-def main():
-    """Main"""
-    # Model sdf
-    sdf = get_sdf_path(name='salamander', version='v1')
-    # sdf = get_sdf_path(name='pleurobot', version='0')
-    # sdf = get_sdf_path(name='salamandra_robotica', version='2')
-    pylog.info('Model SDF: {}'.format(sdf))
-
-    # Controller
-    use_controller = True
-    # use_controller = False
-
-    # Simulation
-    simulation(sdf=sdf, use_controller=use_controller)
-
-
-def profile():
+def profile(function, **kwargs):
     """Profile with cProfile"""
-    import cProfile
-    import pstats
-    cProfile.run("main()", "simulation.profile")
-    pstat = pstats.Stats("simulation.profile")
-    pstat.sort_stats('time').print_stats(30)
-    pstat.sort_stats('cumtime').print_stats(30)
-
-
-def pycall():
-    """Profile with pycallgraph"""
-    from pycallgraph import PyCallGraph
-    from pycallgraph.output import GraphvizOutput
-    with PyCallGraph(output=GraphvizOutput()):
-        main()
-
-
-if __name__ == '__main__':
-    TIC = time.time()
-    # main()
-    profile()
-    # pycall()
-    pylog.info("Total simulation time: {} [s]".format(time.time() - TIC))
+    n_time = kwargs.pop('pstat_n_time', 30)
+    n_cumtime = kwargs.pop('pstat_n_cumtime', 30)
+    cProfile.runctx(
+        statement='function(**kwargs)',
+        globals={},
+        locals={'function': function, 'kwargs': kwargs},
+        filename='simulation.profile'
+    )
+    pstat = pstats.Stats('simulation.profile')
+    pstat.sort_stats('time').print_stats(n_time)
+    pstat.sort_stats('cumtime').print_stats(n_cumtime)

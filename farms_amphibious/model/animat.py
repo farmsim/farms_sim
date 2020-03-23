@@ -267,8 +267,11 @@ class Amphibious(Animat):
     def set_body_properties(self):
         """Set body properties"""
         # Masses
-        for i in range(self.options.morphology.n_links()):
+        n_links = pybullet.getNumJoints(self.identity())+1
+        self.masses = np.zeros(n_links)
+        for i in range(n_links):
             self.masses[i] = pybullet.getDynamicsInfo(self.identity(), i-1)[0]
+        pylog.debug('Body mass: {} [kg]'.format(np.sum(self.masses)))
         # Deactivate collisions
         links_no_collisions = [
             "link_body_{}".format(body_i)
