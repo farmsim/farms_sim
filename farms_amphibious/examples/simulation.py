@@ -112,7 +112,7 @@ def get_water_arena(water_surface):
     ])
 
 
-def simulation(sdf, use_controller=False, water_arena=False):
+def simulation(sdf, **kwargs):
     """Siulation"""
 
     # Get options
@@ -121,7 +121,7 @@ def simulation(sdf, use_controller=False, water_arena=False):
     simulation_options = get_simulation_options()
 
     # Creating arena
-    if water_arena:
+    if kwargs.pop('water_arena', False):
         animat_options.physics.water_surface = -0.1
         arena = get_water_arena(
             water_surface=animat_options.physics.water_surface
@@ -154,7 +154,7 @@ def simulation(sdf, use_controller=False, water_arena=False):
         animat_options=animat_options,
         animat_data=animat_data,
         timestep=simulation_options.timestep
-    )  if use_controller else None
+    ) if kwargs.pop('use_controller', False) else None
     # AmphibiousKinematics(animat_options, animat_data, timestep),
 
     # Creating animat
