@@ -4,7 +4,12 @@
 import time
 import matplotlib.pyplot as plt
 from farms_models.utils import get_sdf_path
-from farms_amphibious.examples.simulation import simulation, profile
+from farms_amphibious.examples.simulation import (
+    simulation,
+    profile,
+    get_animat_options,
+    get_simulation_options,
+)
 import farms_pylog as pylog
 
 
@@ -12,9 +17,13 @@ def main():
     """Main"""
     sdf = get_sdf_path(name='salamander', version='v1')
     pylog.info('Model SDF: {}'.format(sdf))
+    animat_options = get_animat_options(swimming=False)
+    simulation_options = get_simulation_options()
     profile(
         function=simulation,
         sdf=sdf,
+        animat_options=animat_options,
+        simulation_options=simulation_options,
         use_controller=True,
         water_arena=False
     )
