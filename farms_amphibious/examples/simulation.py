@@ -117,8 +117,14 @@ def simulation(sdf, **kwargs):
 
     # Get options
     show_progress = True
-    animat_options = get_animat_options(swimming=False)
-    simulation_options = get_simulation_options()
+    animat_options = kwargs.pop(
+        'animat_options',
+        get_animat_options(swimming=False)
+    )
+    simulation_options = kwargs.pop(
+        'simulation_options',
+        get_simulation_options()
+    )
 
     # Creating arena
     if kwargs.pop('water_arena', False):
@@ -174,6 +180,7 @@ def simulation(sdf, **kwargs):
         animat=animat,
         arena=arena,
     )
+    assert not kwargs
 
     # Run simulation
     pylog.info("Running simulation")
