@@ -82,7 +82,7 @@ class Amphibious(Animat):
             self.convention.leglink2name(
                 leg_i=leg_i,
                 side_i=side_i,
-                joint_i=3
+                joint_i=options.morphology.n_dof_legs-1
             )
             for leg_i in range(options.morphology.n_legs//2)
             for side_i in range(2)
@@ -156,18 +156,20 @@ class Amphibious(Animat):
             name: i
             for i, name in enumerate(joints_names)
         }
-        self.joints_order = [
-            joints_names_dict.get(name, None)
-            for name in [
-                self.convention.bodyjoint2name(i)
-                for i in range(self.options.morphology.n_joints_body)
-            ] + [
-                self.convention.legjoint2name(leg_i, side_i, joint_i)
-                for leg_i in range(self.options.morphology.n_legs//2)
-                for side_i in range(2)
-                for joint_i in range(self.options.morphology.n_dof_legs)
+        pylog.debug('Joints found:\n{}'.format(joints_names))
+        if self.joints_order is None:
+            self.joints_order = [
+                joints_names_dict.get(name, None)
+                for name in [
+                    self.convention.bodyjoint2name(i)
+                    for i in range(self.options.morphology.n_joints_body)
+                ] + [
+                    self.convention.legjoint2name(leg_i, side_i, joint_i)
+                    for leg_i in range(self.options.morphology.n_legs//2)
+                    for side_i in range(2)
+                    for joint_i in range(self.options.morphology.n_dof_legs)
+                ]
             ]
-        ]
         # Set names
         self.links['link_body_{}'.format(0)] = -1
         for i in range(self.options.morphology.n_links_body()-1):
@@ -217,6 +219,8 @@ class Amphibious(Animat):
             )
         })
         # Joints
+        print(self._identity)
+        print(self.joints_order)
         self.sensors.add({
             "joints": JointsStatesSensor(
                 self.data.sensors.proprioception.array,

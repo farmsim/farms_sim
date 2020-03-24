@@ -19,6 +19,7 @@ from farms_amphibious.model.data import (
 )
 from farms_amphibious.simulation.simulation import AmphibiousSimulation
 from farms_amphibious.network.network import AmphibiousNetworkODE
+from farms_amphibious.network.kinematics import AmphibiousKinematics
 
 
 def get_animat_options(swimming=False):
@@ -139,10 +140,6 @@ def simulation(sdf, **kwargs):
         animat_options.physics.resistive = False
         arena = get_flat_arena()
 
-    # Animat options
-    animat_options.morphology.n_dof_legs = 4
-    animat_options.morphology.n_legs = 4
-
     # Animat sensors
 
     # Animat data
@@ -156,12 +153,21 @@ def simulation(sdf, **kwargs):
     )
 
     # Animat controller
-    animat_controller = AmphibiousNetworkODE(
-        animat_options=animat_options,
-        animat_data=animat_data,
-        timestep=simulation_options.timestep
-    ) if kwargs.pop('use_controller', False) else None
-    # AmphibiousKinematics(animat_options, animat_data, timestep),
+    if kwargs.pop('use_controller', False):
+        if animat_options.control.kinematics_file:
+            animat_controller = AmphibiousKinematics(
+                animat_options=animat_options,
+                animat_data=animat_data,
+                timestep=simulation_options.timestep
+            )
+        else:
+            animat_controller = AmphibiousNetworkODE(
+                animat_options=animat_options,
+                animat_data=animat_data,
+                timestep=simulation_options.timestep
+            )
+    else:
+        animat_controller = None
 
     # Creating animat
     animat = Amphibious(
@@ -174,13 +180,13 @@ def simulation(sdf, **kwargs):
     )
 
     # Setup simulation
+    assert not kwargs
     pylog.info("Creating simulation")
     sim = AmphibiousSimulation(
         simulation_options=simulation_options,
         animat=animat,
         arena=arena,
     )
-    assert not kwargs
 
     # Run simulation
     pylog.info("Running simulation")

@@ -18,6 +18,9 @@ def main():
     sdf = get_sdf_path(name='salamander', version='v1')
     pylog.info('Model SDF: {}'.format(sdf))
     animat_options = get_animat_options(swimming=False)
+    animat_options.morphology.n_legs = 4
+    animat_options.morphology.n_dof_legs = 4
+    animat_options.morphology.n_joints_body = 11
     simulation_options = get_simulation_options()
     profile(
         function=simulation,
