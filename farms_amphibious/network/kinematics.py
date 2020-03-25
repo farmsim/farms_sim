@@ -2,13 +2,18 @@
 
 import numpy as np
 from scipy.interpolate import interp1d
+from farms_bullet.model.control import ModelController
 
 
-class AmphibiousKinematics:
+class AmphibiousKinematics(ModelController):
     """Amphibious kinematics"""
 
     def __init__(self, animat_options, animat_data, timestep):
-        super(AmphibiousKinematics, self).__init__()
+        super(AmphibiousKinematics, self).__init__(
+            joints=np.zeros(animat_options.morphology.n_joints()),
+            use_position=True,
+            use_torque=False,
+        )
         self.kinematics = np.loadtxt(animat_options.control.kinematics_file)
         self.kinematics = self.kinematics[:, 3:]
         self.kinematics = ((self.kinematics + np.pi) % (2*np.pi)) - np.pi
@@ -74,3 +79,11 @@ class AmphibiousKinematics:
 
     def update(self, options):
         """Update drives"""
+
+    def positions(self):
+        """Postions"""
+        return self.get_position_output()
+
+    def velocities(self):
+        """Postions"""
+        return self.get_velocity_output()
