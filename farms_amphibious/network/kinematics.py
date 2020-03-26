@@ -38,14 +38,10 @@ class AmphibiousKinematics(ModelController):
         self.animat_options = animat_options
         self.animat_data = animat_data
         self._timestep = timestep
-        self._time = 0
 
     def control_step(self):
         """Control step"""
-        self._time += self._timestep
         self.animat_data.iteration += 1
-        # if self.animat_data.iteration + 1 > np.shape(self.kinematics)[0]:
-        #     self.animat_data.iteration = 0
 
     def get_outputs(self):
         """Outputs"""

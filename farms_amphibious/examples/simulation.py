@@ -158,7 +158,9 @@ def simulation(animat_sdf, arena_sdf, **kwargs):
             animat_controller = AmphibiousKinematics(
                 animat_options=animat_options,
                 animat_data=animat_data,
-                timestep=simulation_options.timestep
+                timestep=simulation_options.timestep,
+                n_iterations=simulation_options.n_iterations(),
+                sampling=kwargs.pop('sampling')
             )
         else:
             animat_controller = AmphibiousNetworkODE(
@@ -174,47 +176,6 @@ def simulation(animat_sdf, arena_sdf, **kwargs):
     links = kwargs.pop('links', None)
     joints = kwargs.pop('joints', None)
     links_no_collisions = kwargs.pop('links_no_collisions', None)
-    if kwargs.pop('use_amphibious', True):
-        convention = AmphibiousConvention(animat_options)
-        feet = [
-            convention.leglink2name(
-                leg_i=leg_i,
-                side_i=side_i,
-                joint_i=animat_options.morphology.n_dof_legs-1
-            )
-            for leg_i in range(animat_options.morphology.n_legs//2)
-            for side_i in range(2)
-        ]
-        if links is None:
-            links = [
-                convention.bodylink2name(i)
-                for i in range(animat_options.morphology.n_links_body())
-            ] + [
-                convention.leglink2name(leg_i, side_i, link_i)
-                for leg_i in range(animat_options.morphology.n_legs//2)
-                for side_i in range(2)
-                for link_i in range(animat_options.morphology.n_dof_legs)
-            ]
-        if joints is None:
-            joints = [
-                convention.bodyjoint2name(i)
-                for i in range(animat_options.morphology.n_joints_body)
-            ] + [
-                convention.legjoint2name(leg_i, side_i, joint_i)
-                for leg_i in range(animat_options.morphology.n_legs//2)
-                for side_i in range(2)
-                for joint_i in range(animat_options.morphology.n_dof_legs)
-            ]
-        if links_no_collisions is None:
-            links_no_collisions = [
-                convention.bodylink2name(body_i)
-                for body_i in range(0)
-            ] + [
-                convention.leglink2name(leg_i, side_i, joint_i)
-                for leg_i in range(animat_options.morphology.n_legs//2)
-                for side_i in range(2)
-                for joint_i in range(animat_options.morphology.n_dof_legs-1)
-            ]
     animat = Amphibious(
         sdf=animat_sdf,
         options=animat_options,
@@ -281,12 +242,54 @@ def amphibious_simulation(animat_sdf, animat_options, **kwargs):
     # Simulation
     simulation_options = get_simulation_options()
 
+    convention = AmphibiousConvention(animat_options)
+    feet = kwargs.pop('feet', [
+        convention.leglink2name(
+            leg_i=leg_i,
+            side_i=side_i,
+            joint_i=animat_options.morphology.n_dof_legs-1
+        )
+        for leg_i in range(animat_options.morphology.n_legs//2)
+        for side_i in range(2)
+    ])
+    links = kwargs.pop('links', [
+        convention.bodylink2name(i)
+        for i in range(animat_options.morphology.n_links_body())
+    ] + [
+        convention.leglink2name(leg_i, side_i, link_i)
+        for leg_i in range(animat_options.morphology.n_legs//2)
+        for side_i in range(2)
+        for link_i in range(animat_options.morphology.n_dof_legs)
+    ])
+    joints = kwargs.pop('joints', [
+        convention.bodyjoint2name(i)
+        for i in range(animat_options.morphology.n_joints_body)
+    ] + [
+        convention.legjoint2name(leg_i, side_i, joint_i)
+        for leg_i in range(animat_options.morphology.n_legs//2)
+        for side_i in range(2)
+        for joint_i in range(animat_options.morphology.n_dof_legs)
+    ])
+    links_no_collisions = kwargs.pop('links_no_collisions', [
+        convention.bodylink2name(body_i)
+        for body_i in range(0)
+    ] + [
+        convention.leglink2name(leg_i, side_i, joint_i)
+        for leg_i in range(animat_options.morphology.n_legs//2)
+        for side_i in range(2)
+        for joint_i in range(animat_options.morphology.n_dof_legs-1)
+    ])
+
     # Simulation
     simulation(
         animat_sdf=animat_sdf,
         animat_options=animat_options,
         arena_sdf=arena_sdf,
         simulation_options=simulation_options,
+        links=links,
+        joints=joints,
+        feet=feet,
+        links_no_collisions=links_no_collisions,
         **kwargs
     )
 
