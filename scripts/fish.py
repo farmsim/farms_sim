@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from farms_models.utils import get_sdf_path, model_kinematics_files
 from farms_amphibious.model.options import AmphibiousOptions
-from farms_amphibious.examples.simulation import (
+from farms_amphibious.experiment.simulation import (
     simulation,
     profile,
     # get_animat_options,

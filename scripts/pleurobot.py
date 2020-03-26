@@ -4,7 +4,7 @@
 import time
 import matplotlib.pyplot as plt
 from farms_models.utils import get_sdf_path
-from farms_amphibious.examples.simulation import (
+from farms_amphibious.experiment.simulation import (
     simulation,
     amphibious_options,
     profile,
