@@ -46,7 +46,7 @@ def main():
     # get_animat_options(swimming=False)
     simulation_options = get_simulation_options()
     simulation_options.gravity = [0, 0, 0]
-    simulation_options.timestep = 1e-3
+    # simulation_options.timestep = 1e-3
     simulation_options.units.meters = 1
     simulation_options.units.seconds = 1e3
     simulation_options.units.kilograms = 1
@@ -67,7 +67,7 @@ def main():
     # )
 
     n_sample = 100
-    sampling_timestep = 1e-2
+    sampling_timestep = 1.2e-2
     for kinematics_file in model_kinematics_files(fish_name, fish_version):
 
         # Kinematics data handling
@@ -75,7 +75,7 @@ def main():
         animat_options.control.kinematics_file = kinematics_file
         kinematics = np.loadtxt(animat_options.control.kinematics_file)
         len_kinematics = np.shape(kinematics)[0]
-        simulation_options.duration = len_kinematics*sampling_timestep
+        simulation_options.duration = (len_kinematics-1)*sampling_timestep
         pose = kinematics[:, :3]
         position = np.ones(3)
         position[:2] = pose[0, :2]
@@ -106,6 +106,7 @@ def main():
             animat_options=animat_options,
             simulation_options=simulation_options,
             use_controller=True,
+            sampling=sampling_timestep,
             arena_sdf=arena_sdf,
             links=['link_body_0']+[
                 'body_{}_t_link'.format(i+1)

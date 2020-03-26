@@ -8,7 +8,7 @@ from farms_bullet.model.control import ModelController
 class AmphibiousKinematics(ModelController):
     """Amphibious kinematics"""
 
-    def __init__(self, animat_options, animat_data, timestep):
+    def __init__(self, animat_options, animat_data, timestep, n_iterations, sampling):
         super(AmphibiousKinematics, self).__init__(
             joints=np.zeros(animat_options.morphology.n_joints()),
             use_position=True,
@@ -17,10 +17,19 @@ class AmphibiousKinematics(ModelController):
         self.kinematics = np.loadtxt(animat_options.control.kinematics_file)
         self.kinematics = self.kinematics[:, 3:]
         self.kinematics = ((self.kinematics + np.pi) % (2*np.pi)) - np.pi
-        len_kinematics = len(self.kinematics)
-        n_iterations = (len_kinematics-1)*10+1
-        interp_x = np.arange(0, n_iterations, 10)
-        interp_xn = np.arange(n_iterations)
+        data_duration = sampling*self.kinematics.shape[0]
+        simulation_duration = timestep*n_iterations
+        interp_x = np.arange(0, data_duration, sampling)
+        interp_xn = np.arange(0, simulation_duration, timestep)
+        assert data_duration >= simulation_duration, 'Data {} < {} Sim'.format(
+            data_duration,
+            simulation_duration
+        )
+        assert len(interp_x) == self.kinematics.shape[0]
+        assert interp_x[-1] >= interp_xn[-1], 'Data[-1] {} < {} Sim[-1]'.format(
+            interp_x[-1],
+            interp_xn[-1]
+        )
         self.kinematics = interp1d(
             interp_x,
             self.kinematics,
@@ -35,8 +44,8 @@ class AmphibiousKinematics(ModelController):
         """Control step"""
         self._time += self._timestep
         self.animat_data.iteration += 1
-        if self.animat_data.iteration + 1 > np.shape(self.kinematics)[0]:
-            self.animat_data.iteration = 0
+        # if self.animat_data.iteration + 1 > np.shape(self.kinematics)[0]:
+        #     self.animat_data.iteration = 0
 
     def get_outputs(self):
         """Outputs"""
