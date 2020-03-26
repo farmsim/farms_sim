@@ -5,7 +5,8 @@ import time
 import matplotlib.pyplot as plt
 from farms_models.utils import get_sdf_path
 from farms_amphibious.examples.simulation import (
-    amphibious_simulation,
+    simulation,
+    amphibious_options,
     profile,
     get_animat_options,
 )
@@ -23,12 +24,26 @@ def main():
     animat_options.morphology.n_dof_legs = 4
     animat_options.morphology.n_joints_body = 11
 
+    (
+        simulation_options,
+        arena_sdf,
+        links,
+        joints,
+        feet,
+        links_no_collisions
+    ) = amphibious_options(animat_options, use_water_arena=False)
+
     # Simulation
     profile(
-        function=amphibious_simulation,
+        function=simulation,
         animat_sdf=sdf,
         animat_options=animat_options,
-        use_water_arena=False,
+        simulation_options=simulation_options,
+        arena_sdf=arena_sdf,
+        links=links,
+        joints=joints,
+        feet=feet,
+        links_no_collisions=links_no_collisions,
         use_controller=True,
     )
     plt.show()

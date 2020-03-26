@@ -126,11 +126,9 @@ def set_swimming_options(animat_options, water_surface):
     animat_options.physics.water_surface = water_surface
 
 
-def simulation(animat_sdf, arena_sdf, **kwargs):
-    """Simulation"""
-
+def simulation_setup(animat_sdf, arena_sdf, **kwargs):
+    """Simulation setup"""
     # Get options
-    show_progress = True
     animat_options = kwargs.pop(
         'animat_options',
         get_animat_options(swimming=False)
@@ -197,6 +195,33 @@ def simulation(animat_sdf, arena_sdf, **kwargs):
         animat=animat,
         arena=arena_sdf,
     )
+    return sim
+
+
+def simulation_post(sim):
+    """Simulation post-processing"""
+    # Analyse results
+    pylog.info('Analysing simulation')
+    sim.postprocess(
+        iteration=sim.iteration,
+        plot=sim.options.plot,
+        log_path=sim.options.log_path,
+        log_extension=sim.options.log_extension,
+        record=sim.options.record and not sim.options.headless
+    )
+    if sim.options.log_path:
+        np.save(
+            sim.options.log_path+'/hydrodynamics.npy',
+            sim.animat().data.sensors.hydrodynamics.array
+        )
+
+
+def simulation(animat_sdf, arena_sdf, show_progress=True, **kwargs):
+    """Simulation"""
+
+    # Instatiate simulation
+    pylog.info('Creating simulation')
+    sim = simulation_setup(animat_sdf, arena_sdf, **kwargs)
 
     # Run simulation
     pylog.info('Running simulation')
@@ -208,30 +233,19 @@ def simulation(animat_sdf, arena_sdf, **kwargs):
         # ))
         assert iteration >= 0
 
-    # Analyse results
-    pylog.info('Analysing simulation')
-    sim.postprocess(
-        iteration=sim.iteration,
-        plot=simulation_options.plot,
-        log_path=simulation_options.log_path,
-        log_extension=simulation_options.log_extension,
-        record=sim.options.record and not sim.options.headless
-    )
-    if simulation_options.log_path:
-        np.save(
-            simulation_options.log_path+'/hydrodynamics.npy',
-            sim.animat().data.sensors.hydrodynamics.array
-        )
+    pylog.info('Simulation post-processing')
+    simulation_post(sim)
 
     # Terminate simulation
+    pylog.info('Terminating simulation')
     sim.end()
+    return sim
 
 
-def amphibious_simulation(animat_sdf, animat_options, **kwargs):
+def amphibious_options(animat_options, use_water_arena=True):
     """Amphibious simulation"""
 
     # Arena
-    use_water_arena = kwargs.pop('use_water_arena', True)
     if use_water_arena:
         arena_sdf = get_water_arena(water_surface=-0.1)
         set_swimming_options(animat_options, water_surface=-0.1)
@@ -243,16 +257,7 @@ def amphibious_simulation(animat_sdf, animat_options, **kwargs):
     simulation_options = get_simulation_options()
 
     convention = AmphibiousConvention(animat_options)
-    feet = kwargs.pop('feet', [
-        convention.leglink2name(
-            leg_i=leg_i,
-            side_i=side_i,
-            joint_i=animat_options.morphology.n_dof_legs-1
-        )
-        for leg_i in range(animat_options.morphology.n_legs//2)
-        for side_i in range(2)
-    ])
-    links = kwargs.pop('links', [
+    links = [
         convention.bodylink2name(i)
         for i in range(animat_options.morphology.n_links_body())
     ] + [
@@ -260,8 +265,8 @@ def amphibious_simulation(animat_sdf, animat_options, **kwargs):
         for leg_i in range(animat_options.morphology.n_legs//2)
         for side_i in range(2)
         for link_i in range(animat_options.morphology.n_dof_legs)
-    ])
-    joints = kwargs.pop('joints', [
+    ]
+    joints = [
         convention.bodyjoint2name(i)
         for i in range(animat_options.morphology.n_joints_body)
     ] + [
@@ -269,8 +274,17 @@ def amphibious_simulation(animat_sdf, animat_options, **kwargs):
         for leg_i in range(animat_options.morphology.n_legs//2)
         for side_i in range(2)
         for joint_i in range(animat_options.morphology.n_dof_legs)
-    ])
-    links_no_collisions = kwargs.pop('links_no_collisions', [
+    ]
+    feet = [
+        convention.leglink2name(
+            leg_i=leg_i,
+            side_i=side_i,
+            joint_i=animat_options.morphology.n_dof_legs-1
+        )
+        for leg_i in range(animat_options.morphology.n_legs//2)
+        for side_i in range(2)
+    ]
+    links_no_collisions = [
         convention.bodylink2name(body_i)
         for body_i in range(0)
     ] + [
@@ -278,19 +292,14 @@ def amphibious_simulation(animat_sdf, animat_options, **kwargs):
         for leg_i in range(animat_options.morphology.n_legs//2)
         for side_i in range(2)
         for joint_i in range(animat_options.morphology.n_dof_legs-1)
-    ])
-
-    # Simulation
-    simulation(
-        animat_sdf=animat_sdf,
-        animat_options=animat_options,
-        arena_sdf=arena_sdf,
-        simulation_options=simulation_options,
-        links=links,
-        joints=joints,
-        feet=feet,
-        links_no_collisions=links_no_collisions,
-        **kwargs
+    ]
+    return (
+        simulation_options,
+        arena_sdf,
+        links,
+        joints,
+        feet,
+        links_no_collisions
     )
 
 
