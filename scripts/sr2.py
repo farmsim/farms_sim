@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run salamander simulation with bullet"""
+"""Run salamandra robotica II simulation with bullet"""
 
 import time
 import matplotlib.pyplot as plt

@@ -303,6 +303,79 @@ def amphibious_options(animat_options, use_water_arena=True):
     )
 
 
+def fish_options(kinematics_file, sampling_timestep):
+    """Fish options"""
+    pylog.info(kinematics_file)
+    kinematics = np.loadtxt(kinematics_file)
+
+    n_joints = kinematics.shape[1]-3
+    animat_options = AmphibiousOptions(
+        show_hydrodynamics=True,
+        n_legs=0,
+        n_dof_legs=0,
+        n_joints_body=n_joints,
+        viscous=False,
+        resistive=True,
+        resistive_coefficients=[
+            1e-1*np.array([-1e-4, -5e-1, -3e-1]),
+            1e-1*np.array([-1e-6, -1e-6, -1e-6])
+        ],
+        water_surface=False,
+    )
+
+    # Arena
+    arena_sdf = get_flat_arena()
+
+    # get_animat_options(swimming=False)
+    simulation_options = get_simulation_options()
+    simulation_options.gravity = [0, 0, 0]
+    # simulation_options.timestep = 1e-3
+    simulation_options.units.meters = 1
+    simulation_options.units.seconds = 1e3
+    simulation_options.units.kilograms = 1
+
+    # Camera options
+    simulation_options.video_yaw = 0
+    simulation_options.video_pitch = -30
+    simulation_options.video_distance = 1
+    # simulation_options.video_name = (
+    #     "transition_videos/swim2walk_y{}_p{}_d{}".format(
+    #         simulation_options.video_yaw,
+    #         simulation_options.video_pitch,
+    #         simulation_options.video_distance,
+    #     )
+    # )
+
+    # Kinematics data handling
+    n_sample = 100
+    animat_options.control.kinematics_file = kinematics_file
+    len_kinematics = np.shape(kinematics)[0]
+    simulation_options.duration = (len_kinematics-1)*sampling_timestep
+    pose = kinematics[:, :3]
+    position = np.ones(3)
+    position[:2] = pose[0, :2]
+    orientation = np.zeros(3)
+    orientation[2] = pose[0, 2]
+    velocity = np.zeros(3)
+    velocity[:2] = pose[n_sample, :2] - pose[0, :2]
+    velocity /= n_sample*sampling_timestep
+    kinematics = kinematics[:, 3:]
+    kinematics = ((kinematics + np.pi) % (2*np.pi)) - np.pi
+
+    # Animat options
+    animat_options.spawn.position = position
+    animat_options.spawn.orientation = orientation
+    animat_options.physics.buoyancy = False
+    animat_options.spawn.velocity_lin = velocity
+    animat_options.spawn.velocity_ang = [0, 0, 0]
+    animat_options.spawn.joints_positions = kinematics[0, :]
+    # np.shape(kinematics)[1] - 3
+    # animat_options.spawn.position = [-10, 0, 0]
+    # animat_options.spawn.orientation = [0, 0, np.pi]
+
+    return animat_options, arena_sdf, simulation_options
+
+
 def profile(function, **kwargs):
     """Profile with cProfile"""
     n_time = kwargs.pop('pstat_n_time', 30)
