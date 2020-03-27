@@ -28,6 +28,8 @@ def main():
     n_joints = 20
     animat_options = AmphibiousOptions(
         show_hydrodynamics=True,
+        n_legs=0,
+        n_dof_legs=0,
         n_joints_body=n_joints,
         viscous=False,
         resistive=True,
@@ -35,10 +37,8 @@ def main():
             1e-1*np.array([-1e-4, -5e-1, -3e-1]),
             1e-1*np.array([-1e-6, -1e-6, -1e-6])
         ],
-        water_surface=False
+        water_surface=False,
     )
-    animat_options.morphology.n_legs = 0
-    animat_options.morphology.n_dof_legs = 0
 
     # Arena
     arena_sdf = get_flat_arena()
@@ -94,7 +94,6 @@ def main():
         animat_options.spawn.velocity_lin = velocity
         animat_options.spawn.velocity_ang = [0, 0, 0]
         animat_options.spawn.joints_positions = kinematics[0, :]
-        animat_options.morphology.n_joints_body = n_joints
         # np.shape(kinematics)[1] - 3
         # animat_options.spawn.position = [-10, 0, 0]
         # animat_options.spawn.orientation = [0, 0, np.pi]

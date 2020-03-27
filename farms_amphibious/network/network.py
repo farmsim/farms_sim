@@ -45,6 +45,12 @@ class AmphibiousNetworkODE(ModelController):
             ]
             for side in range(2)
         ]
+        self.gain_amplitude = np.array(
+            self.animat_options.control.network.joints.gain_amplitude
+        )
+        self.gain_offset = np.array(
+            self.animat_options.control.network.joints.gain_offset
+        )
 
         # Adaptive timestep parameters
         self.solver = integrate.ode(f=self.ode)  # , jac=self.jac
@@ -123,7 +129,7 @@ class AmphibiousNetworkODE(ModelController):
 
     def get_doutputs_all(self):
         """Outputs velocity"""
-        return self.damplitudes*(
+        return self.damplitudes()*(
             1 + np.cos(self.phases)
         ) - self.amplitudes*np.sin(self.phases)*self.dphases
 
@@ -131,30 +137,42 @@ class AmphibiousNetworkODE(ModelController):
         """Position output"""
         outputs = self.get_outputs()
         return (
-            0.5*(outputs[self.groups[0]] - outputs[self.groups[1]])
-            + self.offsets()[self.animat_data.iteration]
+            self.gain_amplitude*0.5*(
+                outputs[self.groups[0]]
+                - outputs[self.groups[1]]
+            )
+            + self.gain_offset*self.offsets()[self.animat_data.iteration]
         )
 
     def get_position_output_all(self):
         """Position output"""
         outputs = self.get_outputs_all()
         return (
-            0.5*(outputs[:, self.groups[0]] - outputs[:, self.groups[1]])
-            + self.offsets
+            self.gain_amplitude*0.5*(
+                outputs[:, self.groups[0]]
+                - outputs[:, self.groups[1]]
+            )
+            + self.gain_offset*self.offsets
         )
 
     def get_velocity_output(self):
         """Position output"""
         outputs = self.get_doutputs()
         return (
-            0.5*(outputs[self.groups[0]] - outputs[self.groups[1]])
+            self.gain_amplitude*0.5*(
+                outputs[self.groups[0]]
+                - outputs[self.groups[1]]
+            )
             + self.doffsets()[self.animat_data.iteration]
         )
 
     def get_velocity_output_all(self):
         """Position output"""
         outputs = self.get_doutputs_all()
-        return 0.5*(outputs[:, self.groups[0]] - outputs[:, self.groups[1]])
+        return self.gain_amplitude*0.5*(
+            outputs[:, self.groups[0]]
+            - outputs[:, self.groups[1]]
+        )
 
     def get_torque_output(self):
         """Torque output"""

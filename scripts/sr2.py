@@ -19,10 +19,12 @@ def main():
     # Animat
     sdf = get_sdf_path(name='salamandra_robotica', version='2')
     pylog.info('Model SDF: {}'.format(sdf))
-    animat_options = get_animat_options(swimming=False)
-    animat_options.morphology.n_legs = 4
-    animat_options.morphology.n_dof_legs = 1
-    animat_options.morphology.n_joints_body = 9
+    animat_options = get_animat_options(
+        swimming=False,
+        n_legs=4,
+        n_dof_legs=1,
+        n_joints_body=9,
+    )
 
     (
         simulation_options,

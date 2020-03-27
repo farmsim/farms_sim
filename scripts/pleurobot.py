@@ -2,6 +2,7 @@
 """Run pleurobot simulation with bullet"""
 
 import time
+import numpy as np
 import matplotlib.pyplot as plt
 from farms_models.utils import get_sdf_path
 from farms_amphibious.experiment.simulation import (
@@ -19,10 +20,57 @@ def main():
     # Animat
     sdf = get_sdf_path(name='pleurobot', version='0')
     pylog.info('Model SDF: {}'.format(sdf))
-    animat_options = get_animat_options(swimming=False)
-    animat_options.morphology.n_legs = 4
-    animat_options.morphology.n_dof_legs = 4
-    animat_options.morphology.n_joints_body = 11
+
+    # Amplitudes
+    gain_amplitude = np.ones(13+4*4)  # np.ones(13+4*4)
+    gain_amplitude[6] = 0
+    gain_amplitude[12] = 0
+    for leg_i in range(2):
+        for side_i in range(2):
+            mirror = (-1 if side_i else 1)
+            gain_amplitude[13+2*leg_i*4+side_i*4+0] = mirror
+            gain_amplitude[13+2*leg_i*4+side_i*4+1] = mirror
+            gain_amplitude[13+2*leg_i*4+side_i*4+2] = -mirror
+            gain_amplitude[13+2*leg_i*4+side_i*4+3] = -mirror
+
+    # Offsets
+    gain_offset = np.ones(13+4*4)
+    gain_offset[6] = 0
+    gain_offset[12] = 0
+    for leg_i in range(2):
+        for side_i in range(2):
+            mirror = (1 if side_i else -1)
+            mirror_full = (1 if leg_i else -1)*(1 if side_i else -1)
+            gain_offset[13+2*leg_i*4+side_i*4+0] = mirror
+            gain_offset[13+2*leg_i*4+side_i*4+1] = mirror
+            gain_offset[13+2*leg_i*4+side_i*4+2] = mirror_full
+            gain_offset[13+2*leg_i*4+side_i*4+3] = mirror_full
+
+    # Animat options
+    animat_options = get_animat_options(
+        swimming=False,
+        n_legs=4,
+        n_dof_legs=4,
+        n_joints_body=13,
+        body_head_amplitude=0,
+        body_tail_amplitude=0,
+        body_stand_amplitude=0.3,
+        # body_stand_shift=np.pi/4,
+        # legs_amplitude=[0.8, np.pi/32, np.pi/4, np.pi/8],
+        # legs_offsets_walking=[0, np.pi/32, 0, np.pi/8],
+        # legs_offsets_swimming=[-2*np.pi/5, 0, 0, 0],
+        body_stand_shift=np.pi/4,
+        legs_amplitude=[np.pi/8, np.pi/16, np.pi/16, np.pi/8],
+        legs_offsets_walking=[0, -np.pi/16, -np.pi/16, np.pi/4],
+        legs_offsets_swimming=[2*np.pi/5, 0, 0, np.pi/2],
+        gain_amplitude=gain_amplitude,
+        gain_offset=gain_offset,
+        w_legs2body=3e1,
+        w_sens_contact_i=0,
+        w_sens_contact_e=0,
+        w_sens_hyfro_freq=0,
+        w_sens_hydro_amp=0,
+    )
 
     (
         simulation_options, arena_sdf, _, _, _, _
@@ -65,7 +113,11 @@ def main():
         'ForearmRight_Elbow',
     ]
     feet = ['link{}'.format(i+1) for i in [14, 18, 22, 26]]
-    links_no_collisions = [link for link in links if link not in feet]
+    links_no_collisions = [
+        link
+        for link in links
+        if link not in feet+['Head', 'link_tail']
+    ]
 
     # Simulation
     profile(
@@ -78,7 +130,7 @@ def main():
         joints=joints,
         feet=feet,
         links_no_collisions=links_no_collisions,
-        use_controller=False,
+        use_controller=True,
     )
     plt.show()
 

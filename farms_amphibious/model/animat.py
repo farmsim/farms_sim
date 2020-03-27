@@ -126,9 +126,10 @@ class Amphibious(Animat):
             for i in range(self.options.morphology.n_links_body())
         ]
 
-    def spawn_sdf(self, verbose=True):
+    def spawn_sdf(self, verbose=False):
         """Spawn sdf"""
-        pylog.debug(self.sdf)
+        if verbose:
+            pylog.debug(self.sdf)
         self._identity = pybullet.loadSDF(
             self.sdf,
             useMaximalCoordinates=0,
@@ -222,14 +223,15 @@ class Amphibious(Animat):
                 )
             })
 
-    def set_body_properties(self):
+    def set_body_properties(self, verbose=False):
         """Set body properties"""
         # Masses
         n_links = pybullet.getNumJoints(self.identity())+1
         self.masses = np.zeros(n_links)
         for i in range(n_links):
             self.masses[i] = pybullet.getDynamicsInfo(self.identity(), i-1)[0]
-        pylog.debug('Body mass: {} [kg]'.format(np.sum(self.masses)))
+        if verbose:
+            pylog.debug('Body mass: {} [kg]'.format(np.sum(self.masses)))
         # Deactivate collisions
         if self.links_no_collisions is not None:
             self.set_collisions(self.links_no_collisions, group=0, mask=0)
@@ -251,7 +253,7 @@ class Amphibious(Animat):
         if self.feet is not None:
             self.set_links_dynamics(
                 self.feet,
-                lateralFriction=0.7,
+                lateralFriction=0.9,
                 spinningFriction=small,
                 rollingFriction=small,
                 # contactStiffness=1e3,
