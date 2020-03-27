@@ -229,102 +229,105 @@ class AmphibiousOscillatorConnectivityArray(ConnectivityArray):
                     convention.legosc2index(**_options, joint_i=0, side=1),
                     legs_amplitude_internal, np.pi
                 ])
-                # 0 - 1
-                connectivity.append([
-                    convention.legosc2index(**_options, joint_i=1, side=0),
-                    convention.legosc2index(**_options, joint_i=0, side=0),
-                    legs_amplitude_internal, 0.5*np.pi
-                ])
-                connectivity.append([
-                    convention.legosc2index(**_options, joint_i=0, side=0),
-                    convention.legosc2index(**_options, joint_i=1, side=0),
-                    legs_amplitude_internal, -0.5*np.pi
-                ])
-                connectivity.append([
-                    convention.legosc2index(**_options, joint_i=1, side=1),
-                    convention.legosc2index(**_options, joint_i=0, side=1),
-                    legs_amplitude_internal, 0.5*np.pi
-                ])
-                connectivity.append([
-                    convention.legosc2index(**_options, joint_i=0, side=1),
-                    convention.legosc2index(**_options, joint_i=1, side=1),
-                    legs_amplitude_internal, -0.5*np.pi
-                ])
-                # 1 - 1
-                connectivity.append([
-                    convention.legosc2index(**_options, joint_i=1, side=1),
-                    convention.legosc2index(**_options, joint_i=1, side=0),
-                    legs_amplitude_internal, np.pi
-                ])
-                connectivity.append([
-                    convention.legosc2index(**_options, joint_i=1, side=0),
-                    convention.legosc2index(**_options, joint_i=1, side=1),
-                    legs_amplitude_internal, np.pi
-                ])
-                # 0 - 2
-                connectivity.append([
-                    convention.legosc2index(**_options, joint_i=2, side=0),
-                    convention.legosc2index(**_options, joint_i=0, side=0),
-                    legs_amplitude_internal, 0
-                ])
-                connectivity.append([
-                    convention.legosc2index(**_options, joint_i=0, side=0),
-                    convention.legosc2index(**_options, joint_i=2, side=0),
-                    legs_amplitude_internal, 0
-                ])
-                connectivity.append([
-                    convention.legosc2index(**_options, joint_i=2, side=1),
-                    convention.legosc2index(**_options, joint_i=0, side=1),
-                    legs_amplitude_internal, 0
-                ])
-                connectivity.append([
-                    convention.legosc2index(**_options, joint_i=0, side=1),
-                    convention.legosc2index(**_options, joint_i=2, side=1),
-                    legs_amplitude_internal, 0
-                ])
-                # 2 - 2
-                connectivity.append([
-                    convention.legosc2index(**_options, joint_i=2, side=1),
-                    convention.legosc2index(**_options, joint_i=2, side=0),
-                    legs_amplitude_internal, np.pi
-                ])
-                connectivity.append([
-                    convention.legosc2index(**_options, joint_i=2, side=0),
-                    convention.legosc2index(**_options, joint_i=2, side=1),
-                    legs_amplitude_internal, np.pi
-                ])
-                # 1 - 3
-                connectivity.append([
-                    convention.legosc2index(**_options, joint_i=3, side=0),
-                    convention.legosc2index(**_options, joint_i=1, side=0),
-                    legs_amplitude_internal, 0
-                ])
-                connectivity.append([
-                    convention.legosc2index(**_options, joint_i=1, side=0),
-                    convention.legosc2index(**_options, joint_i=3, side=0),
-                    legs_amplitude_internal, 0
-                ])
-                connectivity.append([
-                    convention.legosc2index(**_options, joint_i=3, side=1),
-                    convention.legosc2index(**_options, joint_i=1, side=1),
-                    legs_amplitude_internal, 0
-                ])
-                connectivity.append([
-                    convention.legosc2index(**_options, joint_i=1, side=1),
-                    convention.legosc2index(**_options, joint_i=3, side=1),
-                    legs_amplitude_internal, 0
-                ])
-                # 3 - 3
-                connectivity.append([
-                    convention.legosc2index(**_options, joint_i=3, side=1),
-                    convention.legosc2index(**_options, joint_i=3, side=0),
-                    legs_amplitude_internal, np.pi
-                ])
-                connectivity.append([
-                    convention.legosc2index(**_options, joint_i=3, side=0),
-                    convention.legosc2index(**_options, joint_i=3, side=1),
-                    legs_amplitude_internal, np.pi
-                ])
+                if options.morphology.n_dof_legs > 1:
+                    # 0 - 1
+                    connectivity.append([
+                        convention.legosc2index(**_options, joint_i=1, side=0),
+                        convention.legosc2index(**_options, joint_i=0, side=0),
+                        legs_amplitude_internal, 0.5*np.pi
+                    ])
+                    connectivity.append([
+                        convention.legosc2index(**_options, joint_i=0, side=0),
+                        convention.legosc2index(**_options, joint_i=1, side=0),
+                        legs_amplitude_internal, -0.5*np.pi
+                    ])
+                    connectivity.append([
+                        convention.legosc2index(**_options, joint_i=1, side=1),
+                        convention.legosc2index(**_options, joint_i=0, side=1),
+                        legs_amplitude_internal, 0.5*np.pi
+                    ])
+                    connectivity.append([
+                        convention.legosc2index(**_options, joint_i=0, side=1),
+                        convention.legosc2index(**_options, joint_i=1, side=1),
+                        legs_amplitude_internal, -0.5*np.pi
+                    ])
+                    # 1 - 1
+                    connectivity.append([
+                        convention.legosc2index(**_options, joint_i=1, side=1),
+                        convention.legosc2index(**_options, joint_i=1, side=0),
+                        legs_amplitude_internal, np.pi
+                    ])
+                    connectivity.append([
+                        convention.legosc2index(**_options, joint_i=1, side=0),
+                        convention.legosc2index(**_options, joint_i=1, side=1),
+                        legs_amplitude_internal, np.pi
+                    ])
+                if options.morphology.n_dof_legs > 2:
+                    # 0 - 2
+                    connectivity.append([
+                        convention.legosc2index(**_options, joint_i=2, side=0),
+                        convention.legosc2index(**_options, joint_i=0, side=0),
+                        legs_amplitude_internal, 0
+                    ])
+                    connectivity.append([
+                        convention.legosc2index(**_options, joint_i=0, side=0),
+                        convention.legosc2index(**_options, joint_i=2, side=0),
+                        legs_amplitude_internal, 0
+                    ])
+                    connectivity.append([
+                        convention.legosc2index(**_options, joint_i=2, side=1),
+                        convention.legosc2index(**_options, joint_i=0, side=1),
+                        legs_amplitude_internal, 0
+                    ])
+                    connectivity.append([
+                        convention.legosc2index(**_options, joint_i=0, side=1),
+                        convention.legosc2index(**_options, joint_i=2, side=1),
+                        legs_amplitude_internal, 0
+                    ])
+                    # 2 - 2
+                    connectivity.append([
+                        convention.legosc2index(**_options, joint_i=2, side=1),
+                        convention.legosc2index(**_options, joint_i=2, side=0),
+                        legs_amplitude_internal, np.pi
+                    ])
+                    connectivity.append([
+                        convention.legosc2index(**_options, joint_i=2, side=0),
+                        convention.legosc2index(**_options, joint_i=2, side=1),
+                        legs_amplitude_internal, np.pi
+                    ])
+                if options.morphology.n_dof_legs > 3:
+                    # 1 - 3
+                    connectivity.append([
+                        convention.legosc2index(**_options, joint_i=3, side=0),
+                        convention.legosc2index(**_options, joint_i=1, side=0),
+                        legs_amplitude_internal, 0
+                    ])
+                    connectivity.append([
+                        convention.legosc2index(**_options, joint_i=1, side=0),
+                        convention.legosc2index(**_options, joint_i=3, side=0),
+                        legs_amplitude_internal, 0
+                    ])
+                    connectivity.append([
+                        convention.legosc2index(**_options, joint_i=3, side=1),
+                        convention.legosc2index(**_options, joint_i=1, side=1),
+                        legs_amplitude_internal, 0
+                    ])
+                    connectivity.append([
+                        convention.legosc2index(**_options, joint_i=1, side=1),
+                        convention.legosc2index(**_options, joint_i=3, side=1),
+                        legs_amplitude_internal, 0
+                    ])
+                    # 3 - 3
+                    connectivity.append([
+                        convention.legosc2index(**_options, joint_i=3, side=1),
+                        convention.legosc2index(**_options, joint_i=3, side=0),
+                        legs_amplitude_internal, np.pi
+                    ])
+                    connectivity.append([
+                        convention.legosc2index(**_options, joint_i=3, side=0),
+                        convention.legosc2index(**_options, joint_i=3, side=1),
+                        legs_amplitude_internal, np.pi
+                    ])
 
         # Opposite leg interaction
         for leg_i in range(options.morphology.n_legs//2):

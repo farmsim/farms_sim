@@ -25,7 +25,7 @@ class AmphibiousOptions(Options):
         )
         self.control = kwargs.pop(
             "control",
-            AmphibiousControlOptions(self.morphology, **kwargs)
+            AmphibiousControlOptions(self.morphology, kwargs)
         )
         self.collect_gps = kwargs.pop(
             "collect_gps",
@@ -49,7 +49,6 @@ class AmphibiousMorphologyOptions(Options):
     def __init__(self, options):
         super(AmphibiousMorphologyOptions, self).__init__()
         self.mesh_directory = ""
-        self.scale = options.pop("scale", 1.0)
         self.density = options.pop("density", 1000.0)
         self.n_joints_body = options.pop("n_joints_body", 11)
         self.n_dof_legs = options.pop("n_dof_legs", 4)
@@ -125,7 +124,7 @@ class AmphibiousPhysicsOptions(Options):
 class AmphibiousControlOptions(Options):
     """Amphibious control options"""
 
-    def __init__(self, morphology, **kwargs):
+    def __init__(self, morphology, kwargs):
         super(AmphibiousControlOptions, self).__init__()
         self.kinematics_file = kwargs.pop(
             "kinematics_file",
@@ -135,60 +134,14 @@ class AmphibiousControlOptions(Options):
             "drives",
             AmphibiousDrives(**kwargs)
         )
-        self.joints_controllers = kwargs.pop(
-            "joints_controllers",
-            AmphibiousJointsControllers(**kwargs)
-        )
+        # self.joints_controllers = kwargs.pop(
+        #     "joints_controllers",
+        #     AmphibiousJointsControllers(**kwargs)
+        # )
         self.network = kwargs.pop(
             "network",
-            AmphibiousNetworkOptions(morphology, **kwargs)
+            AmphibiousNetworkOptions(morphology, kwargs)
         )
-
-    def to_vector(self):
-        """To vector"""
-        return [
-            self["frequency"],
-            self["body_amplitude_0"],
-            self["body_amplitude_1"],
-            self["body_stand_amplitude"],
-            self["body_stand_shift"],
-            self["leg_0_amplitude"],
-            self["leg_0_offset"],
-            self["leg_1_amplitude"],
-            self["leg_1_offset"],
-            self["leg_2_amplitude"],
-            self["leg_2_offset"],
-            self["leg_turn"],
-            self["body_p"],
-            self["body_d"],
-            self["body_f"],
-            self["legs_p"],
-            self["legs_d"],
-            self["legs_f"]
-        ]
-
-    def from_vector(self, vector):
-        """From vector"""
-        (
-            self["frequency"],
-            self["body_amplitude_0"],
-            self["body_amplitude_1"],
-            self["body_stand_amplitude"],
-            self["body_stand_shift"],
-            self["leg_0_amplitude"],
-            self["leg_0_offset"],
-            self["leg_1_amplitude"],
-            self["leg_1_offset"],
-            self["leg_2_amplitude"],
-            self["leg_2_offset"],
-            self["leg_turn"],
-            self["body_p"],
-            self["body_d"],
-            self["body_f"],
-            self["legs_p"],
-            self["legs_d"],
-            self["legs_f"]
-        ) = vector
 
 
 class AmphibiousDrives(Options):
@@ -202,35 +155,35 @@ class AmphibiousDrives(Options):
         self.right = kwargs.pop("drive_right", 0)
 
 
-class AmphibiousJointsControllers(Options):
-    """Amphibious joints controllers"""
+# class AmphibiousJointsControllers(Options):
+#     """Amphibious joints controllers"""
 
-    def __init__(self, **kwargs):
-        super(AmphibiousJointsControllers, self).__init__()
-        self.body_p = kwargs.pop("body_p", 1e-1)
-        self.body_d = kwargs.pop("body_d", 1e0)
-        self.body_f = kwargs.pop("body_f", 1e1)
-        self.legs_p = kwargs.pop("legs_p", 1e-1)
-        self.legs_d = kwargs.pop("legs_d", 1e0)
-        self.legs_f = kwargs.pop("legs_f", 1e1)
+#     def __init__(self, **kwargs):
+#         super(AmphibiousJointsControllers, self).__init__()
+#         self.body_p = kwargs.pop("body_p", 1e-1)
+#         self.body_d = kwargs.pop("body_d", 1e0)
+#         self.body_f = kwargs.pop("body_f", 1e1)
+#         self.legs_p = kwargs.pop("legs_p", 1e-1)
+#         self.legs_d = kwargs.pop("legs_d", 1e0)
+#         self.legs_f = kwargs.pop("legs_f", 1e1)
 
 
 class AmphibiousNetworkOptions(Options):
     """Amphibious network options"""
 
-    def __init__(self, morphology, **kwargs):
+    def __init__(self, morphology, kwargs):
         super(AmphibiousNetworkOptions, self).__init__()
         self.oscillators = kwargs.pop(
             "oscillators",
-            AmphibiousOscillatorOptions(morphology, **kwargs)
+            AmphibiousOscillatorOptions(morphology, kwargs)
         )
         self.connectivity = kwargs.pop(
             "connectivity",
-            AmphibiousConnectivityOptions(morphology, **kwargs)
+            AmphibiousConnectivityOptions(morphology, kwargs)
         )
         self.joints = kwargs.pop(
             "joints",
-            AmphibiousJointsOptions(morphology, **kwargs)
+            AmphibiousJointsOptions(morphology, kwargs)
         )
         self.sensors = kwargs.pop(
             "sensors",
@@ -344,16 +297,8 @@ class AmphibiousOscillatorJointsOptions(DriveDependentProperty):
     """Amphibious drive dependent properties"""
 
     @classmethod
-    def legs_joints_offsets(cls, joint_i, **kwargs):
+    def legs_joints_offsets(cls, joint_i, offsets_walking, offsets_swimming):
         """Legs joints offsets"""
-        offsets_walking = kwargs.pop(
-            "legs_offsets_walking",
-            [0, np.pi/32, 0, np.pi/8]
-        )
-        offsets_swimming = kwargs.pop(
-            "legs_offsets_swimming",
-            [-2*np.pi/5, 0, 0, 0]
-        )
         return cls([
             [0, offsets_swimming[joint_i]],
             [1, offsets_swimming[joint_i]],
@@ -379,7 +324,7 @@ class AmphibiousOscillatorOptions(Options):
 
     """
 
-    def __init__(self, morphology, **kwargs):
+    def __init__(self, morphology, kwargs):
         super(AmphibiousOscillatorOptions, self).__init__()
         self.morphology = morphology
         self.body_head_amplitude = kwargs.pop("body_head_amplitude", 0)
@@ -455,7 +400,7 @@ class AmphibiousOscillatorOptions(Options):
 class AmphibiousConnectivityOptions(Options):
     """Amphibious connectivity options"""
 
-    def __init__(self, morphology, **kwargs):
+    def __init__(self, morphology, kwargs):
         super(AmphibiousConnectivityOptions, self).__init__()
         self.body_phase_bias = kwargs.pop(
             "body_phase_bias",
@@ -469,17 +414,17 @@ class AmphibiousConnectivityOptions(Options):
         self.weight_osc_legs_internal = 1e3
         self.weight_osc_legs_opposite = 1e0
         self.weight_osc_legs_following = 1e0
-        self.weight_osc_legs2body = 3e1
-        self.weight_sens_contact_i = -2e0
-        self.weight_sens_contact_e = 2e0  # +3e-1
-        self.weight_sens_hydro_freq = -1
-        self.weight_sens_hydro_amp = 1
+        self.weight_osc_legs2body = kwargs.pop('w_legs2body', 3e1)
+        self.weight_sens_contact_i = kwargs.pop('w_sens_contact_i', -2e0)
+        self.weight_sens_contact_e = kwargs.pop('w_sens_contact_e', 2e0)  # +3e-1
+        self.weight_sens_hydro_freq = kwargs.pop('w_sens_hyfro_freq', -1)
+        self.weight_sens_hydro_amp = kwargs.pop('w_sens_hydro_amp', 1)
 
 
 class AmphibiousJointsOptions(Options):
     """Amphibious joints options"""
 
-    def __init__(self, morphology, **kwargs):
+    def __init__(self, morphology, kwargs):
         super(AmphibiousJointsOptions, self).__init__()
         self.morphology = morphology
         self._legs_offsets = kwargs.pop(
@@ -489,6 +434,14 @@ class AmphibiousJointsOptions(Options):
         self._legs_offsets_swimming = kwargs.pop(
             "legs_offsets_swimming",
             [-2*np.pi/5, 0, 0, 0]
+        )
+        self.gain_amplitude = kwargs.pop(
+            "gain_amplitude",
+            [1 for _ in range(morphology.n_joints())]
+        )
+        self.gain_offset = kwargs.pop(
+            "gain_offset",
+            [1 for _ in range(morphology.n_joints())]
         )
         # Joints offsets
         self.legs_offsets = None
@@ -516,8 +469,8 @@ class AmphibiousJointsOptions(Options):
         self.legs_offsets = [
             AmphibiousOscillatorJointsOptions.legs_joints_offsets(
                 joint_i,
-                legs_offsets_walking=self._legs_offsets,
-                legs_offsets_swimming=self._legs_offsets_swimming
+                offsets_walking=self._legs_offsets,
+                offsets_swimming=self._legs_offsets_swimming
             )
             for joint_i in range(self.morphology.n_dof_legs)
         ]

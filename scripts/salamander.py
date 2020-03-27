@@ -4,19 +4,49 @@
 import time
 import matplotlib.pyplot as plt
 from farms_models.utils import get_sdf_path
-from farms_amphibious.examples.simulation import simulation, profile
+from farms_amphibious.experiment.simulation import (
+    simulation,
+    amphibious_options,
+    profile,
+    get_animat_options,
+)
 import farms_pylog as pylog
 
 
 def main():
     """Main"""
+
+    # Animat
     sdf = get_sdf_path(name='salamander', version='v1')
     pylog.info('Model SDF: {}'.format(sdf))
+    animat_options = get_animat_options(
+        swimming=False,
+        n_legs=4,
+        n_dof_legs=4,
+        n_joints_body=11,
+    )
+
+    (
+        simulation_options,
+        arena_sdf,
+        links,
+        joints,
+        feet,
+        links_no_collisions
+    ) = amphibious_options(animat_options, use_water_arena=False)
+
+    # Simulation
     profile(
         function=simulation,
-        sdf=sdf,
+        animat_sdf=sdf,
+        animat_options=animat_options,
+        simulation_options=simulation_options,
+        arena_sdf=arena_sdf,
+        links=links,
+        joints=joints,
+        feet=feet,
+        links_no_collisions=links_no_collisions,
         use_controller=True,
-        water_arena=False
     )
     plt.show()
 
