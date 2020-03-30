@@ -32,8 +32,9 @@ def main():
         links,
         joints,
         feet,
-        links_no_collisions
-    ) = amphibious_options(animat_options, use_water_arena=False)
+        links_swimming,
+        links_no_collisions,
+    ) = amphibious_options(animat_options, use_water_arena=True)
 
     # Simulation
     profile(
@@ -45,6 +46,7 @@ def main():
         links=links,
         joints=joints,
         feet=feet,
+        links_swimming=links_swimming,
         links_no_collisions=links_no_collisions,
         use_controller=True,
     )

@@ -92,6 +92,7 @@ class Amphibious(Animat):
         self.feet = kwargs.pop('feet', None)
         self.links_order = kwargs.pop('links', None)
         self.joints_order = kwargs.pop('joints', None)
+        self.links_swimming = kwargs.pop('links_swimming', None)
         self.links_no_collisions = kwargs.pop('links_no_collisions', None)
         assert not kwargs, kwargs
 
@@ -305,10 +306,13 @@ class Amphibious(Animat):
             self.data.sensors.hydrodynamics.array,
             self.identity(),
             [
-                [i, self._links["link_body_{}".format(i)]]
-                for i in range(self.options.morphology.n_links_body())
+                [self.links_order.index(name), self._links[name]]
+                for name in self.links_swimming
                 if (
-                    self.data.sensors.gps.com_position(iteration, i)[2]
+                    self.data.sensors.gps.com_position(
+                        iteration,
+                        self.links_order.index(name)
+                    )[2]
                     < water_surface
                 )
             ],
@@ -320,8 +324,8 @@ class Amphibious(Animat):
                 iteration,
                 self.data.sensors.gps,
                 [
-                    [i, self._links["link_body_{}".format(i)]]
-                    for i in range(self.options.morphology.n_links_body())
+                    [self.links_order.index(name), self._links[name]]
+                    for name in self.links_swimming
                 ]
             )
 

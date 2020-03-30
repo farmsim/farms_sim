@@ -2,6 +2,7 @@
 """Run fish simulation with bullet"""
 
 import time
+import numpy as np
 import matplotlib.pyplot as plt
 from farms_models.utils import get_sdf_path, model_kinematics_files
 from farms_amphibious.experiment.simulation import (
@@ -27,9 +28,18 @@ def main():
         (
             animat_options,
             arena_sdf,
-            simulation_options
-        ) = fish_options(kinematics_file, sampling_timestep)
-        n_joints = animat_options.morphology.n_joints()
+            simulation_options,
+            _kinematics,
+            links,
+            joints,
+        ) = fish_options(
+            kinematics_file,
+            sampling_timestep,
+            resistive_coefficients=[
+                1e-1*np.array([-1e-4, -5e-1, -3e-1]),
+                1e-1*np.array([-1e-6, -1e-6, -1e-6]),
+            ]
+        )
 
         # Logging
         simulation_options.log_path = "fish_results"
@@ -43,11 +53,9 @@ def main():
             use_controller=True,
             sampling=sampling_timestep,
             arena_sdf=arena_sdf,
-            links=['link_body_0']+[
-                'body_{}_t_link'.format(i+1)
-                for i in range(n_joints-1)
-            ],
-            joints=['joint_{}'.format(i) for i in range(n_joints)],
+            links=links,
+            links_swimming=links,
+            joints=joints,
         )
         plt.show()
 

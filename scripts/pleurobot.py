@@ -73,7 +73,7 @@ def main():
     )
 
     (
-        simulation_options, arena_sdf, _, _, _, _
+        simulation_options, arena_sdf, _, _, _, _, _
     ) = amphibious_options(animat_options, use_water_arena=False)
 
     links = ['base_link', 'Head'] + [

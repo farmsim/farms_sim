@@ -5,36 +5,57 @@ from scipy.interpolate import interp1d
 from farms_bullet.model.control import ModelController
 
 
+def kinematics_interpolation(
+        kinematics,
+        sampling,
+        timestep,
+        n_iterations,
+):
+    """Kinematics interpolations"""
+    data_duration = sampling*kinematics.shape[0]
+    simulation_duration = timestep*n_iterations
+    interp_x = np.arange(0, data_duration, sampling)
+    interp_xn = np.arange(0, simulation_duration, timestep)
+    assert data_duration >= simulation_duration, 'Data {} < {} Sim'.format(
+        data_duration,
+        simulation_duration
+    )
+    assert len(interp_x) == kinematics.shape[0]
+    assert interp_x[-1] >= interp_xn[-1], 'Data[-1] {} < {} Sim[-1]'.format(
+        interp_x[-1],
+        interp_xn[-1]
+    )
+    return interp1d(
+        interp_x,
+        kinematics,
+        axis=0
+    )(interp_xn)
+
+
 class AmphibiousKinematics(ModelController):
     """Amphibious kinematics"""
 
-    def __init__(self, animat_options, animat_data, timestep, n_iterations, sampling):
+    def __init__(
+            self,
+            animat_options,
+            animat_data,
+            timestep,
+            n_iterations,
+            sampling
+    ):
         super(AmphibiousKinematics, self).__init__(
             joints=np.zeros(animat_options.morphology.n_joints()),
             use_position=True,
             use_torque=False,
         )
-        self.kinematics = np.loadtxt(animat_options.control.kinematics_file)
-        self.kinematics = self.kinematics[:, 3:]
-        self.kinematics = ((self.kinematics + np.pi) % (2*np.pi)) - np.pi
-        data_duration = sampling*self.kinematics.shape[0]
-        simulation_duration = timestep*n_iterations
-        interp_x = np.arange(0, data_duration, sampling)
-        interp_xn = np.arange(0, simulation_duration, timestep)
-        assert data_duration >= simulation_duration, 'Data {} < {} Sim'.format(
-            data_duration,
-            simulation_duration
+        kinematics = np.loadtxt(animat_options.control.kinematics_file)
+        kinematics[:, 3:] = ((kinematics[:, 3:] + np.pi) % (2*np.pi)) - np.pi
+        self.kinematics = kinematics_interpolation(
+            kinematics=kinematics[:, 3:],
+            sampling=sampling,
+            timestep=timestep,
+            n_iterations=n_iterations,
         )
-        assert len(interp_x) == self.kinematics.shape[0]
-        assert interp_x[-1] >= interp_xn[-1], 'Data[-1] {} < {} Sim[-1]'.format(
-            interp_x[-1],
-            interp_xn[-1]
-        )
-        self.kinematics = interp1d(
-            interp_x,
-            self.kinematics,
-            axis=0
-        )(interp_xn)
         self.animat_options = animat_options
         self.animat_data = animat_data
         self._timestep = timestep
