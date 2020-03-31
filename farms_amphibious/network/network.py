@@ -10,10 +10,10 @@ from ..model.convention import AmphibiousConvention
 class AmphibiousNetworkODE(ModelController):
     """Amphibious network"""
 
-    def __init__(self, animat_options, animat_data, timestep):
+    def __init__(self, joints, animat_options, animat_data, timestep):
         convention = AmphibiousConvention(animat_options.morphology)
         super(AmphibiousNetworkODE, self).__init__(
-            joints=convention.joint_names(),
+            joints=joints,
             use_position=True,
             use_torque=False,
         )

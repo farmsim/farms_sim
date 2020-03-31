@@ -37,6 +37,7 @@ class AmphibiousKinematics(ModelController):
 
     def __init__(
             self,
+            joints,
             animat_options,
             animat_data,
             timestep,
@@ -44,7 +45,7 @@ class AmphibiousKinematics(ModelController):
             sampling
     ):
         super(AmphibiousKinematics, self).__init__(
-            joints=np.zeros(animat_options.morphology.n_joints()),
+            joints=joints,
             use_position=True,
             use_torque=False,
         )

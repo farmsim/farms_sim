@@ -154,6 +154,7 @@ def simulation_setup(animat_sdf, arena_sdf, **kwargs):
     if kwargs.pop('use_controller', False):
         if animat_options.control.kinematics_file:
             animat_controller = AmphibiousKinematics(
+                joints=animat_options.morphology.joints,
                 animat_options=animat_options,
                 animat_data=animat_data,
                 timestep=simulation_options.timestep,
@@ -162,6 +163,7 @@ def simulation_setup(animat_sdf, arena_sdf, **kwargs):
             )
         else:
             animat_controller = AmphibiousNetworkODE(
+                joints=animat_options.morphology.joints,
                 animat_options=animat_options,
                 animat_data=animat_data,
                 timestep=simulation_options.timestep
