@@ -70,7 +70,7 @@ def initial_pose(identity, spawn_options, units):
 class Amphibious(Animat):
     """Amphibious animat"""
 
-    def __init__(self, sdf, options, controller, timestep, iterations, units, **kwargs):
+    def __init__(self, sdf, options, controller, timestep, iterations, units):
         super(Amphibious, self).__init__(options=options)
         self.sdf = sdf
         self.timestep = timestep
@@ -88,21 +88,20 @@ class Amphibious(Animat):
         self.sensors = Sensors()
         # Physics
         self.units = units
-        # Elements
-        self.feet = kwargs.pop('feet', None)
-        self.links_order = kwargs.pop('links', None)
-        self.joints_order = kwargs.pop('joints', None)
-        self.links_swimming = kwargs.pop('links_swimming', None)
-        self.links_no_collisions = kwargs.pop('links_no_collisions', None)
-        assert not kwargs, kwargs
 
     def links_identities(self):
         """Links"""
-        return [self._links[link] for link in self.links_order]
+        return [
+            self._links[link]
+            for link in self.options.morphology.links
+        ]
 
     def joints_identities(self):
         """Joints"""
-        return [self._joints[joint] for joint in self.joints_order]
+        return [
+            self._joints[joint]
+            for joint in self.options.morphology.joints
+        ]
 
     def spawn(self):
         """Spawn amphibious"""
@@ -141,58 +140,23 @@ class Amphibious(Animat):
             joint_info = pybullet.getJointInfo(self.identity(), joint_i)
             self._links[joint_info[12].decode("UTF-8")] = joint_i
             self._joints[joint_info[1].decode("UTF-8")] = joint_i
-        if self.links_order is not None:
-            for link in self.links_order:
+        if self.options.morphology.links is not None:
+            for link in self.options.morphology.links:
                 if link not in self._links:
                     self._links[link] = -1
                     break
-            for link in self.links_order:
+            for link in self.options.morphology.links:
                 assert link in self._links, 'Link {} not in {}'.format(
                     link,
                     self._links,
                 )
-        # pylog.debug('Joints found:\n{}'.format(self._joints.keys()))
-        # # Set names
-        # self._links['link_body_{}'.format(0)] = -1
-        # for i in range(self.options.morphology.n_joints_body):
-        #     self._links['link_body_{}'.format(i+1)] = self.joints_order[i]
-        #     self._joints['joint_link_body_{}'.format(i)] = self.joints_order[i]
-        # for leg_i in range(self.options.morphology.n_legs//2):
-        #     for side in range(2):
-        #         for joint_i in range(self.options.morphology.n_dof_legs):
-        #             self._links[
-        #                 self.convention.leglink2name(
-        #                     leg_i=leg_i,
-        #                     side_i=side,
-        #                     joint_i=joint_i
-        #                 )
-        #             ] = self.joints_order[
-        #                 self.convention.leglink2index(
-        #                     leg_i=leg_i,
-        #                     side_i=side,
-        #                     joint_i=joint_i
-        #                 )
-        #             ]
-        #             self._joints[
-        #                 self.convention.legjoint2name(
-        #                     leg_i=leg_i,
-        #                     side_i=side,
-        #                     joint_i=joint_i
-        #                 )
-        #             ] = self.joints_order[
-        #                 self.convention.legjoint2index(
-        #                     leg_i=leg_i,
-        #                     side_i=side,
-        #                     joint_i=joint_i
-        #                 )
-        #             ]
         if verbose:
             self.print_information()
 
     def add_sensors(self):
         """Add sensors"""
         # Links
-        if self.links_order is not None:
+        if self.options.morphology.links is not None:
             self.sensors.add({
                 "links": AmphibiousGPS(
                     array=self.data.sensors.gps.array,
@@ -203,7 +167,7 @@ class Amphibious(Animat):
                 )
             })
         # Joints
-        if self.joints_order is not None:
+        if self.options.morphology.joints is not None:
             self.sensors.add({
                 "joints": JointsStatesSensor(
                     self.data.sensors.proprioception.array,
@@ -214,12 +178,21 @@ class Amphibious(Animat):
                 )
             })
         # Contacts
-        if self.links_order is not None and self.feet is not None:
+        if (
+                self.options.morphology.links is not None
+                and self.options.morphology.feet is not None
+        ):
             self.sensors.add({
                 "contacts": ContactsSensors(
                     self.data.sensors.contacts.array,
-                    [self._identity for _ in self.feet],
-                    [self._links[foot] for foot in self.feet],
+                    [
+                        self._identity
+                        for _ in self.options.morphology.feet
+                    ],
+                    [
+                        self._links[foot]
+                        for foot in self.options.morphology.feet
+                    ],
                     self.units.newtons
                 )
             })
@@ -234,8 +207,12 @@ class Amphibious(Animat):
         if verbose:
             pylog.debug('Body mass: {} [kg]'.format(np.sum(self.masses)))
         # Deactivate collisions
-        if self.links_no_collisions is not None:
-            self.set_collisions(self.links_no_collisions, group=0, mask=0)
+        if self.options.morphology.links_no_collisions is not None:
+            self.set_collisions(
+                self.options.morphology.links_no_collisions,
+                group=0,
+                mask=0
+            )
         # Deactivate damping
         small = 0
         self.set_links_dynamics(
@@ -251,9 +228,9 @@ class Amphibious(Animat):
             spinningFriction=small,
             rollingFriction=small,
         )
-        if self.feet is not None:
+        if self.options.morphology.feet is not None:
             self.set_links_dynamics(
-                self.feet,
+                self.options.morphology.feet,
                 lateralFriction=0.9,
                 spinningFriction=small,
                 rollingFriction=small,
@@ -306,12 +283,12 @@ class Amphibious(Animat):
             self.data.sensors.hydrodynamics.array,
             self.identity(),
             [
-                [self.links_order.index(name), self._links[name]]
-                for name in self.links_swimming
+                [self.options.morphology.links.index(name), self._links[name]]
+                for name in self.options.morphology.links_swimming
                 if (
                     self.data.sensors.gps.com_position(
                         iteration,
-                        self.links_order.index(name)
+                        self.options.morphology.links.index(name)
                     )[2]
                     < water_surface
                 )
@@ -324,8 +301,11 @@ class Amphibious(Animat):
                 iteration,
                 self.data.sensors.gps,
                 [
-                    [self.links_order.index(name), self._links[name]]
-                    for name in self.links_swimming
+                    [
+                        self.options.morphology.links.index(name),
+                        self._links[name]
+                    ]
+                    for name in self.options.morphology.links_swimming
                 ]
             )
 

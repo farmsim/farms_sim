@@ -4,6 +4,7 @@ import numpy as np
 from scipy import interpolate
 
 from farms_bullet.simulation.options import Options
+from farms_amphibious.model.convention import AmphibiousConvention
 
 
 class AmphibiousOptions(Options):
@@ -53,6 +54,47 @@ class AmphibiousMorphologyOptions(Options):
         self.n_joints_body = options.pop("n_joints_body", 11)
         self.n_dof_legs = options.pop("n_dof_legs", 4)
         self.n_legs = options.pop("n_legs", 4)
+        convention = AmphibiousConvention(self)
+        self.links = options.pop('links', [
+            convention.bodylink2name(i)
+            for i in range(self.n_links_body())
+        ] + [
+            convention.leglink2name(leg_i, side_i, link_i)
+            for leg_i in range(self.n_legs//2)
+            for side_i in range(2)
+            for link_i in range(self.n_dof_legs)
+        ])
+        self.joints = options.pop('joints', [
+            convention.bodyjoint2name(i)
+            for i in range(self.n_joints_body)
+        ] + [
+            convention.legjoint2name(leg_i, side_i, joint_i)
+            for leg_i in range(self.n_legs//2)
+            for side_i in range(2)
+            for joint_i in range(self.n_dof_legs)
+        ])
+        self.feet = options.pop('feet', [
+            convention.leglink2name(
+                leg_i=leg_i,
+                side_i=side_i,
+                joint_i=self.n_dof_legs-1
+            )
+            for leg_i in range(self.n_legs//2)
+            for side_i in range(2)
+        ])
+        self.links_swimming = options.pop('links_swimming', [
+            convention.bodylink2name(body_i)
+            for body_i in range(self.n_links_body())
+        ])
+        self.links_no_collisions = options.pop('links_no_collisions', [
+            convention.bodylink2name(body_i)
+            for body_i in range(0)
+        ] + [
+            convention.leglink2name(leg_i, side_i, joint_i)
+            for leg_i in range(self.n_legs//2)
+            for side_i in range(2)
+            for joint_i in range(self.n_dof_legs-1)
+        ])
 
     def n_joints(self):
         """Number of joints"""

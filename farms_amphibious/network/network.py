@@ -11,7 +11,7 @@ class AmphibiousNetworkODE(ModelController):
     """Amphibious network"""
 
     def __init__(self, animat_options, animat_data, timestep):
-        convention = AmphibiousConvention(animat_options)
+        convention = AmphibiousConvention(animat_options.morphology)
         super(AmphibiousNetworkODE, self).__init__(
             joints=convention.joint_names(),
             use_position=True,

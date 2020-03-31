@@ -181,7 +181,7 @@ class AmphibiousOscillatorConnectivityArray(ConnectivityArray):
         # ]
 
         # Body
-        convention = AmphibiousConvention(options)
+        convention = AmphibiousConvention(options.morphology)
         for i in range(n_body_joints):
             # i - i
             connectivity.append([
@@ -580,7 +580,7 @@ class AmphibiousContactsConnectivityArray(ConnectivityArray):
         connectivity = []
         options_conn = options.control.network.connectivity
         # options.morphology.n_legs
-        convention = AmphibiousConvention(options)
+        convention = AmphibiousConvention(options.morphology)
         for leg_i in range(options.morphology.n_legs//2):
             for side_i in range(2):
                 for joint_i in range(options.morphology.n_dof_legs):
@@ -624,7 +624,7 @@ class AmphibiousHydroConnectivityArray(ConnectivityArray):
         connectivity = []
         options_conn = options.control.network.connectivity
         # options.morphology.n_legs
-        convention = AmphibiousConvention(options)
+        convention = AmphibiousConvention(options.morphology)
         for joint_i in range(options.morphology.n_joints_body):
             for side_osc in range(2):
                 connectivity.append([

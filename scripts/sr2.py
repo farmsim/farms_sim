@@ -29,11 +29,6 @@ def main():
     (
         simulation_options,
         arena_sdf,
-        links,
-        joints,
-        feet,
-        links_swimming,
-        links_no_collisions
     ) = amphibious_options(animat_options, use_water_arena=False)
 
     # Simulation
@@ -43,11 +38,6 @@ def main():
         animat_options=animat_options,
         simulation_options=simulation_options,
         arena_sdf=arena_sdf,
-        links=links,
-        joints=joints,
-        feet=feet,
-        links_swimming=links_swimming,
-        links_no_collisions=links_no_collisions,
         use_controller=True,
     )
     plt.show()

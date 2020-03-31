@@ -30,8 +30,6 @@ def main():
             arena_sdf,
             simulation_options,
             _kinematics,
-            links,
-            joints,
         ) = fish_options(
             kinematics_file,
             sampling_timestep,
@@ -53,9 +51,6 @@ def main():
             use_controller=True,
             sampling=sampling_timestep,
             arena_sdf=arena_sdf,
-            links=links,
-            links_swimming=links,
-            joints=joints,
         )
         plt.show()
 

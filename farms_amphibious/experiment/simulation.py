@@ -13,7 +13,6 @@ from farms_bullet.model.model import (
 import farms_pylog as pylog
 from farms_amphibious.model.animat import Amphibious
 from farms_amphibious.model.options import AmphibiousOptions
-from farms_amphibious.model.convention import AmphibiousConvention
 from farms_amphibious.model.data import (
     AmphibiousOscillatorNetworkState,
     AmphibiousData
@@ -21,6 +20,7 @@ from farms_amphibious.model.data import (
 from farms_amphibious.simulation.simulation import AmphibiousSimulation
 from farms_amphibious.network.network import AmphibiousNetworkODE
 from farms_amphibious.network.kinematics import AmphibiousKinematics
+
 
 def get_animat_options(swimming=False, **kwargs):
     """Get animat options - Should load a config file in the future"""
@@ -170,11 +170,6 @@ def simulation_setup(animat_sdf, arena_sdf, **kwargs):
         animat_controller = None
 
     # Creating animat
-    feet = kwargs.pop('feet', None)
-    links = kwargs.pop('links', None)
-    joints = kwargs.pop('joints', None)
-    links_swimming = kwargs.pop('links_swimming', None)
-    links_no_collisions = kwargs.pop('links_no_collisions', None)
     animat = Amphibious(
         sdf=animat_sdf,
         options=animat_options,
@@ -182,11 +177,6 @@ def simulation_setup(animat_sdf, arena_sdf, **kwargs):
         timestep=simulation_options.timestep,
         iterations=simulation_options.n_iterations(),
         units=simulation_options.units,
-        links=links,
-        joints=joints,
-        feet=feet,
-        links_swimming=links_swimming,
-        links_no_collisions=links_no_collisions,
     )
 
     # Setup simulation
@@ -258,84 +248,20 @@ def amphibious_options(animat_options, use_water_arena=True):
     # Simulation
     simulation_options = get_simulation_options()
 
-    convention = AmphibiousConvention(animat_options)
-    links = [
-        convention.bodylink2name(i)
-        for i in range(animat_options.morphology.n_links_body())
-    ] + [
-        convention.leglink2name(leg_i, side_i, link_i)
-        for leg_i in range(animat_options.morphology.n_legs//2)
-        for side_i in range(2)
-        for link_i in range(animat_options.morphology.n_dof_legs)
-    ]
-    joints = [
-        convention.bodyjoint2name(i)
-        for i in range(animat_options.morphology.n_joints_body)
-    ] + [
-        convention.legjoint2name(leg_i, side_i, joint_i)
-        for leg_i in range(animat_options.morphology.n_legs//2)
-        for side_i in range(2)
-        for joint_i in range(animat_options.morphology.n_dof_legs)
-    ]
-    feet = [
-        convention.leglink2name(
-            leg_i=leg_i,
-            side_i=side_i,
-            joint_i=animat_options.morphology.n_dof_legs-1
-        )
-        for leg_i in range(animat_options.morphology.n_legs//2)
-        for side_i in range(2)
-    ]
-    links_swimming = [
-        convention.bodylink2name(body_i)
-        for body_i in range(animat_options.morphology.n_links_body())
-    ]
-    links_no_collisions = [
-        convention.bodylink2name(body_i)
-        for body_i in range(0)
-    ] + [
-        convention.leglink2name(leg_i, side_i, joint_i)
-        for leg_i in range(animat_options.morphology.n_legs//2)
-        for side_i in range(2)
-        for joint_i in range(animat_options.morphology.n_dof_legs-1)
-    ]
-    return (
-        simulation_options,
-        arena_sdf,
-        links,
-        joints,
-        feet,
-        links_swimming,
-        links_no_collisions,
-    )
+    return (simulation_options, arena_sdf)
 
 
-def fish_options(kinematics_file, sampling_timestep, timestep=1e-3, **kwargs):
+def fish_options(kinematics_file, sampling_timestep, **kwargs):
     """Fish options"""
     pylog.info(kinematics_file)
     kinematics = np.loadtxt(kinematics_file)
 
-    n_joints = kinematics.shape[1]-3
-    animat_options = AmphibiousOptions(
-        show_hydrodynamics=True,
-        n_legs=0,
-        n_dof_legs=0,
-        n_joints_body=n_joints,
-        viscous=kwargs.pop('viscous', False),
-        resistive=kwargs.pop('resistive', True),
-        resistive_coefficients=kwargs.pop('resistive_coefficients', [
-            1e-1*np.array([-1e-4, -5e-1, -3e-1]),
-            1e-1*np.array([-1e-6, -1e-6, -1e-6]),
-        ]),
-        water_surface=kwargs.pop('water_surface', np.inf),
-        **kwargs
-    )
-
-    # Arena
-    arena_sdf = get_flat_arena()
-
+    # Simulation options
+    sim_options = {}
+    if 'timestep' in kwargs:
+        sim_options = kwargs.pop('timestep')
+    simulation_options = get_simulation_options(**sim_options)
     # get_animat_options(swimming=False)
-    simulation_options = get_simulation_options(timestep=timestep)
     simulation_options.gravity = [0, 0, 0]
     # simulation_options.timestep = 1e-3
     simulation_options.units.meters = 1
@@ -356,7 +282,6 @@ def fish_options(kinematics_file, sampling_timestep, timestep=1e-3, **kwargs):
 
     # Kinematics data handling
     n_sample = 100
-    animat_options.control.kinematics_file = kinematics_file
     len_kinematics = np.shape(kinematics)[0]
     simulation_options.duration = (len_kinematics-1)*sampling_timestep
     pose = kinematics[:, :3]
@@ -367,8 +292,37 @@ def fish_options(kinematics_file, sampling_timestep, timestep=1e-3, **kwargs):
     velocity = np.zeros(3)
     velocity[:2] = pose[n_sample, :2] - pose[0, :2]
     velocity /= n_sample*sampling_timestep
-    # kinematics = kinematics[:, 3:]
     kinematics[:, 3:] = ((kinematics[:, 3:] + np.pi) % (2*np.pi)) - np.pi
+
+    # Animat options
+    n_joints = kinematics.shape[1]-3
+    links = ['link_body_0']+[
+        'body_{}_t_link'.format(i+1)
+        for i in range(n_joints-1)
+    ]
+    joints = ['joint_{}'.format(i) for i in range(n_joints)]
+    animat_options = AmphibiousOptions(
+        show_hydrodynamics=True,
+        n_legs=0,
+        n_dof_legs=0,
+        n_joints_body=n_joints,
+        viscous=kwargs.pop('viscous', False),
+        resistive=kwargs.pop('resistive', True),
+        resistive_coefficients=kwargs.pop('resistive_coefficients', [
+            1e-1*np.array([-1e-4, -5e-1, -3e-1]),
+            1e-1*np.array([-1e-6, -1e-6, -1e-6]),
+        ]),
+        water_surface=kwargs.pop('water_surface', np.inf),
+        links=links,
+        links_swimming=links,
+        links_no_collisions=links,
+        feet=[],
+        joints=joints,
+        **kwargs
+    )
+
+    # Arena
+    arena_sdf = get_flat_arena()
 
     # Animat options
     animat_options.spawn.position = position
@@ -377,27 +331,16 @@ def fish_options(kinematics_file, sampling_timestep, timestep=1e-3, **kwargs):
     animat_options.spawn.velocity_lin = velocity
     animat_options.spawn.velocity_ang = [0, 0, 0]
     animat_options.spawn.joints_positions = kinematics[0, 3:]
+    animat_options.control.kinematics_file = kinematics_file
     # np.shape(kinematics)[1] - 3
     # animat_options.spawn.position = [-10, 0, 0]
     # animat_options.spawn.orientation = [0, 0, np.pi]
-
-    # Links
-    n_joints = animat_options.morphology.n_joints()
-    links = ['link_body_0']+[
-        'body_{}_t_link'.format(i+1)
-        for i in range(n_joints-1)
-    ]
-
-    # Joints
-    joints = ['joint_{}'.format(i) for i in range(n_joints)]
 
     return (
         animat_options,
         arena_sdf,
         simulation_options,
         kinematics,
-        links,
-        joints
     )
 
 
