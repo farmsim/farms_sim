@@ -257,7 +257,7 @@ def fish_options(kinematics_file, sampling_timestep, **kwargs):
     # Simulation options
     sim_options = {}
     if 'timestep' in kwargs:
-        sim_options = kwargs.pop('timestep')
+        sim_options['timestep'] = kwargs.pop('timestep')
     simulation_options = get_simulation_options(**sim_options)
     # get_animat_options(swimming=False)
     simulation_options.gravity = [0, 0, 0]
