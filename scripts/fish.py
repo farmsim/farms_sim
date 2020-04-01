@@ -34,8 +34,8 @@ def main():
             kinematics_file,
             sampling_timestep,
             resistive_coefficients=[
-                1e-1*np.array([-1e-4, -5e-1, -3e-1]),
-                1e-1*np.array([-1e-6, -1e-6, -1e-6]),
+                np.array([-1e-5, -5e-2, -3e-2]),
+                np.array([-1e-7, -1e-7, -1e-7]),
             ]
         )
 

@@ -140,18 +140,11 @@ class AmphibiousPhysicsOptions(Options):
         self.resistive = options.pop("resistive", False)
         self.viscous_coefficients = options.pop(
             "viscous_coefficients",
-            [
-                np.array([-1e-1, -1e0, -1e0]),
-                np.array([-1e-2, -1e-2, -1e-2])
-            ]
+            None
         )
         self.resistive_coefficients = options.pop(
             "resistive_coefficients",
             None
-            # [
-            #     np.array([-1e-1, -1e0, -1e0]),
-            #     np.array([-1e-2, -1e-2, -1e-2])
-            # ]
         )
         self.sph = options.pop("sph", False)
         self.buoyancy = options.pop(

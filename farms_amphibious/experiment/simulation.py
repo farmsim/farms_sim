@@ -25,11 +25,7 @@ from farms_amphibious.network.kinematics import AmphibiousKinematics
 def get_animat_options(swimming=False, **kwargs):
     """Get animat options - Should load a config file in the future"""
     scale = 1
-    animat_options = AmphibiousOptions(
-        # collect_gps=True,
-        show_hydrodynamics=True,
-        **kwargs
-    )
+    animat_options = AmphibiousOptions(**kwargs)
     # animat_options.control.drives.forward = 4
 
     if swimming:
@@ -52,7 +48,7 @@ def get_simulation_options(**kwargs):
     """Get simulation options - Should load a config file in the future"""
     simulation_options = SimulationOptions.with_clargs(**kwargs)
     simulation_options.units.meters = 1
-    simulation_options.units.seconds = 1e3
+    simulation_options.units.seconds = 1
     simulation_options.units.kilograms = 1
     simulation_options.arena = 'water'
 
@@ -267,7 +263,7 @@ def fish_options(kinematics_file, sampling_timestep, **kwargs):
     simulation_options.gravity = [0, 0, 0]
     # simulation_options.timestep = 1e-3
     simulation_options.units.meters = 1
-    simulation_options.units.seconds = 1e3
+    simulation_options.units.seconds = 1
     simulation_options.units.kilograms = 1
 
     # Camera options

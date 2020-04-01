@@ -3,6 +3,7 @@
 
 import time
 # import yaml
+import numpy as np
 import matplotlib.pyplot as plt
 from farms_models.utils import get_sdf_path
 from farms_amphibious.experiment.simulation import (
@@ -21,10 +22,15 @@ def main():
     sdf = get_sdf_path(name='salamander', version='v1')
     pylog.info('Model SDF: {}'.format(sdf))
     animat_options = get_animat_options(
+        show_hydrodynamics=True,
         swimming=False,
         n_legs=4,
         n_dof_legs=4,
         n_joints_body=11,
+        viscous_coefficients=[
+            np.array([-1e-1, -1e0, -1e0]),
+            np.array([-1e-6, -1e-6, -1e-6]),
+        ]
     )
 
     (
