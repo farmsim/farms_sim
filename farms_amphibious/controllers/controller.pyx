@@ -21,7 +21,7 @@ cpdef double[:] ode_oscillators_sparse(
     cdef unsigned int o_dim = data.network.oscillators.size[1]
     cdef double contact
     cdef double hydro_force
-    cdef double[:] dstate = data.state.array[data.iteration+1][1]
+    cdef double[:] dstate = data.state.array[data.iteration][1]
     for i in range(o_dim):  # , nogil=True):
         # Intrinsic frequency
         dstate[i] = data.network.oscillators.array[0][i]

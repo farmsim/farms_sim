@@ -88,7 +88,7 @@ class AmphibiousMorphologyOptions(Options):
         ])
         self.links_no_collisions = options.pop('links_no_collisions', [
             convention.bodylink2name(body_i)
-            for body_i in range(0)
+            for body_i in range(1, self.n_links_body()-1)
         ] + [
             convention.leglink2name(leg_i, side_i, joint_i)
             for leg_i in range(self.n_legs//2)

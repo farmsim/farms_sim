@@ -172,7 +172,11 @@ class AmphibiousSimulation(Simulation):
 
             # Update animat controller
             if self.animat().controller is not None:
-                self.animat().controller.control_step()
+                self.animat().controller.control_step(
+                    iteration=sim_step,
+                    time=sim_step*self.options.timestep,
+                    timestep=self.options.timestep,
+                )
 
     def post_step(self, sim_step):
         """Post step"""
@@ -223,10 +227,6 @@ class AmphibiousSimulation(Simulation):
             self.animat().controller.update(
                 self.animat().options
             )
-            # if self.animat().options.control.drives.forward > 3:
-            #     pybullet.setGravity(0, 0, -0.01*self.options.units.gravity)
-            # else:
-            #     pybullet.setGravity(0, 0, -9.81*self.options.units.gravity)
             self.interface.user_params.drive_speed().changed = False
 
         # Turning

@@ -18,7 +18,7 @@ from farms_amphibious.model.data import (
     AmphibiousData
 )
 from farms_amphibious.simulation.simulation import AmphibiousSimulation
-from farms_amphibious.network.network import AmphibiousNetworkODE
+from farms_amphibious.network.network import AmphibiousController
 from farms_amphibious.network.kinematics import AmphibiousKinematics
 
 
@@ -162,7 +162,7 @@ def simulation_setup(animat_sdf, arena_sdf, **kwargs):
                 sampling=kwargs.pop('sampling')
             )
         else:
-            animat_controller = AmphibiousNetworkODE(
+            animat_controller = AmphibiousController(
                 joints=animat_options.morphology.joints,
                 animat_options=animat_options,
                 animat_data=animat_data,

@@ -2,6 +2,7 @@
 """Run salamander simulation with bullet"""
 
 import time
+# import yaml
 import matplotlib.pyplot as plt
 from farms_models.utils import get_sdf_path
 from farms_amphibious.experiment.simulation import (
@@ -30,6 +31,14 @@ def main():
         simulation_options,
         arena_sdf,
     ) = amphibious_options(animat_options, use_water_arena=True)
+
+    # # Save options
+    # with open('animat_options.yaml', 'w+') as yaml_file:
+    #     yaml.dump(
+    #         animat_options,
+    #         yaml_file,
+    #         default_flow_style=False
+    #     )
 
     # Simulation
     profile(
