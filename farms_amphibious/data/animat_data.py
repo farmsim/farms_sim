@@ -2,6 +2,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+import deepdish as dd
 from .animat_data_cy import (
     AnimatDataCy,
     NetworkParametersCy,
@@ -18,7 +19,35 @@ from .animat_data_cy import (
 
 
 class AnimatData(AnimatDataCy):
-    """Network parameter"""
+    """Animat data"""
+
+    @classmethod
+    def from_dict(cls, dictionary):
+        """Load data from dictionary"""
+        return cls(
+            state=OscillatorNetworkState(dictionary['state'], 0),
+            network=NetworkParameters.from_dict(dictionary['network']),
+            joints=JointsArray(dictionary['joints']),
+            sensors=SensorsData.from_dict(dictionary['sensors']),
+        )
+
+    @classmethod
+    def from_file(cls, filename):
+        """From file"""
+        return cls.from_dict(dd.io.load(filename))
+
+    def to_dict(self):
+        """Convert data to dictionary"""
+        return {
+            'state': np.array(self.state.array),
+            'network': self.network.to_dict(),
+            'joints': np.array(self.joints.array),
+            'sensors': self.sensors.to_dict(),
+        }
+
+    def to_file(self, filename):
+        """Save data to file"""
+        dd.io.save(filename, self.to_dict())
 
     def log(self, times, folder, extension):
         """Log"""
@@ -35,6 +64,33 @@ class AnimatData(AnimatDataCy):
 
 class NetworkParameters(NetworkParametersCy):
     """Network parameter"""
+
+    @classmethod
+    def from_dict(cls, dictionary):
+        """Load data from dictionary"""
+        return cls(
+            oscillators=OscillatorArray(
+                dictionary['oscillators']
+            ),
+            connectivity=ConnectivityArray(
+                dictionary['connectivity']
+            ),
+            contacts_connectivity=ConnectivityArray(
+                dictionary['contacts_connectivity']
+            ),
+            hydro_connectivity=ConnectivityArray(
+                dictionary['hydro_connectivity']
+            ),
+        )
+
+    def to_dict(self):
+        """Convert data to dictionary"""
+        return {
+            'oscillators': np.array(self.oscillators.array),
+            'connectivity': np.array(self.connectivity.array),
+            'contacts_connectivity': np.array(self.contacts_connectivity.array),
+            'hydro_connectivity': np.array(self.hydro_connectivity.array),
+        }
 
     def log(self, times, folder, extension):
         """Log"""
@@ -88,6 +144,25 @@ class JointsArray(JointsArrayCy):
 
 class SensorsData(SensorsDataCy):
     """SensorsData"""
+
+    @classmethod
+    def from_dict(cls, dictionary):
+        """Load data from dictionary"""
+        return cls(
+            contacts=ContactsArray(dictionary['contacts']),
+            proprioception=ProprioceptionArray(dictionary['proprioception']),
+            gps=GpsArray(dictionary['gps']),
+            hydrodynamics=HydrodynamicsArray(dictionary['hydrodynamics']),
+        )
+
+    def to_dict(self):
+        """Convert data to dictionary"""
+        return {
+            'contacts': np.array(self.contacts.array),
+            'proprioception': np.array(self.proprioception.array),
+            'gps': np.array(self.gps.array),
+            'hydrodynamics': np.array(self.hydrodynamics.array),
+        }
 
     def log(self, times, folder, extension):
         """Log"""
