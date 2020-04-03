@@ -18,7 +18,7 @@ from farms_amphibious.model.data import (
     AmphibiousData
 )
 from farms_amphibious.simulation.simulation import AmphibiousSimulation
-from farms_amphibious.network.network import AmphibiousController
+from farms_amphibious.network.controller import AmphibiousController
 from farms_amphibious.network.kinematics import AmphibiousKinematics
 
 
@@ -140,9 +140,10 @@ def simulation_setup(animat_sdf, arena_sdf, **kwargs):
     animat_data = AmphibiousData.from_options(
         AmphibiousOscillatorNetworkState.default_state(
             simulation_options.n_iterations(),
-            animat_options
+            animat_options.morphology,
         ),
-        animat_options,
+        animat_options.morphology,
+        animat_options.control,
         simulation_options.n_iterations()
     )
 
@@ -307,8 +308,8 @@ def fish_options(kinematics_file, sampling_timestep, **kwargs):
         viscous=kwargs.pop('viscous', False),
         resistive=kwargs.pop('resistive', True),
         resistive_coefficients=kwargs.pop('resistive_coefficients', [
-            1e-1*np.array([-1e-4, -5e-1, -3e-1]),
-            1e-1*np.array([-1e-6, -1e-6, -1e-6]),
+            np.array([-1e-5, -5e-2, -3e-2]),
+            np.array([-1e-7, -1e-7, -1e-7]),
         ]),
         water_surface=kwargs.pop('water_surface', np.inf),
         links=links,
