@@ -72,73 +72,59 @@ def demo():
 def animat_options():
     """Animat options"""
     # Options
-    morphology = AmphibiousMorphologyOptions({
+    morphology = AmphibiousMorphologyOptions.from_options({
         'n_joints_body': 11,
         'n_legs': 4,
         'n_dof_legs': 4,
     })
-    control = AmphibiousControlOptions(
-        morphology,
-        {
-            'drives': AmphibiousDrives(**{
-                'drive_forward': 2,
-                'drive_turn': 0,
-                'drive_left': 0,
-                'drive_right': 0,
-            }),
-            'network': AmphibiousNetworkOptions(
-                morphology,
+    control = AmphibiousControlOptions.from_options({
+        'kinematics_file': '',
+        'drives': AmphibiousDrives.from_options({
+            'drive_forward': 2,
+            'drive_turn': 0,
+            'drive_left': 0,
+            'drive_right': 0,
+        }),
+        'network': AmphibiousNetworkOptions.from_options({
+            'oscillators': AmphibiousOscillatorOptions.from_options(
                 {
-                    'oscillators': AmphibiousOscillatorOptions(
-                        morphology,
-                        {
-                            'body_head_amplitude': 0,
-                            'body_tail_amplitude': 0,
-                            'body_stand_amplitude': 0.2,
-                            'legs_amplitude': [0.8, np.pi/32, np.pi/4, np.pi/8],
-                            'body_stand_shift': np.pi/4,
-                        }
-                    ),
-                    'connectivity': AmphibiousConnectivityOptions(
-                        morphology,
-                        {
-                            'body_phase_bias': 2*np.pi/morphology.n_joints_body,
-                            'leg_phase_follow': np.pi,
-                            'w_legs2body': 3e1,
-                            'w_sens_contact_i': -2e0,
-                            'w_sens_contact_e': 2e0,  # +3e-1
-                            'w_sens_hyfro_freq': -1,
-                            'w_sens_hydro_amp': 1,
-                        }
-                    ),
-                    'joints': AmphibiousJointsOptions(
-                        morphology,
-                        {
-                            'legs_offsets_walking': [0, np.pi/32, 0, np.pi/8],
-                            'legs_offsets_swimming': [-2*np.pi/5, 0, 0, 0],
-                            'gain_amplitude': [1 for _ in range(morphology.n_joints())],
-                            'gain_offset': [1 for _ in range(morphology.n_joints())],
-                        }
-                    ),
-                    'sensors': None
+                    'body_head_amplitude': 0,
+                    'body_tail_amplitude': 0,
+                    'body_stand_amplitude': 0.2,
+                    'legs_amplitude': [0.8, np.pi/32, np.pi/4, np.pi/8],
+                    'body_stand_shift': np.pi/4,
                 }
-            )
-        }
+            ),
+            'connectivity': AmphibiousConnectivityOptions.from_options(
+                {
+                    'body_phase_bias': 2*np.pi/morphology.n_joints_body,
+                    'leg_phase_follow': np.pi,
+                    'w_legs2body': 3e1,
+                    'w_sens_contact_i': -2e0,
+                    'w_sens_contact_e': 2e0,  # +3e-1
+                    'w_sens_hyfro_freq': -1,
+                    'w_sens_hydro_amp': 1,
+                }
+            ),
+            'joints': AmphibiousJointsOptions.from_options(
+                {
+                    'legs_offsets_walking': [0, np.pi/32, 0, np.pi/8],
+                    'legs_offsets_swimming': [-2*np.pi/5, 0, 0, 0],
+                    'gain_amplitude': [1 for _ in range(morphology.n_joints())],
+                    'gain_offset': [1 for _ in range(morphology.n_joints())],
+                }
+            ),
+            'sensors': None
+        })
+    })
+    control.network.update(
+        morphology.n_joints_body,
+        morphology.n_dof_legs,
     )
     return morphology, control
 
 
-def save_options(filename, options):
-    """Save options"""
-    with open(filename, 'w+') as yaml_file:
-        yaml.dump(
-            options.to_dict(),
-            yaml_file,
-            default_flow_style=False
-        )
-
-
-def simulation(filename, times, morphology, control):
+def simulation(times, morphology, control):
     """Simulation"""
     timestep = times[1] - times[0]
     n_iterations = len(times)
@@ -159,24 +145,11 @@ def simulation(filename, times, morphology, control):
     for iteration in range(n_iterations-1):
         network.control_step(iteration, iteration*timestep, timestep)
 
-    # Save data
-    pylog.debug('Saving data to {}'.format(filename))
-    animat_data.to_file(filename)
-    pylog.debug('Save complete')
-
-    # Save options
-    save_options('options_morphology.yaml', morphology)
-    save_options('options_control.yaml', control)
-
-    return network
+    return network, animat_data
 
 
-def analysis(filename, times, morphology):
+def analysis(data, times, morphology):
     """Analysis"""
-    # Load from file
-    # pylog.debug('Loading data from {}'.format(filename))
-    # data = AmphibiousData.from_file(filename)
-    # pylog.debug('Load complete')
     # data.plot(times)
     n_oscillators = 2*morphology.n_joints_body
     offset = 0.5
@@ -255,7 +228,6 @@ def analysis(filename, times, morphology):
     ]
     for circle, text, arrow in zip(circles, texts, arrows):
         axes.add_artist(circle)
-        print(circle)
         axes.add_artist(text)
         axes.add_artist(arrow)
 
@@ -264,8 +236,31 @@ def main(filename='cpg_network.h5'):
     """Main"""
     times = np.arange(0, 1, 1e-3)
     morphology, control = animat_options()
-    simulation(filename, times, morphology, control)
-    # analysis(filename, times, morphology)
+    _, animat_data = simulation(times, morphology, control)
+
+    # Save data
+    pylog.debug('Saving data to {}'.format(filename))
+    animat_data.to_file(filename)
+    pylog.debug('Save complete')
+
+    # Save options
+    morphology_filename = 'options_morphology.yaml'
+    control_filename = 'options_control.yaml'
+    morphology.save(morphology_filename)
+    control.save(control_filename)
+
+    # Load options
+    morphology = AmphibiousMorphologyOptions.load(morphology_filename)
+    control = AmphibiousControlOptions.load(control_filename)
+
+    # Load from file
+    pylog.debug('Loading data from {}'.format(filename))
+    data = AmphibiousData.from_file(filename)
+    pylog.debug('Load complete')
+
+    # Post-processing
+    analysis(data, times, morphology)
+
     # demo()
     plt.show()
 

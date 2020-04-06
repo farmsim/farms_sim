@@ -10,7 +10,7 @@ class AmphibiousController(ModelController):
     """Amphibious network"""
 
     def __init__(self, joints, animat_options, animat_data, timestep):
-        convention = AmphibiousConvention(animat_options.morphology)
+        convention = AmphibiousConvention(**animat_options.morphology)
         super(AmphibiousController, self).__init__(
             joints=joints,
             use_position=True,

@@ -25,7 +25,7 @@ from farms_amphibious.network.kinematics import AmphibiousKinematics
 def get_animat_options(swimming=False, **kwargs):
     """Get animat options - Should load a config file in the future"""
     scale = 1
-    animat_options = AmphibiousOptions(**kwargs)
+    animat_options = AmphibiousOptions.from_options(kwargs)
     # animat_options.control.drives.forward = 4
 
     if swimming:

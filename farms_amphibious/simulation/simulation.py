@@ -211,11 +211,13 @@ class AmphibiousSimulation(Simulation):
 
         # Body offset
         if self.interface.user_params.body_offset().changed:
-            self.animat().options.control.network.joints.set_body_offsets(
-                self.interface.user_params.body_offset().value
+            animat = self.animat()
+            animat.options.control.network.joints.set_body_offsets(
+                self.interface.user_params.body_offset().value,
+                animat.options.morphology.n_joints_body
             )
             self.animat().controller.update(
-                self.animat().options
+                animat.options
             )
             self.interface.user_params.body_offset().changed = False
 
