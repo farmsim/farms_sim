@@ -1,9 +1,9 @@
 """CPG network"""
 
+import yaml
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-import deepdish as dd
 
 from farms_amphibious.model.options import (
     AmphibiousMorphologyOptions,
@@ -128,6 +128,16 @@ def animat_options():
     return morphology, control
 
 
+def save_options(filename, options):
+    """Save options"""
+    with open(filename, 'w+') as yaml_file:
+        yaml.dump(
+            options.to_dict(),
+            yaml_file,
+            default_flow_style=False
+        )
+
+
 def simulation(filename, times, morphology, control):
     """Simulation"""
     timestep = times[1] - times[0]
@@ -154,22 +164,26 @@ def simulation(filename, times, morphology, control):
     animat_data.to_file(filename)
     pylog.debug('Save complete')
 
+    # Save options
+    save_options('options_morphology.yaml', morphology)
+    save_options('options_control.yaml', control)
+
     return network
 
 
 def analysis(filename, times, morphology):
     """Analysis"""
     # Load from file
-    pylog.debug('Loading data from {}'.format(filename))
-    data = AmphibiousData.from_file(filename)
-    pylog.debug('Load complete')
+    # pylog.debug('Loading data from {}'.format(filename))
+    # data = AmphibiousData.from_file(filename)
+    # pylog.debug('Load complete')
     # data.plot(times)
     n_oscillators = 2*morphology.n_joints_body
     offset = 0.5
     radius = 0.2
     margin_x = 1
-    margin_y = 3
-    plt.figure('CPGnetwork')
+    margin_y = 1
+    plt.figure('CPGnetwork', figsize=(12, 3))
     axes = plt.gca()
     axes.cla()
     axes.set_xlim((-margin_x, n_oscillators/2-1+margin_x))
@@ -250,9 +264,9 @@ def main(filename='cpg_network.h5'):
     """Main"""
     times = np.arange(0, 1, 1e-3)
     morphology, control = animat_options()
-    # simulation(filename, times, morphology, control)
-    analysis(filename, times, morphology)
-    demo()
+    simulation(filename, times, morphology, control)
+    # analysis(filename, times, morphology)
+    # demo()
     plt.show()
 
 

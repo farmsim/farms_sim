@@ -2,6 +2,7 @@
 
 import sys
 import numpy as np
+from scipy import interpolate
 
 from farms_amphibious.data.animat_data import (
     OscillatorNetworkState,
@@ -122,11 +123,15 @@ class AmphibiousOscillatorArray(OscillatorArray):
         n_legs = morphology.n_legs
         # n_oscillators = 2*(morphology.n_joints_body)
         n_oscillators = 2*(morphology.n_joints())
+        data = np.array(oscillators.body_freqs)
         freqs_body = 2*np.pi*np.ones(2*morphology.n_joints_body)*(
-            oscillators.body_freqs.value(drives)
+            # oscillators.body_freqs.value(drives)
+            interpolate.interp1d(data[:, 0], data[:, 1])(drives.forward)
         )
+        data = np.array(oscillators.legs_freqs)
         freqs_legs = 2*np.pi*np.ones(2*morphology.n_joints_legs())*(
-            oscillators.legs_freqs.value(drives)
+            # oscillators.legs_freqs.value(drives)
+            interpolate.interp1d(data[:, 0], data[:, 1])(drives.forward)
         )
         freqs = np.concatenate([freqs_body, freqs_legs])
         rates = 10*np.ones(n_oscillators)
@@ -134,19 +139,22 @@ class AmphibiousOscillatorArray(OscillatorArray):
         amplitudes = np.zeros(n_oscillators)
         for i in range(n_body):
             # amplitudes[[i, i+n_body]] = 0.1+0.2*i/(n_body-1)
+            data = np.array(oscillators.body_nominal_amplitudes[i])
             amplitudes[[i, i+n_body]] = (
-                oscillators.body_nominal_amplitudes[i].value(drives)
+                interpolate.interp1d(data[:, 0], data[:, 1])(drives.forward)
             )
             # oscillators.body_stand_amplitude*np.sin(
             #     2*np.pi*i/n_body
             #     - oscillators.body_stand_shift
             # )
-        for leg_i in range(n_legs):
-            for i in range(n_dof_legs):
+        for i in range(n_dof_legs):
+            data = np.array(oscillators.legs_nominal_amplitudes[i])
+            interp = interpolate.interp1d(data[:, 0], data[:, 1])
+            for leg_i in range(n_legs):
                 amplitudes[[
                     2*n_body + 2*leg_i*n_dof_legs + i,
                     2*n_body + 2*leg_i*n_dof_legs + i + n_dof_legs
-                ]] = oscillators.legs_nominal_amplitudes[i].value(drives)
+                ]] = interp(drives.forward)
         # pylog.debug("Amplitudes along body: abs({})".format(amplitudes[:11]))
         return np.abs(freqs), np.abs(rates), np.abs(amplitudes)
 
@@ -482,12 +490,12 @@ class AmphibiousJointsArray(JointsArray):
         # Body offset
         offsets[:n_body] = control.drives.turning
         # Legs walking/swimming
-        for leg_i in range(n_legs):
-            for i in range(n_dof_legs):
+        for i in range(n_dof_legs):
+            data = np.array(j_options.legs_offsets[i])
+            interp = interpolate.interp1d(data[:, 0], data[:, 1])
+            for leg_i in range(n_legs):
                 offsets[n_body + leg_i*n_dof_legs + i] = (
-                    j_options.legs_offsets[i].value(
-                        control.drives
-                    )
+                    interp(control.drives.forward)
                 )
         # Turning legs
         for leg_i in range(n_legs//2):
@@ -499,8 +507,11 @@ class AmphibiousJointsArray(JointsArray):
                 )
         # Turning body
         for i in range(n_body):
-            offsets[i] += j_options.body_offsets[i].value(
-                control.drives
+            data = np.array(j_options.body_offsets[i])
+            offsets[i] += (
+                interpolate.interp1d(data[:, 0], data[:, 1])(
+                    control.drives.forward
+                )
             )
         rates = 5*np.ones(n_joints)
         return offsets, rates

@@ -1,7 +1,7 @@
 """Animat options"""
 
 import numpy as np
-from scipy import interpolate
+# from scipy import interpolate
 
 from farms_bullet.simulation.options import Options
 from farms_amphibious.model.convention import AmphibiousConvention
@@ -232,127 +232,6 @@ class AmphibiousNetworkOptions(Options):
         self.joints.update()
 
 
-class DriveDependentProperty(Options):
-    """Drive dependent property"""
-
-    def __init__(self, data):
-        super(DriveDependentProperty, self).__init__()
-        _data = np.array(data)
-        self.interp = interpolate.interp1d(_data[:, 0], _data[:, 1])
-
-    def value(self, drives):
-        """Value in function of drive"""
-        return self.interp(drives.forward)
-
-
-class AmphibiousOscillatorFrequenciesOptions(DriveDependentProperty):
-    """Amphibious oscillator frequencies options"""
-
-    @classmethod
-    def legs_freqs(cls):
-        """Legs intrinsic frequencies"""
-        return  cls([
-            [0, 0],
-            [1, 0],
-            [1, 0.5],
-            [3, 1.5],
-            [3, 0],
-            [6, 0]
-        ])
-
-    @classmethod
-    def body_freqs(cls):
-        """Body intrinsic frequencies"""
-        return cls([
-            [0, 0],
-            [1, 0],
-            [1, 1.5],
-            [5, 4],
-            [5, 0],
-            [6, 0]
-        ])
-
-    def value(self, drives):
-        """Value in function of drive"""
-        return self.interp(drives.forward)
-
-
-class AmphibiousOscillatorAmplitudeOptions(DriveDependentProperty):
-    """Amphibious oscillators amplitudes options"""
-
-    @classmethod
-    def legs_nominal_amplitudes(cls, joint_i, **kwargs):
-        """Legs nominal amplitudes"""
-        amplitude = kwargs.pop(
-            "leg_{}_amplitude".format(joint_i),
-            [0.8, np.pi/32, np.pi/4, np.pi/8][joint_i]
-        )
-        return cls([
-            [0, 0],
-            [1, 0],
-            [1, 0.7*amplitude],
-            [3, amplitude],
-            [3, 0],
-            [6, 0]
-        ])
-
-    @classmethod
-    def body_nominal_amplitudes(cls, morphology, joint_i, **kwargs):
-        """Body nominal amplitudes"""
-        body_stand_amplitude = kwargs.pop("body_stand_amplitude", 0.2)
-        n_body = morphology.n_joints_body
-        body_stand_shift = np.pi/4
-        amplitude = body_stand_amplitude*np.sin(
-            2*np.pi*joint_i/n_body - body_stand_shift
-        )
-        # osc_options.body_stand_amplitude*np.sin(
-        #     2*np.pi*i/n_body
-        #     - osc_options.body_stand_shift
-        # )
-        return cls([
-            [0, 0.3*amplitude],
-            [3, amplitude],
-            [3, 0.1*joint_i/n_body],
-            [5, 0.6*joint_i/n_body+0.2],
-            [5, 0],
-            [6, 0]
-        ])
-
-    @staticmethod
-    def joint_value(options, joint_i):
-        """Value in function of drive"""
-        n_body = options.morphology.n_joints_body
-        osc_options = options.control.network.oscillators
-        return osc_options.body_stand_amplitude*np.sin(
-            2*np.pi*joint_i/n_body
-            - osc_options.body_stand_shift
-        )
-
-
-class AmphibiousOscillatorJointsOptions(DriveDependentProperty):
-    """Amphibious drive dependent properties"""
-
-    @classmethod
-    def legs_joints_offsets(cls, joint_i, offsets_walking, offsets_swimming):
-        """Legs joints offsets"""
-        return cls([
-            [0, offsets_swimming[joint_i]],
-            [1, offsets_swimming[joint_i]],
-            [1, offsets_walking[joint_i]],
-            [3, offsets_walking[joint_i]],
-            [3, offsets_swimming[joint_i]],
-            [6, offsets_swimming[joint_i]]
-        ])
-
-    @classmethod
-    def body_joints_offsets(cls, joint_i, offset=0):
-        """Body joints offsets"""
-        return cls([
-            [0, offset],
-            [6, offset]
-        ])
-
-
 class AmphibiousOscillatorOptions(Options):
     """Amphibious oscillator options
 
@@ -362,7 +241,8 @@ class AmphibiousOscillatorOptions(Options):
 
     def __init__(self, morphology, kwargs):
         super(AmphibiousOscillatorOptions, self).__init__()
-        self.morphology = morphology
+        self.n_joints_body = morphology.n_joints_body
+        self.n_dof_legs = morphology.n_dof_legs
         self.body_head_amplitude = kwargs.pop("body_head_amplitude", 0)
         self.body_tail_amplitude = kwargs.pop("body_tail_amplitude", 0)
         self._body_stand_amplitude = kwargs.pop("body_stand_amplitude", 0.2)
@@ -376,8 +256,22 @@ class AmphibiousOscillatorOptions(Options):
         self.update()
 
         # Frequencies
-        self.body_freqs = AmphibiousOscillatorFrequenciesOptions.body_freqs()
-        self.legs_freqs = AmphibiousOscillatorFrequenciesOptions.legs_freqs()
+        self.body_freqs = [
+            [0, 0],
+            [1, 0],
+            [1, 1.5],
+            [5, 4],
+            [5, 0],
+            [6, 0]
+        ]
+        self.legs_freqs = [
+            [0, 0],
+            [1, 0],
+            [1, 0.5],
+            [3, 1.5],
+            [3, 0],
+            [6, 0]
+        ]
 
     def update(self):
         """Update all"""
@@ -400,13 +294,22 @@ class AmphibiousOscillatorOptions(Options):
 
     def set_body_nominal_amplitudes(self):
         """Set body nominal amplitudes"""
+        n_body = self.n_joints_body
+        body_stand_shift = np.pi/4
         self.body_nominal_amplitudes = [
-            AmphibiousOscillatorAmplitudeOptions.body_nominal_amplitudes(
-                self.morphology,
-                joint_i,
-                body_stand_amplitude=self._body_stand_amplitude
-            )
-            for joint_i in range(self.morphology.n_joints_body)
+            [
+                [0, float(0.3*self._body_stand_amplitude*np.sin(
+                    2*np.pi*joint_i/n_body - body_stand_shift
+                ))],
+                [3, float(self._body_stand_amplitude*np.sin(
+                    2*np.pi*joint_i/n_body - body_stand_shift
+                ))],
+                [3, 0.1*joint_i/n_body],
+                [5, 0.6*joint_i/n_body+0.2],
+                [5, 0],
+                [6, 0]
+            ]
+            for joint_i in range(self.n_joints_body)
         ]
 
     def get_legs_amplitudes(self):
@@ -421,15 +324,15 @@ class AmphibiousOscillatorOptions(Options):
     def set_legs_nominal_amplitudes(self):
         """Set legs nominal amplitudes"""
         self.legs_nominal_amplitudes = [
-            AmphibiousOscillatorAmplitudeOptions.legs_nominal_amplitudes(
-                joint_i,
-                **{
-                    "leg_{}_amplitude".format(joint_i): (
-                        self._legs_amplitudes[joint_i]
-                    )
-                }
-            )
-            for joint_i in range(self.morphology.n_dof_legs)
+            [
+                [0, 0],
+                [1, 0],
+                [1, 0.7*self._legs_amplitudes[joint_i]],
+                [3, self._legs_amplitudes[joint_i]],
+                [3, 0],
+                [6, 0]
+            ]
+            for joint_i in range(self.n_dof_legs)
         ]
 
 
@@ -462,7 +365,8 @@ class AmphibiousJointsOptions(Options):
 
     def __init__(self, morphology, kwargs):
         super(AmphibiousJointsOptions, self).__init__()
-        self.morphology = morphology
+        self.n_joints_body = morphology.n_joints_body
+        self.n_dof_legs = morphology.n_dof_legs
         self._legs_offsets = kwargs.pop(
             "legs_offsets_walking",
             [0, np.pi/32, 0, np.pi/8]
@@ -503,12 +407,15 @@ class AmphibiousJointsOptions(Options):
     def update_legs_offsets(self):
         """Set legs joints offsets"""
         self.legs_offsets = [
-            AmphibiousOscillatorJointsOptions.legs_joints_offsets(
-                joint_i,
-                offsets_walking=self._legs_offsets,
-                offsets_swimming=self._legs_offsets_swimming
-            )
-            for joint_i in range(self.morphology.n_dof_legs)
+            [
+                [0, self._legs_offsets_swimming[joint_i]],
+                [1, self._legs_offsets_swimming[joint_i]],
+                [1, self._legs_offsets[joint_i]],
+                [3, self._legs_offsets[joint_i]],
+                [3, self._legs_offsets_swimming[joint_i]],
+                [6, self._legs_offsets_swimming[joint_i]]
+            ]
+            for joint_i in range(self.n_dof_legs)
         ]
 
     def set_body_offsets(self, value):
@@ -519,9 +426,9 @@ class AmphibiousJointsOptions(Options):
     def update_body_offsets(self):
         """Set body joints offsets"""
         self.body_offsets = [
-            AmphibiousOscillatorJointsOptions.body_joints_offsets(
-                joint_i,
-                offset=self._body_offset
-            )
-            for joint_i in range(self.morphology.n_joints_body)
+            [
+                [0, self._body_offset],
+                [6, self._body_offset]
+            ]
+            for joint_i in range(self.n_joints_body)
         ]
