@@ -2,7 +2,56 @@
 
 import numpy as np
 from scipy import integrate
-from ..controllers.controller import ode_oscillators_sparse
+from ..controllers.controller import (
+    ode_oscillators_sparse,
+    ode_dphase,
+    ode_damplitude,
+    ode_contacts,
+    ode_hydro,
+    ode_joints,
+)
+
+
+def ode_oscillators_sparse_python(time, state, data, network):
+    """ODE"""
+    n_oscillators = data.network.oscillators.size[1]
+    dstate = data.state.array[data.iteration][1]
+    ode_dphase(
+        time,
+        state,
+        dstate,
+        data,
+        n_oscillators,
+    )
+    ode_damplitude(
+        time,
+        state,
+        dstate,
+        data,
+        n_oscillators,
+    )
+    ode_contacts(
+        time,
+        state,
+        dstate,
+        data,
+        n_oscillators,
+    )
+    ode_hydro(
+        time,
+        state,
+        dstate,
+        data,
+        n_oscillators,
+    )
+    ode_joints(
+        time,
+        state,
+        dstate,
+        data,
+        n_oscillators,
+    )
+    return dstate
 
 
 class NetworkODE:
@@ -17,7 +66,10 @@ class NetworkODE:
         # Adaptive timestep parameters
         self.solver = integrate.ode(f=self.ode)  # , jac=self.jac
         self.solver.set_integrator("dopri5")
-        self.solver.set_f_params(self.data)
+        self.solver.set_f_params(
+            self.data,
+            self.data.network
+        )
         self._time = 0
 
     def control_step(self, iteration, time, timestep):
