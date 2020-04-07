@@ -4,7 +4,8 @@ import sys
 import numpy as np
 from scipy import interpolate
 
-from farms_amphibious.data.animat_data import (
+import farms_pylog as pylog
+from ..data.animat_data import (
     OscillatorNetworkState,
     AnimatData,
     NetworkParameters,
@@ -17,8 +18,10 @@ from farms_amphibious.data.animat_data import (
     GpsArray,
     HydrodynamicsArray
 )
-import farms_pylog as pylog
 from .convention import AmphibiousConvention
+
+
+DTYPE = np.float64
 
 
 class AmphibiousData(AnimatData):
@@ -78,12 +81,12 @@ class AmphibiousOscillatorNetworkState(OscillatorNetworkState):
     def default_initial_state(morphology):
         """Default state"""
         n_joints = morphology.n_joints()
-        return 1e-3*np.arange(5*n_joints) + np.concatenate([
+        return 1e-3*np.arange(5*n_joints, dtype=DTYPE) + np.concatenate([
             # 0*np.linspace(2*np.pi, 0, n_joints),
-            np.zeros(n_joints),
-            np.zeros(n_joints),
-            np.zeros(2*n_joints),
-            np.zeros(n_joints)
+            np.zeros(n_joints, dtype=DTYPE),
+            np.zeros(n_joints, dtype=DTYPE),
+            np.zeros(2*n_joints, dtype=DTYPE),
+            np.zeros(n_joints, dtype=DTYPE)
         ])
 
     @staticmethod
@@ -106,9 +109,9 @@ class AmphibiousOscillatorNetworkState(OscillatorNetworkState):
         """From initial state"""
         state = np.zeros(
             [n_iterations, 2, np.shape(initial_state)[0]],
-            dtype=np.float64
+            dtype=DTYPE
         )
-        state[0, 0, :] = np.array(initial_state)
+        state[0, 0, :] = np.array(initial_state, dtype=DTYPE)
         return cls(state, n_oscillators)
 
 
@@ -123,23 +126,23 @@ class AmphibiousOscillatorArray(OscillatorArray):
         n_legs = morphology.n_legs
         # n_oscillators = 2*(morphology.n_joints_body)
         n_oscillators = 2*(morphology.n_joints())
-        data = np.array(oscillators.body_freqs)
-        freqs_body = 2*np.pi*np.ones(2*morphology.n_joints_body)*(
+        data = np.array(oscillators.body_freqs, dtype=DTYPE)
+        freqs_body = 2*np.pi*np.ones(2*morphology.n_joints_body, dtype=DTYPE)*(
             # oscillators.body_freqs.value(drives)
             interpolate.interp1d(data[:, 0], data[:, 1])(drives.forward)
         )
-        data = np.array(oscillators.legs_freqs)
-        freqs_legs = 2*np.pi*np.ones(2*morphology.n_joints_legs())*(
+        data = np.array(oscillators.legs_freqs, dtype=DTYPE)
+        freqs_legs = 2*np.pi*np.ones(2*morphology.n_joints_legs(), dtype=DTYPE)*(
             # oscillators.legs_freqs.value(drives)
             interpolate.interp1d(data[:, 0], data[:, 1])(drives.forward)
         )
         freqs = np.concatenate([freqs_body, freqs_legs])
-        rates = 10*np.ones(n_oscillators)
+        rates = 10*np.ones(n_oscillators, dtype=DTYPE)
         # Amplitudes
-        amplitudes = np.zeros(n_oscillators)
+        amplitudes = np.zeros(n_oscillators, dtype=DTYPE)
         for i in range(n_body):
             # amplitudes[[i, i+n_body]] = 0.1+0.2*i/(n_body-1)
-            data = np.array(oscillators.body_nominal_amplitudes[i])
+            data = np.array(oscillators.body_nominal_amplitudes[i], dtype=DTYPE)
             amplitudes[[i, i+n_body]] = (
                 interpolate.interp1d(data[:, 0], data[:, 1])(drives.forward)
             )
@@ -148,7 +151,7 @@ class AmphibiousOscillatorArray(OscillatorArray):
             #     - oscillators.body_stand_shift
             # )
         for i in range(n_dof_legs):
-            data = np.array(oscillators.legs_nominal_amplitudes[i])
+            data = np.array(oscillators.legs_nominal_amplitudes[i], dtype=DTYPE)
             interp = interpolate.interp1d(data[:, 0], data[:, 1])
             for leg_i in range(n_legs):
                 amplitudes[[
@@ -457,7 +460,7 @@ class AmphibiousOscillatorConnectivityArray(ConnectivityArray):
                     threshold=sys.maxsize
             ):
                 pylog.debug("Oscillator connectivity:\n{}".format(
-                    np.array(connectivity)
+                    np.array(connectivity, dtype=DTYPE)
                 ))
         return connectivity
 
@@ -465,7 +468,7 @@ class AmphibiousOscillatorConnectivityArray(ConnectivityArray):
     def from_options(cls, morphology, control):
         """Parameters for walking"""
         connectivity = cls.set_options(morphology, control)
-        return cls(np.array(connectivity))
+        return cls(np.array(connectivity, dtype=DTYPE))
 
     def update(self, morphology, control):
         """Update from options
@@ -486,12 +489,12 @@ class AmphibiousJointsArray(JointsArray):
         n_dof_legs = morphology.n_dof_legs
         n_legs = morphology.n_legs
         n_joints = n_body + n_legs*n_dof_legs
-        offsets = np.zeros(n_joints)
+        offsets = np.zeros(n_joints, dtype=DTYPE)
         # Body offset
         offsets[:n_body] = control.drives.turning
         # Legs walking/swimming
         for i in range(n_dof_legs):
-            data = np.array(j_options.legs_offsets[i])
+            data = np.array(j_options.legs_offsets[i], dtype=DTYPE)
             interp = interpolate.interp1d(data[:, 0], data[:, 1])
             for leg_i in range(n_legs):
                 offsets[n_body + leg_i*n_dof_legs + i] = (
@@ -507,13 +510,13 @@ class AmphibiousJointsArray(JointsArray):
                 )
         # Turning body
         for i in range(n_body):
-            data = np.array(j_options.body_offsets[i])
+            data = np.array(j_options.body_offsets[i], dtype=DTYPE)
             offsets[i] += (
                 interpolate.interp1d(data[:, 0], data[:, 1])(
                     control.drives.forward
                 )
             )
-        rates = 5*np.ones(n_joints)
+        rates = 5*np.ones(n_joints, dtype=DTYPE)
         return offsets, rates
 
     @classmethod
@@ -538,7 +541,7 @@ class AmphibiousContactsArray(ContactsArray):
     @classmethod
     def from_options(cls, n_contacts, n_iterations):
         """Default"""
-        contacts = np.zeros([n_iterations, n_contacts, 9])  # x, y, z
+        contacts = np.zeros([n_iterations, n_contacts, 9], dtype=DTYPE)  # x, y, z
         return cls(contacts)
 
 
@@ -580,11 +583,11 @@ class AmphibiousContactsConnectivityArray(ConnectivityArray):
                                 ])
         if verbose:
             pylog.debug("Contacts connectivity:\n{}".format(
-                np.array(connectivity)
+                np.array(connectivity, dtype=DTYPE)
             ))
         if not connectivity:
             connectivity = [[]]
-        return cls(np.array(connectivity, dtype=np.float64))
+        return cls(np.array(connectivity, dtype=DTYPE))
 
 
 class AmphibiousHydroConnectivityArray(ConnectivityArray):
@@ -609,9 +612,9 @@ class AmphibiousHydroConnectivityArray(ConnectivityArray):
                 ])
         if verbose:
             pylog.debug("Hydro connectivity:\n{}".format(
-                np.array(connectivity)
+                np.array(connectivity, dtype=DTYPE)
             ))
-        return cls(np.array(connectivity, dtype=np.float64))
+        return cls(np.array(connectivity, dtype=DTYPE))
 
 
 class AmphibiousProprioceptionArray(ProprioceptionArray):
@@ -620,7 +623,7 @@ class AmphibiousProprioceptionArray(ProprioceptionArray):
     @classmethod
     def from_options(cls, n_joints, n_iterations):
         """Default"""
-        proprioception = np.zeros([n_iterations, n_joints, 9])
+        proprioception = np.zeros([n_iterations, n_joints, 9], dtype=DTYPE)
         return cls(proprioception)
 
 
@@ -630,7 +633,7 @@ class AmphibiousGpsArray(GpsArray):
     @classmethod
     def from_options(cls, n_links, n_iterations):
         """Default"""
-        gps = np.zeros([n_iterations, n_links, 20])
+        gps = np.zeros([n_iterations, n_links, 20], dtype=DTYPE)
         return cls(gps)
 
 
@@ -640,5 +643,5 @@ class AmphibiousHydrodynamicsArray(HydrodynamicsArray):
     @classmethod
     def from_options(cls, n_links, n_iterations):
         """Default"""
-        hydrodynamics = np.zeros([n_iterations, n_links, 6])  # Fxyz, Mxyz
+        hydrodynamics = np.zeros([n_iterations, n_links, 6], dtype=DTYPE)  # Fxyz, Mxyz
         return cls(hydrodynamics)

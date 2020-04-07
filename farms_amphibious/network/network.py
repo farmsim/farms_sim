@@ -2,6 +2,7 @@
 
 import numpy as np
 from scipy import integrate
+from ..model.data import DTYPE
 from ..controllers.controller import (
     ode_oscillators_sparse,
     ode_dphase,
@@ -14,6 +15,7 @@ from ..controllers.controller import (
 
 def ode_oscillators_sparse_python(time, state, data, network):
     """ODE"""
+    state = np.array(state, dtype=DTYPE)
     ode_dphase(
         state=state,
         dstate=data.state.array[data.iteration][1],
@@ -47,6 +49,11 @@ def ode_oscillators_sparse_python(time, state, data, network):
         n_oscillators=data.network.oscillators.size[1],
     )
     return data.state.array[data.iteration][1]
+
+
+def ode_oscillators_sparse_python2(time, state, data, network):
+    """ODE"""
+    ode_oscillators_sparse_python(time, state.astype(DTYPE), data, network)
 
 
 class NetworkODE:
