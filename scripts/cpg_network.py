@@ -1,6 +1,5 @@
 """CPG network"""
 
-import yaml
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
@@ -19,6 +18,7 @@ from farms_amphibious.model.data import (
     AmphibiousData,
 )
 from farms_amphibious.network.network import NetworkODE
+from farms_amphibious.experiment.simulation import profile
 import farms_pylog as pylog
 
 
@@ -124,6 +124,12 @@ def animat_options():
     return morphology, control
 
 
+def run_simulation(network, n_iterations, timestep):
+    """Run simulation"""
+    for iteration in range(n_iterations-1):
+        network.control_step(iteration, iteration*timestep, timestep)
+
+
 def simulation(times, morphology, control):
     """Simulation"""
     timestep = times[1] - times[0]
@@ -142,8 +148,12 @@ def simulation(times, morphology, control):
 
     # Animat network
     network = NetworkODE(animat_data)
-    for iteration in range(n_iterations-1):
-        network.control_step(iteration, iteration*timestep, timestep)
+    profile(
+        run_simulation,
+        network=network,
+        n_iterations=n_iterations,
+        timestep=timestep,
+    )
 
     return network, animat_data
 
@@ -254,7 +264,7 @@ def analysis(data, times, morphology):
 
 def main(filename='cpg_network.h5'):
     """Main"""
-    times = np.arange(0, 1, 1e-3)
+    times = np.arange(0, 10, 1e-3)
     morphology, control = animat_options()
     _, animat_data = simulation(times, morphology, control)
 
