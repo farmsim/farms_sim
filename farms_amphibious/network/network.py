@@ -14,44 +14,39 @@ from ..controllers.controller import (
 
 def ode_oscillators_sparse_python(time, state, data, network):
     """ODE"""
-    n_oscillators = data.network.oscillators.size[1]
-    dstate = data.state.array[data.iteration][1]
     ode_dphase(
-        time,
-        state,
-        dstate,
-        data,
-        n_oscillators,
+        state=state,
+        dstate=data.state.array[data.iteration][1],
+        oscillators=data.network.oscillators,
+        connectivity=data.network.connectivity,
     )
     ode_damplitude(
-        time,
-        state,
-        dstate,
-        data,
-        n_oscillators,
+        state=state,
+        dstate=data.state.array[data.iteration][1],
+        oscillators=data.network.oscillators,
     )
     ode_contacts(
-        time,
-        state,
-        dstate,
-        data,
-        n_oscillators,
+        iteration=data.iteration,
+        state=state,
+        dstate=data.state.array[data.iteration][1],
+        contacts=data.sensors.contacts,
+        contacts_connectivity=data.network.contacts_connectivity,
     )
     ode_hydro(
-        time,
-        state,
-        dstate,
-        data,
-        n_oscillators,
+        iteration=data.iteration,
+        state=state,
+        dstate=data.state.array[data.iteration][1],
+        hydrodynamics=data.sensors.hydrodynamics,
+        hydro_connectivity=data.network.hydro_connectivity,
+        n_oscillators=data.network.oscillators.size[1],
     )
     ode_joints(
-        time,
-        state,
-        dstate,
-        data,
-        n_oscillators,
+        state=state,
+        dstate=data.state.array[data.iteration][1],
+        joints=data.joints,
+        n_oscillators=data.network.oscillators.size[1],
     )
-    return dstate
+    return data.state.array[data.iteration][1]
 
 
 class NetworkODE:

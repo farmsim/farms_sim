@@ -16,7 +16,6 @@ cpdef void ode_dphase(
     double[:] dstate,
     OscillatorArrayCy oscillators,
     ConnectivityArrayCy connectivity,
-    unsigned int n_oscillators,
 ) nogil:
     """Oscillator phase ODE
 
@@ -24,6 +23,7 @@ cpdef void ode_dphase(
 
     """
     cdef unsigned int i, i0, i1
+    cdef unsigned int n_oscillators = oscillators.size[1]
     for i in range(n_oscillators):  # , nogil=True):
         # Intrinsic frequency
         dstate[i] = oscillators.array[0][i]
@@ -41,7 +41,6 @@ cpdef void ode_damplitude(
     CTYPE[:] state,
     double[:] dstate,
     OscillatorArrayCy oscillators,
-    unsigned int n_oscillators,
 ) nogil:
     """Oscillator amplitude ODE
 
@@ -49,6 +48,7 @@ cpdef void ode_damplitude(
 
     """
     cdef unsigned int i
+    cdef unsigned int n_oscillators = oscillators.size[1]
     for i in range(n_oscillators):  # , nogil=True):
         # rate*(nominal_amplitude - amplitude)
         dstate[n_oscillators+i] = oscillators.array[1][i]*(
@@ -142,41 +142,37 @@ cpdef double[:] ode_oscillators_sparse(
     AnimatDataCy data,
     NetworkParametersCy network,
 ):
-    """ODE"""
-    cdef unsigned int n_oscillators = data.network.oscillators.size[1]
-    cdef double[:] dstate = data.state.array[data.iteration][1]
+    """Complete CPG network ODE"""
     ode_dphase(
-        state,
-        dstate,
-        data.network.oscillators,
-        data.network.connectivity,
-        n_oscillators,
+        state=state,
+        dstate=data.state.array[data.iteration][1],
+        oscillators=data.network.oscillators,
+        connectivity=data.network.connectivity,
     )
     ode_damplitude(
-        state,
-        dstate,
-        data.network.oscillators,
-        n_oscillators,
+        state=state,
+        dstate=data.state.array[data.iteration][1],
+        oscillators=data.network.oscillators,
     )
     ode_contacts(
-        data.iteration,
-        state,
-        dstate,
-        data.sensors.contacts,
-        data.network.contacts_connectivity,
+        iteration=data.iteration,
+        state=state,
+        dstate=data.state.array[data.iteration][1],
+        contacts=data.sensors.contacts,
+        contacts_connectivity=data.network.contacts_connectivity,
     )
     ode_hydro(
-        data.iteration,
-        state,
-        dstate,
-        data.sensors.hydrodynamics,
-        data.network.hydro_connectivity,
-        n_oscillators,
+        iteration=data.iteration,
+        state=state,
+        dstate=data.state.array[data.iteration][1],
+        hydrodynamics=data.sensors.hydrodynamics,
+        hydro_connectivity=data.network.hydro_connectivity,
+        n_oscillators=data.network.oscillators.size[1],
     )
     ode_joints(
-        state,
-        dstate,
-        data.joints,
-        n_oscillators,
+        state=state,
+        dstate=data.state.array[data.iteration][1],
+        joints=data.joints,
+        n_oscillators=data.network.oscillators.size[1],
     )
-    return dstate
+    return data.state.array[data.iteration][1]

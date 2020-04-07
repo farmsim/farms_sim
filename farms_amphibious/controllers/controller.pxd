@@ -22,7 +22,6 @@ cpdef void ode_dphase(
     double[:] dstate,
     OscillatorArrayCy oscillators,
     ConnectivityArrayCy connectivity,
-    unsigned int n_oscillators,
 ) nogil
 
 
@@ -30,7 +29,6 @@ cpdef void ode_damplitude(
     CTYPE[:] state,
     double[:] dstate,
     OscillatorArrayCy oscillators,
-    unsigned int n_oscillators,
 ) nogil
 
 
