@@ -2,10 +2,10 @@
 """Run salamander simulation with bullet"""
 
 import time
-# import yaml
-import numpy as np
 import matplotlib.pyplot as plt
 from farms_models.utils import get_sdf_path
+from farms_bullet.simulation.options import SimulationOptions
+from farms_amphibious.model.options import AmphibiousOptions
 from farms_amphibious.experiment.simulation import (
     simulation,
     amphibious_options,
@@ -28,8 +28,8 @@ def main():
         n_dof_legs=4,
         n_joints_body=11,
         viscous_coefficients=[
-            np.array([-1e-1, -1e0, -1e0]),
-            np.array([-1e-6, -1e-6, -1e-6]),
+            [-1e-1, -1e0, -1e0],
+            [-1e-6, -1e-6, -1e-6],
         ]
     )
 
@@ -38,13 +38,15 @@ def main():
         arena_sdf,
     ) = amphibious_options(animat_options, use_water_arena=True)
 
-    # # Save options
-    # with open('animat_options.yaml', 'w+') as yaml_file:
-    #     yaml.dump(
-    #         animat_options,
-    #         yaml_file,
-    #         default_flow_style=False
-    #     )
+    # Save options
+    animat_options_filename = 'salamander_animat_options.yaml'
+    animat_options.save(animat_options_filename)
+    simulation_options_filename = 'salamander_simulation_options.yaml'
+    simulation_options.save(simulation_options_filename)
+
+    # Load options
+    animat_options = AmphibiousOptions.load(animat_options_filename)
+    simulation_options = SimulationOptions.load(simulation_options_filename)
 
     # Simulation
     profile(
@@ -55,6 +57,8 @@ def main():
         arena_sdf=arena_sdf,
         use_controller=True,
     )
+
+    # Plot
     plt.show()
 
 

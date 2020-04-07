@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from farms_bullet.simulation.options import Options
+from farms_data.options import Options
 from farms_amphibious.model.convention import AmphibiousConvention
 
 
@@ -11,10 +11,10 @@ class AmphibiousOptions(Options):
 
     def __init__(self, **kwargs):
         super(AmphibiousOptions, self).__init__()
-        self.morphology = kwargs.pop('morphology')
-        self.spawn = kwargs.pop('spawn')
-        self.physics = kwargs.pop('physics')
-        self.control = kwargs.pop('control')
+        self.morphology = AmphibiousMorphologyOptions(**kwargs.pop('morphology'))
+        self.spawn = AmphibiousSpawnOptions(**kwargs.pop('spawn'))
+        self.physics = AmphibiousPhysicsOptions(**kwargs.pop('physics'))
+        self.control = AmphibiousControlOptions(**kwargs.pop('control'))
         self.collect_gps = kwargs.pop('collect_gps')
         self.show_hydrodynamics = kwargs.pop('show_hydrodynamics')
         self.transition = kwargs.pop('transition')
@@ -230,8 +230,8 @@ class AmphibiousControlOptions(Options):
     def __init__(self, **kwargs):
         super(AmphibiousControlOptions, self).__init__()
         self.kinematics_file = kwargs.pop('kinematics_file')
-        self.drives = kwargs.pop('drives')
-        self.network = kwargs.pop('network')
+        self.drives = AmphibiousDrives(**kwargs.pop('drives'))
+        self.network = AmphibiousNetworkOptions(**kwargs.pop('network'))
         if kwargs:
             raise Exception("Unknown kwargs: {}".format(kwargs))
 
@@ -299,9 +299,12 @@ class AmphibiousNetworkOptions(Options):
 
     def __init__(self, **kwargs):
         super(AmphibiousNetworkOptions, self).__init__()
-        self.oscillators = kwargs.pop('oscillators')
-        self.connectivity = kwargs.pop('connectivity')
-        self.joints = kwargs.pop('joints')
+        oscillators = kwargs.pop('oscillators')
+        connectivity = kwargs.pop('connectivity')
+        joints = kwargs.pop('joints')
+        self.oscillators = AmphibiousOscillatorOptions(**oscillators)
+        self.connectivity = AmphibiousConnectivityOptions(**connectivity)
+        self.joints = AmphibiousJointsOptions(**joints)
         self.sensors = kwargs.pop('sensors')
         if kwargs:
             raise Exception("Unknown kwargs: {}".format(kwargs))

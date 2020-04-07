@@ -150,7 +150,27 @@ def simulation(times, morphology, control):
 
 def analysis(data, times, morphology):
     """Analysis"""
+    # Network information
+    sep = '\n'
+    pylog.info(
+        (sep.join([
+            'Network infromation:',
+            '  - Oscillators shape: {}',
+            '  - Connectivity shape: {}',
+            '  - Contacts connectivity shape: {}',
+            '  - Hydro connectivity shape: {}',
+        ])).format(
+            np.shape(data.network.oscillators.array),
+            np.shape(data.network.connectivity.array),
+            np.shape(data.network.contacts_connectivity.array),
+            np.shape(data.network.hydro_connectivity.array),
+        )
+    )
+
+    # # Plot data
     # data.plot(times)
+
+    # Plot network
     n_oscillators = 2*morphology.n_joints_body
     offset = 0.5
     radius = 0.2

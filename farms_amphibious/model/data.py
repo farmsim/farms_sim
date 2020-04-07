@@ -21,47 +21,6 @@ import farms_pylog as pylog
 from .convention import AmphibiousConvention
 
 
-class AmphibiousOscillatorNetworkState(OscillatorNetworkState):
-    """Network state"""
-
-    @staticmethod
-    def default_initial_state(morphology):
-        """Default state"""
-        n_joints = morphology.n_joints()
-        return 1e-3*np.arange(5*n_joints) + np.concatenate([
-            # 0*np.linspace(2*np.pi, 0, n_joints),
-            np.zeros(n_joints),
-            np.zeros(n_joints),
-            np.zeros(2*n_joints),
-            np.zeros(n_joints)
-        ])
-
-    @staticmethod
-    def default_state(n_iterations, morphology):
-        """Default state"""
-        n_joints = morphology.n_joints()
-        n_oscillators = 2*n_joints
-        return AmphibiousOscillatorNetworkState.from_initial_state(
-            initial_state=(
-                AmphibiousOscillatorNetworkState.default_initial_state(
-                    morphology
-                )
-            ),
-            n_iterations=n_iterations,
-            n_oscillators=n_oscillators
-        )
-
-    @classmethod
-    def from_initial_state(cls, initial_state, n_iterations, n_oscillators):
-        """From initial state"""
-        state = np.zeros(
-            [n_iterations, 2, np.shape(initial_state)[0]],
-            dtype=np.float64
-        )
-        state[0, 0, :] = np.array(initial_state)
-        return cls(state, n_oscillators)
-
-
 class AmphibiousData(AnimatData):
     """Amphibious network parameter"""
 
@@ -110,6 +69,47 @@ class AmphibiousData(AnimatData):
             )
         )
         return cls(state, network, joints, sensors)
+
+
+class AmphibiousOscillatorNetworkState(OscillatorNetworkState):
+    """Network state"""
+
+    @staticmethod
+    def default_initial_state(morphology):
+        """Default state"""
+        n_joints = morphology.n_joints()
+        return 1e-3*np.arange(5*n_joints) + np.concatenate([
+            # 0*np.linspace(2*np.pi, 0, n_joints),
+            np.zeros(n_joints),
+            np.zeros(n_joints),
+            np.zeros(2*n_joints),
+            np.zeros(n_joints)
+        ])
+
+    @staticmethod
+    def default_state(n_iterations, morphology):
+        """Default state"""
+        n_joints = morphology.n_joints()
+        n_oscillators = 2*n_joints
+        return AmphibiousOscillatorNetworkState.from_initial_state(
+            initial_state=(
+                AmphibiousOscillatorNetworkState.default_initial_state(
+                    morphology
+                )
+            ),
+            n_iterations=n_iterations,
+            n_oscillators=n_oscillators
+        )
+
+    @classmethod
+    def from_initial_state(cls, initial_state, n_iterations, n_oscillators):
+        """From initial state"""
+        state = np.zeros(
+            [n_iterations, 2, np.shape(initial_state)[0]],
+            dtype=np.float64
+        )
+        state[0, 0, :] = np.array(initial_state)
+        return cls(state, n_oscillators)
 
 
 class AmphibiousOscillatorArray(OscillatorArray):
