@@ -12,8 +12,8 @@ from libc.math cimport sin, fabs  # cos,
 
 
 cpdef void ode_dphase(
-    CTYPE[:] state,
-    double[:] dstate,
+    CTYPEv1 state,
+    CTYPEv1 dstate,
     OscillatorArrayCy oscillators,
     ConnectivityArrayCy connectivity,
 ) nogil:
@@ -38,8 +38,8 @@ cpdef void ode_dphase(
 
 
 cpdef void ode_damplitude(
-    CTYPE[:] state,
-    double[:] dstate,
+    CTYPEv1 state,
+    CTYPEv1 dstate,
     OscillatorArrayCy oscillators,
 ) nogil:
     """Oscillator amplitude ODE
@@ -58,8 +58,8 @@ cpdef void ode_damplitude(
 
 cpdef void ode_contacts(
     unsigned int iteration,
-    CTYPE[:] state,
-    double[:] dstate,
+    CTYPEv1 state,
+    CTYPEv1 dstate,
     ContactsArrayCy contacts,
     ConnectivityArrayCy contacts_connectivity,
 ) nogil:
@@ -68,7 +68,7 @@ cpdef void ode_contacts(
     Can affect d_phase and d_amplitude
 
     """
-    cdef double contact
+    cdef CTYPE contact
     cdef unsigned int i, i0, i1
     for i in range(contacts_connectivity.size[0]):
         i0 = <unsigned int> (
@@ -94,8 +94,8 @@ cpdef void ode_contacts(
 
 cpdef void ode_hydro(
     unsigned int iteration,
-    CTYPE[:] state,
-    double[:] dstate,
+    CTYPEv1 state,
+    CTYPEv1 dstate,
     HydrodynamicsArrayCy hydrodynamics,
     ConnectivityArrayCy hydro_connectivity,
     unsigned int n_oscillators,
@@ -105,7 +105,7 @@ cpdef void ode_hydro(
     Can affect d_phase and d_amplitude
 
     """
-    cdef double hydro_force
+    cdef CTYPE hydro_force
     cdef unsigned int i, i0, i1
     for i in range(hydro_connectivity.size[0]):
         i0 = <unsigned int> (hydro_connectivity.array[i][0] + 0.5)
@@ -118,8 +118,8 @@ cpdef void ode_hydro(
 
 
 cpdef void ode_joints(
-    CTYPE[:] state,
-    double[:] dstate,
+    CTYPEv1 state,
+    CTYPEv1 dstate,
     JointsArrayCy joints,
     unsigned int n_oscillators,
 ) nogil:
@@ -136,12 +136,12 @@ cpdef void ode_joints(
         )
 
 
-cpdef double[:] ode_oscillators_sparse(
-    double time,
-    CTYPE[:] state,
+cpdef CTYPEv1 ode_oscillators_sparse(
+    CTYPE time,
+    CTYPEv1 state,
     AnimatDataCy data,
     NetworkParametersCy network,
-):
+) nogil:
     """Complete CPG network ODE"""
     ode_dphase(
         state=state,

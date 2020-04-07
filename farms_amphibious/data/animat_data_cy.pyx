@@ -180,27 +180,27 @@ cdef class ContactsArrayCy(NetworkArray3D):
         """From parameters"""
         return cls(np.zeros([n_iterations, n_contacts, 9]))
 
-    cpdef double[:] reaction(self, unsigned int iteration, unsigned int sensor_i):
+    cpdef CTYPEv1 reaction(self, unsigned int iteration, unsigned int sensor_i):
         """Reaction force"""
         return self.array[iteration, sensor_i, 0:3]
 
-    cpdef double[:, :] reaction_all(self, unsigned int sensor_i):
+    cpdef CTYPEv2 reaction_all(self, unsigned int sensor_i):
         """Reaction force"""
         return self.array[:, sensor_i, 0:3]
 
-    cpdef double[:] friction(self, unsigned int iteration, unsigned int sensor_i):
+    cpdef CTYPEv1 friction(self, unsigned int iteration, unsigned int sensor_i):
         """Friction force"""
         return self.array[iteration, sensor_i, 3:6]
 
-    cpdef double[:, :] friction_all(self, unsigned int sensor_i):
+    cpdef CTYPEv2 friction_all(self, unsigned int sensor_i):
         """Friction force"""
         return self.array[:, sensor_i, 3:6]
 
-    cpdef double[:] total(self, unsigned int iteration, unsigned int sensor_i):
+    cpdef CTYPEv1 total(self, unsigned int iteration, unsigned int sensor_i):
         """Total force"""
         return self.array[iteration, sensor_i, 6:9]
 
-    cpdef double[:, :] total_all(self, unsigned int sensor_i):
+    cpdef CTYPEv2 total_all(self, unsigned int sensor_i):
         """Total force"""
         return self.array[:, sensor_i, 6:9]
 
@@ -213,51 +213,51 @@ cdef class ProprioceptionArrayCy(NetworkArray3D):
         """From parameters"""
         return cls(np.zeros([n_iterations, n_joints, 9]))
 
-    cpdef double position(self, unsigned int iteration, unsigned int joint_i):
+    cpdef CTYPE position(self, unsigned int iteration, unsigned int joint_i):
         """Joint position"""
         return self.array[iteration, joint_i, 0]
 
-    cpdef double[:] positions(self, unsigned int iteration):
+    cpdef CTYPEv1 positions(self, unsigned int iteration):
         """Joints positions"""
         return self.array[iteration, :, 0]
 
-    cpdef double[:, :] positions_all(self):
+    cpdef CTYPEv2 positions_all(self):
         """Joints positions"""
         return self.array[:, :, 0]
 
-    cpdef double velocity(self, unsigned int iteration, unsigned int joint_i):
+    cpdef CTYPE velocity(self, unsigned int iteration, unsigned int joint_i):
         """Joint velocity"""
         return self.array[iteration, joint_i, 1]
 
-    cpdef double[:] velocities(self, unsigned int iteration):
+    cpdef CTYPEv1 velocities(self, unsigned int iteration):
         """Joints velocities"""
         return self.array[iteration, :, 1]
 
-    cpdef double[:, :] velocities_all(self):
+    cpdef CTYPEv2 velocities_all(self):
         """Joints velocities"""
         return self.array[:, :, 1]
 
-    cpdef double[:] force(self, unsigned int iteration, unsigned int joint_i):
+    cpdef CTYPEv1 force(self, unsigned int iteration, unsigned int joint_i):
         """Joint force"""
         return self.array[iteration, joint_i, 2:5]
 
-    cpdef double[:, :, :] forces_all(self):
+    cpdef CTYPEv3 forces_all(self):
         """Joints forces"""
         return self.array[:, :, 2:5]
 
-    cpdef double[:] torque(self, unsigned int iteration, unsigned int joint_i):
+    cpdef CTYPEv1 torque(self, unsigned int iteration, unsigned int joint_i):
         """Joint torque"""
         return self.array[iteration, joint_i, 5:8]
 
-    cpdef double[:, :, :] torques_all(self):
+    cpdef CTYPEv3 torques_all(self):
         """Joints torques"""
         return self.array[:, :, 5:8]
 
-    cpdef double motor_torque(self, unsigned int iteration, unsigned int joint_i):
+    cpdef CTYPE motor_torque(self, unsigned int iteration, unsigned int joint_i):
         """Joint velocity"""
         return self.array[iteration, joint_i, 8]
 
-    cpdef double[:, :] motor_torques(self):
+    cpdef CTYPEv2 motor_torques(self):
         """Joint velocity"""
         return self.array[:, :, 8]
 
@@ -270,35 +270,35 @@ cdef class GpsArrayCy(NetworkArray3D):
         """From parameters"""
         return cls(np.zeros([n_iterations, n_links, 20]))
 
-    cpdef double[:] com_position(self, unsigned int iteration, unsigned int link_i):
+    cpdef CTYPEv1 com_position(self, unsigned int iteration, unsigned int link_i):
         """CoM position of a link"""
         return self.array[iteration, link_i, 0:3]
 
-    cpdef double[:] com_orientation(self, unsigned int iteration, unsigned int link_i):
+    cpdef CTYPEv1 com_orientation(self, unsigned int iteration, unsigned int link_i):
         """CoM orientation of a link"""
         return self.array[iteration, link_i, 3:7]
 
-    cpdef double[:] urdf_position(self, unsigned int iteration, unsigned int link_i):
+    cpdef CTYPEv1 urdf_position(self, unsigned int iteration, unsigned int link_i):
         """URDF position of a link"""
         return self.array[iteration, link_i, 7:10]
 
-    cpdef double[:, :, :] urdf_positions(self):
+    cpdef CTYPEv3 urdf_positions(self):
         """URDF position of a link"""
         return self.array[:, :, 7:10]
 
-    cpdef double[:] urdf_orientation(self, unsigned int iteration, unsigned int link_i):
+    cpdef CTYPEv1 urdf_orientation(self, unsigned int iteration, unsigned int link_i):
         """URDF orientation of a link"""
         return self.array[iteration, link_i, 10:14]
 
-    cpdef double[:] com_lin_velocity(self, unsigned int iteration, unsigned int link_i):
+    cpdef CTYPEv1 com_lin_velocity(self, unsigned int iteration, unsigned int link_i):
         """CoM linear velocity of a link"""
         return self.array[iteration, link_i, 14:17]
 
-    cpdef double[:, :, :] com_lin_velocities(self):
+    cpdef CTYPEv3 com_lin_velocities(self):
         """CoM linear velocities"""
         return self.array[:, :, 14:17]
 
-    cpdef double[:] com_ang_velocity(self, unsigned int iteration, unsigned int link_i):
+    cpdef CTYPEv1 com_ang_velocity(self, unsigned int iteration, unsigned int link_i):
         """CoM angular velocity of a link"""
         return self.array[iteration, link_i, 17:20]
 
@@ -311,10 +311,10 @@ cdef class HydrodynamicsArrayCy(NetworkArray3D):
         """From parameters"""
         return cls(np.zeros([n_iterations, n_links, 6]))
 
-    cpdef double[:, :, :] forces(self):
+    cpdef CTYPEv3 forces(self):
         """Forces"""
         return self.array[:, :, 0:3]
 
-    cpdef double[:, :, :] torques(self):
+    cpdef CTYPEv3 torques(self):
         """Torques"""
         return self.array[:, :, 3:6]

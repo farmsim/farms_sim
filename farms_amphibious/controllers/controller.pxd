@@ -1,7 +1,6 @@
 """Cython controller code"""
 
-cimport numpy as np
-
+include "../data/array.pxd"
 from ..data.animat_data_cy cimport (
     AnimatDataCy,
     NetworkParametersCy,
@@ -13,29 +12,25 @@ from ..data.animat_data_cy cimport (
 )
 
 
-ctypedef double CTYPE
-ctypedef np.float64_t DTYPE
-
-
 cpdef void ode_dphase(
-    CTYPE[:] state,
-    double[:] dstate,
+    CTYPEv1 state,
+    CTYPEv1 dstate,
     OscillatorArrayCy oscillators,
     ConnectivityArrayCy connectivity,
 ) nogil
 
 
 cpdef void ode_damplitude(
-    CTYPE[:] state,
-    double[:] dstate,
+    CTYPEv1 state,
+    CTYPEv1 dstate,
     OscillatorArrayCy oscillators,
 ) nogil
 
 
 cpdef void ode_contacts(
     unsigned int iteration,
-    CTYPE[:] state,
-    double[:] dstate,
+    CTYPEv1 state,
+    CTYPEv1 dstate,
     ContactsArrayCy contacts,
     ConnectivityArrayCy contacts_connectivity,
 ) nogil
@@ -43,8 +38,8 @@ cpdef void ode_contacts(
 
 cpdef void ode_hydro(
     unsigned int iteration,
-    CTYPE[:] state,
-    double[:] dstate,
+    CTYPEv1 state,
+    CTYPEv1 dstate,
     HydrodynamicsArrayCy hydrodynamics,
     ConnectivityArrayCy hydro_connectivity,
     unsigned int n_oscillators,
@@ -52,16 +47,16 @@ cpdef void ode_hydro(
 
 
 cpdef void ode_joints(
-    CTYPE[:] state,
-    double[:] dstate,
+    CTYPEv1 state,
+    CTYPEv1 dstate,
     JointsArrayCy joints,
     unsigned int n_oscillators,
 ) nogil
 
 
-cpdef double[:] ode_oscillators_sparse(
-    double time,
-    CTYPE[:] state,
+cpdef CTYPEv1 ode_oscillators_sparse(
+    CTYPE time,
+    CTYPEv1 state,
     AnimatDataCy data,
     NetworkParametersCy network,
-)
+) nogil
