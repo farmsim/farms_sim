@@ -60,3 +60,17 @@ cpdef CTYPEv1 ode_oscillators_sparse(
     AnimatDataCy data,
     NetworkParametersCy network,
 ) nogil
+
+
+cpdef void rk_oscillators(
+    CTYPE time,
+    CTYPE timestep,
+    CTYPEv1 state,
+    AnimatDataCy data,
+    NetworkParametersCy network,
+    CTYPEv1 k1,
+    CTYPEv1 k2,
+    CTYPEv1 k3,
+    CTYPEv1 k4,
+    CTYPEv1 state_out,
+) nogil

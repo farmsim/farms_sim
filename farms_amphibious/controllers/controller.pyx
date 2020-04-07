@@ -68,7 +68,7 @@ cpdef void ode_contacts(
     Can affect d_phase and d_amplitude
 
     """
-    cdef CTYPE contact
+    cdef CTYPE contact_force
     cdef unsigned int i, i0, i1
     for i in range(contacts_connectivity.size[0]):
         i0 = <unsigned int> (
@@ -78,15 +78,15 @@ cpdef void ode_contacts(
             contacts_connectivity.array[i][1] + 0.5
         )
         # contact_weight*contact_force
-        # contact = (
+        # contact_force = (
         #     contacts.array[iteration][i1][0]**2
         #     + contacts.array[iteration][i1][1]**2
         #     + contacts.array[iteration][i1][2]**2
         # )**0.5
-        contact = fabs(contacts.array[iteration][i1][2])
+        contact_force = fabs(contacts.array[iteration][i1][2])
         dstate[i0] += (
             contacts_connectivity.array[i][2]
-            *(10*contact/(1+10*contact))  # Saturation
+            *(10*contact_force/(1+10*contact_force))  # Saturation
             # *cos(state[i0])
             # *sin(state[i0])  # For Tegotae
         )
@@ -176,3 +176,56 @@ cpdef CTYPEv1 ode_oscillators_sparse(
         n_oscillators=data.network.oscillators.size[1],
     )
     return data.state.array[data.iteration][1]
+
+
+cpdef void rk_oscillators(
+    CTYPE time,
+    CTYPE timestep,
+    CTYPEv1 state,
+    AnimatDataCy data,
+    NetworkParametersCy network,
+    CTYPEv1 k1,
+    CTYPEv1 k2,
+    CTYPEv1 k3,
+    CTYPEv1 k4,
+    CTYPEv1 state_out,
+) nogil:
+    """Complete CPG network ODE"""
+    cdef unsigned int i, state_size = state.shape[0]
+    cdef CTYPE rk_const = 1.0/6.0
+    k1 = ode_oscillators_sparse(
+        time=time,
+        state=state,
+        data=data,
+        network=network,
+    )
+    for i in range(state_size):
+        k1[i] = timestep*k1[i]
+        state_out[i] = state[i] + 0.5*k1[i]
+    k2 = ode_oscillators_sparse(
+        time=time+0.5*timestep,
+        state=state_out,
+        data=data,
+        network=network,
+    )
+    for i in range(state_size):
+        k2[i] = timestep*k2[i]
+        state_out[i] = state[i] + 0.5*k2[i]
+    k3 = ode_oscillators_sparse(
+        time=time + 0.5*timestep,
+        state=state_out,
+        data=data,
+        network=network,
+    )
+    for i in range(state_size):
+        k3[i] = timestep*k3[i]
+        state_out[i] = state[i] + k3[i]
+    k4 = ode_oscillators_sparse(
+        time=time + timestep,
+        state=state_out,
+        data=data,
+        network=network,
+    )
+    for i in range(state_size):
+        k4[i] = timestep*k4[i]
+        state_out[i] = state[i] + rk_const*(k1[i] + 2*k2[i] + 2*k3[i] + k4[i])
