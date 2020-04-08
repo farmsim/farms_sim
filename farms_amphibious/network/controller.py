@@ -48,6 +48,9 @@ class AmphibiousController(ModelController):
         self.gain_offset = np.array(
             animat_options.control.network.joints.gain_offset
         )
+        self.joints_offsets = np.array(
+            animat_options.control.network.joints.offsets
+        )
 
     def control_step(self, iteration, time, timestep):
         """Control step"""
@@ -62,6 +65,7 @@ class AmphibiousController(ModelController):
                 - outputs[self.groups[1]]
             )
             + self.gain_offset*self.network.offsets()[iteration]
+            + self.joints_offsets
         )
 
     def get_position_output_all(self):
@@ -73,6 +77,7 @@ class AmphibiousController(ModelController):
                 - outputs[:, self.groups[1]]
             )
             + self.gain_offset*self.network.offsets()
+            + self.joints_offsets
         )
 
     def get_velocity_output(self, iteration):
