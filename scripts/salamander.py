@@ -28,9 +28,18 @@ def main():
         n_dof_legs=4,
         n_joints_body=11,
         viscous_coefficients=[
-            [-1e-1, -1e0, -1e0],
+            [-1e-1, -1e1, -1e1],
             [-1e-6, -1e-6, -1e-6],
-        ]
+        ],
+        weight_osc_body=1e0,
+        weight_osc_legs_internal=3e1,
+        weight_osc_legs_opposite=3e0,
+        weight_osc_legs_following=3e0,
+        weight_osc_legs2body=1e1,
+        weight_sens_contact_i=-2e0,
+        weight_sens_contact_e=2e0,
+        weight_sens_hydro_freq=-1e-1,
+        weight_sens_hydro_amp=-1e-1,
     )
 
     (
