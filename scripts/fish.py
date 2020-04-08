@@ -16,7 +16,7 @@ import farms_pylog as pylog
 def main():
     """Main"""
     fish_name = 'crescent_gunnel'
-    fish_version = '0'
+    fish_version = '1'
     animat_sdf = get_sdf_path(
         name=fish_name,
         version=fish_version
@@ -31,6 +31,8 @@ def main():
             simulation_options,
             _kinematics,
         ) = fish_options(
+            fish_name,
+            fish_version,
             kinematics_file,
             sampling_timestep,
             resistive_coefficients=[

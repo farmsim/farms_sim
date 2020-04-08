@@ -308,7 +308,7 @@ def fish_options(animat, version, kinematics_file, sampling_timestep, **kwargs):
         '{}_v_{}_i_0_e_body_{}_t_link'.format(animat, version, i+1)
         for i in range(n_joints)
     ]
-    animat_options = AmphibiousOptions(
+    animat_options = AmphibiousOptions.from_options(dict(
         show_hydrodynamics=True,
         n_legs=0,
         n_dof_legs=0,
@@ -326,7 +326,7 @@ def fish_options(animat, version, kinematics_file, sampling_timestep, **kwargs):
         feet=[],
         joints=joints,
         **kwargs
-    )
+    ))
 
     # Arena
     arena_sdf = get_flat_arena()
