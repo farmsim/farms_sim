@@ -49,12 +49,18 @@ class AmphibiousOptions(Options):
                 options['morphology'].n_joints_body,
                 options['morphology'].n_dof_legs
             )
-            options['control'].network.joints.gain_amplitude = (
-                [1 for _ in range(options['morphology'].n_joints())]
-            )
-            options['control'].network.joints.gain_offset = (
-                [1 for _ in range(options['morphology'].n_joints())]
-            )
+            if options['control'].network.joints.gain_amplitude is None:
+                options['control'].network.joints.gain_amplitude = (
+                    [1 for _ in range(options['morphology'].n_joints())]
+                )
+            if options['control'].network.joints.gain_offset is None:
+                options['control'].network.joints.gain_offset = (
+                    [1 for _ in range(options['morphology'].n_joints())]
+                )
+            if options['control'].network.joints.offsets is None:
+                options['control'].network.joints.offsets = (
+                    [0 for _ in range(options['morphology'].n_joints())]
+                )
 
         options['collect_gps'] = kwargs.pop("collect_gps", False)
         options['show_hydrodynamics'] = kwargs.pop("show_hydrodynamics", False)
@@ -348,7 +354,7 @@ class AmphibiousOscillatorOptions(Options):
         super(AmphibiousOscillatorOptions, self).__init__()
         self.body_head_amplitude = kwargs.pop('body_head_amplitude')
         self.body_tail_amplitude = kwargs.pop('body_tail_amplitude')
-        self._body_stand_amplitude = kwargs.pop('_body_stand_amplitude')
+        self.body_stand_amplitude = kwargs.pop('body_stand_amplitude')
         self._legs_amplitudes = kwargs.pop('_legs_amplitudes')
         self._body_stand_shift = kwargs.pop('_body_stand_shift')
         self.body_nominal_amplitudes = kwargs.pop('body_nominal_amplitudes')
@@ -364,7 +370,7 @@ class AmphibiousOscillatorOptions(Options):
         options = {}
         options['body_head_amplitude'] = kwargs.pop("body_head_amplitude", 0)
         options['body_tail_amplitude'] = kwargs.pop("body_tail_amplitude", 0)
-        options['_body_stand_amplitude'] = kwargs.pop("body_stand_amplitude", 0.2)
+        options['body_stand_amplitude'] = kwargs.pop("body_stand_amplitude", 0.2)
         options['_legs_amplitudes'] = kwargs.pop(
             "legs_amplitude",
             [0.8, np.pi/32, np.pi/4, np.pi/8]
@@ -403,13 +409,13 @@ class AmphibiousOscillatorOptions(Options):
         self.set_body_nominal_amplitudes(n_joints_body)
         self.set_legs_nominal_amplitudes(n_dof_legs)
 
-    def get_body_stand_amplitude(self):
+    def getbody_stand_amplitude(self):
         """Body stand amplitude"""
-        return self._body_stand_amplitude
+        return self.body_stand_amplitude
 
-    def set_body_stand_amplitude(self, value, n_joints_body):
+    def setbody_stand_amplitude(self, value, n_joints_body):
         """Body stand amplitude"""
-        self._body_stand_amplitude = value
+        self.body_stand_amplitude = value
         self.set_body_nominal_amplitudes(n_joints_body)
 
     def set_body_stand_shift(self, value, n_joints_body):
@@ -422,14 +428,14 @@ class AmphibiousOscillatorOptions(Options):
         body_stand_shift = np.pi/4
         self.body_nominal_amplitudes = [
             [
-                [0, float(0.3*self._body_stand_amplitude*np.sin(
+                [0, float(0.3*self.body_stand_amplitude*np.sin(
                     2*np.pi*joint_i/n_joints_body - body_stand_shift
                 ))],
-                [3, float(self._body_stand_amplitude*np.sin(
+                [3, float(self.body_stand_amplitude*np.sin(
                     2*np.pi*joint_i/n_joints_body - body_stand_shift
                 ))],
                 [3, 0.1*joint_i/n_joints_body],
-                [5, 0.6*joint_i/n_joints_body+0.2],
+                [5, 0.1*joint_i/n_joints_body+1],
                 [5, 0],
                 [6, 0]
             ]
@@ -493,15 +499,19 @@ class AmphibiousConnectivityOptions(Options):
             "leg_phase_follow",
             np.pi
         )
-        options['weight_osc_body'] = 1e3
-        options['weight_osc_legs_internal'] = 1e3
-        options['weight_osc_legs_opposite'] = 1e0
-        options['weight_osc_legs_following'] = 1e0
-        options['weight_osc_legs2body'] = kwargs.pop('w_legs2body', 3e1)
-        options['weight_sens_contact_i'] = kwargs.pop('w_sens_contact_i', -2e0)
-        options['weight_sens_contact_e'] = kwargs.pop('w_sens_contact_e', 2e0)
-        options['weight_sens_hydro_freq'] = kwargs.pop('w_sens_hyfro_freq', -1)
-        options['weight_sens_hydro_amp'] = kwargs.pop('w_sens_hydro_amp', 1)
+        for option_name, default_value in [
+                ['weight_osc_body', 1e3],
+                ['weight_osc_body', 1e3],
+                ['weight_osc_legs_internal', 1e3],
+                ['weight_osc_legs_opposite', 1e0],
+                ['weight_osc_legs_following', 1e0],
+                ['weight_osc_legs2body', 3e1],
+                ['weight_sens_contact_i', -2e0],
+                ['weight_sens_contact_e', 2e0],
+                ['weight_sens_hydro_freq', -1],
+                ['weight_sens_hydro_amp', 1],
+        ]:
+            options[option_name] = kwargs.pop(option_name, default_value)
         return cls(**options)
 
 
@@ -515,6 +525,7 @@ class AmphibiousJointsOptions(Options):
         self.gain_amplitude = kwargs.pop("gain_amplitude")
         self.gain_offset = kwargs.pop("gain_offset")
         # Joints offsets
+        self.offsets = kwargs.pop("offsets")
         self.legs_offsets = kwargs.pop("legs_offsets")
         self._body_offset = kwargs.pop("_body_offset")
         self.body_offsets = kwargs.pop("body_offsets")
@@ -535,6 +546,7 @@ class AmphibiousJointsOptions(Options):
         )
         options['gain_amplitude'] = kwargs.pop("gain_amplitude", None)
         options['gain_offset'] = kwargs.pop("gain_offset", None)
+        options['offsets'] = kwargs.pop("joints_offsets", None)
         # Joints offsets
         options['legs_offsets'] = None
         options['_body_offset'] = 0
