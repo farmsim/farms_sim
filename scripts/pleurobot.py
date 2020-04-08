@@ -49,8 +49,6 @@ def main():
 
     # Joints joints_offsets
     joints_offsets = np.zeros(13+4*4)
-    joints_offsets[6] = 0
-    joints_offsets[12] = 0
     for leg_i in range(2):
         for side_i in range(2):
             mirror = (1 if side_i else -1)

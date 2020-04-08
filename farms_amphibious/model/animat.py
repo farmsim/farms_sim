@@ -278,19 +278,20 @@ class Amphibious(Animat):
             self, iteration, water_surface, link_frame=True, debug=False
     ):
         """Animat swimming physics"""
+        links = self.options.morphology.links
+        links_swimming = self.options.morphology.links_swimming
         swimming_motion(
             iteration,
             self.data.sensors.hydrodynamics.array,
             self.identity(),
             [
-                [self.options.morphology.links.index(name), self._links[name]]
-                for name in self.options.morphology.links_swimming
+                [links.index(name), self._links[name]]
+                for name in links_swimming
                 if (
                     self.data.sensors.gps.com_position(
                         iteration,
-                        self.options.morphology.links.index(name)
-                    )[2]
-                    < water_surface
+                        links.index(name)
+                    )[2] < water_surface
                 )
             ],
             link_frame=link_frame,
@@ -301,24 +302,30 @@ class Amphibious(Animat):
                 iteration,
                 self.data.sensors.gps,
                 [
-                    [
-                        self.options.morphology.links.index(name),
-                        self._links[name]
-                    ]
-                    for name in self.options.morphology.links_swimming
+                    [links.index(name), self._links[name]]
+                    for name in links_swimming
                 ]
             )
 
-    def draw_hydrodynamics(self, iteration):
+    def draw_hydrodynamics(self, iteration, water_surface, margin=0.01):
         """Draw hydrodynamics forces"""
-        for i, line in enumerate(self.hydrodynamics):
-            force = self.data.sensors.hydrodynamics.array[iteration, i, :3]
-            self.hydrodynamics[i] = pybullet.addUserDebugLine(
-                lineFromXYZ=[0, 0, 0],
-                lineToXYZ=np.array(force),
-                lineColorRGB=[0, 0, 1],
-                lineWidth=7*self.units.meters,
-                parentObjectUniqueId=self.identity(),
-                parentLinkIndex=i-1,
-                replaceItemUniqueId=line
-            )
+        gps = self.data.sensors.gps
+        links = self.options.morphology.links
+        for i, (line, name) in enumerate(zip(
+                self.hydrodynamics,
+                self.options.morphology.links_swimming
+        )):
+            if (
+                    gps.com_position(iteration, links.index(name))[2]
+                    < water_surface + margin
+            ):
+                force = self.data.sensors.hydrodynamics.array[iteration, i, :3]
+                self.hydrodynamics[i] = pybullet.addUserDebugLine(
+                    lineFromXYZ=[0, 0, 0],
+                    lineToXYZ=np.array(force),
+                    lineColorRGB=[0, 0, 1],
+                    lineWidth=7*self.units.meters,
+                    parentObjectUniqueId=self.identity(),
+                    parentLinkIndex=i-1,
+                    replaceItemUniqueId=line
+                )

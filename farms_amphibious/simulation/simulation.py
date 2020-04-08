@@ -43,10 +43,13 @@ def swimming_step(sim_step, animat):
             )
         animat.apply_swimming_forces(
             sim_step,
-            water_surface=water_surface
+            water_surface=water_surface,
         )
         if animat.options.show_hydrodynamics:
-            animat.draw_hydrodynamics(sim_step)
+            animat.draw_hydrodynamics(
+                sim_step,
+                water_surface=water_surface,
+            )
 
 
 def time_based_drive(sim_step, n_iterations, interface):
