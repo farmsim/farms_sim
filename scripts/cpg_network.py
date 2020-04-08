@@ -158,6 +158,35 @@ def simulation(times, morphology, control):
     return network, animat_data
 
 
+def rotate(vector, theta):
+    """Rotate vector"""
+    cos_t, sin_t = np.cos(theta), np.sin(theta)
+    rotation = np.array(((cos_t, -sin_t), (sin_t, cos_t)))
+    return np.dot(rotation, vector)
+
+
+def direction(vector1, vector2):
+    """Unit direction"""
+    return (vector2-vector1)/np.linalg.norm(vector2-vector1)
+
+
+def connect_positions(source, destination, dir_shift, perp_shift):
+    """Connect positions"""
+    connection_direction = direction(source, destination)
+    connection_perp = rotate(connection_direction, 0.5*np.pi)
+    new_source = (
+        source
+        + dir_shift*connection_direction
+        + perp_shift*connection_perp
+    )
+    new_destination = (
+        destination
+        - dir_shift*connection_direction
+        + perp_shift*connection_perp
+    )
+    return new_source, new_destination
+
+
 def analysis(data, times, morphology):
     """Analysis"""
     # Network information
@@ -222,19 +251,27 @@ def analysis(data, times, morphology):
     offset = 0.5
     radius = 0.2
     margin_x = 1
-    margin_y = 1
-    plt.figure('CPGnetwork', figsize=(12, 3))
+    margin_y = 5
+    plt.figure('CPGnetwork', figsize=(12, 8))
     axes = plt.gca()
     axes.cla()
     axes.set_xlim((-margin_x, n_oscillators/2-1+margin_x))
     axes.set_ylim((-offset-margin_y, offset+margin_y))
     axes.set_aspect('equal', adjustable='box')
 
-    positions = [
-        [osc_i, side]
-        for side in [-offset, offset]
-        for osc_i in range(n_oscillators//2)
-    ]
+    positions = np.array(
+        [
+            [osc_i, side]
+            for side in [-offset, offset]
+            for osc_i in range(n_oscillators//2)
+        ] + [
+            [leg_x+osc_side_x, joint_y*side_x]
+            for leg_x in [1, 6]
+            for side_x in [-1, 1]
+            for joint_y in [2, 3, 4, 5]
+            for osc_side_x in [-0.5, 0.5]
+        ]
+    )
 
     circles = [
         plt.Circle(position, radius, color='g')  # fill=False, clip_on=False
@@ -252,13 +289,14 @@ def analysis(data, times, morphology):
         for i, position in enumerate(positions)
     ]
 
-    offx = np.array([radius/2, 0])
-    offy = np.array([0, radius])
+    positions = np.array([
+        [positions[int(connection[1]+0.5)], positions[int(connection[0]+0.5)]]
+        for connection in data.network.connectivity.array
+    ])
     arrows = [
         patches.FancyArrowPatch(
-            position+offx+offy,
-            position2+offx-offy,
-            arrowstyle=patches.ArrowStyle(  # 'Simple,tail_width=0.5,head_width=4,head_length=8',
+            *connect_positions(source, destination, radius, -radius/2),
+            arrowstyle=patches.ArrowStyle(
                 stylename='Simple',
                 head_length=8,
                 head_width=4,
@@ -270,33 +308,15 @@ def analysis(data, times, morphology):
             ),
             color='k',
         )
-        for osc_i, (position, position2) in enumerate(
-            zip(positions[:11], positions[11:])
-        )
-    ] + [
-        patches.FancyArrowPatch(
-            position-offx-offy,
-            position2-offx+offy,
-            arrowstyle=patches.ArrowStyle(  # 'Simple,tail_width=0.5,head_width=4,head_length=8',
-                stylename='Simple',
-                head_length=8,
-                head_width=4,
-                tail_width=0.5,
-            ),
-            connectionstyle=patches.ConnectionStyle(
-                'Arc3',
-                rad=0.3
-            ),
-            color='k',
-        )
-        for osc_i, (position, position2) in enumerate(
-            zip(positions[11:], positions[:11])
-        )
+        for source, destination in positions
     ]
-    for circle, text, arrow in zip(circles, texts, arrows):
+
+    # Show elements
+    for arrow in arrows:
+        axes.add_artist(arrow)
+    for circle, text in zip(circles, texts):
         axes.add_artist(circle)
         axes.add_artist(text)
-        axes.add_artist(arrow)
 
 
 def main(filename='cpg_network.h5'):
