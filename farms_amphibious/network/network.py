@@ -20,19 +20,25 @@ class NetworkODE:
         self.solver.set_f_params(self.data, self.data.network)
         self.solver.set_initial_value(y=self.data.state.array[0, 0, :], t=0.0)
 
-    def control_step(self, iteration, time, timestep):
+    def control_step(self, iteration, time, timestep, check=False):
         """Control step"""
+        if check:
+            assert np.array_equal(
+                self.solver.y,
+                self.data.state.array[iteration, 0, :]
+            )
         self.data.iteration = iteration
         self.data.state.array[iteration+1, 0, :] = (
             self.solver.integrate(time+timestep)
         )
-        assert self.solver.successful()
-        assert abs(time+timestep-self.solver.t) < 1e-6*timestep, (
-            'ODE solver time: {} [s] != Simulation time: {} [s]'.format(
-                self.solver.t,
-                time+timestep,
+        if check:
+            assert self.solver.successful()
+            assert abs(time+timestep-self.solver.t) < 1e-6*timestep, (
+                'ODE solver time: {} [s] != Simulation time: {} [s]'.format(
+                    self.solver.t,
+                    time+timestep,
+                )
             )
-        )
 
     def phases(self):
         """Oscillators phases"""
