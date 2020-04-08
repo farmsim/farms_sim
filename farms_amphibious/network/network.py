@@ -10,6 +10,7 @@ from ..controllers.controller import (
     ode_contacts,
     ode_hydro,
     ode_joints,
+    rk_oscillators,
 )
 
 
@@ -68,22 +69,82 @@ class NetworkODE:
         # Adaptive timestep parameters
         self.solver = integrate.ode(f=self.ode)  # , jac=self.jac
         self.solver.set_integrator("dopri5")
-        self.solver.set_f_params(
-            self.data,
-            self.data.network
-        )
-        self._time = 0
+        self.solver.set_f_params(self.data, self.data.network)
+        self.solver.set_initial_value(y=self.data.state.array[0, 0, :], t=0.0)
+
+        # # Solver
+        # self.solver_fix = integrate.RK45(
+        #     fun=self.fun,
+        #     t0=0,
+        #     y0=self.data.state.array[0, 0],
+        #     t_bound=1000,
+        #     max_step=1e-4,
+        #     first_step=1e-4,
+        #     rtol=1e-6,
+        #     atol=1e-8,
+        # )
+
+    # def fun(self, time, state):
+    #     """ODE"""
+    #     return self.ode(time, state, self.data, self.data.network)
 
     def control_step(self, iteration, time, timestep):
         """Control step"""
         self.data.iteration = iteration
-        self.solver.set_initial_value(
-            self.data.state.array[iteration, 0, :],
-            time
-        )
         self.data.state.array[iteration+1, 0, :] = (
             self.solver.integrate(time+timestep)
         )
+        assert self.solver.successful()
+        assert abs(time+timestep-self.solver.t) < 1e-6*timestep, (
+            'ODE solver time: {} [s] != Simulation time: {} [s]'.format(
+                self.solver.t,
+                time+timestep,
+            )
+        )
+
+        # # Runge-Kutta
+        # state = self.data.state.array[iteration, 0, :]
+        # size = len(state)
+        # n_iterations = 50
+        # k1 = np.zeros(size)
+        # k2 = np.zeros(size)
+        # k3 = np.zeros(size)
+        # k4 = np.zeros(size)
+        # _state = np.zeros(size)
+        # _state = np.zeros(size)
+        # self.data.state.array[iteration+1, 0, :] = (
+        #     self.data.state.array[iteration, 0, :]
+        # )
+        # for i in range(n_iterations):
+        #     rk_oscillators(
+        #         time=time+i*n_iterations,
+        #         timestep=timestep/n_iterations,
+        #         state=np.copy(self.data.state.array[iteration+1, 0, :]),
+        #         data=self.data,
+        #         network=self.data.network,
+        #         k1=k1,
+        #         k2=k2,
+        #         k3=k3,
+        #         k4=k4,
+        #         state_out=self.data.state.array[iteration+1, 0, :],
+        #     )
+
+        # # Solve_ivp
+        # self.data.state.array[iteration+1, 0, :] = integrate.solve_ivp(
+        #     self.ode,
+        #     [0, timestep],
+        #     self.data.state.array[iteration, 0, :],
+        #     method='RK23',
+        #     t_eval=[timestep],
+        #     args=(self.data, self.data.network),
+        # )['y'][0]
+
+        # # Scipy RK45
+        # self.solver_fix.t = time
+        # while self.solver_fix.t < time+timestep:
+        #     self.solver_fix.step()
+        #     print(self.solver_fix.t)
+        # self.data.state.array[iteration+1, 0, :] = self.solver_fix.y
 
     def phases(self):
         """Oscillators phases"""

@@ -126,7 +126,7 @@ class OscillatorNetworkState(OscillatorNetworkStateCy):
         for data in np.transpose(self.amplitudes_all()):
             plt.plot(times, data[:len(times)])
         plt.xlabel("Times [s]")
-        plt.ylabel("Amplitudes [rad]")
+        plt.ylabel("Amplitudes")
         plt.grid(True)
 
 

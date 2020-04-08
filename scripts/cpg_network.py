@@ -179,6 +179,7 @@ def analysis(data, times, morphology):
 
     # # Plot data
     # data.plot(times)
+    data.state.plot_amplitudes(times)
 
     # Plot network
     n_oscillators = 2*morphology.n_joints_body
