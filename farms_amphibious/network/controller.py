@@ -80,24 +80,24 @@ class AmphibiousController(ModelController):
             + self.joints_offsets
         )
 
-    def get_velocity_output(self, iteration):
-        """Position output"""
-        outputs = self.network.get_doutputs(iteration)
-        return (
-            self.gain_amplitude*0.5*(
-                outputs[self.groups[0]]
-                - outputs[self.groups[1]]
-            )
-            + self.network.doffsets()[iteration]
-        )
+    # def get_velocity_output(self, iteration):
+    #     """Position output"""
+    #     outputs = self.network.get_doutputs(iteration)
+    #     return (
+    #         self.gain_amplitude*0.5*(
+    #             outputs[self.groups[0]]
+    #             - outputs[self.groups[1]]
+    #         )
+    #         + self.network.doffsets()[iteration]
+    #     )
 
-    def get_velocity_output_all(self):
-        """Position output"""
-        outputs = self.network.get_doutputs_all()
-        return self.gain_amplitude*0.5*(
-            outputs[:, self.groups[0]]
-            - outputs[:, self.groups[1]]
-        )
+    # def get_velocity_output_all(self):
+    #     """Position output"""
+    #     outputs = self.network.get_doutputs_all()
+    #     return self.gain_amplitude*0.5*(
+    #         outputs[:, self.groups[0]]
+    #         - outputs[:, self.groups[1]]
+    #     )
 
     def get_torque_output(self, iteration):
         """Torque output"""
