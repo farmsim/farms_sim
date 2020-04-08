@@ -161,6 +161,42 @@ def simulation(times, morphology, control):
 def analysis(data, times, morphology):
     """Analysis"""
     # Network information
+    sep = '\n  - '
+    pylog.info(
+        'Oscillator connectivity information'
+        + sep.join([
+            'O_{} <- O_{} (w={}, theta={})'.format(
+                int(connection[0]+0.5),
+                int(connection[1]+0.5),
+                connection[2],
+                connection[3],
+            )
+            for connection in data.network.connectivity.array
+        ])
+    )
+    pylog.info(
+        'Contacts connectivity information'
+        + sep.join([
+            'O_{} <- contact_{} (frequency_gain={})'.format(
+                int(connection[0]+0.5),
+                int(connection[1]+0.5),
+                connection[2],
+            )
+            for connection in data.network.contacts_connectivity.array
+        ])
+    )
+    pylog.info(
+        'Hydrodynamics connectivity information'
+        + sep.join([
+            'O_{} <- link_{} (phase_gain={}, amplitude_gain={})'.format(
+                int(connection[0]+0.5),
+                int(connection[1]+0.5),
+                connection[2],
+                connection[3],
+            )
+            for connection in data.network.hydro_connectivity.array
+        ])
+    )
     sep = '\n'
     pylog.info(
         (sep.join([
@@ -196,8 +232,8 @@ def analysis(data, times, morphology):
 
     positions = [
         [osc_i, side]
-        for osc_i in range(n_oscillators//2)
         for side in [-offset, offset]
+        for osc_i in range(n_oscillators//2)
     ]
 
     circles = [
@@ -235,7 +271,7 @@ def analysis(data, times, morphology):
             color='k',
         )
         for osc_i, (position, position2) in enumerate(
-            zip(positions[0::2], positions[1::2])
+            zip(positions[:11], positions[11:])
         )
     ] + [
         patches.FancyArrowPatch(
@@ -254,7 +290,7 @@ def analysis(data, times, morphology):
             color='k',
         )
         for osc_i, (position, position2) in enumerate(
-            zip(positions[1::2], positions[0::2])
+            zip(positions[11:], positions[:11])
         )
     ]
     for circle, text, arrow in zip(circles, texts, arrows):
