@@ -187,6 +187,56 @@ def connect_positions(source, destination, dir_shift, perp_shift):
     return new_source, new_destination
 
 
+def draw_nodes(axes, positions, radius, color, prefix):
+    """Draw nodes"""
+    nodes = [
+        plt.Circle(position, radius, color=color)  # fill=False, clip_on=False
+        for position in positions
+    ]
+
+    nodes_texts = [
+        axes.text(
+            position[0]+radius, position[1]+radius,
+            '{}{}'.format(prefix, i),
+            # transform=axes.transAxes,
+            va="bottom",
+            ha="left",
+            fontsize=8,
+        )
+        for i, position in enumerate(positions)
+    ]
+
+    return nodes, nodes_texts
+
+
+def draw_connectivity(sources, destinations, radius, connectivity):
+    """Draw nodes"""
+    node_connectivity = [
+        patches.FancyArrowPatch(
+            *connect_positions(source, destination, radius, -radius/2),
+            arrowstyle=patches.ArrowStyle(
+                stylename='Simple',
+                head_length=8,
+                head_width=4,
+                tail_width=0.5,
+            ),
+            connectionstyle=patches.ConnectionStyle(
+                'Arc3',
+                rad=0.1
+            ),
+            color='k',
+        )
+        for source, destination in np.array([
+            [
+                sources[int(connection[1]+0.5)],
+                destinations[int(connection[0]+0.5)],
+            ]
+            for connection in connectivity
+        ])
+    ]
+    return node_connectivity
+
+
 def analysis(data, times, morphology):
     """Analysis"""
     # Network information
@@ -251,70 +301,69 @@ def analysis(data, times, morphology):
     offset = 0.5
     radius = 0.2
     margin_x = 1
-    margin_y = 5
-    plt.figure('CPGnetwork', figsize=(12, 8))
+    margin_y = 7
+    plt.figure('CPGnetwork', figsize=(10, 8))
     axes = plt.gca()
     axes.cla()
-    axes.set_xlim((-margin_x, n_oscillators/2-1+margin_x))
+    axes.set_xlim((-margin_x, n_oscillators-1+margin_x))
     axes.set_ylim((-offset-margin_y, offset+margin_y))
     axes.set_aspect('equal', adjustable='box')
 
-    positions = np.array(
+    oscillator_positions = np.array(
         [
-            [osc_i, side]
-            for side in [-offset, offset]
-            for osc_i in range(n_oscillators//2)
+            [2*osc_x, side_y]
+            for side_y in [-offset, offset]
+            for osc_x in range(n_oscillators//2)
         ] + [
             [leg_x+osc_side_x, joint_y*side_x]
-            for leg_x in [1, 6]
+            for leg_x in [3, 11]
             for side_x in [-1, 1]
             for joint_y in [2, 3, 4, 5]
             for osc_side_x in [-0.5, 0.5]
         ]
     )
+    oscillators, oscillators_texts = draw_nodes(
+        axes,
+        oscillator_positions,
+        radius,
+        'g',
+        'O_',
+    )
+    oscillator_connectivity = draw_connectivity(
+        oscillator_positions,
+        oscillator_positions,
+        radius,
+        data.network.connectivity.array,
+    )
 
-    circles = [
-        plt.Circle(position, radius, color='g')  # fill=False, clip_on=False
-        for position in positions
-    ]
-
-    texts = [
-        axes.text(
-            position[0]+radius, position[1]+radius,
-            'O_{}'.format(i),
-            # transform=axes.transAxes,
-            va="bottom",
-            ha="left",
-        )
-        for i, position in enumerate(positions)
-    ]
-
-    positions = np.array([
-        [positions[int(connection[1]+0.5)], positions[int(connection[0]+0.5)]]
-        for connection in data.network.connectivity.array
+    contacts_positions = np.array([
+        [leg_x, side_y]
+        for leg_x in [3, 11]
+        for side_y in [-6, 6]
     ])
-    arrows = [
-        patches.FancyArrowPatch(
-            *connect_positions(source, destination, radius, -radius/2),
-            arrowstyle=patches.ArrowStyle(
-                stylename='Simple',
-                head_length=8,
-                head_width=4,
-                tail_width=0.5,
-            ),
-            connectionstyle=patches.ConnectionStyle(
-                'Arc3',
-                rad=0.3
-            ),
-            color='k',
-        )
-        for source, destination in positions
-    ]
+    contact_sensors, contact_sensor_texts = draw_nodes(
+        axes,
+        contacts_positions,
+        radius,
+        'y',
+        'C_',
+    )
+    contact_connectivity = draw_connectivity(
+        contacts_positions,
+        oscillator_positions,
+        radius,
+        data.network.contacts_connectivity.array,
+    )
 
     # Show elements
-    for arrow in arrows:
+    for arrow in oscillator_connectivity:
         axes.add_artist(arrow)
-    for circle, text in zip(circles, texts):
+    for arrow in contact_connectivity:
+        axes.add_artist(arrow)
+    for circle, text in zip(oscillators, oscillators_texts):
+        axes.add_artist(circle)
+        axes.add_artist(text)
+    for circle, text in zip(contact_sensors, contact_sensor_texts):
         axes.add_artist(circle)
         axes.add_artist(text)
 
