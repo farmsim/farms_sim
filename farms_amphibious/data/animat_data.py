@@ -196,7 +196,7 @@ class ContactsArray(ContactsArrayCy):
     def plot_ground_reaction_forces(self, times):
         """Plot ground reaction forces"""
         plt.figure("Ground reaction forces")
-        for sensor_i in range(self.size[1]):
+        for sensor_i in range(self.size(1)):
             data = np.asarray(self.reaction_all(sensor_i))
             plt.plot(
                 times,
@@ -211,7 +211,7 @@ class ContactsArray(ContactsArrayCy):
     def plot_friction_forces(self, times):
         """Plot friction forces"""
         plt.figure("Friction forces")
-        for sensor_i in range(self.size[1]):
+        for sensor_i in range(self.size(1)):
             data = np.asarray(self.friction_all(sensor_i))
             plt.plot(
                 times,
@@ -226,7 +226,7 @@ class ContactsArray(ContactsArrayCy):
     def plot_friction_forces_ori(self, times, ori):
         """Plot friction forces"""
         plt.figure("Friction forces (ori={})".format(ori))
-        for sensor_i in range(self.size[1]):
+        for sensor_i in range(self.size(1)):
             data = np.asarray(self.friction_all(sensor_i))
             plt.plot(
                 times,
@@ -241,7 +241,7 @@ class ContactsArray(ContactsArrayCy):
     def plot_total_forces(self, times):
         """Plot contact forces"""
         plt.figure("Contact total forces")
-        for sensor_i in range(self.size[1]):
+        for sensor_i in range(self.size(1)):
             data = np.asarray(self.total_all(sensor_i))
             plt.plot(
                 times,
@@ -268,7 +268,7 @@ class ProprioceptionArray(ProprioceptionArrayCy):
     def plot_positions(self, times):
         """Plot ground reaction forces"""
         plt.figure("Joints positions")
-        for joint_i in range(self.size[1]):
+        for joint_i in range(self.size(1)):
             plt.plot(
                 times,
                 np.asarray(self.positions_all())[:len(times), joint_i],
@@ -282,7 +282,7 @@ class ProprioceptionArray(ProprioceptionArrayCy):
     def plot_velocities(self, times):
         """Plot ground reaction forces"""
         plt.figure("Joints velocities")
-        for joint_i in range(self.size[1]):
+        for joint_i in range(self.size(1)):
             plt.plot(
                 times,
                 np.asarray(self.velocities_all())[:len(times), joint_i],
@@ -296,7 +296,7 @@ class ProprioceptionArray(ProprioceptionArrayCy):
     def plot_forces(self, times):
         """Plot ground reaction forces"""
         plt.figure("Joints forces")
-        for joint_i in range(self.size[1]):
+        for joint_i in range(self.size(1)):
             data = np.linalg.norm(np.asarray(self.forces_all()), axis=-1)
             plt.plot(
                 times,
@@ -311,7 +311,7 @@ class ProprioceptionArray(ProprioceptionArrayCy):
     def plot_torques(self, times):
         """Plot ground reaction torques"""
         plt.figure("Joints torques")
-        for joint_i in range(self.size[1]):
+        for joint_i in range(self.size(1)):
             data = np.linalg.norm(np.asarray(self.torques_all()), axis=-1)
             plt.plot(
                 times,
@@ -326,7 +326,7 @@ class ProprioceptionArray(ProprioceptionArrayCy):
     def plot_motor_torques(self, times):
         """Plot ground reaction forces"""
         plt.figure("Joints motor torques")
-        for joint_i in range(self.size[1]):
+        for joint_i in range(self.size(1)):
             plt.plot(
                 times,
                 np.asarray(self.motor_torques())[:len(times), joint_i],
@@ -349,7 +349,7 @@ class GpsArray(GpsArrayCy):
     def plot_base_position(self, times, xaxis=0, yaxis=1):
         """Plot"""
         plt.figure("GPS position")
-        for link_i in range(self.size[1]):
+        for link_i in range(self.size(1)):
             data = np.asarray(self.urdf_positions())[:len(times), link_i]
             plt.plot(
                 data[:, xaxis],
@@ -365,7 +365,7 @@ class GpsArray(GpsArrayCy):
     def plot_base_velocity(self, times):
         """Plot"""
         plt.figure("GPS velocities")
-        for link_i in range(self.size[1]):
+        for link_i in range(self.size(1)):
             data = np.asarray(self.com_lin_velocities())[:len(times), link_i]
             plt.plot(
                 times,
@@ -389,7 +389,7 @@ class HydrodynamicsArray(HydrodynamicsArrayCy):
     def plot_forces(self, times):
         """Plot"""
         plt.figure("Hydrodynamic forces")
-        for link_i in range(self.size[1]):
+        for link_i in range(self.size(1)):
             data = np.asarray(self.forces())[:len(times), link_i]
             plt.plot(
                 times,
@@ -403,7 +403,7 @@ class HydrodynamicsArray(HydrodynamicsArrayCy):
     def plot_torques(self, times):
         """Plot"""
         plt.figure("Hydrodynamic torques")
-        for link_i in range(self.size[1]):
+        for link_i in range(self.size(1)):
             data = np.asarray(self.torques())[:len(times), link_i]
             plt.plot(
                 times,

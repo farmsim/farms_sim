@@ -1,6 +1,6 @@
 """Animat data"""
 
-include "array.pxd"
+include "types.pxd"
 from .array cimport NetworkArray2D, NetworkArray3D
 
 

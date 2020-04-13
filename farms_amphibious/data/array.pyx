@@ -5,8 +5,12 @@ import numpy as np
 cimport numpy as np
 
 
-cdef class NetworkArray:
+cdef class NetworkArray(object):
     """Network array"""
+
+    cpdef unsigned int size(self, unsigned int index):
+        """Shape"""
+        return self.array.shape[index]
 
     def copy_array(self):
         """Copy array"""
