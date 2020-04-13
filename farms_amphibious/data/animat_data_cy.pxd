@@ -29,17 +29,55 @@ cdef class OscillatorNetworkStateCy(NetworkArray3D):
 
 cdef class OscillatorArrayCy(NetworkArray2D):
     """Oscillator array"""
-    pass
+    cpdef public CTYPEv1 freqs(self)
+
+    cdef inline unsigned int c_n_oscillators(self) nogil:
+        """Number of oscillators"""
+        return self.array.shape[1]
+
+    cdef inline CTYPE c_angular_frequency(self, unsigned int index) nogil:
+        """Angular frequency"""
+        return self.array[0][index]
+
+    cdef inline CTYPE c_rate(self, unsigned int index) nogil:
+        """Rate"""
+        return self.array[1][index]
+
+    cdef inline CTYPE c_nominal_amplitude(self, unsigned int index) nogil:
+        """Nominal amplitude"""
+        return self.array[2][index]
 
 
 cdef class ConnectivityArrayCy(NetworkArray2D):
     """Connectivity array"""
-    pass
+
+    cdef inline CTYPE c_weight(self, unsigned int iteration) nogil:
+        """Weight"""
+        return self.array[iteration][2]
+
+    cdef inline CTYPE c_desired_phase(self, unsigned int iteration) nogil:
+        """Desired phase"""
+        return self.array[iteration][3]
+
+    cdef inline CTYPE c_weight_hydro_amplitude(self, unsigned int iteration) nogil:
+        """Weight for hydrodynamics amplitude"""
+        return self.array[iteration][3]
 
 
 cdef class JointsArrayCy(NetworkArray2D):
     """Oscillator array"""
-    pass
+
+    cdef inline unsigned int c_n_joints(self) nogil:
+        """Number of joints"""
+        return self.array.shape[1]
+
+    cdef inline CTYPE c_offset_desired(self, unsigned int index) nogil:
+        """Desired offset"""
+        return self.array[0][index]
+
+    cdef inline CTYPE c_rate(self, unsigned int index) nogil:
+        """Rate"""
+        return self.array[1][index]
 
 
 cdef class SensorsDataCy:
@@ -60,6 +98,18 @@ cdef class ContactsArrayCy(NetworkArray3D):
     cpdef CTYPEv1 total(self, unsigned int iteration, unsigned int sensor_i)
     cpdef CTYPEv2 total_all(self, unsigned int sensor_i)
 
+    cdef inline CTYPE c_force_x(self, unsigned iteration, unsigned int index) nogil:
+        """Force z"""
+        return self.array[iteration][index][0]
+
+    cdef inline CTYPE c_force_y(self, unsigned iteration, unsigned int index) nogil:
+        """Force z"""
+        return self.array[iteration][index][1]
+
+    cdef inline CTYPE c_force_z(self, unsigned iteration, unsigned int index) nogil:
+        """Force z"""
+        return self.array[iteration][index][2]
+
 
 cdef class ProprioceptionArrayCy(NetworkArray3D):
     """Proprioception array"""
@@ -76,6 +126,12 @@ cdef class ProprioceptionArrayCy(NetworkArray3D):
     cpdef CTYPEv3 torques_all(self)
     cpdef CTYPE motor_torque(self, unsigned int iteration, unsigned int joint_i)
     cpdef CTYPEv2 motor_torques(self)
+    cpdef CTYPE active(self, unsigned int iteration, unsigned int joint_i)
+    cpdef CTYPEv2 active_torques(self)
+    cpdef CTYPE spring(self, unsigned int iteration, unsigned int joint_i)
+    cpdef CTYPEv2 spring_torques(self)
+    cpdef CTYPE damping(self, unsigned int iteration, unsigned int joint_i)
+    cpdef CTYPEv2 damping_torques(self)
 
 
 cdef class GpsArrayCy(NetworkArray3D):
@@ -96,3 +152,15 @@ cdef class HydrodynamicsArrayCy(NetworkArray3D):
 
     cpdef public CTYPEv3 forces(self)
     cpdef public CTYPEv3 torques(self)
+
+    cdef inline CTYPE c_force_x(self, unsigned iteration, unsigned int index) nogil:
+        """Force z"""
+        return self.array[iteration][index][0]
+
+    cdef inline CTYPE c_force_y(self, unsigned iteration, unsigned int index) nogil:
+        """Force z"""
+        return self.array[iteration][index][1]
+
+    cdef inline CTYPE c_force_z(self, unsigned iteration, unsigned int index) nogil:
+        """Force z"""
+        return self.array[iteration][index][2]

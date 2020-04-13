@@ -11,7 +11,38 @@ from libc.math cimport sin, fabs  # cos,
 # from cython.parallel import prange
 
 
-cpdef void ode_dphase(
+cdef inline CTYPE phase(
+    CTYPEv1 state,
+    unsigned int index
+) nogil:
+    """Phase"""
+    return state[index]
+
+
+cdef inline CTYPE amplitude(
+    CTYPEv1 state,
+    unsigned int index,
+    unsigned int n_oscillators,
+) nogil:
+    """Amplitude"""
+    return state[index+n_oscillators]
+
+
+cdef inline CTYPE joint_offset(
+    CTYPEv1 state,
+    unsigned int index,
+    unsigned int n_oscillators,
+) nogil:
+    """Joint offset"""
+    return state[index+2*n_oscillators]
+
+
+cdef inline CTYPE saturation(CTYPE value, CTYPE multiplier) nogil:
+    """Saturation from 0 to 1"""
+    return multiplier*value/(1+multiplier*value)
+
+
+cpdef inline void ode_dphase(
     CTYPEv1 state,
     CTYPEv1 dstate,
     OscillatorArrayCy oscillators,
@@ -22,21 +53,20 @@ cpdef void ode_dphase(
     d_theta = omega + sum amplitude_j*weight*sin(phase_j - phase_i - phase_bias)
 
     """
-    cdef unsigned int i, i0, i1, n_oscillators = oscillators.array.shape[1]
+    cdef unsigned int i, i0, i1, n_oscillators = oscillators.c_n_oscillators()
     for i in range(n_oscillators):  # , nogil=True):
         # Intrinsic frequency
-        dstate[i] = oscillators.array[0][i]
+        dstate[i] = oscillators.c_angular_frequency(i)
     for i in range(connectivity.array.shape[0]):
         i0 = <unsigned int> (connectivity.array[i][0] + 0.5)
         i1 = <unsigned int> (connectivity.array[i][1] + 0.5)
-        # amplitude_j*weight*sin(phase_j - phase_i - phase_bias)
-        dstate[i0] += state[n_oscillators+i1]*connectivity.array[i][2]*sin(
-            state[i1] - state[i0]
-            - connectivity.array[i][3]
+        dstate[i0] += state[n_oscillators+i1]*connectivity.c_weight(i)*sin(
+            phase(state, i1) - phase(state, i0)
+            - connectivity.c_desired_phase(i)
         )
 
 
-cpdef void ode_damplitude(
+cpdef inline void ode_damplitude(
     CTYPEv1 state,
     CTYPEv1 dstate,
     OscillatorArrayCy oscillators,
@@ -46,15 +76,16 @@ cpdef void ode_damplitude(
     d_amplitude = rate*(nominal_amplitude - amplitude)
 
     """
-    cdef unsigned int i, n_oscillators = oscillators.array.shape[1]
+    cdef unsigned int i, n_oscillators = oscillators.c_n_oscillators()
     for i in range(n_oscillators):  # , nogil=True):
         # rate*(nominal_amplitude - amplitude)
-        dstate[n_oscillators+i] = oscillators.array[1][i]*(
-            oscillators.array[2][i] - state[n_oscillators+i]
+        dstate[n_oscillators+i] = oscillators.c_rate(i)*(
+            oscillators.c_nominal_amplitude(i)
+            - amplitude(state, i, n_oscillators)
         )
 
 
-cpdef void ode_contacts(
+cpdef inline void ode_contacts(
     unsigned int iteration,
     CTYPEv1 state,
     CTYPEv1 dstate,
@@ -81,16 +112,16 @@ cpdef void ode_contacts(
         #     + contacts.array[iteration][i1][1]**2
         #     + contacts.array[iteration][i1][2]**2
         # )**0.5
-        contact_force = fabs(contacts.array[iteration][i1][2])
+        contact_force = fabs(contacts.c_force_z(iteration, i1))
         dstate[i0] += (
-            contacts_connectivity.array[i][2]
-            *(10*contact_force/(1+10*contact_force))  # Saturation
+            contacts_connectivity.c_weight(i)
+            *saturation(contact_force, 10)  # Saturation
             # *cos(state[i0])
             # *sin(state[i0])  # For Tegotae
         )
 
 
-cpdef void ode_hydro(
+cpdef inline void ode_hydro(
     unsigned int iteration,
     CTYPEv1 state,
     CTYPEv1 dstate,
@@ -108,14 +139,14 @@ cpdef void ode_hydro(
     for i in range(hydro_connectivity.array.shape[0]):
         i0 = <unsigned int> (hydro_connectivity.array[i][0] + 0.5)
         i1 = <unsigned int> (hydro_connectivity.array[i][1] + 0.5)
-        hydro_force = fabs(hydrodynamics.array[iteration][i1][1])
+        hydro_force = fabs(hydrodynamics.c_force_y(iteration, i1))
         # dfrequency += hydro_weight*hydro_force
-        dstate[i0] += hydro_connectivity.array[i][2]*hydro_force
+        dstate[i0] += hydro_connectivity.c_weight(i)*hydro_force
         # damplitude += hydro_weight*hydro_force
-        dstate[n_oscillators+i0] += hydro_connectivity.array[i][3]*hydro_force
+        dstate[n_oscillators+i0] += hydro_connectivity.c_weight_hydro_amplitude(i)*hydro_force
 
 
-cpdef void ode_joints(
+cpdef inline void ode_joints(
     CTYPEv1 state,
     CTYPEv1 dstate,
     JointsArrayCy joints,
@@ -126,15 +157,15 @@ cpdef void ode_joints(
     d_joints_offset = rate*(joints_offset_desired - joints_offset)
 
     """
-    cdef unsigned int i
-    for i in range(joints.array.shape[1]):
+    cdef unsigned int i, n_joints = joints.c_n_joints()
+    for i in range(n_joints):
         # rate*(joints_offset_desired - joints_offset)
-        dstate[2*n_oscillators+i] = joints.array[1][i]*(
-            joints.array[0][i] - state[2*n_oscillators+i]
+        dstate[2*n_oscillators+i] = joints.c_rate(i)*(
+            joints.c_offset_desired(i) - joint_offset(state, i, n_oscillators)
         )
 
 
-cpdef CTYPEv1 ode_oscillators_sparse(
+cpdef inline CTYPEv1 ode_oscillators_sparse(
     CTYPE time,
     CTYPEv1 state,
     unsigned int iteration,
@@ -166,13 +197,13 @@ cpdef CTYPEv1 ode_oscillators_sparse(
         dstate=data.state.array[iteration][1],
         hydrodynamics=data.sensors.hydrodynamics,
         hydro_connectivity=data.network.hydro_connectivity,
-        n_oscillators=data.network.oscillators.array.shape[1],
+        n_oscillators=data.network.oscillators.c_n_oscillators(),
     )
     ode_joints(
         state=state,
         dstate=data.state.array[iteration][1],
         joints=data.joints,
-        n_oscillators=data.network.oscillators.array.shape[1],
+        n_oscillators=data.network.oscillators.c_n_oscillators(),
     )
     return data.state.array[iteration][1]
 

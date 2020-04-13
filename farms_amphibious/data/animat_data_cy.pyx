@@ -88,7 +88,7 @@ cdef class OscillatorArrayCy(NetworkArray2D):
         """From each parameter"""
         return cls(np.array([freqs, rates, amplitudes]))
 
-    def freqs(self):
+    cpdef CTYPEv1 freqs(self):
         """Frequencies"""
         return self.array[0]
 
@@ -211,7 +211,7 @@ cdef class ProprioceptionArrayCy(NetworkArray3D):
     @classmethod
     def from_parameters(cls, n_iterations, n_joints):
         """From parameters"""
-        return cls(np.zeros([n_iterations, n_joints, 9]))
+        return cls(np.zeros([n_iterations, n_joints, 12]))
 
     cpdef CTYPE position(self, unsigned int iteration, unsigned int joint_i):
         """Joint position"""
@@ -260,6 +260,30 @@ cdef class ProprioceptionArrayCy(NetworkArray3D):
     cpdef CTYPEv2 motor_torques(self):
         """Joint velocity"""
         return self.array[:, :, 8]
+
+    cpdef CTYPE active(self, unsigned int iteration, unsigned int joint_i):
+        """Active torque"""
+        return self.array[iteration, joint_i, 9]
+
+    cpdef CTYPEv2 active_torques(self):
+        """Active torques"""
+        return self.array[:, :, 9]
+
+    cpdef CTYPE spring(self, unsigned int iteration, unsigned int joint_i):
+        """Passive spring torque"""
+        return self.array[iteration, joint_i, 10]
+
+    cpdef CTYPEv2 spring_torques(self):
+        """Spring torques"""
+        return self.array[:, :, 10]
+
+    cpdef CTYPE damping(self, unsigned int iteration, unsigned int joint_i):
+        """passive damping torque"""
+        return self.array[iteration, joint_i, 11]
+
+    cpdef CTYPEv2 damping_torques(self):
+        """Damping torques"""
+        return self.array[:, :, 11]
 
 
 cdef class GpsArrayCy(NetworkArray3D):

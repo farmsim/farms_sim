@@ -264,6 +264,9 @@ class ProprioceptionArray(ProprioceptionArrayCy):
         self.plot_forces(times)
         self.plot_torques(times)
         self.plot_motor_torques(times)
+        self.plot_active_torques(times)
+        self.plot_spring_torques(times)
+        self.plot_damping_torques(times)
 
     def plot_positions(self, times):
         """Plot ground reaction forces"""
@@ -330,6 +333,48 @@ class ProprioceptionArray(ProprioceptionArrayCy):
             plt.plot(
                 times,
                 np.asarray(self.motor_torques())[:len(times), joint_i],
+                label="Joint_{}".format(joint_i)
+            )
+        plt.legend()
+        plt.xlabel("Times [s]")
+        plt.ylabel("Joint torque [Nm]")
+        plt.grid(True)
+
+    def plot_active_torques(self, times):
+        """Plot joints active torques"""
+        plt.figure("Joints active torques")
+        for joint_i in range(self.size(1)):
+            plt.plot(
+                times,
+                np.asarray(self.active_torques())[:len(times), joint_i],
+                label="Joint_{}".format(joint_i)
+            )
+        plt.legend()
+        plt.xlabel("Times [s]")
+        plt.ylabel("Joint torque [Nm]")
+        plt.grid(True)
+
+    def plot_spring_torques(self, times):
+        """Plot joints spring torques"""
+        plt.figure("Joints spring torques")
+        for joint_i in range(self.size(1)):
+            plt.plot(
+                times,
+                np.asarray(self.spring_torques())[:len(times), joint_i],
+                label="Joint_{}".format(joint_i)
+            )
+        plt.legend()
+        plt.xlabel("Times [s]")
+        plt.ylabel("Joint torque [Nm]")
+        plt.grid(True)
+
+    def plot_damping_torques(self, times):
+        """Plot joints damping torques"""
+        plt.figure("Joints damping torques")
+        for joint_i in range(self.size(1)):
+            plt.plot(
+                times,
+                np.asarray(self.damping_torques())[:len(times), joint_i],
                 label="Joint_{}".format(joint_i)
             )
         plt.legend()
