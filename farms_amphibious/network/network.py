@@ -27,7 +27,7 @@ class NetworkODE:
                 self.solver.y,
                 self.data.state.array[iteration, 0, :]
             )
-        self.data.iteration = iteration
+        self.solver.set_f_params(iteration, self.data, self.data.network)
         self.data.state.array[iteration+1, 0, :] = (
             self.solver.integrate(time+timestep)
         )

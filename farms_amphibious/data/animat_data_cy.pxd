@@ -10,7 +10,6 @@ cdef class AnimatDataCy:
     cdef public NetworkParametersCy network
     cdef public JointsArrayCy joints
     cdef public SensorsDataCy sensors
-    cdef public unsigned int iteration
 
 
 cdef class NetworkParametersCy:

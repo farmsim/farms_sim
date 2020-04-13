@@ -13,7 +13,6 @@ cdef class AnimatDataCy:
         self.network = network
         self.joints = joints
         self.sensors = sensors
-        self.iteration = 0
 
 
 cdef class NetworkParametersCy:
