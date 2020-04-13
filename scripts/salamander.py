@@ -4,6 +4,8 @@
 import time
 import matplotlib.pyplot as plt
 from farms_models.utils import get_sdf_path
+from farms_bullet.simulation.options import SimulationOptions
+from farms_amphibious.model.options import AmphibiousOptions
 from farms_amphibious.experiment.simulation import (
     simulation,
     amphibious_options,
@@ -20,16 +22,40 @@ def main():
     sdf = get_sdf_path(name='salamander', version='v1')
     pylog.info('Model SDF: {}'.format(sdf))
     animat_options = get_animat_options(
+        show_hydrodynamics=True,
         swimming=False,
         n_legs=4,
         n_dof_legs=4,
         n_joints_body=11,
+        viscous_coefficients=[
+            [-1e-1, -1e1, -1e1],
+            [-1e-6, -1e-6, -1e-6],
+        ],
+        weight_osc_body=1e0,
+        weight_osc_legs_internal=3e1,
+        weight_osc_legs_opposite=3e0,
+        weight_osc_legs_following=3e0,
+        weight_osc_legs2body=1e1,
+        weight_sens_contact_i=-2e0,
+        weight_sens_contact_e=2e0,
+        weight_sens_hydro_freq=-1e-1,
+        weight_sens_hydro_amp=-1e-1,
     )
 
     (
         simulation_options,
         arena_sdf,
     ) = amphibious_options(animat_options, use_water_arena=True)
+
+    # Save options
+    animat_options_filename = 'salamander_animat_options.yaml'
+    animat_options.save(animat_options_filename)
+    simulation_options_filename = 'salamander_simulation_options.yaml'
+    simulation_options.save(simulation_options_filename)
+
+    # Load options
+    animat_options = AmphibiousOptions.load(animat_options_filename)
+    simulation_options = SimulationOptions.load(simulation_options_filename)
 
     # Simulation
     profile(
@@ -40,6 +66,8 @@ def main():
         arena_sdf=arena_sdf,
         use_controller=True,
     )
+
+    # Plot
     plt.show()
 
 

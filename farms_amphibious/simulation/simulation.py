@@ -43,10 +43,13 @@ def swimming_step(sim_step, animat):
             )
         animat.apply_swimming_forces(
             sim_step,
-            water_surface=water_surface
+            water_surface=water_surface,
         )
         if animat.options.show_hydrodynamics:
-            animat.draw_hydrodynamics(sim_step)
+            animat.draw_hydrodynamics(
+                sim_step,
+                water_surface=water_surface,
+            )
 
 
 def time_based_drive(sim_step, n_iterations, interface):
@@ -172,7 +175,11 @@ class AmphibiousSimulation(Simulation):
 
             # Update animat controller
             if self.animat().controller is not None:
-                self.animat().controller.control_step()
+                self.animat().controller.control_step(
+                    iteration=sim_step,
+                    time=sim_step*self.options.timestep,
+                    timestep=self.options.timestep,
+                )
 
     def post_step(self, sim_step):
         """Post step"""
@@ -207,11 +214,13 @@ class AmphibiousSimulation(Simulation):
 
         # Body offset
         if self.interface.user_params.body_offset().changed:
-            self.animat().options.control.network.joints.set_body_offsets(
-                self.interface.user_params.body_offset().value
+            animat = self.animat()
+            animat.options.control.network.joints.set_body_offsets(
+                self.interface.user_params.body_offset().value,
+                animat.options.morphology.n_joints_body
             )
             self.animat().controller.update(
-                self.animat().options
+                animat.options
             )
             self.interface.user_params.body_offset().changed = False
 
@@ -223,10 +232,6 @@ class AmphibiousSimulation(Simulation):
             self.animat().controller.update(
                 self.animat().options
             )
-            # if self.animat().options.control.drives.forward > 3:
-            #     pybullet.setGravity(0, 0, -0.01*self.options.units.gravity)
-            # else:
-            #     pybullet.setGravity(0, 0, -9.81*self.options.units.gravity)
             self.interface.user_params.drive_speed().changed = False
 
         # Turning

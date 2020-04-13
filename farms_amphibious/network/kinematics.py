@@ -37,6 +37,7 @@ class AmphibiousKinematics(ModelController):
 
     def __init__(
             self,
+            joints,
             animat_options,
             animat_data,
             timestep,
@@ -44,7 +45,7 @@ class AmphibiousKinematics(ModelController):
             sampling
     ):
         super(AmphibiousKinematics, self).__init__(
-            joints=np.zeros(animat_options.morphology.n_joints()),
+            joints=joints,
             use_position=True,
             use_torque=False,
         )
@@ -60,9 +61,9 @@ class AmphibiousKinematics(ModelController):
         self.animat_data = animat_data
         self._timestep = timestep
 
-    def control_step(self):
+    def control_step(self, iteration, time, timestep):
         """Control step"""
-        self.animat_data.iteration += 1
+        self.animat_data.iteration = iteration
 
     def get_outputs(self):
         """Outputs"""
@@ -106,10 +107,10 @@ class AmphibiousKinematics(ModelController):
     def update(self, options):
         """Update drives"""
 
-    def positions(self):
+    def positions(self, iteration):
         """Postions"""
         return self.get_position_output()
 
-    def velocities(self):
+    def velocities(self, iteration):
         """Postions"""
         return self.get_velocity_output()

@@ -2,214 +2,103 @@
 
 import numpy as np
 from scipy import integrate
-from farms_bullet.model.control import ModelController
 from ..controllers.controller import ode_oscillators_sparse
-from ..model.convention import AmphibiousConvention
 
 
-class AmphibiousNetworkODE(ModelController):
-    """Amphibious network"""
+class NetworkODE:
+    """NetworkODE"""
 
-    def __init__(self, animat_options, animat_data, timestep):
-        convention = AmphibiousConvention(animat_options.morphology)
-        super(AmphibiousNetworkODE, self).__init__(
-            joints=convention.joint_names(),
-            use_position=True,
-            use_torque=False,
-        )
+    def __init__(self, data):
+        super(NetworkODE, self).__init__()
         self.ode = ode_oscillators_sparse
-        self.animat_options = animat_options
-        self.animat_data = animat_data
-        self._timestep = timestep
-        self._n_oscillators = animat_data.state.n_oscillators
-        n_body = self.animat_options.morphology.n_joints_body
-        n_legs_dofs = self.animat_options.morphology.n_dof_legs
-        self.groups = [None, None]
-        self.groups = [
-            [
-                convention.bodyosc2index(
-                    joint_i=i,
-                    side=side
-                )
-                for i in range(n_body)
-            ] + [
-                convention.legosc2index(
-                    leg_i=leg_i,
-                    side_i=side_i,
-                    joint_i=joint_i,
-                    side=side
-                )
-                for leg_i in range(self.animat_options.morphology.n_legs//2)
-                for side_i in range(2)
-                for joint_i in range(n_legs_dofs)
-            ]
-            for side in range(2)
-        ]
-        self.gain_amplitude = np.array(
-            self.animat_options.control.network.joints.gain_amplitude
-        )
-        self.gain_offset = np.array(
-            self.animat_options.control.network.joints.gain_offset
-        )
+        self.data = data
+        self.n_oscillators = data.state.n_oscillators
 
         # Adaptive timestep parameters
-        self.solver = integrate.ode(f=self.ode)  # , jac=self.jac
+        self.solver = integrate.ode(f=self.ode)
         self.solver.set_integrator("dopri5")
-        self.solver.set_f_params(self.animat_data)
-        self._time = 0
+        self.solver.set_f_params(self.data, self.data.network)
+        self.solver.set_initial_value(y=self.data.state.array[0, 0, :], t=0.0)
 
-    def control_step(self):
+    def control_step(self, iteration, time, timestep, check=False):
         """Control step"""
-        # Adaptive timestep (ODE)
-        self.solver.set_initial_value(
-            self.animat_data.state.array[self.animat_data.iteration, 0, :],
-            self._time
+        if check:
+            assert np.array_equal(
+                self.solver.y,
+                self.data.state.array[iteration, 0, :]
+            )
+        self.solver.set_f_params(iteration, self.data, self.data.network)
+        self.data.state.array[iteration+1, 0, :] = (
+            self.solver.integrate(time+timestep)
         )
-        self._time += self._timestep
-        self.animat_data.state.array[self.animat_data.iteration+1, 0, :] = (
-            self.solver.integrate(self._time)
-        )
-        self.animat_data.iteration += 1
+        if check:
+            assert self.solver.successful()
+            assert abs(time+timestep-self.solver.t) < 1e-6*timestep, (
+                'ODE solver time: {} [s] != Simulation time: {} [s]'.format(
+                    self.solver.t,
+                    time+timestep,
+                )
+            )
 
-        # # Adaptive timestep (ODEINT)
-        # self.animat_data.state.array[self.iteration+1, 0, :] = integrate.odeint(
-        #     func=self.fun,
-        #     Dfun=self.jac,
-        #     y0=np.copy(self.animat_data.state.array[self.iteration, 0, :]),
-        #     t=np.linspace(0, self._timestep, 10),
-        #     tfirst=True
-        # )[-1]
-        # self.iteration += 1
-
-    def phases(self):
+    def phases(self, iteration=None):
         """Oscillators phases"""
-        return self.animat_data.state.array[:, 0, :self._n_oscillators]
-
-    def dphases(self):
-        """Oscillators phases velocity"""
-        return self.animat_data.state.array[:, 1, :self._n_oscillators]
-
-    def amplitudes(self):
-        """Amplitudes"""
-        return self.animat_data.state.array[:, 0, self._n_oscillators:2*self._n_oscillators]
-
-    def damplitudes(self):
-        """Amplitudes velocity"""
-        return self.animat_data.state.array[:, 1, self._n_oscillators:2*self._n_oscillators]
-
-    def offsets(self):
-        """Offset"""
-        return self.animat_data.state.array[:, 0, 2*self._n_oscillators:]
-
-    def doffsets(self):
-        """Offset velocity"""
-        return self.animat_data.state.array[:, 1, 2*self._n_oscillators:]
-
-    def get_outputs(self):
-        """Outputs"""
-        return self.amplitudes()[self.animat_data.iteration]*(
-            1 + np.cos(self.phases()[self.animat_data.iteration])
+        return (
+            self.data.state.array[iteration, 0, :self.n_oscillators]
+            if iteration is not None else
+            self.data.state.array[:, 0, :self.n_oscillators]
         )
+
+    # def dphases(self):
+    #     """Oscillators phases velocity"""
+    #     return self.data.state.array[:, 1, :self.n_oscillators]
+
+    def amplitudes(self, iteration=None):
+        """Amplitudes"""
+        return (
+            self.data.state.array[
+                iteration, 0,
+                self.n_oscillators:2*self.n_oscillators
+            ]
+            if iteration is not None else
+            self.data.state.array[
+                :, 0,
+                self.n_oscillators:2*self.n_oscillators
+            ]
+        )
+
+    # def damplitudes(self):
+    #     """Amplitudes velocity"""
+    #     return self.data.state.array[:, 1, self.n_oscillators:2*self.n_oscillators]
+
+    def get_outputs(self, iteration=None):
+        """Outputs"""
+        return self.amplitudes(iteration)*(1 + np.cos(self.phases(iteration)))
 
     def get_outputs_all(self):
         """Outputs"""
-        return self.amplitudes()*(
-            1 + np.cos(self.phases())
-        )
+        return self.amplitudes()*(1 + np.cos(self.phases()))
 
-    def get_doutputs(self):
-        """Outputs velocity"""
-        return self.damplitudes()[self.animat_data.iteration]*(
-            1 + np.cos(self.phases()[self.animat_data.iteration])
-        ) - (
-            self.amplitudes()[self.animat_data.iteration]
-            *np.sin(self.phases()[self.animat_data.iteration])
-            *self.dphases()[self.animat_data.iteration]
-        )
+    # def get_doutputs(self, iteration):
+    #     """Outputs velocity"""
+    #     return np.zeros_like(self.get_outputs(iteration))
+    #     return self.damplitudes(iteration)*(
+    #         1 + np.cos(self.phases(iteration))
+    #     ) - (
+    #         self.amplitudes(iteration)
+    #         *np.sin(self.phases(iteration))
+    #         *self.dphases(iteration)
+    #     )
 
-    def get_doutputs_all(self):
-        """Outputs velocity"""
-        return self.damplitudes()*(
-            1 + np.cos(self.phases)
-        ) - self.amplitudes*np.sin(self.phases)*self.dphases
+    # def get_doutputs_all(self):
+    #     """Outputs velocity"""
+    #     return self.damplitudes()*(
+    #         1 + np.cos(self.phases)
+    #     ) - self.amplitudes()*np.sin(self.phases)*self.dphases
 
-    def get_position_output(self):
-        """Position output"""
-        outputs = self.get_outputs()
-        return (
-            self.gain_amplitude*0.5*(
-                outputs[self.groups[0]]
-                - outputs[self.groups[1]]
-            )
-            + self.gain_offset*self.offsets()[self.animat_data.iteration]
-        )
+    def offsets(self):
+        """Offset"""
+        return self.data.state.array[:, 0, 2*self.n_oscillators:]
 
-    def get_position_output_all(self):
-        """Position output"""
-        outputs = self.get_outputs_all()
-        return (
-            self.gain_amplitude*0.5*(
-                outputs[:, self.groups[0]]
-                - outputs[:, self.groups[1]]
-            )
-            + self.gain_offset*self.offsets
-        )
-
-    def get_velocity_output(self):
-        """Position output"""
-        outputs = self.get_doutputs()
-        return (
-            self.gain_amplitude*0.5*(
-                outputs[self.groups[0]]
-                - outputs[self.groups[1]]
-            )
-            + self.doffsets()[self.animat_data.iteration]
-        )
-
-    def get_velocity_output_all(self):
-        """Position output"""
-        outputs = self.get_doutputs_all()
-        return self.gain_amplitude*0.5*(
-            outputs[:, self.groups[0]]
-            - outputs[:, self.groups[1]]
-        )
-
-    def get_torque_output(self):
-        """Torque output"""
-        iteration = self.animat_data.iteration-1
-        proprioception = self.animat_data.sensors.proprioception
-        positions = np.array(proprioception.positions(iteration))
-        velocities = np.array(proprioception.velocities(iteration))
-        predicted_positions = (positions+3*self._timestep*velocities)
-        cmd_positions = self.get_position_output()
-        cmd_velocities = self.get_velocity_output()
-        positions_rest = np.array(self.offsets()[self.animat_data.iteration])
-        cmd_kp = 1e1  # Nm/rad
-        cmd_kd = 1e-2  # Nm*s/rad
-        spring = 1e0  # Nm/rad
-        damping = 1e-2  # Nm*s/rad
-        max_torque = 1  # Nm
-        torques = np.clip(
-            (
-                + cmd_kp*(cmd_positions-predicted_positions)
-                + cmd_kd*(cmd_velocities-velocities)
-                + spring*(positions_rest-predicted_positions)
-                - damping*velocities
-            ),
-            -max_torque,
-            +max_torque
-        )
-        return torques
-
-    def update(self, options):
-        """Update drives"""
-        self.animat_data.network.oscillators.update(options)
-        self.animat_data.joints.update(options)
-
-    def positions(self):
-        """Postions"""
-        return self.get_position_output()
-
-    def velocities(self):
-        """Postions"""
-        return self.get_velocity_output()
+    # def doffsets(self):
+    #     """Offset velocity"""
+    #     return self.data.state.array[:, 1, 2*self.n_oscillators:]

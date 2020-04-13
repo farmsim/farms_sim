@@ -5,12 +5,12 @@ import numpy as np
 cimport numpy as np
 
 
-cdef class NetworkArray:
+cdef class NetworkArray(object):
     """Network array"""
 
-    def shape(self):
-        """Array shape"""
-        return np.shape(self.array)
+    cpdef unsigned int size(self, unsigned int index):
+        """Shape"""
+        return self.array.shape[index]
 
     def copy_array(self):
         """Copy array"""
@@ -47,10 +47,6 @@ cdef class NetworkArray2D(NetworkArray):
     def __init__(self, array):
         super(NetworkArray, self).__init__()
         self.array = array
-        shape = np.array(np.shape(array), dtype=np.uint)
-        cdef unsigned int i
-        for i in range(2):
-            self.size[i] = shape[i]
 
 
 cdef class NetworkArray3D(NetworkArray):
@@ -59,7 +55,19 @@ cdef class NetworkArray3D(NetworkArray):
     def __init__(self, array):
         super(NetworkArray, self).__init__()
         self.array = array
-        shape = np.array(np.shape(array), dtype=np.uint)
-        cdef unsigned int i
-        for i in range(3):
-            self.size[i] = shape[i]
+
+
+cdef class IntegerArray2D(NetworkArray):
+    """Network array"""
+
+    def __init__(self, array):
+        super(NetworkArray, self).__init__()
+        self.array = array
+
+
+cdef class IntegerArray3D(NetworkArray):
+    """Network array"""
+
+    def __init__(self, array):
+        super(NetworkArray, self).__init__()
+        self.array = array

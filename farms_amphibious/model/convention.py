@@ -3,13 +3,15 @@
 class AmphibiousConvention:
     """Amphibious convention"""
 
-    def __init__(self, morphology):
+    def __init__(self, **kwargs):
         super(AmphibiousConvention, self).__init__()
-        self.morphology = morphology
+        self.n_joints_body = kwargs.pop('n_joints_body')
+        self.n_dof_legs = kwargs.pop('n_dof_legs')
+        self.n_legs = kwargs.pop('n_legs')
 
     def bodyosc2index(self, joint_i, side=0):
         """body2index"""
-        n_body_joints = self.morphology.n_joints_body
+        n_body_joints = self.n_joints_body
         assert 0 <= joint_i < n_body_joints, "Joint must be < {}, got {}".format(
             n_body_joints,
             joint_i
@@ -18,9 +20,9 @@ class AmphibiousConvention:
 
     def legosc2index(self, leg_i, side_i, joint_i, side=0):
         """legosc2index"""
-        n_legs = self.morphology.n_legs
-        n_body_joints = self.morphology.n_joints_body
-        n_legs_dof = self.morphology.n_dof_legs
+        n_legs = self.n_legs
+        n_body_joints = self.n_joints_body
+        n_legs_dof = self.n_dof_legs
         assert 0 <= leg_i < n_legs, "Leg must be < {}, got {}".format(n_legs//2, leg_i)
         assert 0 <= side_i < 2, "Body side must be < 2, got {}".format(side_i)
         assert 0 <= joint_i < n_legs_dof, "Joint must be < {}, got {}".format(n_legs_dof, joint_i)
@@ -35,15 +37,15 @@ class AmphibiousConvention:
 
     def bodylink2name(self, link_i):
         """bodylink2name"""
-        n_body = self.morphology.n_links_body()
+        n_body = self.n_joints_body+1
         assert 0 <= link_i < n_body, "Body must be < {}, got {}".format(n_body, link_i)
         return "link_body_{}".format(link_i)
 
     def leglink2index(self, leg_i, side_i, joint_i):
         """leglink2index"""
-        n_legs = self.morphology.n_legs
-        n_body_links = self.morphology.n_links_body()
-        n_legs_dof = self.morphology.n_dof_legs
+        n_legs = self.n_legs
+        n_body_links = self.n_joints_body+1
+        n_legs_dof = self.n_dof_legs
         assert 0 <= leg_i < n_legs, "Leg must be < {}, got {}".format(n_legs//2, leg_i)
         assert 0 <= side_i < 2, "Body side must be < 2, got {}".format(side_i)
         assert 0 <= joint_i < n_legs_dof, "Joint must be < {}, got {}".format(n_legs_dof, joint_i)
@@ -56,14 +58,14 @@ class AmphibiousConvention:
 
     def bodyjoint2name(self, link_i):
         """bodyjoint2name"""
-        n_body = self.morphology.n_links_body()
+        n_body = self.n_joints_body + 1
         assert 0 <= link_i < n_body, "Body must be < {}, got {}".format(n_body, link_i)
         return "joint_body_{}".format(link_i)
 
     def leglink2name(self, leg_i, side_i, joint_i):
         """leglink2name"""
-        n_legs = self.morphology.n_legs
-        n_legs_dof = self.morphology.n_dof_legs
+        n_legs = self.n_legs
+        n_legs_dof = self.n_dof_legs
         assert 0 <= leg_i < n_legs, "Leg must be < {}, got {}".format(n_legs//2, leg_i)
         assert 0 <= side_i < 2, "Body side must be < 2, got {}".format(side_i)
         assert 0 <= joint_i < n_legs_dof, "Joint must be < {}, got {}".format(n_legs_dof, joint_i)
@@ -71,9 +73,9 @@ class AmphibiousConvention:
 
     def legjoint2index(self, leg_i, side_i, joint_i):
         """legjoint2index"""
-        n_legs = self.morphology.n_legs
-        n_body_joints = self.morphology.n_joints_body
-        n_legs_dof = self.morphology.n_dof_legs
+        n_legs = self.n_legs
+        n_body_joints = self.n_joints_body
+        n_legs_dof = self.n_dof_legs
         assert 0 <= leg_i < n_legs, "Leg must be < {}, got {}".format(n_legs//2, leg_i)
         assert 0 <= side_i < 2, "Body side must be < 2, got {}".format(side_i)
         assert 0 <= joint_i < n_legs_dof, "Joint must be < {}, got {}".format(n_legs_dof, joint_i)
@@ -86,8 +88,8 @@ class AmphibiousConvention:
 
     def legjoint2name(self, leg_i, side_i, joint_i):
         """legjoint2index"""
-        n_legs = self.morphology.n_legs
-        n_legs_dof = self.morphology.n_dof_legs
+        n_legs = self.n_legs
+        n_legs_dof = self.n_dof_legs
         link_name = self.leglink2name(
             leg_i,
             side_i,
@@ -101,7 +103,7 @@ class AmphibiousConvention:
 
     def contactleglink2index(self, leg_i, side_i):
         """Contact leg link 2 index"""
-        n_legs = self.morphology.n_legs
+        n_legs = self.n_legs
         assert 0 <= leg_i < n_legs, "Leg must be < {}, got {}".format(n_legs//2, leg_i)
         assert 0 <= side_i < 2, "Body side must be < 2, got {}".format(side_i)
         return 2*leg_i + side_i
@@ -110,10 +112,10 @@ class AmphibiousConvention:
         """Joint names"""
         return [
             self.bodyjoint2name(i)
-            for i in range(self.morphology.n_joints_body)
+            for i in range(self.n_joints_body)
         ] + [
             self.legjoint2name(leg_i, side_i, joint_i)
-            for leg_i in range(self.morphology.n_legs)
+            for leg_i in range(self.n_legs)
             for side_i in range(2)
-            for joint_i in range(self.morphology.n_dof_legs)
+            for joint_i in range(self.n_dof_legs)
         ]
