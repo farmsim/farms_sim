@@ -623,7 +623,7 @@ class AmphibiousProprioceptionArray(ProprioceptionArray):
     @classmethod
     def from_options(cls, n_joints, n_iterations):
         """Default"""
-        proprioception = np.zeros([n_iterations, n_joints, 9], dtype=DTYPE)
+        proprioception = np.zeros([n_iterations, n_joints, 12], dtype=DTYPE)
         return cls(proprioception)
 
 

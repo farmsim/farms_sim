@@ -104,34 +104,43 @@ class AmphibiousController(ModelController):
         proprioception = self.animat_data.sensors.proprioception
         positions = np.array(proprioception.positions(iteration))
         velocities = np.array(proprioception.velocities(iteration))
-        predicted_positions = (positions+3*self._timestep*velocities)
         cmd_positions = self.get_position_output(iteration)
-        cmd_velocities = self.get_velocity_output(iteration)
+        # cmd_velocities = self.get_velocity_output(iteration)
         positions_rest = np.array(self.network.offsets()[iteration])
-        cmd_kp = 1e1  # Nm/rad
-        cmd_kd = 1e-2  # Nm*s/rad
-        spring = 1e0  # Nm/rad
-        damping = 1e-2  # Nm*s/rad
-        max_torque = 1  # Nm
-        torques = np.clip(
-            (
-                + cmd_kp*(cmd_positions-predicted_positions)
-                + cmd_kd*(cmd_velocities-velocities)
-                + spring*(positions_rest-predicted_positions)
-                - damping*velocities
-            ),
-            -max_torque,
-            +max_torque
-        )
+        # max_torque = 1  # Nm
+        spring = 2e0  # Nm/rad
+        damping = 5e-3  # max_torque/10  # 1e-1 # Nm*s/rad
+        cmd_kp = 5*spring  # Nm/rad
+        cmd_kd = 0.5*damping  # Nm*s/rad
+        motor_torques = cmd_kp*(cmd_positions-positions)
+        spring_torques = spring*(positions_rest-positions)
+        damping_torques = - damping*velocities
+        if iteration > 0:
+            motor_torques += cmd_kd*(
+                (
+                    self.get_position_output(iteration)
+                    - self.get_position_output(iteration-1)
+                )/self._timestep
+                - velocities
+            )
+        torques = motor_torques + spring_torques + damping_torques
+        proprioception.array[iteration, :, 8] = torques
+        proprioception.array[iteration, :, 9] = motor_torques
+        proprioception.array[iteration, :, 10] = spring_torques
+        proprioception.array[iteration, :, 11] = damping_torques
         return torques
 
     def positions(self, iteration):
         """Postions"""
         return self.get_position_output(iteration)
 
-    def velocities(self, iteration):
+    # def velocities(self, iteration):
+    #     """Postions"""
+    #     return self.get_velocity_output(iteration)
+
+    def torques(self, iteration):
         """Postions"""
-        return self.get_velocity_output(iteration)
+        return self.get_torque_output(iteration)
 
     def update(self, options):
         """Update drives"""

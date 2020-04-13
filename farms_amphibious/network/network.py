@@ -48,9 +48,9 @@ class NetworkODE:
             self.data.state.array[:, 0, :self.n_oscillators]
         )
 
-    def dphases(self):
-        """Oscillators phases velocity"""
-        return self.data.state.array[:, 1, :self.n_oscillators]
+    # def dphases(self):
+    #     """Oscillators phases velocity"""
+    #     return self.data.state.array[:, 1, :self.n_oscillators]
 
     def amplitudes(self, iteration=None):
         """Amplitudes"""

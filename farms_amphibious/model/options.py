@@ -435,7 +435,7 @@ class AmphibiousOscillatorOptions(Options):
                     2*np.pi*joint_i/n_joints_body - body_stand_shift
                 ))],
                 [3, 0.1*joint_i/n_joints_body],
-                [5, 0.1*joint_i/n_joints_body+1],
+                [5, 0.1*joint_i/n_joints_body+0.5],
                 [5, 0],
                 [6, 0]
             ]
