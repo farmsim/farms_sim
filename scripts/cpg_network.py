@@ -273,6 +273,124 @@ def draw_network(source, destination, radius, connectivity, prefix, rad, color, 
     return nodes, nodes_texts, node_connectivity
 
 
+def plot_network(n_oscillators, data, **kwargs):
+    """Plot network"""
+    offset = kwargs.pop('offset', 1)
+    radius = kwargs.pop('radius', 0.3)
+    margin_x = kwargs.pop('margin_x', 2)
+    margin_y = kwargs.pop('margin_y', 7)
+    alpha = kwargs.pop('alpha', 0.3)
+
+    plt.figure(kwargs.pop('title', 'Network'), figsize=(12, 10))
+    axes = plt.gca()
+    axes.cla()
+    axes.set_xlim((-margin_x, n_oscillators-1+margin_x))
+    axes.set_ylim((-offset-margin_y, offset+margin_y))
+    axes.set_aspect('equal', adjustable='box')
+    axes.get_xaxis().set_visible(False)
+    axes.get_yaxis().set_visible(False)
+    plt.tight_layout()
+
+    # Oscillators
+    oscillator_positions = np.array(
+        [
+            [2*osc_x, side_y]
+            for osc_x in range(n_oscillators//2)
+            for side_y in [-offset, offset]
+        ] + [
+            [leg_x+osc_side_x+joint_y, joint_y*side_x]
+            for leg_x in [1, 11]
+            for side_x in [-1, 1]
+            for joint_y in [3, 4, 5, 6]
+            for osc_side_x in [-1, 1]
+        ]
+    )
+    oscillators, oscillators_texts, oscillator_connectivity = draw_network(
+        source=oscillator_positions,
+        destination=oscillator_positions,
+        radius=radius,
+        connectivity=data.network.connectivity.array,
+        prefix='O_',
+        rad=0.2,
+        color='C2',
+        alpha=alpha
+    )
+
+    # Contacts
+    contacts_positions = np.array([
+        [leg_x, side_y]
+        for leg_x in [1+6, 11+6]
+        for side_y in [-7, 7]
+    ])
+    contact_sensors, contact_sensor_texts, contact_connectivity = draw_network(
+        source=contacts_positions,
+        destination=oscillator_positions,
+        radius=radius,
+        connectivity=data.network.contacts_connectivity.array,
+        prefix='C_',
+        rad=0.0,
+        color='C1',
+        alpha=alpha
+    )
+
+    # Hydrodynamics
+    hydrodynamics_positions = np.array([
+        [2*osc_x+1, 0]
+        for osc_x in range(-1, n_oscillators//2)
+    ])
+    hydro_sensors, hydro_sensor_texts, hydro_connectivity = draw_network(
+        source=hydrodynamics_positions,
+        destination=oscillator_positions,
+        radius=radius,
+        connectivity=data.network.hydro_connectivity.array,
+        prefix='H_',
+        rad=0.0,
+        color='C0',
+        alpha=2*alpha
+    )
+
+    # Show elements
+    [
+        show_oscillators,
+        show_contacts,
+        show_hydrodynamics,
+        show_oscillator_connectivity,
+        show_contacts_connectivity,
+        show_hydrodynamics_connectivity,
+    ] = [
+        kwargs.pop(key, True)
+        for key in [
+                'show_oscillators',
+                'show_contacts',
+                'show_hydrodynamics',
+                'show_oscillator_connectivity',
+                'show_contacts_connectivity',
+                'show_hydrodynamics_connectivity',
+        ]
+    ]
+    if show_oscillator_connectivity:
+        for arrow in oscillator_connectivity:
+            axes.add_artist(arrow)
+    if show_contacts_connectivity:
+        for arrow in contact_connectivity:
+            axes.add_artist(arrow)
+    if show_hydrodynamics_connectivity:
+        for arrow in hydro_connectivity:
+            axes.add_artist(arrow)
+    if show_oscillators:
+        for circle, text in zip(oscillators, oscillators_texts):
+            axes.add_artist(circle)
+            axes.add_artist(text)
+    if show_contacts:
+        for circle, text in zip(contact_sensors, contact_sensor_texts):
+            axes.add_artist(circle)
+            axes.add_artist(text)
+    if show_hydrodynamics:
+        for circle, text in zip(hydro_sensors, hydro_sensor_texts):
+            axes.add_artist(circle)
+            axes.add_artist(text)
+
+
 def analysis(data, times, morphology):
     """Analysis"""
     # Network information
@@ -328,101 +446,38 @@ def analysis(data, times, morphology):
         )
     )
 
-    # # Plot data
+    # Plot data
     # data.plot(times)
+    data.state.plot_phases(times)
     data.state.plot_amplitudes(times)
 
     # Plot network
-    n_oscillators = 2*morphology.n_joints_body
-    offset = 1
-    radius = 0.3
-    margin_x = 2
-    margin_y = 7
-    alpha = 0.3
-    plt.figure('CPGnetwork', figsize=(12, 10))
-    axes = plt.gca()
-    axes.cla()
-    axes.set_xlim((-margin_x, n_oscillators-1+margin_x))
-    axes.set_ylim((-offset-margin_y, offset+margin_y))
-    axes.set_aspect('equal', adjustable='box')
-    axes.get_xaxis().set_visible(False)
-    axes.get_yaxis().set_visible(False)
-    plt.tight_layout()
-
-    # Oscillators
-    oscillator_positions = np.array(
-        [
-            [2*osc_x, side_y]
-            for side_y in [-offset, offset]
-            for osc_x in range(n_oscillators//2)
-        ] + [
-            [leg_x+osc_side_x+joint_y, joint_y*side_x]
-            for leg_x in [1, 11]
-            for side_x in [-1, 1]
-            for joint_y in [3, 4, 5, 6]
-            for osc_side_x in [-1, 1]
-        ]
+    # plot_network(
+    #     n_oscillators=2*morphology.n_joints_body,
+    #     data=data,
+    #     title='Complete CPG Network',
+    # )
+    plot_network(
+        n_oscillators=2*morphology.n_joints_body,
+        data=data,
+        title='Oscillators',
+        show_contacts_connectivity=False,
+        show_hydrodynamics_connectivity=False,
     )
-    oscillators, oscillators_texts, oscillator_connectivity = draw_network(
-        source=oscillator_positions,
-        destination=oscillator_positions,
-        radius=radius,
-        connectivity=data.network.connectivity.array,
-        prefix='O_',
-        rad=0.3,
-        color='C2',
-        alpha=alpha
-    )
-
-    # Contacts
-    contacts_positions = np.array([
-        [leg_x, side_y]
-        for leg_x in [1+6, 11+6]
-        for side_y in [-7, 7]
-    ])
-    contact_sensors, contact_sensor_texts, contact_connectivity = draw_network(
-        source=contacts_positions,
-        destination=oscillator_positions,
-        radius=radius,
-        connectivity=data.network.contacts_connectivity.array,
-        prefix='C_',
-        rad=0.0,
-        color='C1',
-        alpha=alpha
-    )
-
-    # Hydrodynamics
-    hydrodynamics_positions = np.array([
-        [2*osc_x+1, 0]
-        for osc_x in range(-1, n_oscillators//2)
-    ])
-    hydro_sensors, hydro_sensor_texts, hydro_connectivity = draw_network(
-        source=hydrodynamics_positions,
-        destination=oscillator_positions,
-        radius=radius,
-        connectivity=data.network.hydro_connectivity.array,
-        prefix='H_',
-        rad=0.0,
-        color='C0',
-        alpha=2*alpha
-    )
-
-    # Show elements
-    for arrow in oscillator_connectivity:
-        axes.add_artist(arrow)
-    for arrow in contact_connectivity:
-        axes.add_artist(arrow)
-    for arrow in hydro_connectivity:
-        axes.add_artist(arrow)
-    for circle, text in zip(oscillators, oscillators_texts):
-        axes.add_artist(circle)
-        axes.add_artist(text)
-    for circle, text in zip(contact_sensors, contact_sensor_texts):
-        axes.add_artist(circle)
-        axes.add_artist(text)
-    for circle, text in zip(hydro_sensors, hydro_sensor_texts):
-        axes.add_artist(circle)
-        axes.add_artist(text)
+    # plot_network(
+    #     n_oscillators=2*morphology.n_joints_body,
+    #     data=data,
+    #     title='Contacts',
+    #     show_oscillator_connectivity=False,
+    #     show_hydrodynamics_connectivity=False,
+    # )
+    # plot_network(
+    #     n_oscillators=2*morphology.n_joints_body,
+    #     data=data,
+    #     title='Hydrodynamics',
+    #     show_oscillator_connectivity=False,
+    #     show_contacts_connectivity=False,
+    # )
 
 
 def main(filename='cpg_network.h5'):
@@ -448,7 +503,10 @@ def main(filename='cpg_network.h5'):
 
     # Load from file
     pylog.debug('Loading data from {}'.format(filename))
-    data = AmphibiousData.from_file(filename)
+    data = AmphibiousData.from_file(
+        filename,
+        2*morphology.n_joints()
+    )
     pylog.debug('Load complete')
 
     # Post-processing
