@@ -1,9 +1,7 @@
-"""CPG network"""
+"""Network"""
 
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.patches as patches
-from matplotlib.colors import colorConverter
 
 from farms_amphibious.model.options import (
     AmphibiousMorphologyOptions,
@@ -20,54 +18,8 @@ from farms_amphibious.model.data import (
 )
 from farms_amphibious.network.network import NetworkODE
 from farms_amphibious.experiment.simulation import profile
+from farms_amphibious.utils.network import plot_networks_maps
 import farms_pylog as pylog
-
-
-def demo_con_style(ax, connectionstyle):
-    x1, y1 = 0.3, 0.2
-    x2, y2 = 0.8, 0.6
-
-    ax.plot([x1, x2], [y1, y2], ".")
-    ax.annotate(
-        "",
-        xy=(x1, y1), xycoords='data',
-        xytext=(x2, y2), textcoords='data',
-        arrowprops=dict(
-            arrowstyle="->", color="0.5",
-            shrinkA=5, shrinkB=5,
-            patchA=None, patchB=None,
-            connectionstyle=connectionstyle,
-        ),
-    )
-
-    ax.text(
-        .05, .95, connectionstyle.replace(",", ",\n"),
-        transform=ax.transAxes, ha="left", va="top"
-    )
-
-
-def demo():
-    fig, axs = plt.subplots(3, 5, figsize=(8, 4.8))
-    demo_con_style(axs[0, 0], "angle3,angleA=90,angleB=0")
-    demo_con_style(axs[1, 0], "angle3,angleA=0,angleB=90")
-    demo_con_style(axs[0, 1], "arc3,rad=0.")
-    demo_con_style(axs[1, 1], "arc3,rad=0.3")
-    demo_con_style(axs[2, 1], "arc3,rad=-0.3")
-    demo_con_style(axs[0, 2], "angle,angleA=-90,angleB=180,rad=0")
-    demo_con_style(axs[1, 2], "angle,angleA=-90,angleB=180,rad=5")
-    demo_con_style(axs[2, 2], "angle,angleA=-90,angleB=10,rad=5")
-    demo_con_style(axs[0, 3], "arc,angleA=-90,angleB=0,armA=30,armB=30,rad=0")
-    demo_con_style(axs[1, 3], "arc,angleA=-90,angleB=0,armA=30,armB=30,rad=5")
-    demo_con_style(axs[2, 3], "arc,angleA=-90,angleB=0,armA=0,armB=40,rad=0")
-    demo_con_style(axs[0, 4], "bar,fraction=0.3")
-    demo_con_style(axs[1, 4], "bar,fraction=-0.3")
-    demo_con_style(axs[2, 4], "bar,angle=180,fraction=-0.2")
-
-    for ax in axs.flat:
-        ax.set(xlim=(0, 1), ylim=(0, 1), xticks=[], yticks=[], aspect=1)
-    fig.tight_layout(pad=0.2)
-
-    plt.show()
 
 
 def animat_options():
@@ -159,120 +111,6 @@ def simulation(times, morphology, control):
     return network, animat_data
 
 
-def rotate(vector, theta):
-    """Rotate vector"""
-    cos_t, sin_t = np.cos(theta), np.sin(theta)
-    rotation = np.array(((cos_t, -sin_t), (sin_t, cos_t)))
-    return np.dot(rotation, vector)
-
-
-def direction(vector1, vector2):
-    """Unit direction"""
-    return (vector2-vector1)/np.linalg.norm(vector2-vector1)
-
-
-def connect_positions(source, destination, dir_shift, perp_shift):
-    """Connect positions"""
-    connection_direction = direction(source, destination)
-    connection_perp = rotate(connection_direction, 0.5*np.pi)
-    new_source = (
-        source
-        + dir_shift*connection_direction
-        + perp_shift*connection_perp
-    )
-    new_destination = (
-        destination
-        - dir_shift*connection_direction
-        + perp_shift*connection_perp
-    )
-    return new_source, new_destination
-
-
-def draw_nodes(positions, radius, color, prefix):
-    """Draw nodes"""
-    nodes = [
-        plt.Circle(
-            position,
-            radius,
-            facecolor=color,
-            edgecolor=0.7*np.array(colorConverter.to_rgb(color)),
-            linewidth=2,
-        )  # fill=False, clip_on=False
-        for position in positions
-    ]
-
-    nodes_texts = [
-        plt.text(
-            # position[0]+radius, position[1]+radius,
-            position[0], position[1],
-            '{}{}'.format(prefix, i),
-            # transform=axes.transAxes,
-            # va="bottom",
-            # ha="left",
-            va="center",
-            ha="center",
-            fontsize=8,
-            color='k',
-        )
-        for i, position in enumerate(positions)
-    ]
-
-    return nodes, nodes_texts
-
-
-def draw_connectivity(sources, destinations, radius, connectivity, rad, color):
-    """Draw nodes"""
-    node_connectivity = [
-        patches.FancyArrowPatch(
-            *connect_positions(
-                source,
-                destination,
-                radius,
-                -radius/2 if rad > 0 else 0
-            ),
-            arrowstyle=patches.ArrowStyle(
-                stylename='Simple',
-                head_length=8,
-                head_width=4,
-                tail_width=0.5,
-            ),
-            connectionstyle=patches.ConnectionStyle(
-                'Arc3',
-                rad=rad,
-            ),
-            color=color,
-        )
-        for source, destination in np.array([
-            [
-                sources[int(connection[1]+0.5)],
-                destinations[int(connection[0]+0.5)],
-            ]
-            for connection in connectivity
-        ])
-    ]
-    return node_connectivity
-
-
-def draw_network(source, destination, radius, connectivity, prefix, rad, color, alpha):
-    """Draw network"""
-    # Nodes
-    nodes, nodes_texts = draw_nodes(
-        source,
-        radius,
-        color,
-        prefix,
-    )
-    node_connectivity = draw_connectivity(
-        source,
-        destination,
-        radius,
-        connectivity,
-        rad=rad,
-        color=colorConverter.to_rgb(color)+(alpha,),
-    )
-    return nodes, nodes_texts, node_connectivity
-
-
 def analysis(data, times, morphology):
     """Analysis"""
     # Network information
@@ -328,101 +166,13 @@ def analysis(data, times, morphology):
         )
     )
 
-    # # Plot data
+    # Plot data
     # data.plot(times)
+    data.state.plot_phases(times)
     data.state.plot_amplitudes(times)
 
-    # Plot network
-    n_oscillators = 2*morphology.n_joints_body
-    offset = 1
-    radius = 0.3
-    margin_x = 2
-    margin_y = 7
-    alpha = 0.3
-    plt.figure('CPGnetwork', figsize=(12, 10))
-    axes = plt.gca()
-    axes.cla()
-    axes.set_xlim((-margin_x, n_oscillators-1+margin_x))
-    axes.set_ylim((-offset-margin_y, offset+margin_y))
-    axes.set_aspect('equal', adjustable='box')
-    axes.get_xaxis().set_visible(False)
-    axes.get_yaxis().set_visible(False)
-    plt.tight_layout()
-
-    # Oscillators
-    oscillator_positions = np.array(
-        [
-            [2*osc_x, side_y]
-            for side_y in [-offset, offset]
-            for osc_x in range(n_oscillators//2)
-        ] + [
-            [leg_x+osc_side_x+joint_y, joint_y*side_x]
-            for leg_x in [1, 11]
-            for side_x in [-1, 1]
-            for joint_y in [3, 4, 5, 6]
-            for osc_side_x in [-1, 1]
-        ]
-    )
-    oscillators, oscillators_texts, oscillator_connectivity = draw_network(
-        source=oscillator_positions,
-        destination=oscillator_positions,
-        radius=radius,
-        connectivity=data.network.connectivity.array,
-        prefix='O_',
-        rad=0.3,
-        color='C2',
-        alpha=alpha
-    )
-
-    # Contacts
-    contacts_positions = np.array([
-        [leg_x, side_y]
-        for leg_x in [1+6, 11+6]
-        for side_y in [-7, 7]
-    ])
-    contact_sensors, contact_sensor_texts, contact_connectivity = draw_network(
-        source=contacts_positions,
-        destination=oscillator_positions,
-        radius=radius,
-        connectivity=data.network.contacts_connectivity.array,
-        prefix='C_',
-        rad=0.0,
-        color='C1',
-        alpha=alpha
-    )
-
-    # Hydrodynamics
-    hydrodynamics_positions = np.array([
-        [2*osc_x+1, 0]
-        for osc_x in range(-1, n_oscillators//2)
-    ])
-    hydro_sensors, hydro_sensor_texts, hydro_connectivity = draw_network(
-        source=hydrodynamics_positions,
-        destination=oscillator_positions,
-        radius=radius,
-        connectivity=data.network.hydro_connectivity.array,
-        prefix='H_',
-        rad=0.0,
-        color='C0',
-        alpha=2*alpha
-    )
-
-    # Show elements
-    for arrow in oscillator_connectivity:
-        axes.add_artist(arrow)
-    for arrow in contact_connectivity:
-        axes.add_artist(arrow)
-    for arrow in hydro_connectivity:
-        axes.add_artist(arrow)
-    for circle, text in zip(oscillators, oscillators_texts):
-        axes.add_artist(circle)
-        axes.add_artist(text)
-    for circle, text in zip(contact_sensors, contact_sensor_texts):
-        axes.add_artist(circle)
-        axes.add_artist(text)
-    for circle, text in zip(hydro_sensors, hydro_sensor_texts):
-        axes.add_artist(circle)
-        axes.add_artist(text)
+    # Network
+    plot_networks_maps(morphology, data)
 
 
 def main(filename='cpg_network.h5'):
@@ -448,13 +198,16 @@ def main(filename='cpg_network.h5'):
 
     # Load from file
     pylog.debug('Loading data from {}'.format(filename))
-    data = AmphibiousData.from_file(filename)
+    data = AmphibiousData.from_file(
+        filename,
+        2*morphology.n_joints()
+    )
     pylog.debug('Load complete')
 
     # Post-processing
     analysis(data, times, morphology)
 
-    # demo()
+    # Show
     plt.show()
 
 

@@ -124,6 +124,7 @@ class AmphibiousOscillatorArray(OscillatorArray):
         n_body = morphology.n_joints_body
         n_dof_legs = morphology.n_dof_legs
         n_legs = morphology.n_legs
+        convention = AmphibiousConvention(**morphology)
         # n_oscillators = 2*(morphology.n_joints_body)
         n_oscillators = 2*(morphology.n_joints())
         data = np.array(oscillators.body_freqs, dtype=DTYPE)
@@ -141,23 +142,25 @@ class AmphibiousOscillatorArray(OscillatorArray):
         # Amplitudes
         amplitudes = np.zeros(n_oscillators, dtype=DTYPE)
         for i in range(n_body):
-            # amplitudes[[i, i+n_body]] = 0.1+0.2*i/(n_body-1)
             data = np.array(oscillators.body_nominal_amplitudes[i], dtype=DTYPE)
-            amplitudes[[i, i+n_body]] = (
+            amplitudes[convention.bodyosc2index(i, side=0)] = (
                 interpolate.interp1d(data[:, 0], data[:, 1])(drives.forward)
             )
-            # oscillators.body_stand_amplitude*np.sin(
-            #     2*np.pi*i/n_body
-            #     - oscillators.body_stand_shift
-            # )
+            amplitudes[convention.bodyosc2index(i, side=1)] = (
+                interpolate.interp1d(data[:, 0], data[:, 1])(drives.forward)
+            )
         for i in range(n_dof_legs):
             data = np.array(oscillators.legs_nominal_amplitudes[i], dtype=DTYPE)
             interp = interpolate.interp1d(data[:, 0], data[:, 1])
-            for leg_i in range(n_legs):
-                amplitudes[[
-                    2*n_body + 2*leg_i*n_dof_legs + i,
-                    2*n_body + 2*leg_i*n_dof_legs + i + n_dof_legs
-                ]] = interp(drives.forward)
+            for leg_i in range(n_legs//2):
+                for side_i in range(2):
+                    for side in range(2):
+                        amplitudes[convention.legosc2index(
+                            leg_i,
+                            side_i,
+                            i,
+                            side=side
+                        )] = interp(drives.forward)
         # pylog.debug("Amplitudes along body: abs({})".format(amplitudes[:11]))
         return np.abs(freqs), np.abs(rates), np.abs(amplitudes)
 
@@ -213,33 +216,27 @@ class AmphibiousOscillatorConnectivityArray(ConnectivityArray):
         # Body
         convention = AmphibiousConvention(**morphology)
         for i in range(n_body_joints):
-            # i - i
-            connectivity.append([
-                convention.bodyosc2index(joint_i=i, side=1),
-                convention.bodyosc2index(joint_i=i, side=0),
-                body_amplitude, np.pi
-            ])
-            connectivity.append([
-                convention.bodyosc2index(joint_i=i, side=0),
-                convention.bodyosc2index(joint_i=i, side=1),
-                body_amplitude, np.pi
-            ])
+            for sides in [[1, 0], [0, 1]]:
+                connectivity.append([
+                    convention.bodyosc2index(joint_i=i, side=sides[0]),
+                    convention.bodyosc2index(joint_i=i, side=sides[1]),
+                    body_amplitude, np.pi
+                ])
         for i in range(n_body_joints-1):
             # i - i+1
             phase_diff = connectivity_options.body_phase_bias
             phase_follow = connectivity_options.leg_phase_follow
             # phase_diff = np.pi/11
             for side in range(2):
-                connectivity.append([
-                    convention.bodyosc2index(joint_i=i+1, side=side),
-                    convention.bodyosc2index(joint_i=i, side=side),
-                    body_amplitude, phase_diff
-                ])
-                connectivity.append([
-                    convention.bodyosc2index(joint_i=i, side=side),
-                    convention.bodyosc2index(joint_i=i+1, side=side),
-                    body_amplitude, -phase_diff
-                ])
+                for osc, phase in [
+                        [[i+1, i], phase_diff],
+                        [[i, i+1], -phase_diff]
+                ]:
+                    connectivity.append([
+                        convention.bodyosc2index(joint_i=osc[0], side=side),
+                        convention.bodyosc2index(joint_i=osc[1], side=side),
+                        body_amplitude, phase
+                    ])
 
         # Legs (internal)
         for leg_i in range(morphology.n_legs//2):
@@ -248,115 +245,64 @@ class AmphibiousOscillatorConnectivityArray(ConnectivityArray):
                     "leg_i": leg_i,
                     "side_i": side_i
                 }
-                # 0 - 0
-                connectivity.append([
-                    convention.legosc2index(**_options, joint_i=0, side=1),
-                    convention.legosc2index(**_options, joint_i=0, side=0),
-                    legs_amplitude_internal, np.pi
-                ])
-                connectivity.append([
-                    convention.legosc2index(**_options, joint_i=0, side=0),
-                    convention.legosc2index(**_options, joint_i=0, side=1),
-                    legs_amplitude_internal, np.pi
-                ])
+                # X - X
+                for joint_i in range(morphology.n_dof_legs):
+                    for sides in [[1, 0], [0, 1]]:
+                        connectivity.append([
+                            convention.legosc2index(
+                                **_options,
+                                joint_i=joint_i,
+                                side=sides[0]
+                            ),
+                            convention.legosc2index(
+                                **_options,
+                                joint_i=joint_i,
+                                side=sides[1]
+                            ),
+                            legs_amplitude_internal,
+                            np.pi
+                        ])
+
+                # Following
+                internal_connectivity = []
                 if morphology.n_dof_legs > 1:
                     # 0 - 1
-                    connectivity.append([
-                        convention.legosc2index(**_options, joint_i=1, side=0),
-                        convention.legosc2index(**_options, joint_i=0, side=0),
-                        legs_amplitude_internal, 0.5*np.pi
-                    ])
-                    connectivity.append([
-                        convention.legosc2index(**_options, joint_i=0, side=0),
-                        convention.legosc2index(**_options, joint_i=1, side=0),
-                        legs_amplitude_internal, -0.5*np.pi
-                    ])
-                    connectivity.append([
-                        convention.legosc2index(**_options, joint_i=1, side=1),
-                        convention.legosc2index(**_options, joint_i=0, side=1),
-                        legs_amplitude_internal, 0.5*np.pi
-                    ])
-                    connectivity.append([
-                        convention.legosc2index(**_options, joint_i=0, side=1),
-                        convention.legosc2index(**_options, joint_i=1, side=1),
-                        legs_amplitude_internal, -0.5*np.pi
-                    ])
-                    # 1 - 1
-                    connectivity.append([
-                        convention.legosc2index(**_options, joint_i=1, side=1),
-                        convention.legosc2index(**_options, joint_i=1, side=0),
-                        legs_amplitude_internal, np.pi
-                    ])
-                    connectivity.append([
-                        convention.legosc2index(**_options, joint_i=1, side=0),
-                        convention.legosc2index(**_options, joint_i=1, side=1),
-                        legs_amplitude_internal, np.pi
+                    internal_connectivity.extend([
+                        [[1, 0], 0, 0.5*np.pi],
+                        [[0, 1], 0, -0.5*np.pi],
+                        [[1, 0], 1, 0.5*np.pi],
+                        [[0, 1], 1, -0.5*np.pi],
                     ])
                 if morphology.n_dof_legs > 2:
                     # 0 - 2
-                    connectivity.append([
-                        convention.legosc2index(**_options, joint_i=2, side=0),
-                        convention.legosc2index(**_options, joint_i=0, side=0),
-                        legs_amplitude_internal, 0
-                    ])
-                    connectivity.append([
-                        convention.legosc2index(**_options, joint_i=0, side=0),
-                        convention.legosc2index(**_options, joint_i=2, side=0),
-                        legs_amplitude_internal, 0
-                    ])
-                    connectivity.append([
-                        convention.legosc2index(**_options, joint_i=2, side=1),
-                        convention.legosc2index(**_options, joint_i=0, side=1),
-                        legs_amplitude_internal, 0
-                    ])
-                    connectivity.append([
-                        convention.legosc2index(**_options, joint_i=0, side=1),
-                        convention.legosc2index(**_options, joint_i=2, side=1),
-                        legs_amplitude_internal, 0
-                    ])
-                    # 2 - 2
-                    connectivity.append([
-                        convention.legosc2index(**_options, joint_i=2, side=1),
-                        convention.legosc2index(**_options, joint_i=2, side=0),
-                        legs_amplitude_internal, np.pi
-                    ])
-                    connectivity.append([
-                        convention.legosc2index(**_options, joint_i=2, side=0),
-                        convention.legosc2index(**_options, joint_i=2, side=1),
-                        legs_amplitude_internal, np.pi
+                    internal_connectivity.extend([
+                        [[2, 0], 0, 0],
+                        [[0, 2], 0, 0],
+                        [[2, 0], 1, 0],
+                        [[0, 2], 1, 0],
                     ])
                 if morphology.n_dof_legs > 3:
                     # 1 - 3
-                    connectivity.append([
-                        convention.legosc2index(**_options, joint_i=3, side=0),
-                        convention.legosc2index(**_options, joint_i=1, side=0),
-                        legs_amplitude_internal, 0
+                    internal_connectivity.extend([
+                        [[3, 1], 0, 0],
+                        [[1, 3], 0, 0],
+                        [[3, 1], 1, 0],
+                        [[1, 3], 1, 0],
                     ])
+                for joints, side, phase in internal_connectivity:
                     connectivity.append([
-                        convention.legosc2index(**_options, joint_i=1, side=0),
-                        convention.legosc2index(**_options, joint_i=3, side=0),
-                        legs_amplitude_internal, 0
-                    ])
-                    connectivity.append([
-                        convention.legosc2index(**_options, joint_i=3, side=1),
-                        convention.legosc2index(**_options, joint_i=1, side=1),
-                        legs_amplitude_internal, 0
-                    ])
-                    connectivity.append([
-                        convention.legosc2index(**_options, joint_i=1, side=1),
-                        convention.legosc2index(**_options, joint_i=3, side=1),
-                        legs_amplitude_internal, 0
-                    ])
-                    # 3 - 3
-                    connectivity.append([
-                        convention.legosc2index(**_options, joint_i=3, side=1),
-                        convention.legosc2index(**_options, joint_i=3, side=0),
-                        legs_amplitude_internal, np.pi
-                    ])
-                    connectivity.append([
-                        convention.legosc2index(**_options, joint_i=3, side=0),
-                        convention.legosc2index(**_options, joint_i=3, side=1),
-                        legs_amplitude_internal, np.pi
+                        convention.legosc2index(
+                            **_options,
+                            joint_i=joints[0],
+                            side=side,
+                        ),
+                        convention.legosc2index(
+                            **_options,
+                            joint_i=joints[1],
+                            side=side,
+                        ),
+                        legs_amplitude_internal,
+                        phase
                     ])
 
         # Opposite leg interaction
@@ -367,24 +313,20 @@ class AmphibiousOscillatorConnectivityArray(ConnectivityArray):
                         "joint_i": joint_i,
                         "side": side
                     }
-                    connectivity.append([
-                        convention.legosc2index(
-                            leg_i=leg_i, side_i=0, **_options
-                        ),
-                        convention.legosc2index(
-                            leg_i=leg_i, side_i=1, **_options
-                        ),
-                        legs_amplitude_opposite, np.pi
-                    ])
-                    connectivity.append([
-                        convention.legosc2index(
-                            leg_i=leg_i, side_i=1, **_options
-                        ),
-                        convention.legosc2index(
-                            leg_i=leg_i, side_i=0, **_options
-                        ),
-                        legs_amplitude_opposite, np.pi
-                    ])
+                    for sides in [[1, 0], [0, 1]]:
+                        connectivity.append([
+                            convention.legosc2index(
+                                leg_i=leg_i,
+                                side_i=sides[0],
+                                **_options
+                            ),
+                            convention.legosc2index(
+                                leg_i=leg_i,
+                                side_i=sides[1],
+                                **_options
+                            ),
+                            legs_amplitude_opposite, np.pi
+                        ])
 
         # Following leg interaction
         for leg_pre in range(morphology.n_legs//2-1):
@@ -392,34 +334,24 @@ class AmphibiousOscillatorConnectivityArray(ConnectivityArray):
                 for side in range(2):
                     _options = {
                         "side_i": side_i,
-                        "side": side
+                        "side": side,
+                        "joint_i": 0,
                     }
-                    connectivity.append([
-                        convention.legosc2index(
-                            leg_i=leg_pre,
-                            joint_i=0,
-                            **_options
-                        ),
-                        convention.legosc2index(
-                            leg_i=leg_pre+1,
-                            joint_i=0,
-                            **_options
-                        ),
-                        legs_amplitude_following, phase_follow
-                    ])
-                    connectivity.append([
-                        convention.legosc2index(
-                            leg_i=leg_pre+1,
-                            joint_i=0,
-                            **_options
-                        ),
-                        convention.legosc2index(
-                            leg_i=leg_pre,
-                            joint_i=0,
-                            **_options
-                        ),
-                        legs_amplitude_following, -phase_follow
-                    ])
+                    for legs, phase in [
+                            [[leg_pre, leg_pre+1], phase_follow],
+                            [[leg_pre+1, leg_pre], -phase_follow],
+                    ]:
+                        connectivity.append([
+                            convention.legosc2index(
+                                leg_i=legs[0],
+                                **_options
+                            ),
+                            convention.legosc2index(
+                                leg_i=legs[1],
+                                **_options
+                            ),
+                            legs_amplitude_following, phase
+                        ])
 
         # Body-legs interaction
         for leg_i in range(morphology.n_legs//2):

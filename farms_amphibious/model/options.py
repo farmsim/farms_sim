@@ -409,11 +409,11 @@ class AmphibiousOscillatorOptions(Options):
         self.set_body_nominal_amplitudes(n_joints_body)
         self.set_legs_nominal_amplitudes(n_dof_legs)
 
-    def getbody_stand_amplitude(self):
+    def get_body_stand_amplitude(self):
         """Body stand amplitude"""
         return self.body_stand_amplitude
 
-    def setbody_stand_amplitude(self, value, n_joints_body):
+    def set_body_stand_amplitude(self, value, n_joints_body):
         """Body stand amplitude"""
         self.body_stand_amplitude = value
         self.set_body_nominal_amplitudes(n_joints_body)

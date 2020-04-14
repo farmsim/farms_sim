@@ -16,7 +16,7 @@ class AmphibiousConvention:
             n_body_joints,
             joint_i
         )
-        return joint_i + side*n_body_joints
+        return 2*joint_i + side
 
     def legosc2index(self, leg_i, side_i, joint_i, side=0):
         """legosc2index"""
@@ -31,9 +31,37 @@ class AmphibiousConvention:
             2*n_body_joints
             + leg_i*2*n_legs_dof*2  # 2 oscillators, 2 legs
             + side_i*n_legs_dof*2  # 2 oscillators
-            + joint_i
-            + side*n_legs_dof
+            + 2*joint_i
+            + side
         )
+
+    def oscindex2information(self, index):
+        """Oscillator index information"""
+        information = {}
+        n_joints = self.n_joints_body + self.n_legs*self.n_dof_legs
+        n_oscillators = 2*n_joints
+        n_body_oscillators = 2*self.n_joints_body
+        assert 0 <= index < n_oscillators, (
+            'Index {} bigger than number of oscillator (n={})'.format(
+                index,
+                n_oscillators,
+            )
+        )
+        information['body'] = index < n_body_oscillators
+        information['side'] = index % 2
+        if information['body']:
+            information['body_link'] = index//2
+        else:
+            index_i = index - n_body_oscillators
+            n_osc_leg = 2*self.n_dof_legs
+            n_osc_leg_pair = 2*n_osc_leg
+            information['leg'] = index_i // n_osc_leg
+            information['leg_i'] = index_i // n_osc_leg_pair
+            information['side_i'] = (
+                0 if (index_i % n_osc_leg_pair) < n_osc_leg else 1
+            )
+            information['joint_i'] = (index_i % n_osc_leg)//2
+        return information
 
     def bodylink2name(self, link_i):
         """bodylink2name"""
