@@ -22,19 +22,19 @@ class AnimatData(AnimatDataCy):
     """Animat data"""
 
     @classmethod
-    def from_dict(cls, dictionary):
+    def from_dict(cls, dictionary, n_oscillators=0):
         """Load data from dictionary"""
         return cls(
-            state=OscillatorNetworkState(dictionary['state'], 0),
+            state=OscillatorNetworkState(dictionary['state'], n_oscillators),
             network=NetworkParameters.from_dict(dictionary['network']),
             joints=JointsArray(dictionary['joints']),
             sensors=SensorsData.from_dict(dictionary['sensors']),
         )
 
     @classmethod
-    def from_file(cls, filename):
+    def from_file(cls, filename, n_oscillators=0):
         """From file"""
-        return cls.from_dict(dd.io.load(filename))
+        return cls.from_dict(dd.io.load(filename), n_oscillators)
 
     def to_dict(self):
         """Convert data to dictionary"""
