@@ -52,12 +52,13 @@ class AmphibiousConvention:
         if information['body']:
             information['body_link'] = index//2
         else:
-            index_i = index - 2*n_oscillators
+            index_i = index - n_body_oscillators
             n_osc_leg = 2*self.n_dof_legs
             n_osc_leg_pair = 2*n_osc_leg
+            information['leg'] = index_i // n_osc_leg
             information['leg_i'] = index_i // n_osc_leg_pair
             information['side_i'] = (
-                0 if index_i % n_osc_leg_pair < n_osc_leg else 1
+                0 if (index_i % n_osc_leg_pair) < n_osc_leg else 1
             )
             information['joint_i'] = (index_i % n_osc_leg)//2
         return information

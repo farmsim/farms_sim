@@ -288,6 +288,7 @@ def plot_network(n_oscillators, data, **kwargs):
     margin_y = kwargs.pop('margin_y', 7)
     alpha = kwargs.pop('alpha', 0.3)
     title = kwargs.pop('title', 'Network')
+    rads = kwargs.pop('rads', [0.2, 0.0, 0.0])
 
     plt.figure(num=title, figsize=(12, 10))
 
@@ -315,13 +316,9 @@ def plot_network(n_oscillators, data, **kwargs):
             for osc_side_x in [-1, 1]
         ]
     )
-    osc_conn0_cond = kwargs.pop(
-        'osc_conn0_cond',
-        lambda osc: True
-    )
-    osc_conn1_cond = kwargs.pop(
-        'osc_conn1_cond',
-        lambda osc: True
+    osc_conn_cond = kwargs.pop(
+        'osc_conn_cond',
+        lambda osc0, osc1: True
     )
     oscillators, oscillators_texts, oscillator_connectivity = draw_network(
         source=oscillator_positions,
@@ -330,11 +327,10 @@ def plot_network(n_oscillators, data, **kwargs):
         connectivity=[
             connection
             for connection in data.network.connectivity.array
-            if osc_conn0_cond(connection[0])
-            if osc_conn1_cond(connection[1])
+            if osc_conn_cond(connection[0], connection[1])
         ],
         prefix='O_',
-        rad=0.2,
+        rad=rads[0],
         color='C2',
         alpha=alpha,
     )
@@ -351,7 +347,7 @@ def plot_network(n_oscillators, data, **kwargs):
         radius=radius,
         connectivity=data.network.contacts_connectivity.array,
         prefix='C_',
-        rad=0.0,
+        rad=rads[1],
         color='C1',
         alpha=alpha,
     )
@@ -367,7 +363,7 @@ def plot_network(n_oscillators, data, **kwargs):
         radius=radius,
         connectivity=data.network.hydro_connectivity.array,
         prefix='H_',
-        rad=0.0,
+        rad=rads[2],
         color='C0',
         alpha=2*alpha
     )
@@ -474,9 +470,31 @@ def analysis(data, times, morphology):
     data.state.plot_phases(times)
     data.state.plot_amplitudes(times)
 
-    # Plot network
+    # Plot tools
     convention = AmphibiousConvention(**morphology)
     info = convention.oscindex2information
+    body2body = lambda osc0, osc1: info(osc0)['body'] and info(osc1)['body']
+    leg2body = lambda osc0, osc1: info(osc0)['body'] and not info(osc1)['body']
+    body2leg = lambda osc0, osc1: not info(osc0)['body'] and info(osc1)['body']
+    leg2leg = (
+        lambda osc0, osc1: not info(osc0)['body'] and not info(osc1)['body']
+    )
+    leg2sameleg = (
+        lambda osc0, osc1: (
+            not info(osc0)['body']
+            and not info(osc1)['body']
+            and info(osc0)['leg'] == info(osc1)['leg']
+        )
+    )
+    leg2diffleg = (
+        lambda osc0, osc1: (
+            not info(osc0)['body']
+            and not info(osc1)['body']
+            and info(osc0)['leg'] != info(osc1)['leg']
+        )
+    )
+
+    # Plot network
     # plot_network(
     #     n_oscillators=2*morphology.n_joints_body,
     #     data=data,
@@ -495,8 +513,7 @@ def analysis(data, times, morphology):
         title='Oscillators body2body connectivity',
         show_contacts_connectivity=False,
         show_hydrodynamics_connectivity=False,
-        osc_conn0_cond=lambda osc: info(osc)['body'],
-        osc_conn1_cond=lambda osc: info(osc)['body'],
+        osc_conn_cond=body2body,
     )
     plot_network(
         n_oscillators=2*morphology.n_joints_body,
@@ -504,8 +521,7 @@ def analysis(data, times, morphology):
         title='Oscillators body2limb connectivity',
         show_contacts_connectivity=False,
         show_hydrodynamics_connectivity=False,
-        osc_conn0_cond=lambda osc: not info(osc)['body'],
-        osc_conn1_cond=lambda osc: info(osc)['body'],
+        osc_conn_cond=body2leg,
     )
     plot_network(
         n_oscillators=2*morphology.n_joints_body,
@@ -513,8 +529,8 @@ def analysis(data, times, morphology):
         title='Oscillators limb2body connectivity',
         show_contacts_connectivity=False,
         show_hydrodynamics_connectivity=False,
-        osc_conn0_cond=lambda osc: info(osc)['body'],
-        osc_conn1_cond=lambda osc: not info(osc)['body'],
+        osc_conn_cond=leg2body,
+        rads=[0.05, 0.0, 0.0],
     )
     plot_network(
         n_oscillators=2*morphology.n_joints_body,
@@ -522,8 +538,26 @@ def analysis(data, times, morphology):
         title='Oscillators limb2limb connectivity',
         show_contacts_connectivity=False,
         show_hydrodynamics_connectivity=False,
-        osc_conn0_cond=lambda osc: not info(osc)['body'],
-        osc_conn1_cond=lambda osc: not info(osc)['body'],
+        osc_conn_cond=leg2leg,
+        rads=[0.05, 0.0, 0.0],
+    )
+    plot_network(
+        n_oscillators=2*morphology.n_joints_body,
+        data=data,
+        title='Oscillators intralimb connectivity',
+        show_contacts_connectivity=False,
+        show_hydrodynamics_connectivity=False,
+        osc_conn_cond=leg2sameleg,
+        rads=[0.2, 0.0, 0.0],
+    )
+    plot_network(
+        n_oscillators=2*morphology.n_joints_body,
+        data=data,
+        title='Oscillators interlimb connectivity',
+        show_contacts_connectivity=False,
+        show_hydrodynamics_connectivity=False,
+        osc_conn_cond=leg2diffleg,
+        rads=[0.05, 0.0, 0.0],
     )
     # plot_network(
     #     n_oscillators=2*morphology.n_joints_body,
