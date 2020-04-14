@@ -3,7 +3,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-from matplotlib.colors import colorConverter
+import matplotlib.cm as cm
+from matplotlib.colors import colorConverter, Normalize, ListedColormap
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 from farms_amphibious.model.options import (
     AmphibiousMorphologyOptions,
@@ -221,8 +223,14 @@ def draw_nodes(positions, radius, color, prefix):
     return nodes, nodes_texts
 
 
-def draw_connectivity(sources, destinations, radius, connectivity, rad, color):
+def draw_connectivity(sources, destinations, connectivity, **kwargs):
     """Draw nodes"""
+    radius = kwargs.pop('radius')
+    rad = kwargs.pop('rad')
+    color = kwargs.pop('color')
+    alpha = kwargs.pop('alpha')
+    if isinstance(color, ListedColormap):
+        color_values = kwargs.pop('color_values')
     node_connectivity = [
         patches.FancyArrowPatch(
             *connect_positions(
@@ -241,9 +249,13 @@ def draw_connectivity(sources, destinations, radius, connectivity, rad, color):
                 'Arc3',
                 rad=rad,
             ),
-            color=color,
+            color=colorConverter.to_rgb(
+                color(color_values[connection_i])
+                if isinstance(color, ListedColormap)
+                else color
+            )+(alpha,),
         )
-        for source, destination in np.array([
+        for connection_i, (source, destination) in enumerate([
             [
                 sources[int(connection[1]+0.5)],
                 destinations[int(connection[0]+0.5)],
@@ -259,14 +271,31 @@ def draw_network(source, destination, radius, connectivity, **kwargs):
     # Arguments
     prefix = kwargs.pop('prefix')
     rad = kwargs.pop('rad')
-    color = kwargs.pop('color')
+    color_nodes = kwargs.pop('color_nodes')
+    color_arrows = kwargs.pop('color_arrows', None)
+    options = {}
     alpha = kwargs.pop('alpha')
+    if color_arrows is None:
+        color_arrows = colorConverter.to_rgb(color_nodes)
+    else:
+        weights = kwargs.pop('weights')
+        if list(weights):
+            weight_min = np.min(weights)
+            weight_max = np.max(weights)
+            if weight_max == weight_min:
+                weight_max += 1e-3
+                weight_min -= 1e-3
+            options['color_values'] = (
+                (weights-weight_min)/(weight_max-weight_min)
+            )
+        else:
+            options['color_values'] = None
 
     # Nodes
     nodes, nodes_texts = draw_nodes(
         positions=source,
         radius=radius,
-        color=color,
+        color=color_nodes,
         prefix=prefix,
     )
     node_connectivity = draw_connectivity(
@@ -275,13 +304,16 @@ def draw_network(source, destination, radius, connectivity, **kwargs):
         radius=radius,
         connectivity=connectivity,
         rad=rad,
-        color=colorConverter.to_rgb(color)+(alpha,),
+        color=color_arrows,
+        alpha=alpha,
+        **options
     )
     return nodes, nodes_texts, node_connectivity
 
 
 def plot_network(n_oscillators, data, **kwargs):
     """Plot network"""
+    # Options
     offset = kwargs.pop('offset', 1)
     radius = kwargs.pop('radius', 0.3)
     margin_x = kwargs.pop('margin_x', 2)
@@ -289,9 +321,10 @@ def plot_network(n_oscillators, data, **kwargs):
     alpha = kwargs.pop('alpha', 0.3)
     title = kwargs.pop('title', 'Network')
     rads = kwargs.pop('rads', [0.2, 0.0, 0.0])
+    use_colorbar = kwargs.pop('use_colorbar', False)
 
+    # Create figure
     plt.figure(num=title, figsize=(12, 10))
-
     axes = plt.gca()
     axes.cla()
     plt.title(title)
@@ -301,6 +334,10 @@ def plot_network(n_oscillators, data, **kwargs):
     axes.get_xaxis().set_visible(False)
     axes.get_yaxis().set_visible(False)
     plt.tight_layout()
+
+    # Colorbar
+    if use_colorbar:
+        cmap = plt.get_cmap(kwargs.pop('cmap', 'viridis'))
 
     # Oscillators
     oscillator_positions = np.array(
@@ -320,19 +357,32 @@ def plot_network(n_oscillators, data, **kwargs):
         'osc_conn_cond',
         lambda osc0, osc1: True
     )
+    connections = np.array([
+        connection
+        for connection in data.network.connectivity.array
+        if osc_conn_cond(connection[0], connection[1])
+    ])
+    options = {}
+    use_weights = use_colorbar and kwargs.pop('oscillator_weights', False)
+    if use_weights:
+        if connections.any():
+            options['weights'] = connections[:, 2]
+            vmin = np.min(connections[:, 2])
+            vmax = np.max(connections[:, 2])
+        else:
+            options['weights'] = []
+            vmin, vmax = 0, 1
     oscillators, oscillators_texts, oscillator_connectivity = draw_network(
         source=oscillator_positions,
         destination=oscillator_positions,
         radius=radius,
-        connectivity=[
-            connection
-            for connection in data.network.connectivity.array
-            if osc_conn_cond(connection[0], connection[1])
-        ],
+        connectivity=connections,
         prefix='O_',
         rad=rads[0],
-        color='C2',
+        color_nodes='C2',
+        color_arrows=cmap if use_weights else None,
         alpha=alpha,
+        **options,
     )
 
     # Contacts
@@ -345,19 +395,32 @@ def plot_network(n_oscillators, data, **kwargs):
         'contact_conn_cond',
         lambda osc0, osc1: True
     )
+    connections = np.array([
+        connection
+        for connection in data.network.contacts_connectivity.array
+        if contact_conn_cond(connection[0], connection[1])
+    ])
+    options = {}
+    use_weights = use_colorbar and kwargs.pop('contacts_weights', False)
+    if use_weights:
+        if connections.any():
+            options['weights'] = connections[:, 2]
+            vmin = np.min(connections[:, 2])
+            vmax = np.max(connections[:, 2])
+        else:
+            options['weights'] = []
+            vmin, vmax = 0, 1
     contact_sensors, contact_sensor_texts, contact_connectivity = draw_network(
         source=contacts_positions,
         destination=oscillator_positions,
         radius=radius,
-        connectivity=[
-            connection
-            for connection in data.network.contacts_connectivity.array
-            if contact_conn_cond(connection[0], connection[1])
-        ],
+        connectivity=connections,
         prefix='C_',
         rad=rads[1],
-        color='C1',
+        color_nodes='C1',
+        color_arrows=cmap if use_weights else None,
         alpha=alpha,
+        **options,
     )
 
     # Hydrodynamics
@@ -369,6 +432,21 @@ def plot_network(n_oscillators, data, **kwargs):
         'hydro_conn_cond',
         lambda osc0, osc1: True
     )
+    connections = np.array([
+        connection
+        for connection in data.network.hydro_connectivity.array
+        if hydro_conn_cond(connection[0], connection[1])
+    ])
+    options = {}
+    use_weights = use_colorbar and kwargs.pop('hydro_weights', False)
+    if use_weights:
+        if connections.any():
+            options['weights'] = connections[:, 2]
+            vmin = np.min(connections[:, 2])
+            vmax = np.max(connections[:, 2])
+        else:
+            options['weights'] = []
+            vmin, vmax = 0, 1
     hydro_sensors, hydro_sensor_texts, hydro_connectivity = draw_network(
         source=hydrodynamics_positions,
         destination=oscillator_positions,
@@ -380,8 +458,10 @@ def plot_network(n_oscillators, data, **kwargs):
         ],
         prefix='H_',
         rad=rads[2],
-        color='C0',
-        alpha=2*alpha
+        color_nodes='C0',
+        color_arrows=cmap if use_weights else None,
+        alpha=2*alpha,
+        **options,
     )
 
     # Show elements
@@ -424,6 +504,22 @@ def plot_network(n_oscillators, data, **kwargs):
         for circle, text in zip(hydro_sensors, hydro_sensor_texts):
             axes.add_artist(circle)
             axes.add_artist(text)
+    if use_colorbar:
+        divider = make_axes_locatable(axes)
+        cax = divider.append_axes("right", size="5%", pad=0.05)
+        print('{}: {}, {}'.format(title, vmin, vmax))
+        plt.colorbar(
+            mappable=cm.ScalarMappable(
+                norm=Normalize(
+                    vmin=vmin,
+                    vmax=vmax,
+                    clip=True,
+                ),
+                cmap=cmap,
+            ),
+            cax=cax,
+        )
+        plt.sca(axes)
 
 
 def analysis(data, times, morphology):
@@ -538,6 +634,8 @@ def analysis(data, times, morphology):
         title='Oscillators complete connectivity',
         show_contacts_connectivity=False,
         show_hydrodynamics_connectivity=False,
+        use_colorbar=True,
+        oscillator_weights=True,
     )
     plot_network(
         n_oscillators=2*morphology.n_joints_body,
@@ -546,6 +644,8 @@ def analysis(data, times, morphology):
         show_contacts_connectivity=False,
         show_hydrodynamics_connectivity=False,
         osc_conn_cond=body2body,
+        use_colorbar=True,
+        oscillator_weights=True,
     )
     plot_network(
         n_oscillators=2*morphology.n_joints_body,
@@ -554,6 +654,8 @@ def analysis(data, times, morphology):
         show_contacts_connectivity=False,
         show_hydrodynamics_connectivity=False,
         osc_conn_cond=body2leg,
+        use_colorbar=True,
+        oscillator_weights=True,
     )
     plot_network(
         n_oscillators=2*morphology.n_joints_body,
@@ -563,6 +665,8 @@ def analysis(data, times, morphology):
         show_hydrodynamics_connectivity=False,
         osc_conn_cond=leg2body,
         rads=[0.05, 0.0, 0.0],
+        use_colorbar=True,
+        oscillator_weights=True,
     )
     plot_network(
         n_oscillators=2*morphology.n_joints_body,
@@ -572,6 +676,8 @@ def analysis(data, times, morphology):
         show_hydrodynamics_connectivity=False,
         osc_conn_cond=leg2leg,
         rads=[0.05, 0.0, 0.0],
+        use_colorbar=True,
+        oscillator_weights=True,
     )
     plot_network(
         n_oscillators=2*morphology.n_joints_body,
@@ -581,6 +687,8 @@ def analysis(data, times, morphology):
         show_hydrodynamics_connectivity=False,
         osc_conn_cond=leg2sameleg,
         rads=[0.2, 0.0, 0.0],
+        use_colorbar=True,
+        oscillator_weights=True,
     )
     plot_network(
         n_oscillators=2*morphology.n_joints_body,
@@ -590,6 +698,8 @@ def analysis(data, times, morphology):
         show_hydrodynamics_connectivity=False,
         osc_conn_cond=leg2diffleg,
         rads=[0.05, 0.0, 0.0],
+        use_colorbar=True,
+        oscillator_weights=True,
     )
 
     # Plot contacts connectivity
@@ -599,6 +709,8 @@ def analysis(data, times, morphology):
         title='Contacts complete connectivity',
         show_oscillator_connectivity=False,
         show_hydrodynamics_connectivity=False,
+        use_colorbar=True,
+        contacts_weights=True,
     )
     plot_network(
         n_oscillators=2*morphology.n_joints_body,
@@ -607,6 +719,8 @@ def analysis(data, times, morphology):
         show_oscillator_connectivity=False,
         show_hydrodynamics_connectivity=False,
         contact_conn_cond=contact2sameleg,
+        use_colorbar=True,
+        contacts_weights=True,
     )
     plot_network(
         n_oscillators=2*morphology.n_joints_body,
@@ -615,6 +729,8 @@ def analysis(data, times, morphology):
         show_oscillator_connectivity=False,
         show_hydrodynamics_connectivity=False,
         contact_conn_cond=contact2diffleg,
+        use_colorbar=True,
+        contacts_weights=True,
     )
 
     # Plot hydrodynamics connectivity
@@ -624,6 +740,8 @@ def analysis(data, times, morphology):
         title='Hydrodynamics complete connectivity',
         show_oscillator_connectivity=False,
         show_contacts_connectivity=False,
+        use_colorbar=True,
+        hydro_weights=True,
     )
 
 
