@@ -516,7 +516,7 @@ def plot_network(n_oscillators, data, **kwargs):
     if use_colorbar:
         divider = make_axes_locatable(axes)
         cax = divider.append_axes("right", size="5%", pad=0.05)
-        print('{}: {}, {}'.format(title, vmin, vmax))
+        pylog.debug('{}: {}, {}'.format(title, vmin, vmax))
         plt.colorbar(
             mappable=cm.ScalarMappable(
                 norm=Normalize(
@@ -531,66 +531,8 @@ def plot_network(n_oscillators, data, **kwargs):
         plt.sca(axes)
 
 
-def analysis(data, times, morphology):
-    """Analysis"""
-    # Network information
-    sep = '\n  - '
-    pylog.info(
-        'Oscillator connectivity information'
-        + sep.join([
-            'O_{} <- O_{} (w={}, theta={})'.format(
-                int(connection[0]+0.5),
-                int(connection[1]+0.5),
-                connection[2],
-                connection[3],
-            )
-            for connection in data.network.connectivity.array
-        ])
-    )
-    pylog.info(
-        'Contacts connectivity information'
-        + sep.join([
-            'O_{} <- contact_{} (frequency_gain={})'.format(
-                int(connection[0]+0.5),
-                int(connection[1]+0.5),
-                connection[2],
-            )
-            for connection in data.network.contacts_connectivity.array
-        ])
-    )
-    pylog.info(
-        'Hydrodynamics connectivity information'
-        + sep.join([
-            'O_{} <- link_{} (phase_gain={}, amplitude_gain={})'.format(
-                int(connection[0]+0.5),
-                int(connection[1]+0.5),
-                connection[2],
-                connection[3],
-            )
-            for connection in data.network.hydro_connectivity.array
-        ])
-    )
-    sep = '\n'
-    pylog.info(
-        (sep.join([
-            'Network infromation:',
-            '  - Oscillators shape: {}',
-            '  - Connectivity shape: {}',
-            '  - Contacts connectivity shape: {}',
-            '  - Hydro connectivity shape: {}',
-        ])).format(
-            np.shape(data.network.oscillators.array),
-            np.shape(data.network.connectivity.array),
-            np.shape(data.network.contacts_connectivity.array),
-            np.shape(data.network.hydro_connectivity.array),
-        )
-    )
-
-    # Plot data
-    # data.plot(times)
-    data.state.plot_phases(times)
-    data.state.plot_amplitudes(times)
-
+def plot_networks_maps(morphology, data):
+    """Plot network maps"""
     # Plot tools
     convention = AmphibiousConvention(**morphology)
     info = convention.oscindex2information
@@ -768,6 +710,70 @@ def analysis(data, times, morphology):
         use_colorbar=True,
         hydro_amplitude_weights=True,
     )
+
+
+def analysis(data, times, morphology):
+    """Analysis"""
+    # Network information
+    sep = '\n  - '
+    pylog.info(
+        'Oscillator connectivity information'
+        + sep.join([
+            'O_{} <- O_{} (w={}, theta={})'.format(
+                int(connection[0]+0.5),
+                int(connection[1]+0.5),
+                connection[2],
+                connection[3],
+            )
+            for connection in data.network.connectivity.array
+        ])
+    )
+    pylog.info(
+        'Contacts connectivity information'
+        + sep.join([
+            'O_{} <- contact_{} (frequency_gain={})'.format(
+                int(connection[0]+0.5),
+                int(connection[1]+0.5),
+                connection[2],
+            )
+            for connection in data.network.contacts_connectivity.array
+        ])
+    )
+    pylog.info(
+        'Hydrodynamics connectivity information'
+        + sep.join([
+            'O_{} <- link_{} (phase_gain={}, amplitude_gain={})'.format(
+                int(connection[0]+0.5),
+                int(connection[1]+0.5),
+                connection[2],
+                connection[3],
+            )
+            for connection in data.network.hydro_connectivity.array
+        ])
+    )
+    sep = '\n'
+    pylog.info(
+        (sep.join([
+            'Network infromation:',
+            '  - Oscillators shape: {}',
+            '  - Connectivity shape: {}',
+            '  - Contacts connectivity shape: {}',
+            '  - Hydro connectivity shape: {}',
+        ])).format(
+            np.shape(data.network.oscillators.array),
+            np.shape(data.network.connectivity.array),
+            np.shape(data.network.contacts_connectivity.array),
+            np.shape(data.network.hydro_connectivity.array),
+        )
+    )
+
+    # Plot data
+    # data.plot(times)
+    data.state.plot_phases(times)
+    data.state.plot_amplitudes(times)
+
+    # Network
+    plot_networks_maps(morphology, data)
 
 
 def main(filename='cpg_network.h5'):
