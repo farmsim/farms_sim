@@ -21,7 +21,6 @@ class AmphibiousController(ModelController):
         self._timestep = timestep
         n_body = animat_options.morphology.n_joints_body
         n_legs_dofs = animat_options.morphology.n_dof_legs
-        self.groups = [None, None]
         self.groups = [
             [
                 convention.bodyosc2index(

@@ -16,7 +16,7 @@ class AmphibiousConvention:
             n_body_joints,
             joint_i
         )
-        return joint_i + side*n_body_joints
+        return 2*joint_i + side
 
     def legosc2index(self, leg_i, side_i, joint_i, side=0):
         """legosc2index"""
@@ -31,8 +31,8 @@ class AmphibiousConvention:
             2*n_body_joints
             + leg_i*2*n_legs_dof*2  # 2 oscillators, 2 legs
             + side_i*n_legs_dof*2  # 2 oscillators
-            + joint_i
-            + side*n_legs_dof
+            + 2*joint_i
+            + side
         )
 
     def bodylink2name(self, link_i):

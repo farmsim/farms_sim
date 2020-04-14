@@ -124,6 +124,7 @@ class AmphibiousOscillatorArray(OscillatorArray):
         n_body = morphology.n_joints_body
         n_dof_legs = morphology.n_dof_legs
         n_legs = morphology.n_legs
+        convention = AmphibiousConvention(**morphology)
         # n_oscillators = 2*(morphology.n_joints_body)
         n_oscillators = 2*(morphology.n_joints())
         data = np.array(oscillators.body_freqs, dtype=DTYPE)
@@ -141,23 +142,25 @@ class AmphibiousOscillatorArray(OscillatorArray):
         # Amplitudes
         amplitudes = np.zeros(n_oscillators, dtype=DTYPE)
         for i in range(n_body):
-            # amplitudes[[i, i+n_body]] = 0.1+0.2*i/(n_body-1)
             data = np.array(oscillators.body_nominal_amplitudes[i], dtype=DTYPE)
-            amplitudes[[i, i+n_body]] = (
+            amplitudes[convention.bodyosc2index(i, side=0)] = (
                 interpolate.interp1d(data[:, 0], data[:, 1])(drives.forward)
             )
-            # oscillators.body_stand_amplitude*np.sin(
-            #     2*np.pi*i/n_body
-            #     - oscillators.body_stand_shift
-            # )
+            amplitudes[convention.bodyosc2index(i, side=1)] = (
+                interpolate.interp1d(data[:, 0], data[:, 1])(drives.forward)
+            )
         for i in range(n_dof_legs):
             data = np.array(oscillators.legs_nominal_amplitudes[i], dtype=DTYPE)
             interp = interpolate.interp1d(data[:, 0], data[:, 1])
-            for leg_i in range(n_legs):
-                amplitudes[[
-                    2*n_body + 2*leg_i*n_dof_legs + i,
-                    2*n_body + 2*leg_i*n_dof_legs + i + n_dof_legs
-                ]] = interp(drives.forward)
+            for leg_i in range(n_legs//2):
+                for side_i in range(2):
+                    for side in range(2):
+                        amplitudes[convention.legosc2index(
+                            leg_i,
+                            side_i,
+                            i,
+                            side=side
+                        )] = interp(drives.forward)
         # pylog.debug("Amplitudes along body: abs({})".format(amplitudes[:11]))
         return np.abs(freqs), np.abs(rates), np.abs(amplitudes)
 
