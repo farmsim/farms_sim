@@ -35,6 +35,33 @@ class AmphibiousConvention:
             + side
         )
 
+    def oscindex2information(self, index):
+        """Oscillator index information"""
+        information = {}
+        n_joints = self.n_joints_body + self.n_legs*self.n_dof_legs
+        n_oscillators = 2*n_joints
+        n_body_oscillators = 2*self.n_joints_body
+        assert 0 <= index < n_oscillators, (
+            'Index {} bigger than number of oscillator (n={})'.format(
+                index,
+                n_oscillators,
+            )
+        )
+        information['body'] = index < n_body_oscillators
+        information['side'] = index % 2
+        if information['body']:
+            information['body_link'] = index//2
+        else:
+            index_i = index - 2*n_oscillators
+            n_osc_leg = 2*self.n_dof_legs
+            n_osc_leg_pair = 2*n_osc_leg
+            information['leg_i'] = index_i // n_osc_leg_pair
+            information['side_i'] = (
+                0 if index_i % n_osc_leg_pair < n_osc_leg else 1
+            )
+            information['joint_i'] = (index_i % n_osc_leg)//2
+        return information
+
     def bodylink2name(self, link_i):
         """bodylink2name"""
         n_body = self.n_joints_body+1

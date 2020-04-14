@@ -18,6 +18,7 @@ from farms_amphibious.model.data import (
     AmphibiousOscillatorNetworkState,
     AmphibiousData,
 )
+from farms_amphibious.model.convention import AmphibiousConvention
 from farms_amphibious.network.network import NetworkODE
 from farms_amphibious.experiment.simulation import profile
 import farms_pylog as pylog
@@ -474,6 +475,8 @@ def analysis(data, times, morphology):
     data.state.plot_amplitudes(times)
 
     # Plot network
+    convention = AmphibiousConvention(**morphology)
+    info = convention.oscindex2information
     # plot_network(
     #     n_oscillators=2*morphology.n_joints_body,
     #     data=data,
@@ -492,8 +495,8 @@ def analysis(data, times, morphology):
         title='Oscillators body2body connectivity',
         show_contacts_connectivity=False,
         show_hydrodynamics_connectivity=False,
-        osc_conn0_cond=lambda osc: osc < 2*morphology.n_joints_body,
-        osc_conn1_cond=lambda osc: osc < 2*morphology.n_joints_body,
+        osc_conn0_cond=lambda osc: info(osc)['body'],
+        osc_conn1_cond=lambda osc: info(osc)['body'],
     )
     plot_network(
         n_oscillators=2*morphology.n_joints_body,
@@ -501,8 +504,8 @@ def analysis(data, times, morphology):
         title='Oscillators body2limb connectivity',
         show_contacts_connectivity=False,
         show_hydrodynamics_connectivity=False,
-        osc_conn0_cond=lambda osc: osc >= 2*morphology.n_joints_body,
-        osc_conn1_cond=lambda osc: osc < 2*morphology.n_joints_body,
+        osc_conn0_cond=lambda osc: not info(osc)['body'],
+        osc_conn1_cond=lambda osc: info(osc)['body'],
     )
     plot_network(
         n_oscillators=2*morphology.n_joints_body,
@@ -510,8 +513,8 @@ def analysis(data, times, morphology):
         title='Oscillators limb2body connectivity',
         show_contacts_connectivity=False,
         show_hydrodynamics_connectivity=False,
-        osc_conn0_cond=lambda osc: osc < 2*morphology.n_joints_body,
-        osc_conn1_cond=lambda osc: osc >= 2*morphology.n_joints_body,
+        osc_conn0_cond=lambda osc: info(osc)['body'],
+        osc_conn1_cond=lambda osc: not info(osc)['body'],
     )
     plot_network(
         n_oscillators=2*morphology.n_joints_body,
@@ -519,8 +522,8 @@ def analysis(data, times, morphology):
         title='Oscillators limb2limb connectivity',
         show_contacts_connectivity=False,
         show_hydrodynamics_connectivity=False,
-        osc_conn0_cond=lambda osc: osc >= 2*morphology.n_joints_body,
-        osc_conn1_cond=lambda osc: osc >= 2*morphology.n_joints_body,
+        osc_conn0_cond=lambda osc: not info(osc)['body'],
+        osc_conn1_cond=lambda osc: not info(osc)['body'],
     )
     # plot_network(
     #     n_oscillators=2*morphology.n_joints_body,
