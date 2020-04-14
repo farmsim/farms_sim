@@ -341,11 +341,19 @@ def plot_network(n_oscillators, data, **kwargs):
         for leg_x in [1+6, 11+6]
         for side_y in [-7, 7]
     ])
+    contact_conn_cond = kwargs.pop(
+        'contact_conn_cond',
+        lambda osc0, osc1: True
+    )
     contact_sensors, contact_sensor_texts, contact_connectivity = draw_network(
         source=contacts_positions,
         destination=oscillator_positions,
         radius=radius,
-        connectivity=data.network.contacts_connectivity.array,
+        connectivity=[
+            connection
+            for connection in data.network.contacts_connectivity.array
+            if contact_conn_cond(connection[0], connection[1])
+        ],
         prefix='C_',
         rad=rads[1],
         color='C1',
@@ -357,11 +365,19 @@ def plot_network(n_oscillators, data, **kwargs):
         [2*osc_x+1, 0]
         for osc_x in range(-1, n_oscillators//2)
     ])
+    hydro_conn_cond = kwargs.pop(
+        'hydro_conn_cond',
+        lambda osc0, osc1: True
+    )
     hydro_sensors, hydro_sensor_texts, hydro_connectivity = draw_network(
         source=hydrodynamics_positions,
         destination=oscillator_positions,
         radius=radius,
-        connectivity=data.network.hydro_connectivity.array,
+        connectivity=[
+            connection
+            for connection in data.network.hydro_connectivity.array
+            if hydro_conn_cond(connection[0], connection[1])
+        ],
         prefix='H_',
         rad=rads[2],
         color='C0',
@@ -493,13 +509,29 @@ def analysis(data, times, morphology):
             and info(osc0)['leg'] != info(osc1)['leg']
         )
     )
+    contact2sameleg = (
+        lambda osc0, osc1: (
+            not info(osc0)['body']
+            and info(osc0)['leg'] == osc1
+            # and osc1 in (1, 2)
+        )
+    )
+    contact2diffleg = (
+        lambda osc0, osc1: (
+            not info(osc0)['body']
+            and info(osc0)['leg'] != osc1
+            # and osc1 in (1, 2)
+        )
+    )
 
     # Plot network
-    # plot_network(
-    #     n_oscillators=2*morphology.n_joints_body,
-    #     data=data,
-    #     title='Complete CPG Network',
-    # )
+    plot_network(
+        n_oscillators=2*morphology.n_joints_body,
+        data=data,
+        title='Complete network',
+    )
+
+    # Plot network oscillator connectivity
     plot_network(
         n_oscillators=2*morphology.n_joints_body,
         data=data,
@@ -559,20 +591,40 @@ def analysis(data, times, morphology):
         osc_conn_cond=leg2diffleg,
         rads=[0.05, 0.0, 0.0],
     )
-    # plot_network(
-    #     n_oscillators=2*morphology.n_joints_body,
-    #     data=data,
-    #     title='Contacts',
-    #     show_oscillator_connectivity=False,
-    #     show_hydrodynamics_connectivity=False,
-    # )
-    # plot_network(
-    #     n_oscillators=2*morphology.n_joints_body,
-    #     data=data,
-    #     title='Hydrodynamics',
-    #     show_oscillator_connectivity=False,
-    #     show_contacts_connectivity=False,
-    # )
+
+    # Plot contacts connectivity
+    plot_network(
+        n_oscillators=2*morphology.n_joints_body,
+        data=data,
+        title='Contacts complete connectivity',
+        show_oscillator_connectivity=False,
+        show_hydrodynamics_connectivity=False,
+    )
+    plot_network(
+        n_oscillators=2*morphology.n_joints_body,
+        data=data,
+        title='Contacts intralimb connectivity',
+        show_oscillator_connectivity=False,
+        show_hydrodynamics_connectivity=False,
+        contact_conn_cond=contact2sameleg,
+    )
+    plot_network(
+        n_oscillators=2*morphology.n_joints_body,
+        data=data,
+        title='Contacts interlimb connectivity',
+        show_oscillator_connectivity=False,
+        show_hydrodynamics_connectivity=False,
+        contact_conn_cond=contact2diffleg,
+    )
+
+    # Plot hydrodynamics connectivity
+    plot_network(
+        n_oscillators=2*morphology.n_joints_body,
+        data=data,
+        title='Hydrodynamics complete connectivity',
+        show_oscillator_connectivity=False,
+        show_contacts_connectivity=False,
+    )
 
 
 def main(filename='cpg_network.h5'):
