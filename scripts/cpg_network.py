@@ -438,12 +438,21 @@ def plot_network(n_oscillators, data, **kwargs):
         if hydro_conn_cond(connection[0], connection[1])
     ])
     options = {}
-    use_weights = use_colorbar and kwargs.pop('hydro_weights', False)
+    use_weights = use_colorbar and kwargs.pop('hydro_frequency_weights', False)
     if use_weights:
         if connections.any():
             options['weights'] = connections[:, 2]
             vmin = np.min(connections[:, 2])
             vmax = np.max(connections[:, 2])
+        else:
+            options['weights'] = []
+            vmin, vmax = 0, 1
+    use_weights = use_colorbar and kwargs.pop('hydro_amplitude_weights', False)
+    if use_weights:
+        if connections.any():
+            options['weights'] = connections[:, 3]
+            vmin = np.min(connections[:, 3])
+            vmax = np.max(connections[:, 3])
         else:
             options['weights'] = []
             vmin, vmax = 0, 1
@@ -740,8 +749,24 @@ def analysis(data, times, morphology):
         title='Hydrodynamics complete connectivity',
         show_oscillator_connectivity=False,
         show_contacts_connectivity=False,
+    )
+    plot_network(
+        n_oscillators=2*morphology.n_joints_body,
+        data=data,
+        title='Hydrodynamics frequency connectivity',
+        show_oscillator_connectivity=False,
+        show_contacts_connectivity=False,
         use_colorbar=True,
-        hydro_weights=True,
+        hydro_frequency_weights=True,
+    )
+    plot_network(
+        n_oscillators=2*morphology.n_joints_body,
+        data=data,
+        title='Hydrodynamics amplitude connectivity',
+        show_oscillator_connectivity=False,
+        show_contacts_connectivity=False,
+        use_colorbar=True,
+        hydro_amplitude_weights=True,
     )
 
 
