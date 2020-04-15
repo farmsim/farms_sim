@@ -165,12 +165,14 @@ cpdef inline void ode_joints(
         )
 
 
+## ODEs
+
+
 cpdef inline CTYPEv1 ode_oscillators_sparse(
     CTYPE time,
     CTYPEv1 state,
     unsigned int iteration,
     AnimatDataCy data,
-    NetworkParametersCy network,
 ) nogil:
     """Complete CPG network ODE"""
     ode_dphase(

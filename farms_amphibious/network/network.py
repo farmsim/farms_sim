@@ -17,7 +17,7 @@ class NetworkODE:
         # Adaptive timestep parameters
         self.solver = integrate.ode(f=self.ode)
         self.solver.set_integrator("dopri5")
-        self.solver.set_f_params(self.data, self.data.network)
+        self.solver.set_f_params(0, self.data)
         self.solver.set_initial_value(y=self.data.state.array[0, 0, :], t=0.0)
 
     def control_step(self, iteration, time, timestep, check=False):
@@ -27,7 +27,7 @@ class NetworkODE:
                 self.solver.y,
                 self.data.state.array[iteration, 0, :]
             )
-        self.solver.set_f_params(iteration, self.data, self.data.network)
+        self.solver.set_f_params(iteration, self.data)
         self.data.state.array[iteration+1, 0, :] = (
             self.solver.integrate(time+timestep)
         )

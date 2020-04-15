@@ -61,5 +61,4 @@ cpdef CTYPEv1 ode_oscillators_sparse(
     CTYPEv1 state,
     unsigned int iteration,
     AnimatDataCy data,
-    NetworkParametersCy network,
 ) nogil
