@@ -52,10 +52,6 @@ class NetworkODE:
             self.data.state.array[:, 0, :self.n_oscillators]
         )
 
-    # def dphases(self):
-    #     """Oscillators phases velocity"""
-    #     return self.data.state.array[:, 1, :self.n_oscillators]
-
     def amplitudes(self, iteration=None):
         """Amplitudes"""
         return (
@@ -70,39 +66,10 @@ class NetworkODE:
             ]
         )
 
-    # def damplitudes(self):
-    #     """Amplitudes velocity"""
-    #     return self.data.state.array[:, 1, self.n_oscillators:2*self.n_oscillators]
-
-    def get_outputs(self, iteration=None):
-        """Outputs"""
-        return self.amplitudes(iteration)*(1 + np.cos(self.phases(iteration)))
-
-    def get_outputs_all(self):
-        """Outputs"""
-        return self.amplitudes()*(1 + np.cos(self.phases()))
-
-    # def get_doutputs(self, iteration):
-    #     """Outputs velocity"""
-    #     return np.zeros_like(self.get_outputs(iteration))
-    #     return self.damplitudes(iteration)*(
-    #         1 + np.cos(self.phases(iteration))
-    #     ) - (
-    #         self.amplitudes(iteration)
-    #         *np.sin(self.phases(iteration))
-    #         *self.dphases(iteration)
-    #     )
-
-    # def get_doutputs_all(self):
-    #     """Outputs velocity"""
-    #     return self.damplitudes()*(
-    #         1 + np.cos(self.phases)
-    #     ) - self.amplitudes()*np.sin(self.phases)*self.dphases
-
     def offsets(self):
         """Offset"""
         return self.data.state.array[:, 0, 2*self.n_oscillators:]
 
-    # def doffsets(self):
-    #     """Offset velocity"""
-    #     return self.data.state.array[:, 1, 2*self.n_oscillators:]
+    def outputs(self, iteration=None):
+        """Outputs"""
+        return self.amplitudes(iteration)*(1 + np.cos(self.phases(iteration)))

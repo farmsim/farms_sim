@@ -55,9 +55,9 @@ class AmphibiousController(ModelController):
         """Control step"""
         self.network.control_step(iteration, time, timestep)
 
-    def get_position_output(self, iteration):
-        """Position output"""
-        outputs = self.network.get_outputs(iteration)
+    def positions(self, iteration):
+        """Postions"""
+        outputs = self.network.outputs(iteration)
         return (
             self.gain_amplitude*0.5*(
                 outputs[self.groups[0]]
@@ -67,43 +67,12 @@ class AmphibiousController(ModelController):
             + self.joints_offsets
         )
 
-    def get_position_output_all(self):
-        """Position output"""
-        outputs = self.network.get_outputs_all()
-        return (
-            self.gain_amplitude*0.5*(
-                outputs[:, self.groups[0]]
-                - outputs[:, self.groups[1]]
-            )
-            + self.gain_offset*self.network.offsets()
-            + self.joints_offsets
-        )
-
-    # def get_velocity_output(self, iteration):
-    #     """Position output"""
-    #     outputs = self.network.get_doutputs(iteration)
-    #     return (
-    #         self.gain_amplitude*0.5*(
-    #             outputs[self.groups[0]]
-    #             - outputs[self.groups[1]]
-    #         )
-    #         + self.network.doffsets()[iteration]
-    #     )
-
-    # def get_velocity_output_all(self):
-    #     """Position output"""
-    #     outputs = self.network.get_doutputs_all()
-    #     return self.gain_amplitude*0.5*(
-    #         outputs[:, self.groups[0]]
-    #         - outputs[:, self.groups[1]]
-    #     )
-
-    def get_torque_output(self, iteration):
-        """Torque output"""
+    def torques(self, iteration):
+        """Torques"""
         proprioception = self.animat_data.sensors.proprioception
         positions = np.array(proprioception.positions(iteration))
         velocities = np.array(proprioception.velocities(iteration))
-        cmd_positions = self.get_position_output(iteration)
+        cmd_positions = self.positions(iteration)
         # cmd_velocities = self.get_velocity_output(iteration)
         positions_rest = np.array(self.network.offsets()[iteration])
         # max_torque = 1  # Nm
@@ -116,10 +85,7 @@ class AmphibiousController(ModelController):
         damping_torques = - damping*velocities
         if iteration > 0:
             motor_torques += cmd_kd*(
-                (
-                    self.get_position_output(iteration)
-                    - self.get_position_output(iteration-1)
-                )/self._timestep
+                (cmd_positions- self.positions(iteration-1))/self._timestep
                 - velocities
             )
         torques = motor_torques + spring_torques + damping_torques
@@ -128,18 +94,6 @@ class AmphibiousController(ModelController):
         proprioception.array[iteration, :, 10] = spring_torques
         proprioception.array[iteration, :, 11] = damping_torques
         return torques
-
-    def positions(self, iteration):
-        """Postions"""
-        return self.get_position_output(iteration)
-
-    # def velocities(self, iteration):
-    #     """Postions"""
-    #     return self.get_velocity_output(iteration)
-
-    def torques(self, iteration):
-        """Postions"""
-        return self.get_torque_output(iteration)
 
     def update(self, options):
         """Update drives"""
