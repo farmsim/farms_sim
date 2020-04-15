@@ -333,12 +333,12 @@ def fish_options(animat, version, kinematics_file, sampling_timestep, **kwargs):
     arena_sdf = get_flat_arena()
 
     # Animat options
-    animat_options.spawn.position = position
-    animat_options.spawn.orientation = orientation
+    animat_options.spawn.position = position.tolist()
+    animat_options.spawn.orientation = orientation.tolist()
     animat_options.physics.buoyancy = False
-    animat_options.spawn.velocity_lin = velocity
+    animat_options.spawn.velocity_lin = velocity.tolist()
     animat_options.spawn.velocity_ang = [0, 0, 0]
-    animat_options.spawn.joints_positions = kinematics[0, 3:]
+    animat_options.spawn.joints_positions = kinematics[0, 3:].tolist()
     animat_options.control.kinematics_file = kinematics_file
     # np.shape(kinematics)[1] - 3
     # animat_options.spawn.position = [-10, 0, 0]

@@ -50,11 +50,11 @@ def initial_pose(identity, spawn_options, units):
         if spawn_options.joints_positions is None:
             spawn_options.joints_positions = np.zeros_like(
                 spawn_options.joints_velocities
-            )
+            ).tolist()
         if spawn_options.joints_velocities is None:
             spawn_options.joints_velocities = np.zeros_like(
                 spawn_options.joints_positions
-            )
+            ).tolist()
         for joint_i, (position, velocity) in enumerate(zip(
                 spawn_options.joints_positions,
                 spawn_options.joints_velocities
