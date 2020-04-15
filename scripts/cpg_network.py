@@ -125,9 +125,9 @@ def analysis(data, times, morphology):
                 phase,
             )
             for connection, weight, phase in zip(
-                    data.network.osc_connectivity.connections.array,
-                    data.network.osc_connectivity.weights.array,
-                    data.network.osc_connectivity.desired_phases.array,
+                data.network.osc_connectivity.connections.array,
+                data.network.osc_connectivity.weights.array,
+                data.network.osc_connectivity.desired_phases.array,
             )
         ])
     )
@@ -140,8 +140,8 @@ def analysis(data, times, morphology):
                 weight,
             )
             for connection, weight in zip(
-                    data.network.contacts_connectivity.connections.array,
-                    data.network.contacts_connectivity.weights.array,
+                data.network.contacts_connectivity.connections.array,
+                data.network.contacts_connectivity.weights.array,
             )
         ])
     )
@@ -155,9 +155,9 @@ def analysis(data, times, morphology):
                 amplitude,
             )
             for connection, frequency, amplitude in zip(
-                    data.network.hydro_connectivity.connections.array,
-                    data.network.hydro_connectivity.frequency.array,
-                    data.network.hydro_connectivity.amplitude.array,
+                data.network.hydro_connectivity.connections.array,
+                data.network.hydro_connectivity.frequency.array,
+                data.network.hydro_connectivity.amplitude.array,
             )
         ])
     )

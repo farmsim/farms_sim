@@ -354,12 +354,12 @@ def plot_network(n_oscillators, data, **kwargs):
     ] = [
         kwargs.pop(key, True)
         for key in [
-                'show_oscillators',
-                'show_contacts',
-                'show_hydrodynamics',
-                'show_oscillator_connectivity',
-                'show_contacts_connectivity',
-                'show_hydrodynamics_connectivity',
+            'show_oscillators',
+            'show_contacts',
+            'show_hydrodynamics',
+            'show_oscillator_connectivity',
+            'show_contacts_connectivity',
+            'show_hydrodynamics_connectivity',
         ]
     ]
     if show_oscillator_connectivity:
