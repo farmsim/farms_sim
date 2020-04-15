@@ -46,7 +46,7 @@ cpdef inline void ode_dphase(
     CTYPEv1 state,
     CTYPEv1 dstate,
     OscillatorArrayCy oscillators,
-    ConnectivityArrayCy connectivity,
+    OscillatorConnectivityCy connectivity,
 ) nogil:
     """Oscillator phase ODE
 
@@ -57,9 +57,9 @@ cpdef inline void ode_dphase(
     for i in range(n_oscillators):  # , nogil=True):
         # Intrinsic frequency
         dstate[i] = oscillators.c_angular_frequency(i)
-    for i in range(connectivity.array.shape[0]):
-        i0 = <unsigned int> (connectivity.array[i][0] + 0.5)
-        i1 = <unsigned int> (connectivity.array[i][1] + 0.5)
+    for i in range(connectivity.connections.array.shape[0]):
+        i0 = connectivity.connections.array[i][0]
+        i1 = connectivity.connections.array[i][1]
         dstate[i0] += state[n_oscillators+i1]*connectivity.c_weight(i)*sin(
             phase(state, i1) - phase(state, i0)
             - connectivity.c_desired_phase(i)
@@ -177,7 +177,7 @@ cpdef inline CTYPEv1 ode_oscillators_sparse(
         state=state,
         dstate=data.state.array[iteration][1],
         oscillators=data.network.oscillators,
-        connectivity=data.network.connectivity,
+        connectivity=data.network.osc_connectivity,
     )
     ode_damplitude(
         state=state,

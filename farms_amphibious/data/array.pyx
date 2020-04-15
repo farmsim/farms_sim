@@ -41,11 +41,19 @@ cdef class NetworkArray(object):
             raise Exception(msg.format(self.array.ndim, extension))
 
 
+cdef class NetworkArray1D(NetworkArray):
+    """Network array"""
+
+    def __init__(self, array):
+        super(NetworkArray1D, self).__init__()
+        self.array = array
+
+
 cdef class NetworkArray2D(NetworkArray):
     """Network array"""
 
     def __init__(self, array):
-        super(NetworkArray, self).__init__()
+        super(NetworkArray2D, self).__init__()
         self.array = array
 
 
@@ -53,7 +61,7 @@ cdef class NetworkArray3D(NetworkArray):
     """Network array"""
 
     def __init__(self, array):
-        super(NetworkArray, self).__init__()
+        super(NetworkArray3D, self).__init__()
         self.array = array
 
 
@@ -61,13 +69,5 @@ cdef class IntegerArray2D(NetworkArray):
     """Network array"""
 
     def __init__(self, array):
-        super(NetworkArray, self).__init__()
-        self.array = array
-
-
-cdef class IntegerArray3D(NetworkArray):
-    """Network array"""
-
-    def __init__(self, array):
-        super(NetworkArray, self).__init__()
+        super(IntegerArray2D, self).__init__()
         self.array = array

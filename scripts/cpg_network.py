@@ -204,8 +204,8 @@ def main(filename='cpg_network.h5'):
     )
     pylog.debug('Load complete')
 
-    # Post-processing
-    analysis(data, times, morphology)
+    # # Post-processing
+    # analysis(data, times, morphology)
 
     # Show
     plt.show()

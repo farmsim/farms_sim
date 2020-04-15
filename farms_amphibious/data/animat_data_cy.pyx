@@ -21,13 +21,13 @@ cdef class NetworkParametersCy:
     def __init__(
             self,
             oscillators,
-            connectivity,
+            osc_connectivity,
             contacts_connectivity,
             hydro_connectivity
     ):
         super(NetworkParametersCy, self).__init__()
         self.oscillators = oscillators
-        self.connectivity = connectivity
+        self.osc_connectivity = osc_connectivity
         self.contacts_connectivity = contacts_connectivity
         self.hydro_connectivity = hydro_connectivity
 
@@ -35,18 +35,16 @@ cdef class NetworkParametersCy:
 cdef class OscillatorNetworkStateCy(NetworkArray3D):
     """Network state"""
 
-    def __init__(self, state, n_oscillators, iteration=0):
+    def __init__(self, state, n_oscillators):
         super(OscillatorNetworkStateCy, self).__init__(state)
         self.n_oscillators = n_oscillators
-        self._iteration = iteration
 
     @classmethod
-    def from_options(cls, state, animat_options, iteration=0):
+    def from_options(cls, state, animat_options):
         """From options"""
         return cls(
             state=state,
-            n_oscillators=2*animat_options.morphology.n_joints(),
-            iteration=iteration
+            n_oscillators=2*animat_options.morphology.n_joints()
         )
 
     @classmethod
@@ -106,6 +104,35 @@ cdef class OscillatorArrayCy(NetworkArray2D):
     def set_amplitudes_desired(self, value):
         """Amplitudes desired"""
         self.array[2, :] = value
+
+
+cdef class ConnectivityCy:
+    """Connectivity array"""
+
+    def __init__(self, connections):
+        super(ConnectivityCy, self).__init__()
+        self.connections = IntegerArray2D(connections)
+
+    cpdef INDEX input(self, connection_i):
+        """Node input"""
+        self.array[connection_i, 0]
+
+    cpdef INDEX output(self, connection_i):
+        """Node input"""
+        self.array[connection_i, 1]
+
+
+cdef class OscillatorConnectivityCy(ConnectivityCy):
+    """Oscillator connectivity array"""
+
+    def __init__(self, connections, weights, desired_phases):
+        size = np.shape(connections)[0]
+        assert size == len(weights)
+        assert size == len(desired_phases)
+        assert np.shape(connections)[1] == 2
+        super(OscillatorConnectivityCy, self).__init__(connections)
+        self.weights = NetworkArray1D(weights)
+        self.desired_phases = NetworkArray1D(desired_phases)
 
 
 cdef class ConnectivityArrayCy(NetworkArray2D):

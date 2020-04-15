@@ -10,6 +10,7 @@ from ..data.animat_data import (
     AnimatData,
     NetworkParameters,
     OscillatorArray,
+    OscillatorConnectivityArray,
     ConnectivityArray,
     JointsArray,
     SensorsData,
@@ -22,6 +23,7 @@ from .convention import AmphibiousConvention
 
 
 DTYPE = np.float64
+ITYPE = np.uintc
 
 
 class AmphibiousData(AnimatData):
@@ -36,7 +38,7 @@ class AmphibiousData(AnimatData):
                 control.network.oscillators,
                 control.drives,
             ),
-            connectivity=AmphibiousOscillatorConnectivityArray.from_options(
+            osc_connectivity=AmphibiousOscillatorConnectivityArray.from_options(
                 morphology,
                 control.network.connectivity,
             ),
@@ -189,7 +191,7 @@ class AmphibiousOscillatorArray(OscillatorArray):
         self.amplitudes_desired()[:] = amplitudes
 
 
-class AmphibiousOscillatorConnectivityArray(ConnectivityArray):
+class AmphibiousOscillatorConnectivityArray(OscillatorConnectivityArray):
     """Connectivity array"""
 
     @staticmethod
@@ -197,7 +199,7 @@ class AmphibiousOscillatorConnectivityArray(ConnectivityArray):
         """Walking parameters"""
         # osc_options = control.network.oscillators
         n_body_joints = morphology.n_joints_body
-        connectivity = []
+        connectivity, weights, desired_phases = [], [], []
         body_amplitude = connectivity_options.weight_osc_body
         legs_amplitude_internal = connectivity_options.weight_osc_legs_internal
         legs_amplitude_opposite = connectivity_options.weight_osc_legs_opposite
@@ -220,8 +222,9 @@ class AmphibiousOscillatorConnectivityArray(ConnectivityArray):
                 connectivity.append([
                     convention.bodyosc2index(joint_i=i, side=sides[0]),
                     convention.bodyosc2index(joint_i=i, side=sides[1]),
-                    body_amplitude, np.pi
                 ])
+                weights.append(body_amplitude)
+                desired_phases.append(np.pi)
         for i in range(n_body_joints-1):
             # i - i+1
             phase_diff = connectivity_options.body_phase_bias
@@ -235,8 +238,9 @@ class AmphibiousOscillatorConnectivityArray(ConnectivityArray):
                     connectivity.append([
                         convention.bodyosc2index(joint_i=osc[0], side=side),
                         convention.bodyosc2index(joint_i=osc[1], side=side),
-                        body_amplitude, phase
                     ])
+                    weights.append(body_amplitude)
+                    desired_phases.append(phase)
 
         # Legs (internal)
         for leg_i in range(morphology.n_legs//2):
@@ -259,9 +263,9 @@ class AmphibiousOscillatorConnectivityArray(ConnectivityArray):
                                 joint_i=joint_i,
                                 side=sides[1]
                             ),
-                            legs_amplitude_internal,
-                            np.pi
                         ])
+                        weights.append(legs_amplitude_internal)
+                        desired_phases.append(np.pi)
 
                 # Following
                 internal_connectivity = []
@@ -301,9 +305,9 @@ class AmphibiousOscillatorConnectivityArray(ConnectivityArray):
                             joint_i=joints[1],
                             side=side,
                         ),
-                        legs_amplitude_internal,
-                        phase
                     ])
+                    weights.append(legs_amplitude_internal)
+                    desired_phases.append(phase)
 
         # Opposite leg interaction
         for leg_i in range(morphology.n_legs//2):
@@ -325,8 +329,9 @@ class AmphibiousOscillatorConnectivityArray(ConnectivityArray):
                                 side_i=sides[1],
                                 **_options
                             ),
-                            legs_amplitude_opposite, np.pi
                         ])
+                        weights.append(legs_amplitude_opposite)
+                        desired_phases.append(np.pi)
 
         # Following leg interaction
         for leg_pre in range(morphology.n_legs//2-1):
@@ -350,8 +355,9 @@ class AmphibiousOscillatorConnectivityArray(ConnectivityArray):
                                 leg_i=legs[1],
                                 **_options
                             ),
-                            legs_amplitude_following, phase
                         ])
+                        weights.append(legs_amplitude_following)
+                        desired_phases.append(phase)
 
         # Body-legs interaction
         for leg_i in range(morphology.n_legs//2):
@@ -376,15 +382,15 @@ class AmphibiousOscillatorConnectivityArray(ConnectivityArray):
                                     joint_i=0,
                                     side=(side_i+side_leg)%2
                                 ),
-                                legs2body_amplitude,
-                                (
-                                    walk_phase
-                                    + np.pi*(side_i+1)
-                                    + lateral*np.pi
-                                    + side_leg*np.pi
-                                    + leg_i*np.pi
-                                )
                             ])
+                            weights.append(legs2body_amplitude)
+                            desired_phases.append(
+                                walk_phase
+                                + np.pi*(side_i+1)
+                                + lateral*np.pi
+                                + side_leg*np.pi
+                                + leg_i*np.pi
+                            )
         if verbose:
             with np.printoptions(
                     suppress=True,
@@ -394,13 +400,17 @@ class AmphibiousOscillatorConnectivityArray(ConnectivityArray):
                 pylog.debug("Oscillator connectivity:\n{}".format(
                     np.array(connectivity, dtype=DTYPE)
                 ))
-        return connectivity
+        return connectivity, weights, desired_phases
 
     @classmethod
     def from_options(cls, morphology, control):
         """Parameters for walking"""
-        connectivity = cls.set_options(morphology, control)
-        return cls(np.array(connectivity, dtype=DTYPE))
+        connectivity, weights, phases = cls.set_options(morphology, control)
+        return cls(
+            np.array(connectivity, dtype=ITYPE),
+            np.array(weights, dtype=DTYPE),
+            np.array(phases, dtype=DTYPE),
+        )
 
     def update(self, morphology, control):
         """Update from options

@@ -5,6 +5,7 @@ from ..data.animat_data_cy cimport (
     AnimatDataCy,
     NetworkParametersCy,
     OscillatorArrayCy,
+    OscillatorConnectivityCy,
     ConnectivityArrayCy,
     ContactsArrayCy,
     HydrodynamicsArrayCy,
@@ -16,7 +17,7 @@ cpdef void ode_dphase(
     CTYPEv1 state,
     CTYPEv1 dstate,
     OscillatorArrayCy oscillators,
-    ConnectivityArrayCy connectivity,
+    OscillatorConnectivityCy connectivity,
 ) nogil
 
 
