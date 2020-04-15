@@ -33,7 +33,7 @@ setup(
     name='farms_amphibious',
     version='0.1',
     author='farmsdev',
-    author_email='jonathan.arreguitoneill@epfl.ch',
+    author_email='biorob-farms@groupes.epfl.ch',
     description='FARMS package for amphibious simulations',
     # license='BSD-3',
     keywords='farms amphibious control simulation',
