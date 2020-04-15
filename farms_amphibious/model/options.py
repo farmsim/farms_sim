@@ -22,7 +22,12 @@ class AmphibiousOptions(Options):
             raise Exception('Unknown kwargs: {}'.format(kwargs))
 
     @classmethod
-    def from_options(cls, kwargs):
+    def default(cls):
+        """Deafault options"""
+        return cls.from_options({})
+
+    @classmethod
+    def from_options(cls, kwargs=None):
         """From options"""
         options = {}
         options['morphology'] = kwargs.pop(
