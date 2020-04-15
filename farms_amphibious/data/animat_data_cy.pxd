@@ -60,6 +60,10 @@ cdef class ConnectivityCy:
     cpdef INDEX input(self, connection_i)
     cpdef INDEX output(self, connection_i)
 
+    cdef inline INDEX c_n_connections(self) nogil:
+        """Number of connections"""
+        return self.connections.array.shape[0]
+
 
 cdef class OscillatorConnectivityCy(ConnectivityCy):
     """oscillator connectivity array"""

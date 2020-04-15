@@ -57,7 +57,7 @@ cpdef inline void ode_dphase(
     for i in range(n_oscillators):  # , nogil=True):
         # Intrinsic frequency
         dstate[i] = oscillators.c_angular_frequency(i)
-    for i in range(connectivity.connections.array.shape[0]):
+    for i in range(connectivity.c_n_connections()):
         i0 = connectivity.connections.array[i][0]
         i1 = connectivity.connections.array[i][1]
         dstate[i0] += state[n_oscillators+i1]*connectivity.c_weight(i)*sin(
@@ -99,7 +99,7 @@ cpdef inline void ode_contacts(
     """
     cdef CTYPE contact_force
     cdef unsigned int i, i0, i1
-    for i in range(contacts_connectivity.connections.array.shape[0]):
+    for i in range(contacts_connectivity.c_n_connections()):
         i0 = contacts_connectivity.connections.array[i][0]
         i1 = contacts_connectivity.connections.array[i][1]
         # contact_weight*contact_force
@@ -132,7 +132,7 @@ cpdef inline void ode_hydro(
     """
     cdef CTYPE hydro_force
     cdef unsigned int i, i0, i1
-    for i in range(hydro_connectivity.connections.array.shape[0]):
+    for i in range(hydro_connectivity.c_n_connections()):
         i0 = hydro_connectivity.connections.array[i][0]
         i1 = hydro_connectivity.connections.array[i][1]
         hydro_force = fabs(hydrodynamics.c_force_y(iteration, i1))
