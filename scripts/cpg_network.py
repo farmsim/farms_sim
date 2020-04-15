@@ -44,7 +44,7 @@ def animat_options():
                     'body_head_amplitude': 0,
                     'body_tail_amplitude': 0,
                     'body_stand_amplitude': 0.2,
-                    'legs_amplitude': [0.8, np.pi/32, np.pi/4, np.pi/8],
+                    'legs_amplitude': [np.pi/4, np.pi/32, np.pi/4, np.pi/8],
                     'body_stand_shift': np.pi/4,
                 }
             ),

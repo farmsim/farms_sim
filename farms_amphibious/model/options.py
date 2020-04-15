@@ -378,7 +378,7 @@ class AmphibiousOscillatorOptions(Options):
         options['body_stand_amplitude'] = kwargs.pop('body_stand_amplitude', 0.2)
         options['_legs_amplitudes'] = kwargs.pop(
             'legs_amplitude',
-            [0.8, np.pi/32, np.pi/4, np.pi/8]
+            [np.pi/4, np.pi/32, np.pi/4, np.pi/8]
         )
         options['_body_stand_shift'] = kwargs.pop('body_stand_shift', np.pi/4)
         options['body_nominal_amplitudes'] = kwargs.pop(
