@@ -145,25 +145,16 @@ cdef class ContactConnectivityCy(ConnectivityCy):
         self.weights = NetworkArray1D(weights)
 
 
-cdef class ConnectivityArrayCy(NetworkArray2D):
+cdef class HydroConnectivityCy(ConnectivityCy):
     """Connectivity array"""
 
-    @classmethod
-    def from_parameters(cls, connections, weights, desired_phases):
-        """From each parameter"""
-        return cls(np.stack([connections, weights, desired_phases], axis=1))
-
-    def connections(self):
-        """Connections"""
-        return self.array[:][0, 1]
-
-    def weights(self):
-        """Weights"""
-        return self.array[:][2]
-
-    def desired_phases(self):
-        """Weights"""
-        return self.array[:][3]
+    def __init__(self, connections, frequency, amplitude):
+        size = np.shape(connections)[0]
+        assert size == len(frequency)
+        assert size == len(amplitude)
+        super(HydroConnectivityCy, self).__init__(connections)
+        self.frequency = NetworkArray1D(frequency)
+        self.amplitude = NetworkArray1D(amplitude)
 
 
 cdef class JointsArrayCy(NetworkArray2D):

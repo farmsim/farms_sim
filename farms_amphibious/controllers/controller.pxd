@@ -7,7 +7,7 @@ from ..data.animat_data_cy cimport (
     OscillatorArrayCy,
     OscillatorConnectivityCy,
     ContactConnectivityCy,
-    ConnectivityArrayCy,
+    HydroConnectivityCy,
     ContactsArrayCy,
     HydrodynamicsArrayCy,
     JointsArrayCy,
@@ -43,7 +43,7 @@ cpdef void ode_hydro(
     CTYPEv1 state,
     CTYPEv1 dstate,
     HydrodynamicsArrayCy hydrodynamics,
-    ConnectivityArrayCy hydro_connectivity,
+    HydroConnectivityCy hydro_connectivity,
     unsigned int n_oscillators,
 ) nogil
 

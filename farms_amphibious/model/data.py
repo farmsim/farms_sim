@@ -12,7 +12,7 @@ from ..data.animat_data import (
     OscillatorArray,
     OscillatorConnectivity,
     ContactConnectivity,
-    ConnectivityArray,
+    HydroConnectivity,
     JointsArray,
     SensorsData,
     ContactsArray,
@@ -47,7 +47,7 @@ class AmphibiousData(AnimatData):
                 morphology,
                 control.network.connectivity,
             ),
-            hydro_connectivity=AmphibiousHydroConnectivityArray.from_options(
+            hydro_connectivity=AmphibiousHydroConnectivity.from_options(
                 morphology,
                 control.network.connectivity,
             ),
@@ -536,13 +536,15 @@ class AmphibiousContactsConnectivity(ContactConnectivity):
         )
 
 
-class AmphibiousHydroConnectivityArray(ConnectivityArray):
+class AmphibiousHydroConnectivity(HydroConnectivity):
     """Amphibious hydro connectivity array"""
 
     @classmethod
     def from_options(cls, morphology, connectivity_options, verbose=False):
         """Default"""
         connectivity = []
+        frequencies = []
+        amplitudes = []
         # morphology.n_legs
         convention = AmphibiousConvention(**morphology)
         for joint_i in range(morphology.n_joints_body):
@@ -553,14 +555,18 @@ class AmphibiousHydroConnectivityArray(ConnectivityArray):
                         side=side_osc
                     ),
                     joint_i+1,
-                    connectivity_options.weight_sens_hydro_freq,
-                    connectivity_options.weight_sens_hydro_amp
                 ])
+                frequencies.append(connectivity_options.weight_sens_hydro_freq)
+                amplitudes.append(connectivity_options.weight_sens_hydro_amp)
         if verbose:
             pylog.debug("Hydro connectivity:\n{}".format(
-                np.array(connectivity, dtype=DTYPE)
+                np.array(connectivity, dtype=ITYPE)
             ))
-        return cls(np.array(connectivity, dtype=DTYPE))
+        return cls(
+            connections=np.array(connectivity, dtype=ITYPE),
+            frequency=np.array(frequencies, dtype=DTYPE),
+            amplitude=np.array(amplitudes, dtype=DTYPE),
+        )
 
 
 class AmphibiousProprioceptionArray(ProprioceptionArray):

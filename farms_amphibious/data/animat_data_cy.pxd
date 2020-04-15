@@ -22,7 +22,7 @@ cdef class NetworkParametersCy:
     cdef public OscillatorArrayCy oscillators
     cdef public OscillatorConnectivityCy osc_connectivity
     cdef public ContactConnectivityCy contacts_connectivity
-    cdef public ConnectivityArrayCy hydro_connectivity
+    cdef public HydroConnectivityCy hydro_connectivity
 
 
 cdef class OscillatorNetworkStateCy(NetworkArray3D):
@@ -77,7 +77,7 @@ cdef class OscillatorConnectivityCy(ConnectivityCy):
 
 
 cdef class ContactConnectivityCy(ConnectivityCy):
-    """contact connectivity array"""
+    """Contact connectivity array"""
 
     cdef readonly NetworkArray1D weights
 
@@ -86,20 +86,19 @@ cdef class ContactConnectivityCy(ConnectivityCy):
         return self.weights.array[iteration]
 
 
-cdef class ConnectivityArrayCy(NetworkArray2D):
-    """Connectivity array"""
+cdef class HydroConnectivityCy(ConnectivityCy):
+    """Hydrodynamics connectivity array"""
 
-    cdef inline CTYPE c_weight(self, unsigned int iteration) nogil:
-        """Weight"""
-        return self.array[iteration][2]
+    cdef readonly NetworkArray1D amplitude
+    cdef readonly NetworkArray1D frequency
 
-    cdef inline CTYPE c_desired_phase(self, unsigned int iteration) nogil:
-        """Desired phase"""
-        return self.array[iteration][3]
+    cdef inline CTYPE c_weight_frequency(self, unsigned int iteration) nogil:
+        """Weight for hydrodynamics frequency"""
+        return self.frequency.array[iteration]
 
-    cdef inline CTYPE c_weight_hydro_amplitude(self, unsigned int iteration) nogil:
+    cdef inline CTYPE c_weight_amplitude(self, unsigned int iteration) nogil:
         """Weight for hydrodynamics amplitude"""
-        return self.array[iteration][3]
+        return self.amplitude.array[iteration]
 
 
 cdef class JointsArrayCy(NetworkArray2D):

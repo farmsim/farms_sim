@@ -10,7 +10,7 @@ from .animat_data_cy import (
     OscillatorArrayCy,
     OscillatorConnectivityCy,
     ContactConnectivityCy,
-    ConnectivityArrayCy,
+    HydroConnectivityCy,
     JointsArrayCy,
     SensorsDataCy,
     ContactsArrayCy,
@@ -73,7 +73,7 @@ class NetworkParameters(NetworkParametersCy):
             contacts_connectivity=ContactConnectivity.from_dict(
                 dictionary['contacts_connectivity']
             ),
-            hydro_connectivity=ConnectivityArray(
+            hydro_connectivity=HydroConnectivity.from_dict(
                 dictionary['hydro_connectivity']
             ),
         )
@@ -84,7 +84,7 @@ class NetworkParameters(NetworkParametersCy):
             'oscillators': np.array(self.oscillators.array),
             'osc_connectivity': self.osc_connectivity.to_dict(),
             'contacts_connectivity': self.contacts_connectivity.to_dict(),
-            'hydro_connectivity': np.array(self.hydro_connectivity.array),
+            'hydro_connectivity': self.hydro_connectivity.to_dict(),
         }
 
 
@@ -159,8 +159,25 @@ class ContactConnectivity(ContactConnectivityCy):
         }
 
 
-class ConnectivityArray(ConnectivityArrayCy):
+class HydroConnectivity(HydroConnectivityCy):
     """Connectivity array"""
+
+    @classmethod
+    def from_dict(cls, dictionary):
+        """Load data from dictionary"""
+        return cls(
+            connections=dictionary['connections'],
+            frequency=dictionary['frequency'],
+            amplitude=dictionary['amplitude'],
+        )
+
+    def to_dict(self):
+        """Convert data to dictionary"""
+        return {
+            'connections': np.array(self.connections.array),
+            'frequency': np.array(self.frequency.array),
+            'amplitude': np.array(self.amplitude.array),
+        }
 
 
 class JointsArray(JointsArrayCy):

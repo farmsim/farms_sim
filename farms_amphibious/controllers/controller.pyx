@@ -122,7 +122,7 @@ cpdef inline void ode_hydro(
     CTYPEv1 state,
     CTYPEv1 dstate,
     HydrodynamicsArrayCy hydrodynamics,
-    ConnectivityArrayCy hydro_connectivity,
+    HydroConnectivityCy hydro_connectivity,
     unsigned int n_oscillators,
 ) nogil:
     """Sensory feedback - Hydrodynamics
@@ -132,14 +132,18 @@ cpdef inline void ode_hydro(
     """
     cdef CTYPE hydro_force
     cdef unsigned int i, i0, i1
-    for i in range(hydro_connectivity.array.shape[0]):
-        i0 = <unsigned int> (hydro_connectivity.array[i][0] + 0.5)
-        i1 = <unsigned int> (hydro_connectivity.array[i][1] + 0.5)
+    for i in range(hydro_connectivity.connections.array.shape[0]):
+        i0 = hydro_connectivity.connections.array[i][0]
+        i1 = hydro_connectivity.connections.array[i][1]
         hydro_force = fabs(hydrodynamics.c_force_y(iteration, i1))
         # dfrequency += hydro_weight*hydro_force
-        dstate[i0] += hydro_connectivity.c_weight(i)*hydro_force
+        dstate[i0] += (
+            hydro_connectivity.c_weight_frequency(i)*hydro_force
+        )
         # damplitude += hydro_weight*hydro_force
-        dstate[n_oscillators+i0] += hydro_connectivity.c_weight_hydro_amplitude(i)*hydro_force
+        dstate[n_oscillators+i0] += (
+            hydro_connectivity.c_weight_amplitude(i)*hydro_force
+        )
 
 
 cpdef inline void ode_joints(
