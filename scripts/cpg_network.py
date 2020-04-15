@@ -121,10 +121,14 @@ def analysis(data, times, morphology):
             'O_{} <- O_{} (w={}, theta={})'.format(
                 int(connection[0]+0.5),
                 int(connection[1]+0.5),
-                connection[2],
-                connection[3],
+                weight,
+                phase,
             )
-            for connection in data.network.connectivity.array
+            for connection, weight, phase in zip(
+                    data.network.osc_connectivity.connections.array,
+                    data.network.osc_connectivity.weights.array,
+                    data.network.osc_connectivity.desired_phases.array,
+            )
         ])
     )
     pylog.info(
@@ -133,21 +137,28 @@ def analysis(data, times, morphology):
             'O_{} <- contact_{} (frequency_gain={})'.format(
                 int(connection[0]+0.5),
                 int(connection[1]+0.5),
-                connection[2],
+                weight,
             )
-            for connection in data.network.contacts_connectivity.array
+            for connection, weight in zip(
+                    data.network.contacts_connectivity.connections.array,
+                    data.network.contacts_connectivity.weights.array,
+            )
         ])
     )
     pylog.info(
         'Hydrodynamics connectivity information'
         + sep.join([
-            'O_{} <- link_{} (phase_gain={}, amplitude_gain={})'.format(
+            'O_{} <- link_{} (frequency_gain={}, amplitude_gain={})'.format(
                 int(connection[0]+0.5),
                 int(connection[1]+0.5),
-                connection[2],
-                connection[3],
+                frequency,
+                amplitude,
             )
-            for connection in data.network.hydro_connectivity.array
+            for connection, frequency, amplitude in zip(
+                    data.network.hydro_connectivity.connections.array,
+                    data.network.hydro_connectivity.frequency.array,
+                    data.network.hydro_connectivity.amplitude.array,
+            )
         ])
     )
     sep = '\n'
@@ -160,9 +171,9 @@ def analysis(data, times, morphology):
             '  - Hydro connectivity shape: {}',
         ])).format(
             np.shape(data.network.oscillators.array),
-            np.shape(data.network.connectivity.array),
-            np.shape(data.network.contacts_connectivity.array),
-            np.shape(data.network.hydro_connectivity.array),
+            np.shape(data.network.osc_connectivity.connections.array),
+            np.shape(data.network.contacts_connectivity.connections.array),
+            np.shape(data.network.hydro_connectivity.connections.array),
         )
     )
 
@@ -204,8 +215,8 @@ def main(filename='cpg_network.h5'):
     )
     pylog.debug('Load complete')
 
-    # # Post-processing
-    # analysis(data, times, morphology)
+    # Post-processing
+    analysis(data, times, morphology)
 
     # Show
     plt.show()
