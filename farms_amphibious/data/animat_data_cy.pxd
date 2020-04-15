@@ -21,7 +21,7 @@ cdef class NetworkParametersCy:
     """Network parameter"""
     cdef public OscillatorArrayCy oscillators
     cdef public OscillatorConnectivityCy osc_connectivity
-    cdef public ConnectivityArrayCy contacts_connectivity
+    cdef public ContactConnectivityCy contacts_connectivity
     cdef public ConnectivityArrayCy hydro_connectivity
 
 
@@ -74,6 +74,16 @@ cdef class OscillatorConnectivityCy(ConnectivityCy):
     cdef inline CTYPE c_desired_phase(self, unsigned int iteration) nogil:
         """Desired phase"""
         return self.desired_phases.array[iteration]
+
+
+cdef class ContactConnectivityCy(ConnectivityCy):
+    """contact connectivity array"""
+
+    cdef readonly NetworkArray1D weights
+
+    cdef inline CTYPE c_weight(self, unsigned int iteration) nogil:
+        """Weight"""
+        return self.weights.array[iteration]
 
 
 cdef class ConnectivityArrayCy(NetworkArray2D):

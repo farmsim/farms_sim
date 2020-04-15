@@ -9,6 +9,7 @@ from .animat_data_cy import (
     OscillatorNetworkStateCy,
     OscillatorArrayCy,
     OscillatorConnectivityCy,
+    ContactConnectivityCy,
     ConnectivityArrayCy,
     JointsArrayCy,
     SensorsDataCy,
@@ -50,13 +51,6 @@ class AnimatData(AnimatDataCy):
         """Save data to file"""
         dd.io.save(filename, self.to_dict())
 
-    # def log(self, times, folder, extension):
-    #     """Log"""
-    #     self.state.log(times, folder, "network_state", extension)
-    #     self.network.log(times, folder, extension)
-    #     self.joints.log(times, folder, "joints", extension)
-    #     self.sensors.log(times, folder, extension)
-
     def plot(self, times):
         """Plot"""
         self.state.plot(times)
@@ -73,10 +67,10 @@ class NetworkParameters(NetworkParametersCy):
             oscillators=OscillatorArray(
                 dictionary['oscillators']
             ),
-            osc_connectivity=OscillatorConnectivityArray.from_dict(
+            osc_connectivity=OscillatorConnectivity.from_dict(
                 dictionary['osc_connectivity']
             ),
-            contacts_connectivity=ConnectivityArray(
+            contacts_connectivity=ContactConnectivity.from_dict(
                 dictionary['contacts_connectivity']
             ),
             hydro_connectivity=ConnectivityArray(
@@ -89,19 +83,9 @@ class NetworkParameters(NetworkParametersCy):
         return {
             'oscillators': np.array(self.oscillators.array),
             'osc_connectivity': self.osc_connectivity.to_dict(),
-            'contacts_connectivity': np.array(self.contacts_connectivity.array),
+            'contacts_connectivity': self.contacts_connectivity.to_dict(),
             'hydro_connectivity': np.array(self.hydro_connectivity.array),
         }
-
-    # def log(self, times, folder, extension):
-    #     """Log"""
-    #     for data, name in [
-    #             [self.oscillators, "oscillators"],
-    #             [self.osc_connectivity, "osc_connectivity"],
-    #             [self.contacts_connectivity, "contacts_connectivity"],
-    #             [self.hydro_connectivity, "hydro_connectivity"]
-    #     ]:
-    #         data.log(times, folder, name, extension)
 
 
 class OscillatorNetworkState(OscillatorNetworkStateCy):
@@ -135,7 +119,7 @@ class OscillatorArray(OscillatorArrayCy):
     """Oscillator array"""
 
 
-class OscillatorConnectivityArray(OscillatorConnectivityCy):
+class OscillatorConnectivity(OscillatorConnectivityCy):
     """Connectivity array"""
 
     @classmethod
@@ -153,6 +137,25 @@ class OscillatorConnectivityArray(OscillatorConnectivityCy):
             'connections': np.array(self.connections.array),
             'weights': np.array(self.weights.array),
             'desired_phases': np.array(self.desired_phases.array),
+        }
+
+
+class ContactConnectivity(ContactConnectivityCy):
+    """Connectivity array"""
+
+    @classmethod
+    def from_dict(cls, dictionary):
+        """Load data from dictionary"""
+        return cls(
+            connections=dictionary['connections'],
+            weights=dictionary['weights'],
+        )
+
+    def to_dict(self):
+        """Convert data to dictionary"""
+        return {
+            'connections': np.array(self.connections.array),
+            'weights': np.array(self.weights.array),
         }
 
 
@@ -185,16 +188,6 @@ class SensorsData(SensorsDataCy):
             'gps': np.array(self.gps.array),
             'hydrodynamics': np.array(self.hydrodynamics.array),
         }
-
-    def log(self, times, folder, extension):
-        """Log"""
-        for data, name in [
-                [self.contacts, "contacts"],
-                [self.proprioception, "proprioception"],
-                [self.gps, "gps"],
-                [self.hydrodynamics, "hydrodynamics"]
-        ]:
-            data.log(times, folder, name, extension)
 
     def plot(self, times):
         """Plot"""

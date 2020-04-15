@@ -90,7 +90,7 @@ cpdef inline void ode_contacts(
     CTYPEv1 state,
     CTYPEv1 dstate,
     ContactsArrayCy contacts,
-    ConnectivityArrayCy contacts_connectivity,
+    ContactConnectivityCy contacts_connectivity,
 ) nogil:
     """Sensory feedback - Contacts
 
@@ -99,13 +99,9 @@ cpdef inline void ode_contacts(
     """
     cdef CTYPE contact_force
     cdef unsigned int i, i0, i1
-    for i in range(contacts_connectivity.array.shape[0]):
-        i0 = <unsigned int> (
-            contacts_connectivity.array[i][0] + 0.5
-        )
-        i1 = <unsigned int> (
-            contacts_connectivity.array[i][1] + 0.5
-        )
+    for i in range(contacts_connectivity.connections.array.shape[0]):
+        i0 = contacts_connectivity.connections.array[i][0]
+        i1 = contacts_connectivity.connections.array[i][1]
         # contact_weight*contact_force
         # contact_force = (
         #     contacts.array[iteration][i1][0]**2

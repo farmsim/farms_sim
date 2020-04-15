@@ -111,6 +111,7 @@ cdef class ConnectivityCy:
 
     def __init__(self, connections):
         super(ConnectivityCy, self).__init__()
+        assert np.shape(connections)[1] == 2
         self.connections = IntegerArray2D(connections)
 
     cpdef INDEX input(self, connection_i):
@@ -129,10 +130,19 @@ cdef class OscillatorConnectivityCy(ConnectivityCy):
         size = np.shape(connections)[0]
         assert size == len(weights)
         assert size == len(desired_phases)
-        assert np.shape(connections)[1] == 2
         super(OscillatorConnectivityCy, self).__init__(connections)
         self.weights = NetworkArray1D(weights)
         self.desired_phases = NetworkArray1D(desired_phases)
+
+
+cdef class ContactConnectivityCy(ConnectivityCy):
+    """Contact connectivity array"""
+
+    def __init__(self, connections, weights):
+        size = np.shape(connections)[0]
+        assert size == len(weights)
+        super(ContactConnectivityCy, self).__init__(connections)
+        self.weights = NetworkArray1D(weights)
 
 
 cdef class ConnectivityArrayCy(NetworkArray2D):

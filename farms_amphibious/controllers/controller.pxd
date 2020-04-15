@@ -6,6 +6,7 @@ from ..data.animat_data_cy cimport (
     NetworkParametersCy,
     OscillatorArrayCy,
     OscillatorConnectivityCy,
+    ContactConnectivityCy,
     ConnectivityArrayCy,
     ContactsArrayCy,
     HydrodynamicsArrayCy,
@@ -33,7 +34,7 @@ cpdef void ode_contacts(
     CTYPEv1 state,
     CTYPEv1 dstate,
     ContactsArrayCy contacts,
-    ConnectivityArrayCy contacts_connectivity,
+    ContactConnectivityCy contacts_connectivity,
 ) nogil
 
 

@@ -10,7 +10,8 @@ from ..data.animat_data import (
     AnimatData,
     NetworkParameters,
     OscillatorArray,
-    OscillatorConnectivityArray,
+    OscillatorConnectivity,
+    ContactConnectivity,
     ConnectivityArray,
     JointsArray,
     SensorsData,
@@ -38,11 +39,11 @@ class AmphibiousData(AnimatData):
                 control.network.oscillators,
                 control.drives,
             ),
-            osc_connectivity=AmphibiousOscillatorConnectivityArray.from_options(
+            osc_connectivity=AmphibiousOscillatorConnectivity.from_options(
                 morphology,
                 control.network.connectivity,
             ),
-            contacts_connectivity=AmphibiousContactsConnectivityArray.from_options(
+            contacts_connectivity=AmphibiousContactsConnectivity.from_options(
                 morphology,
                 control.network.connectivity,
             ),
@@ -191,7 +192,7 @@ class AmphibiousOscillatorArray(OscillatorArray):
         self.amplitudes_desired()[:] = amplitudes
 
 
-class AmphibiousOscillatorConnectivityArray(OscillatorConnectivityArray):
+class AmphibiousOscillatorConnectivity(OscillatorConnectivity):
     """Connectivity array"""
 
     @staticmethod
@@ -487,13 +488,13 @@ class AmphibiousContactsArray(ContactsArray):
         return cls(contacts)
 
 
-class AmphibiousContactsConnectivityArray(ConnectivityArray):
+class AmphibiousContactsConnectivity(ContactConnectivity):
     """Amphibious contacts connectivity array"""
 
     @classmethod
     def from_options(cls, morphology, connectivity_options, verbose=False):
         """Default"""
-        connectivity = []
+        connectivity, weights = [], []
         # morphology.n_legs
         convention = AmphibiousConvention(**morphology)
         for leg_i in range(morphology.n_legs//2):
@@ -521,15 +522,18 @@ class AmphibiousContactsConnectivityArray(ConnectivityArray):
                                         leg_i=sensor_leg_i,
                                         side_i=sensor_side_i
                                     ),
-                                    weight
                                 ])
+                                weights.append(weight)
         if verbose:
             pylog.debug("Contacts connectivity:\n{}".format(
                 np.array(connectivity, dtype=DTYPE)
             ))
         if not connectivity:
             connectivity = [[]]
-        return cls(np.array(connectivity, dtype=DTYPE))
+        return cls(
+            np.array(connectivity, dtype=ITYPE),
+            np.array(weights, dtype=DTYPE),
+        )
 
 
 class AmphibiousHydroConnectivityArray(ConnectivityArray):
