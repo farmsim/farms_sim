@@ -221,6 +221,16 @@ def plot_network(n_oscillators, data, **kwargs):
         else:
             options['weights'] = []
             vmin, vmax = 0, 1
+    options = {}
+    use_weights = use_colorbar and kwargs.pop('oscillator_phases', False)
+    if use_weights:
+        if connections.any():
+            options['weights'] = connections[:, 3]
+            vmin = np.min(connections[:, 3])
+            vmax = np.max(connections[:, 3])
+        else:
+            options['weights'] = []
+            vmin, vmax = 0, 1
     oscillators, oscillators_texts, oscillator_connectivity = draw_network(
         source=oscillator_positions,
         destination=oscillator_positions,
@@ -427,7 +437,7 @@ def plot_networks_maps(morphology, data):
         title='Complete network',
     )
 
-    # Plot network oscillator connectivity
+    # Plot network oscillator weights connectivity
     plot_network(
         n_oscillators=2*morphology.n_joints_body,
         data=data,
@@ -500,6 +510,81 @@ def plot_networks_maps(morphology, data):
         rads=[0.05, 0.0, 0.0],
         use_colorbar=True,
         oscillator_weights=True,
+    )
+
+    # Plot network oscillator phases connectivity
+    plot_network(
+        n_oscillators=2*morphology.n_joints_body,
+        data=data,
+        title='Oscillators complete phases',
+        show_contacts_connectivity=False,
+        show_hydrodynamics_connectivity=False,
+        use_colorbar=True,
+        oscillator_phases=True,
+    )
+    plot_network(
+        n_oscillators=2*morphology.n_joints_body,
+        data=data,
+        title='Oscillators body2body phases',
+        show_contacts_connectivity=False,
+        show_hydrodynamics_connectivity=False,
+        osc_conn_cond=body2body,
+        use_colorbar=True,
+        oscillator_phases=True,
+    )
+    plot_network(
+        n_oscillators=2*morphology.n_joints_body,
+        data=data,
+        title='Oscillators body2limb phases',
+        show_contacts_connectivity=False,
+        show_hydrodynamics_connectivity=False,
+        osc_conn_cond=body2leg,
+        use_colorbar=True,
+        oscillator_phases=True,
+    )
+    plot_network(
+        n_oscillators=2*morphology.n_joints_body,
+        data=data,
+        title='Oscillators limb2body phases',
+        show_contacts_connectivity=False,
+        show_hydrodynamics_connectivity=False,
+        osc_conn_cond=leg2body,
+        rads=[0.05, 0.0, 0.0],
+        use_colorbar=True,
+        oscillator_phases=True,
+    )
+    plot_network(
+        n_oscillators=2*morphology.n_joints_body,
+        data=data,
+        title='Oscillators limb2limb phases',
+        show_contacts_connectivity=False,
+        show_hydrodynamics_connectivity=False,
+        osc_conn_cond=leg2leg,
+        rads=[0.05, 0.0, 0.0],
+        use_colorbar=True,
+        oscillator_phases=True,
+    )
+    plot_network(
+        n_oscillators=2*morphology.n_joints_body,
+        data=data,
+        title='Oscillators intralimb phases',
+        show_contacts_connectivity=False,
+        show_hydrodynamics_connectivity=False,
+        osc_conn_cond=leg2sameleg,
+        rads=[0.2, 0.0, 0.0],
+        use_colorbar=True,
+        oscillator_phases=True,
+    )
+    plot_network(
+        n_oscillators=2*morphology.n_joints_body,
+        data=data,
+        title='Oscillators interlimb phases',
+        show_contacts_connectivity=False,
+        show_hydrodynamics_connectivity=False,
+        osc_conn_cond=leg2diffleg,
+        rads=[0.05, 0.0, 0.0],
+        use_colorbar=True,
+        oscillator_phases=True,
     )
 
     # Plot contacts connectivity
