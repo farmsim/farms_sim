@@ -528,8 +528,6 @@ class AmphibiousContactsConnectivity(ContactConnectivity):
             pylog.debug("Contacts connectivity:\n{}".format(
                 np.array(connectivity, dtype=DTYPE)
             ))
-        if not connectivity:
-            connectivity = [[]]
         return cls(
             np.array(connectivity, dtype=ITYPE),
             np.array(weights, dtype=DTYPE),

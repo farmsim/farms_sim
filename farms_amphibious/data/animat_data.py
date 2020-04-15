@@ -20,6 +20,11 @@ from .animat_data_cy import (
 )
 
 
+def to_array_or_none(array):
+    """To array or None"""
+    return np.array(array) if array is not None else None
+
+
 class AnimatData(AnimatDataCy):
     """Animat data"""
 
@@ -41,9 +46,9 @@ class AnimatData(AnimatDataCy):
     def to_dict(self):
         """Convert data to dictionary"""
         return {
-            'state': np.array(self.state.array),
+            'state': to_array_or_none(self.state.array),
             'network': self.network.to_dict(),
-            'joints': np.array(self.joints.array),
+            'joints': to_array_or_none(self.joints.array),
             'sensors': self.sensors.to_dict(),
         }
 
@@ -81,7 +86,7 @@ class NetworkParameters(NetworkParametersCy):
     def to_dict(self):
         """Convert data to dictionary"""
         return {
-            'oscillators': np.array(self.oscillators.array),
+            'oscillators': to_array_or_none(self.oscillators.array),
             'osc_connectivity': self.osc_connectivity.to_dict(),
             'contacts_connectivity': self.contacts_connectivity.to_dict(),
             'hydro_connectivity': self.hydro_connectivity.to_dict(),
@@ -134,9 +139,9 @@ class OscillatorConnectivity(OscillatorConnectivityCy):
     def to_dict(self):
         """Convert data to dictionary"""
         return {
-            'connections': np.array(self.connections.array),
-            'weights': np.array(self.weights.array),
-            'desired_phases': np.array(self.desired_phases.array),
+            'connections': to_array_or_none(self.connections.array),
+            'weights': to_array_or_none(self.weights.array),
+            'desired_phases': to_array_or_none(self.desired_phases.array),
         }
 
 
@@ -154,8 +159,8 @@ class ContactConnectivity(ContactConnectivityCy):
     def to_dict(self):
         """Convert data to dictionary"""
         return {
-            'connections': np.array(self.connections.array),
-            'weights': np.array(self.weights.array),
+            'connections': to_array_or_none(self.connections.array),
+            'weights': to_array_or_none(self.weights.array),
         }
 
 
@@ -174,9 +179,9 @@ class HydroConnectivity(HydroConnectivityCy):
     def to_dict(self):
         """Convert data to dictionary"""
         return {
-            'connections': np.array(self.connections.array),
-            'frequency': np.array(self.frequency.array),
-            'amplitude': np.array(self.amplitude.array),
+            'connections': to_array_or_none(self.connections.array),
+            'frequency': to_array_or_none(self.frequency.array),
+            'amplitude': to_array_or_none(self.amplitude.array),
         }
 
 
@@ -200,10 +205,10 @@ class SensorsData(SensorsDataCy):
     def to_dict(self):
         """Convert data to dictionary"""
         return {
-            'contacts': np.array(self.contacts.array),
-            'proprioception': np.array(self.proprioception.array),
-            'gps': np.array(self.gps.array),
-            'hydrodynamics': np.array(self.hydrodynamics.array),
+            'contacts': to_array_or_none(self.contacts.array),
+            'proprioception': to_array_or_none(self.proprioception.array),
+            'gps': to_array_or_none(self.gps.array),
+            'hydrodynamics': to_array_or_none(self.hydrodynamics.array),
         }
 
     def plot(self, times):

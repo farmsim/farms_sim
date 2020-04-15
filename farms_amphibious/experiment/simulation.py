@@ -224,6 +224,7 @@ def simulation(animat_sdf, arena_sdf, show_progress=True, **kwargs):
         # ))
         assert iteration >= 0
 
+    # Post-processing
     pylog.info('Simulation post-processing')
     simulation_post(sim)
 
