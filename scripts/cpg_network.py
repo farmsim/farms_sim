@@ -16,7 +16,7 @@ from farms_amphibious.model.data import (
     AmphibiousOscillatorNetworkState,
     AmphibiousData,
 )
-from farms_amphibious.network.network import NetworkODE
+from farms_amphibious.control.network import NetworkODE
 from farms_amphibious.experiment.simulation import profile
 from farms_amphibious.utils.network import plot_networks_maps
 import farms_pylog as pylog

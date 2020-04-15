@@ -13,13 +13,13 @@ from farms_bullet.model.model import (
 import farms_pylog as pylog
 from farms_amphibious.model.animat import Amphibious
 from farms_amphibious.model.options import AmphibiousOptions
+from farms_amphibious.control.controller import AmphibiousController
+from farms_amphibious.control.kinematics import AmphibiousKinematics
+from farms_amphibious.simulation.simulation import AmphibiousSimulation
 from farms_amphibious.model.data import (
     AmphibiousOscillatorNetworkState,
     AmphibiousData
 )
-from farms_amphibious.simulation.simulation import AmphibiousSimulation
-from farms_amphibious.network.controller import AmphibiousController
-from farms_amphibious.network.kinematics import AmphibiousKinematics
 
 
 def get_animat_options(swimming=False, **kwargs):

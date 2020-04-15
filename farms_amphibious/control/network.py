@@ -2,7 +2,7 @@
 
 import numpy as np
 from scipy import integrate
-from ..controllers.controller import (
+from .ode import (
     ode_oscillators_sparse,
     ode_oscillators_sparse_no_sensors,
     ode_oscillators_sparse_tegotae,

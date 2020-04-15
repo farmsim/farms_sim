@@ -63,7 +63,7 @@ setup(
             )
             for folder in [
                 'data',
-                'controllers',
+                'control',
             ]
         ],
         include_path=[np.get_include()],
