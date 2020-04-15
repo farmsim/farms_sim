@@ -1,5 +1,6 @@
 """Amphibious simulation"""
 
+import os
 import time
 import numpy as np
 
@@ -243,6 +244,43 @@ class AmphibiousSimulation(Simulation):
                 self.animat().options
             )
             self.interface.user_params.drive_turn().changed = False
+
+    def postprocess(self, iteration, **kwargs):
+        """Plot after simulation"""
+        times = np.arange(
+            0,
+            self.options.timestep*self.options.n_iterations(),
+            self.options.timestep
+        )[:iteration]
+
+        # Log
+        log_path = kwargs.pop("log_path", None)
+        if log_path:
+            pylog.info('Saving data to {}'.format(log_path))
+            self.animat().data.to_file(os.path.join(
+                log_path,
+                'simulation.hdf5'
+            ))
+            self.options.save(os.path.join(
+                log_path,
+                'simulation_options.yaml'
+            ))
+            self.animat().options.save(os.path.join(
+                log_path,
+                'animat_options.yaml'
+            ))
+
+        # Plot
+        plot = kwargs.pop("plot", None)
+        if plot:
+            self.animat().data.plot(times)
+
+        # Record video
+        record = kwargs.pop("record", None)
+        if record:
+            self.interface.video.save(
+                "{}.avi".format(self.options.video_name)
+            )
 
 
 def main(simulation_options=None, animat_options=None):
