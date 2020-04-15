@@ -117,6 +117,37 @@ cpdef inline void ode_contacts(
         )
 
 
+cpdef inline void ode_contacts_tegotae(
+    unsigned int iteration,
+    CTYPEv1 state,
+    CTYPEv1 dstate,
+    ContactsArrayCy contacts,
+    ContactConnectivityCy contacts_connectivity,
+) nogil:
+    """Sensory feedback - Contacts
+
+    Can affect d_phase and d_amplitude
+
+    """
+    cdef CTYPE contact_force
+    cdef unsigned int i, i0, i1
+    for i in range(contacts_connectivity.c_n_connections()):
+        i0 = contacts_connectivity.connections.array[i][0]
+        i1 = contacts_connectivity.connections.array[i][1]
+        # contact_weight*contact_force
+        # contact_force = (
+        #     contacts.array[iteration][i1][0]**2
+        #     + contacts.array[iteration][i1][1]**2
+        #     + contacts.array[iteration][i1][2]**2
+        # )**0.5
+        contact_force = fabs(contacts.c_force_z(iteration, i1))
+        dstate[i0] += (
+            contacts_connectivity.c_weight(i)
+            *saturation(contact_force, 10)  # Saturation
+            *sin(state[i0])  # For Tegotae
+        )
+
+
 cpdef inline void ode_hydro(
     unsigned int iteration,
     CTYPEv1 state,
@@ -206,5 +237,66 @@ cpdef inline CTYPEv1 ode_oscillators_sparse(
         dstate=data.state.array[iteration][1],
         joints=data.joints,
         n_oscillators=data.network.oscillators.c_n_oscillators(),
+    )
+    return data.state.array[iteration][1]
+
+
+cpdef inline CTYPEv1 ode_oscillators_sparse_no_sensors(
+    CTYPE time,
+    CTYPEv1 state,
+    unsigned int iteration,
+    AnimatDataCy data,
+) nogil:
+    """CPG network ODE using no sensors"""
+    ode_dphase(
+        state=state,
+        dstate=data.state.array[iteration][1],
+        oscillators=data.network.oscillators,
+        connectivity=data.network.osc_connectivity,
+    )
+    ode_damplitude(
+        state=state,
+        dstate=data.state.array[iteration][1],
+        oscillators=data.network.oscillators,
+    )
+    ode_joints(
+        state=state,
+        dstate=data.state.array[iteration][1],
+        joints=data.joints,
+        n_oscillators=data.network.oscillators.c_n_oscillators(),
+    )
+    return data.state.array[iteration][1]
+
+
+cpdef inline CTYPEv1 ode_oscillators_sparse_tegotae(
+    CTYPE time,
+    CTYPEv1 state,
+    unsigned int iteration,
+    AnimatDataCy data,
+) nogil:
+    """CPG network ODE using Tegotae"""
+    ode_dphase(
+        state=state,
+        dstate=data.state.array[iteration][1],
+        oscillators=data.network.oscillators,
+        connectivity=data.network.osc_connectivity,
+    )
+    ode_damplitude(
+        state=state,
+        dstate=data.state.array[iteration][1],
+        oscillators=data.network.oscillators,
+    )
+    ode_joints(
+        state=state,
+        dstate=data.state.array[iteration][1],
+        joints=data.joints,
+        n_oscillators=data.network.oscillators.c_n_oscillators(),
+    )
+    ode_contacts_tegotae(
+        iteration=iteration,
+        state=state,
+        dstate=data.state.array[iteration][1],
+        contacts=data.sensors.contacts,
+        contacts_connectivity=data.network.contacts_connectivity,
     )
     return data.state.array[iteration][1]

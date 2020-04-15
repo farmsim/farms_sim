@@ -38,6 +38,15 @@ cpdef void ode_contacts(
 ) nogil
 
 
+cpdef void ode_contacts_tegotae(
+    unsigned int iteration,
+    CTYPEv1 state,
+    CTYPEv1 dstate,
+    ContactsArrayCy contacts,
+    ContactConnectivityCy contacts_connectivity,
+) nogil
+
+
 cpdef void ode_hydro(
     unsigned int iteration,
     CTYPEv1 state,
@@ -57,6 +66,22 @@ cpdef void ode_joints(
 
 
 cpdef CTYPEv1 ode_oscillators_sparse(
+    CTYPE time,
+    CTYPEv1 state,
+    unsigned int iteration,
+    AnimatDataCy data,
+) nogil
+
+
+cpdef CTYPEv1 ode_oscillators_sparse_no_sensors(
+    CTYPE time,
+    CTYPEv1 state,
+    unsigned int iteration,
+    AnimatDataCy data,
+) nogil
+
+
+cpdef CTYPEv1 ode_oscillators_sparse_tegotae(
     CTYPE time,
     CTYPEv1 state,
     unsigned int iteration,
