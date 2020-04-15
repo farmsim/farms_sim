@@ -3,16 +3,16 @@
 
 import time
 import matplotlib.pyplot as plt
+
+import farms_pylog as pylog
 from farms_models.utils import get_sdf_path
 from farms_bullet.simulation.options import SimulationOptions
 from farms_amphibious.model.options import AmphibiousOptions
-from farms_amphibious.experiment.simulation import (
-    simulation,
+from farms_amphibious.experiment.simulation import simulation, profile
+from farms_amphibious.experiment.options import (
     amphibious_options,
-    profile,
     get_animat_options,
 )
-import farms_pylog as pylog
 
 
 def main():

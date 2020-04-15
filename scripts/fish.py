@@ -2,14 +2,10 @@
 """Run fish simulation with bullet"""
 
 import time
-import numpy as np
 import matplotlib.pyplot as plt
 from farms_models.utils import get_sdf_path, model_kinematics_files
-from farms_amphibious.experiment.simulation import (
-    simulation,
-    profile,
-    fish_options,
-)
+from farms_amphibious.experiment.options import fish_options
+from farms_amphibious.experiment.simulation import simulation, profile
 import farms_pylog as pylog
 
 
