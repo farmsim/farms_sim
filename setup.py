@@ -30,56 +30,56 @@ Options.closure_freelist_size = 8
 
 
 setup(
-    name="farms_amphibious",
-    version="0.1",
-    author="farmsdev",
-    author_email="jonathan.arreguitoneill@epfl.ch",
-    description="FARMS package for amphibious simulations",
-    # license="BSD-3",
-    keywords="farms amphibious control simulation",
-    # url="",
-    # packages=["farms_amphibious"],
+    name='farms_amphibious',
+    version='0.1',
+    author='farmsdev',
+    author_email='jonathan.arreguitoneill@epfl.ch',
+    description='FARMS package for amphibious simulations',
+    # license='BSD-3',
+    keywords='farms amphibious control simulation',
+    # url='',
+    # packages=['farms_amphibious'],
     packages=find_packages(),
-    # long_description=read("README"),
+    # long_description=read('README'),
     # classifiers=[
-    #     "Development Status :: 3 - Alpha",
-    #     "Topic :: Utilities",
-    #     "License :: OSI Approved :: BSD License",
+    #     'Development Status :: 3 - Alpha',
+    #     'Topic :: Utilities',
+    #     'License :: OSI Approved :: BSD License',
     # ],
     scripts=[],
-    # package_data={"farms_amphibious": [
-    #     "farms_amphibious/templates/*",
-    #     "farms_amphibious/config/*"
+    # package_data={'farms_amphibious': [
+    #     'farms_amphibious/templates/*',
+    #     'farms_amphibious/config/*'
     # ]},
     include_package_data=True,
     include_dirs=[np.get_include()],
     ext_modules=cythonize(
         [
             Extension(
-                "farms_amphibious.{}*".format(folder.replace("/", "_") + "." if folder else ""),
-                sources=["farms_amphibious/{}*.pyx".format(folder + "/" if folder else "")],
-                extra_compile_args=["-O3"],  # , "-fopenmp"
-                extra_link_args=["-O3"]  # , "-fopenmp"
+                'farms_amphibious.{}*'.format(folder.replace('/', '_') + '.' if folder else ''),
+                sources=['farms_amphibious/{}*.pyx'.format(folder + '/' if folder else '')],
+                extra_compile_args=['-O3'],  # , '-fopenmp'
+                extra_link_args=['-O3']  # , '-fopenmp'
             )
             for folder in [
-                "data",
-                "controllers",
+                'data',
+                'controllers',
             ]
         ],
         include_path=[np.get_include()],
         compiler_directives={
             # Directives
             'binding': False,
-            "embedsignature": True,
-            "cdivision": True,
-            "language_level": 3,
-            "infer_types": True,
-            "profile": True,
-            "wraparound": False,
-            "boundscheck": DEBUG,
-            "nonecheck": DEBUG,
-            "initializedcheck": DEBUG,
-            "overflowcheck": DEBUG,
+            'embedsignature': True,
+            'cdivision': True,
+            'language_level': 3,
+            'infer_types': True,
+            'profile': True,
+            'wraparound': False,
+            'boundscheck': DEBUG,
+            'nonecheck': DEBUG,
+            'initializedcheck': DEBUG,
+            'overflowcheck': DEBUG,
             'overflowcheck.fold': DEBUG,
             'cdivision_warnings': DEBUG,
             'always_allow_keywords': DEBUG,
@@ -99,9 +99,9 @@ setup(
     ),
     zip_safe=False,
     # install_requires=[
-    #     "cython",
-    #     "numpy",
-    #     "trimesh",
-    #     "pyamphibious"
+    #     'cython',
+    #     'numpy',
+    #     'trimesh',
+    #     'pyamphibious'
     # ],
 )

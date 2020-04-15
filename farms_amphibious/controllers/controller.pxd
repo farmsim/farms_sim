@@ -1,6 +1,6 @@
 """Cython controller code"""
 
-include "../data/types.pxd"
+include '../data/types.pxd'
 from ..data.animat_data_cy cimport (
     AnimatDataCy,
     NetworkParametersCy,

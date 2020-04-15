@@ -14,7 +14,7 @@ def main():
     duration = 10
     timestep = 1e-2
     # Simulation
-    pybullet.connect(pybullet.GUI)  # , options="--opencl"
+    pybullet.connect(pybullet.GUI)  # , options='--opencl'
     pybullet.createMultiBody(
         baseMass=0,
         baseCollisionShapeIndex=pybullet.createCollisionShape(
@@ -36,7 +36,7 @@ def main():
     print(np.shape(positions))
     for _positions in positions:
         n_particles *= len(_positions)
-    print("Number of particles: {}".format(n_particles))
+    print('Number of particles: {}'.format(n_particles))
     pybullet.configureDebugVisualizer(pybullet.COV_ENABLE_RENDERING, 0)
     pybullet.setGravity(0, 0, -9.81)
     particles_positions = [
@@ -63,7 +63,7 @@ def main():
         )
     pybullet.configureDebugVisualizer(pybullet.COV_ENABLE_RENDERING, 1)
     pybullet.setTimeStep(1e-3)
-    print("Running simulation")
+    print('Running simulation')
     for current_time in tqdm(np.arange(0, duration, timestep)):
         pybullet.stepSimulation()
 

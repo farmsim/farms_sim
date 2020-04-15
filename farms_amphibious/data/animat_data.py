@@ -103,20 +103,20 @@ class OscillatorNetworkState(OscillatorNetworkStateCy):
 
     def plot_phases(self, times):
         """Plot phases"""
-        plt.figure("Network state phases")
+        plt.figure('Network state phases')
         for data in np.transpose(self.phases_all()):
             plt.plot(times, data[:len(times)])
-        plt.xlabel("Times [s]")
-        plt.ylabel("Phases [rad]")
+        plt.xlabel('Times [s]')
+        plt.ylabel('Phases [rad]')
         plt.grid(True)
 
     def plot_amplitudes(self, times):
         """Plot amplitudes"""
-        plt.figure("Network state amplitudes")
+        plt.figure('Network state amplitudes')
         for data in np.transpose(self.amplitudes_all()):
             plt.plot(times, data[:len(times)])
-        plt.xlabel("Times [s]")
-        plt.ylabel("Amplitudes")
+        plt.xlabel('Times [s]')
+        plt.ylabel('Amplitudes')
         plt.grid(True)
 
 
@@ -232,62 +232,62 @@ class ContactsArray(ContactsArrayCy):
 
     def plot_ground_reaction_forces(self, times):
         """Plot ground reaction forces"""
-        plt.figure("Ground reaction forces")
+        plt.figure('Ground reaction forces')
         for sensor_i in range(self.size(1)):
             data = np.asarray(self.reaction_all(sensor_i))
             plt.plot(
                 times,
                 np.linalg.norm(data, axis=-1)[:len(times)],
-                label="Leg_{}".format(sensor_i)
+                label='Leg_{}'.format(sensor_i)
             )
         plt.legend()
-        plt.xlabel("Times [s]")
-        plt.ylabel("Forces [N]")
+        plt.xlabel('Times [s]')
+        plt.ylabel('Forces [N]')
         plt.grid(True)
 
     def plot_friction_forces(self, times):
         """Plot friction forces"""
-        plt.figure("Friction forces")
+        plt.figure('Friction forces')
         for sensor_i in range(self.size(1)):
             data = np.asarray(self.friction_all(sensor_i))
             plt.plot(
                 times,
                 np.linalg.norm(data, axis=-1)[:len(times)],
-                label="Leg_{}".format(sensor_i)
+                label='Leg_{}'.format(sensor_i)
             )
         plt.legend()
-        plt.xlabel("Times [s]")
-        plt.ylabel("Forces [N]")
+        plt.xlabel('Times [s]')
+        plt.ylabel('Forces [N]')
         plt.grid(True)
 
     def plot_friction_forces_ori(self, times, ori):
         """Plot friction forces"""
-        plt.figure("Friction forces (ori={})".format(ori))
+        plt.figure('Friction forces (ori={})'.format(ori))
         for sensor_i in range(self.size(1)):
             data = np.asarray(self.friction_all(sensor_i))
             plt.plot(
                 times,
                 data[:len(times), ori],
-                label="Leg_{}".format(sensor_i)
+                label='Leg_{}'.format(sensor_i)
             )
         plt.legend()
-        plt.xlabel("Times [s]")
-        plt.ylabel("Forces [N]")
+        plt.xlabel('Times [s]')
+        plt.ylabel('Forces [N]')
         plt.grid(True)
 
     def plot_total_forces(self, times):
         """Plot contact forces"""
-        plt.figure("Contact total forces")
+        plt.figure('Contact total forces')
         for sensor_i in range(self.size(1)):
             data = np.asarray(self.total_all(sensor_i))
             plt.plot(
                 times,
                 np.linalg.norm(data, axis=-1)[:len(times)],
-                label="Leg_{}".format(sensor_i)
+                label='Leg_{}'.format(sensor_i)
             )
         plt.legend()
-        plt.xlabel("Times [s]")
-        plt.ylabel("Forces [N]")
+        plt.xlabel('Times [s]')
+        plt.ylabel('Forces [N]')
         plt.grid(True)
 
 
@@ -307,116 +307,116 @@ class ProprioceptionArray(ProprioceptionArrayCy):
 
     def plot_positions(self, times):
         """Plot ground reaction forces"""
-        plt.figure("Joints positions")
+        plt.figure('Joints positions')
         for joint_i in range(self.size(1)):
             plt.plot(
                 times,
                 np.asarray(self.positions_all())[:len(times), joint_i],
-                label="Joint_{}".format(joint_i)
+                label='Joint_{}'.format(joint_i)
             )
         plt.legend()
-        plt.xlabel("Times [s]")
-        plt.ylabel("Joint position [rad]")
+        plt.xlabel('Times [s]')
+        plt.ylabel('Joint position [rad]')
         plt.grid(True)
 
     def plot_velocities(self, times):
         """Plot ground reaction forces"""
-        plt.figure("Joints velocities")
+        plt.figure('Joints velocities')
         for joint_i in range(self.size(1)):
             plt.plot(
                 times,
                 np.asarray(self.velocities_all())[:len(times), joint_i],
-                label="Joint_{}".format(joint_i)
+                label='Joint_{}'.format(joint_i)
             )
         plt.legend()
-        plt.xlabel("Times [s]")
-        plt.ylabel("Joint velocity [rad/s]")
+        plt.xlabel('Times [s]')
+        plt.ylabel('Joint velocity [rad/s]')
         plt.grid(True)
 
     def plot_forces(self, times):
         """Plot ground reaction forces"""
-        plt.figure("Joints forces")
+        plt.figure('Joints forces')
         for joint_i in range(self.size(1)):
             data = np.linalg.norm(np.asarray(self.forces_all()), axis=-1)
             plt.plot(
                 times,
                 data[:len(times), joint_i],
-                label="Joint_{}".format(joint_i)
+                label='Joint_{}'.format(joint_i)
             )
         plt.legend()
-        plt.xlabel("Times [s]")
-        plt.ylabel("Joint force [N]")
+        plt.xlabel('Times [s]')
+        plt.ylabel('Joint force [N]')
         plt.grid(True)
 
     def plot_torques(self, times):
         """Plot ground reaction torques"""
-        plt.figure("Joints torques")
+        plt.figure('Joints torques')
         for joint_i in range(self.size(1)):
             data = np.linalg.norm(np.asarray(self.torques_all()), axis=-1)
             plt.plot(
                 times,
                 data[:len(times), joint_i],
-                label="Joint_{}".format(joint_i)
+                label='Joint_{}'.format(joint_i)
             )
         plt.legend()
-        plt.xlabel("Times [s]")
-        plt.ylabel("Joint torque [Nm]")
+        plt.xlabel('Times [s]')
+        plt.ylabel('Joint torque [Nm]')
         plt.grid(True)
 
     def plot_motor_torques(self, times):
         """Plot ground reaction forces"""
-        plt.figure("Joints motor torques")
+        plt.figure('Joints motor torques')
         for joint_i in range(self.size(1)):
             plt.plot(
                 times,
                 np.asarray(self.motor_torques())[:len(times), joint_i],
-                label="Joint_{}".format(joint_i)
+                label='Joint_{}'.format(joint_i)
             )
         plt.legend()
-        plt.xlabel("Times [s]")
-        plt.ylabel("Joint torque [Nm]")
+        plt.xlabel('Times [s]')
+        plt.ylabel('Joint torque [Nm]')
         plt.grid(True)
 
     def plot_active_torques(self, times):
         """Plot joints active torques"""
-        plt.figure("Joints active torques")
+        plt.figure('Joints active torques')
         for joint_i in range(self.size(1)):
             plt.plot(
                 times,
                 np.asarray(self.active_torques())[:len(times), joint_i],
-                label="Joint_{}".format(joint_i)
+                label='Joint_{}'.format(joint_i)
             )
         plt.legend()
-        plt.xlabel("Times [s]")
-        plt.ylabel("Joint torque [Nm]")
+        plt.xlabel('Times [s]')
+        plt.ylabel('Joint torque [Nm]')
         plt.grid(True)
 
     def plot_spring_torques(self, times):
         """Plot joints spring torques"""
-        plt.figure("Joints spring torques")
+        plt.figure('Joints spring torques')
         for joint_i in range(self.size(1)):
             plt.plot(
                 times,
                 np.asarray(self.spring_torques())[:len(times), joint_i],
-                label="Joint_{}".format(joint_i)
+                label='Joint_{}'.format(joint_i)
             )
         plt.legend()
-        plt.xlabel("Times [s]")
-        plt.ylabel("Joint torque [Nm]")
+        plt.xlabel('Times [s]')
+        plt.ylabel('Joint torque [Nm]')
         plt.grid(True)
 
     def plot_damping_torques(self, times):
         """Plot joints damping torques"""
-        plt.figure("Joints damping torques")
+        plt.figure('Joints damping torques')
         for joint_i in range(self.size(1)):
             plt.plot(
                 times,
                 np.asarray(self.damping_torques())[:len(times), joint_i],
-                label="Joint_{}".format(joint_i)
+                label='Joint_{}'.format(joint_i)
             )
         plt.legend()
-        plt.xlabel("Times [s]")
-        plt.ylabel("Joint torque [Nm]")
+        plt.xlabel('Times [s]')
+        plt.ylabel('Joint torque [Nm]')
         plt.grid(True)
 
 
@@ -430,33 +430,33 @@ class GpsArray(GpsArrayCy):
 
     def plot_base_position(self, times, xaxis=0, yaxis=1):
         """Plot"""
-        plt.figure("GPS position")
+        plt.figure('GPS position')
         for link_i in range(self.size(1)):
             data = np.asarray(self.urdf_positions())[:len(times), link_i]
             plt.plot(
                 data[:, xaxis],
                 data[:, yaxis],
-                label="Link_{}".format(link_i)
+                label='Link_{}'.format(link_i)
             )
         plt.legend()
-        plt.xlabel("Position [m]")
-        plt.ylabel("Position [m]")
-        plt.axis("equal")
+        plt.xlabel('Position [m]')
+        plt.ylabel('Position [m]')
+        plt.axis('equal')
         plt.grid(True)
 
     def plot_base_velocity(self, times):
         """Plot"""
-        plt.figure("GPS velocities")
+        plt.figure('GPS velocities')
         for link_i in range(self.size(1)):
             data = np.asarray(self.com_lin_velocities())[:len(times), link_i]
             plt.plot(
                 times,
                 np.linalg.norm(data, axis=-1),
-                label="Link_{}".format(link_i)
+                label='Link_{}'.format(link_i)
             )
         plt.legend()
-        plt.xlabel("Time [s]")
-        plt.ylabel("Velocity [m/s]")
+        plt.xlabel('Time [s]')
+        plt.ylabel('Velocity [m/s]')
         plt.grid(True)
 
 
@@ -470,28 +470,28 @@ class HydrodynamicsArray(HydrodynamicsArrayCy):
 
     def plot_forces(self, times):
         """Plot"""
-        plt.figure("Hydrodynamic forces")
+        plt.figure('Hydrodynamic forces')
         for link_i in range(self.size(1)):
             data = np.asarray(self.forces())[:len(times), link_i]
             plt.plot(
                 times,
                 np.linalg.norm(data, axis=-1),
-                label="Link_{}".format(link_i)
+                label='Link_{}'.format(link_i)
             )
-        plt.xlabel("Time [s]")
-        plt.ylabel("Forces [N]")
+        plt.xlabel('Time [s]')
+        plt.ylabel('Forces [N]')
         plt.grid(True)
 
     def plot_torques(self, times):
         """Plot"""
-        plt.figure("Hydrodynamic torques")
+        plt.figure('Hydrodynamic torques')
         for link_i in range(self.size(1)):
             data = np.asarray(self.torques())[:len(times), link_i]
             plt.plot(
                 times,
                 np.linalg.norm(data, axis=-1),
-                label="Link_{}".format(link_i)
+                label='Link_{}'.format(link_i)
             )
-        plt.xlabel("Time [s]")
-        plt.ylabel("Torques [Nm]")
+        plt.xlabel('Time [s]')
+        plt.ylabel('Torques [Nm]')
         plt.grid(True)

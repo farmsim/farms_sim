@@ -273,7 +273,7 @@ def fish_options(animat, version, kinematics_file, sampling_timestep, **kwargs):
     simulation_options.video_pitch = -30
     simulation_options.video_distance = 1
     # simulation_options.video_name = (
-    #     "transition_videos/swim2walk_y{}_p{}_d{}".format(
+    #     'transition_videos/swim2walk_y{}_p{}_d{}'.format(
     #         simulation_options.video_yaw,
     #         simulation_options.video_pitch,
     #         simulation_options.video_distance,

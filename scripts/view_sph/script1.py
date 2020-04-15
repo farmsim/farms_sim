@@ -14,7 +14,7 @@ def main(
     fluid = particle_arrays['fluid']
     fluid.plot.actor.property.opacity = 0.1
     fluid.plot.actor.property.point_size = 15
-    fluid.scalar = "vmag"
+    fluid.scalar = 'vmag'
     fluid.show_legend = True
     fluid.show_time = True
     # Tank

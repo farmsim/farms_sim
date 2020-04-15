@@ -47,4 +47,4 @@ def main():
 if __name__ == '__main__':
     TIC = time.time()
     main()
-    print("Total simulation time: {} [s]".format(time.time() - TIC))
+    print('Total simulation time: {} [s]'.format(time.time() - TIC))

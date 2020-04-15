@@ -1,6 +1,6 @@
 """Arrays"""
 
-include "types.pxd"
+include 'types.pxd'
 
 
 cdef class NetworkArray:

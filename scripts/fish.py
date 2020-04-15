@@ -42,7 +42,7 @@ def main():
         )
 
         # Logging
-        simulation_options.log_path = "fish_results"
+        simulation_options.log_path = 'fish_results'
 
         # Simulation
         profile(

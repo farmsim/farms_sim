@@ -59,10 +59,10 @@ def draw_nodes(positions, radius, color, prefix):
             position[0], position[1],
             '{}{}'.format(prefix, i),
             # transform=axes.transAxes,
-            # va="bottom",
-            # ha="left",
-            va="center",
-            ha="center",
+            # va='bottom',
+            # ha='left',
+            va='center',
+            ha='center',
             fontsize=8,
             color='k',
         )
@@ -385,7 +385,7 @@ def plot_network(n_oscillators, data, **kwargs):
             axes.add_artist(text)
     if use_colorbar:
         divider = make_axes_locatable(axes)
-        cax = divider.append_axes("right", size="5%", pad=0.05)
+        cax = divider.append_axes('right', size='5%', pad=0.05)
         pylog.debug('{}: {}, {}'.format(title, vmin, vmax))
         plt.colorbar(
             mappable=cm.ScalarMappable(

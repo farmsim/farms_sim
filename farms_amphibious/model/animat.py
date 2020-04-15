@@ -22,9 +22,9 @@ from ..sensors.sensors import AmphibiousGPS
 
 def links_ordering(text):
     """links ordering"""
-    text = re.sub("version[0-9]_", "", text)
-    text = re.sub("[a-z]", "", text)
-    text = re.sub("_", "", text)
+    text = re.sub('version[0-9]_', '', text)
+    text = re.sub('[a-z]', '', text)
+    text = re.sub('_', '', text)
     text = int(text)
     return [text]
 
@@ -138,8 +138,8 @@ class Amphibious(Animat):
         initial_pose(self._identity, self.options.spawn, self.units)
         for joint_i in range(pybullet.getNumJoints(self.identity())):
             joint_info = pybullet.getJointInfo(self.identity(), joint_i)
-            self._links[joint_info[12].decode("UTF-8")] = joint_i
-            self._joints[joint_info[1].decode("UTF-8")] = joint_i
+            self._links[joint_info[12].decode('UTF-8')] = joint_i
+            self._joints[joint_info[1].decode('UTF-8')] = joint_i
         if self.options.morphology.links is not None:
             for link in self.options.morphology.links:
                 if link not in self._links:
@@ -158,7 +158,7 @@ class Amphibious(Animat):
         # Links
         if self.options.morphology.links is not None:
             self.sensors.add({
-                "links": AmphibiousGPS(
+                'links': AmphibiousGPS(
                     array=self.data.sensors.gps.array,
                     animat_id=self.identity(),
                     links=self.links_identities(),
@@ -169,7 +169,7 @@ class Amphibious(Animat):
         # Joints
         if self.options.morphology.joints is not None:
             self.sensors.add({
-                "joints": JointsStatesSensor(
+                'joints': JointsStatesSensor(
                     self.data.sensors.proprioception.array,
                     self._identity,
                     self.joints_identities(),
@@ -183,7 +183,7 @@ class Amphibious(Animat):
                 and self.options.morphology.feet is not None
         ):
             self.sensors.add({
-                "contacts": ContactsSensors(
+                'contacts': ContactsSensors(
                     self.data.sensors.contacts.array,
                     [
                         self._identity

@@ -14,8 +14,8 @@ def main():
     x(t+dt) = f(t, x(t))
 
     """
-    x0, t, dt = sp.symbols("x0 t dt")
-    x = sp.Function("x")
+    x0, t, dt = sp.symbols('x0 t dt')
+    x = sp.Function('x')
     print(x)
     dxdt = sp.diff(x(t), t)
     print(dxdt)

@@ -164,7 +164,7 @@ class AmphibiousOscillatorArray(OscillatorArray):
                             i,
                             side=side
                         )] = interp(drives.forward)
-        # pylog.debug("Amplitudes along body: abs({})".format(amplitudes[:11]))
+        # pylog.debug('Amplitudes along body: abs({})'.format(amplitudes[:11]))
         return np.abs(freqs), np.abs(rates), np.abs(amplitudes)
 
     @classmethod
@@ -247,8 +247,8 @@ class AmphibiousOscillatorConnectivity(OscillatorConnectivity):
         for leg_i in range(morphology.n_legs//2):
             for side_i in range(2):
                 _options = {
-                    "leg_i": leg_i,
-                    "side_i": side_i
+                    'leg_i': leg_i,
+                    'side_i': side_i
                 }
                 # X - X
                 for joint_i in range(morphology.n_dof_legs):
@@ -315,8 +315,8 @@ class AmphibiousOscillatorConnectivity(OscillatorConnectivity):
             for joint_i in range(morphology.n_dof_legs):
                 for side in range(2):
                     _options = {
-                        "joint_i": joint_i,
-                        "side": side
+                        'joint_i': joint_i,
+                        'side': side
                     }
                     for sides in [[1, 0], [0, 1]]:
                         connectivity.append([
@@ -339,9 +339,9 @@ class AmphibiousOscillatorConnectivity(OscillatorConnectivity):
             for side_i in range(2):
                 for side in range(2):
                     _options = {
-                        "side_i": side_i,
-                        "side": side,
-                        "joint_i": 0,
+                        'side_i': side_i,
+                        'side': side,
+                        'joint_i': 0,
                     }
                     for legs, phase in [
                             [[leg_pre, leg_pre+1], phase_follow],
@@ -398,7 +398,7 @@ class AmphibiousOscillatorConnectivity(OscillatorConnectivity):
                     precision=3,
                     threshold=sys.maxsize
             ):
-                pylog.debug("Oscillator connectivity:\n{}".format(
+                pylog.debug('Oscillator connectivity:\n{}'.format(
                     np.array(connectivity, dtype=DTYPE)
                 ))
         return connectivity, weights, desired_phases
@@ -525,7 +525,7 @@ class AmphibiousContactsConnectivity(ContactConnectivity):
                                 ])
                                 weights.append(weight)
         if verbose:
-            pylog.debug("Contacts connectivity:\n{}".format(
+            pylog.debug('Contacts connectivity:\n{}'.format(
                 np.array(connectivity, dtype=DTYPE)
             ))
         return cls(
@@ -557,7 +557,7 @@ class AmphibiousHydroConnectivity(HydroConnectivity):
                 frequencies.append(connectivity_options.weight_sens_hydro_freq)
                 amplitudes.append(connectivity_options.weight_sens_hydro_amp)
         if verbose:
-            pylog.debug("Hydro connectivity:\n{}".format(
+            pylog.debug('Hydro connectivity:\n{}'.format(
                 np.array(connectivity, dtype=ITYPE)
             ))
         return cls(

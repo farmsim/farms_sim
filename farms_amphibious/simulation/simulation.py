@@ -254,7 +254,7 @@ class AmphibiousSimulation(Simulation):
         )[:iteration]
 
         # Log
-        log_path = kwargs.pop("log_path", None)
+        log_path = kwargs.pop('log_path', None)
         if log_path:
             pylog.info('Saving data to {}'.format(log_path))
             self.animat().data.to_file(os.path.join(
@@ -271,15 +271,15 @@ class AmphibiousSimulation(Simulation):
             ))
 
         # Plot
-        plot = kwargs.pop("plot", None)
+        plot = kwargs.pop('plot', None)
         if plot:
             self.animat().data.plot(times)
 
         # Record video
-        record = kwargs.pop("record", None)
+        record = kwargs.pop('record', None)
         if record:
             self.interface.video.save(
-                "{}.avi".format(self.options.video_name)
+                '{}.avi'.format(self.options.video_name)
             )
 
 
@@ -293,7 +293,7 @@ def main(simulation_options=None, animat_options=None):
         animat_options = AmphibiousOptions()
 
     # Setup simulation
-    pylog.debug("Creating simulation")
+    pylog.debug('Creating simulation')
     sim = AmphibiousSimulation(
         simulation_options=simulation_options,
         animat=Amphibious(
@@ -305,11 +305,11 @@ def main(simulation_options=None, animat_options=None):
     )
 
     # Run simulation
-    pylog.debug("Running simulation")
+    pylog.debug('Running simulation')
     sim.run()
 
     # Analyse results
-    pylog.debug("Analysing simulation")
+    pylog.debug('Analysing simulation')
     sim.postprocess(
         iteration=sim.iteration,
         plot=simulation_options.plot,
@@ -319,7 +319,7 @@ def main(simulation_options=None, animat_options=None):
     )
     if simulation_options.log_path:
         np.save(
-            simulation_options.log_path+"/hydrodynamics.npy",
+            simulation_options.log_path+'/hydrodynamics.npy',
             sim.models.animat.data.sensors.hydrodynamics.array
         )
 
@@ -338,7 +338,7 @@ def main_parallel():
 
     # Run simulation
     pool.map(main, [sim_options, sim_options])
-    pylog.debug("Done")
+    pylog.debug('Done')
 
 
 if __name__ == '__main__':
