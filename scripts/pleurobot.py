@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Run pleurobot simulation with bullet"""
 
+import os
 import time
 import matplotlib.pyplot as plt
 
@@ -23,7 +24,7 @@ def main():
     ) = amphibious_options(animat_options, use_water_arena=False)
 
     # Simulation
-    profile(
+    sim = profile(
         function=simulation,
         animat_sdf=sdf,
         animat_options=animat_options,
@@ -31,6 +32,21 @@ def main():
         arena_sdf=arena_sdf,
         use_controller=True,
     )
+
+    # Post-processing
+    pylog.info('Simulation post-processing')
+    video_name = ''
+    log_path = 'pleurobot_results'
+    if not os.path.isdir(log_path):
+        os.mkdir(log_path)
+    sim.postprocess(
+        iteration=sim.iteration,
+        log_path=log_path,
+        plot=False,
+        video=video_name if not sim.options.headless else ''
+    )
+
+    # Plot
     plt.show()
 
 
