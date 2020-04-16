@@ -20,6 +20,10 @@ from .animat_data_cy import (
 )
 
 
+DTYPE = np.float64
+ITYPE = np.uintc
+
+
 def to_array(array, iteration=None):
     """To array or None"""
     if array is not None:
@@ -168,6 +172,22 @@ class ContactConnectivity(ContactConnectivityCy):
             'connections': to_array(self.connections.array),
             'weights': to_array(self.weights.array),
         }
+
+    @classmethod
+    def from_connectivity(cls, connectivity):
+        """From connectivity"""
+        connections = [
+            [connection['in'], connection['out']]
+            for connection in connectivity
+        ]
+        weights = [
+            connection['weight']
+            for connection in connectivity
+        ]
+        return cls(
+            np.array(connections, dtype=ITYPE),
+            np.array(weights, dtype=DTYPE),
+        )
 
 
 class HydroConnectivity(HydroConnectivityCy):

@@ -43,9 +43,12 @@ class AmphibiousData(AnimatData):
                 morphology,
                 control.network.connectivity,
             ),
-            contacts_connectivity=AmphibiousContactsConnectivity.from_options(
-                morphology,
-                control.network.connectivity,
+            # contacts_connectivity=AmphibiousContactsConnectivity.from_options(
+            #     morphology,
+            #     control.network.connectivity,
+            # )
+            contacts_connectivity=ContactConnectivity.from_connectivity(
+                control.network.contact2osc
             ),
             hydro_connectivity=AmphibiousHydroConnectivity.from_options(
                 morphology,
@@ -488,50 +491,50 @@ class AmphibiousContactsArray(ContactsArray):
         return cls(contacts)
 
 
-class AmphibiousContactsConnectivity(ContactConnectivity):
-    """Amphibious contacts connectivity array"""
+# class AmphibiousContactsConnectivity(ContactConnectivity):
+#     """Amphibious contacts connectivity array"""
 
-    @classmethod
-    def from_options(cls, morphology, connectivity_options, verbose=False):
-        """Default"""
-        connectivity, weights = [], []
-        # morphology.n_legs
-        convention = AmphibiousConvention(**morphology)
-        for leg_i in range(morphology.n_legs//2):
-            for side_i in range(2):
-                for joint_i in range(morphology.n_dof_legs):
-                    for side_o in range(2):
-                        for sensor_leg_i in range(morphology.n_legs//2):
-                            for sensor_side_i in range(2):
-                                weight = (
-                                    connectivity_options.weight_sens_contact_e
-                                    if (
-                                        (leg_i == sensor_leg_i)
-                                        != (side_i == sensor_side_i)
-                                    )
-                                    else connectivity_options.weight_sens_contact_i
-                                )
-                                connectivity.append([
-                                    convention.legosc2index(
-                                        leg_i=leg_i,
-                                        side_i=side_i,
-                                        joint_i=joint_i,
-                                        side=side_o
-                                    ),
-                                    convention.contactleglink2index(
-                                        leg_i=sensor_leg_i,
-                                        side_i=sensor_side_i
-                                    ),
-                                ])
-                                weights.append(weight)
-        if verbose:
-            pylog.debug('Contacts connectivity:\n{}'.format(
-                np.array(connectivity, dtype=DTYPE)
-            ))
-        return cls(
-            np.array(connectivity, dtype=ITYPE),
-            np.array(weights, dtype=DTYPE),
-        )
+#     @classmethod
+#     def from_options(cls, morphology, connectivity_options, verbose=False):
+#         """Default"""
+#         connectivity, weights = [], []
+#         # morphology.n_legs
+#         convention = AmphibiousConvention(**morphology)
+#         for leg_i in range(morphology.n_legs//2):
+#             for side_i in range(2):
+#                 for joint_i in range(morphology.n_dof_legs):
+#                     for side_o in range(2):
+#                         for sensor_leg_i in range(morphology.n_legs//2):
+#                             for sensor_side_i in range(2):
+#                                 weight = (
+#                                     connectivity_options.weight_sens_contact_e
+#                                     if (
+#                                         (leg_i == sensor_leg_i)
+#                                         != (side_i == sensor_side_i)
+#                                     )
+#                                     else connectivity_options.weight_sens_contact_i
+#                                 )
+#                                 connectivity.append([
+#                                     convention.legosc2index(
+#                                         leg_i=leg_i,
+#                                         side_i=side_i,
+#                                         joint_i=joint_i,
+#                                         side=side_o
+#                                     ),
+#                                     convention.contactleglink2index(
+#                                         leg_i=sensor_leg_i,
+#                                         side_i=sensor_side_i
+#                                     ),
+#                                 ])
+#                                 weights.append(weight)
+#         if verbose:
+#             pylog.debug('Contacts connectivity:\n{}'.format(
+#                 np.array(connectivity, dtype=DTYPE)
+#             ))
+#         return cls(
+#             np.array(connectivity, dtype=ITYPE),
+#             np.array(weights, dtype=DTYPE),
+#         )
 
 
 class AmphibiousHydroConnectivity(HydroConnectivity):
