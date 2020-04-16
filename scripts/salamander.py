@@ -69,19 +69,17 @@ def main():
     )
 
     # Post-processing
-    postprocessing = False
-    if postprocessing:
-        pylog.info('Simulation post-processing')
-        video_name = ''
-        log_path = 'salamander_results'
-        if not os.path.isdir(log_path):
-            os.mkdir(log_path)
-        sim.postprocess(
-            iteration=sim.iteration,
-            log_path=log_path,
-            plot=True,
-            video=video_name if not sim.options.headless else ''
-        )
+    pylog.info('Simulation post-processing')
+    video_name = ''
+    log_path = 'salamander_results'
+    if not os.path.isdir(log_path):
+        os.mkdir(log_path)
+    sim.postprocess(
+        iteration=sim.iteration,
+        log_path=log_path,
+        plot=False,
+        video=video_name if not sim.options.headless else ''
+    )
 
     # Plot
     plt.show()
