@@ -135,9 +135,9 @@ def get_fluid_and_dam_geometry_3d(
 def mesh_to_particles(link, filename=None, dx=2e-2, show=False):
     """Test"""
     import trimesh
-    folder = "../farms_bullet/experiments/salamander/meshes/"
-    mesh_file = "salamander_body_{}.obj".format(link)
-    print("Loading {}".format(mesh_file))
+    folder = '../farms_bullet/experiments/salamander/meshes/'
+    mesh_file = 'salamander_body_{}.obj'.format(link)
+    print('Loading {}'.format(mesh_file))
     mesh = trimesh.load_mesh(folder+mesh_file)
     b = mesh.bounds
     d = np.array([np.arange(b[0, i], b[1, i], dx) for i in range(3)])
@@ -147,7 +147,7 @@ def mesh_to_particles(link, filename=None, dx=2e-2, show=False):
     points = np.array([points_tested[i] for i in ind])
     if show:
         trimesh.Scene([trimesh.PointCloud(points)]).show()
-    print("Number of particles in {}: {}".format(
+    print('Number of particles in {}: {}'.format(
         mesh_file,
         np.shape(points)[0]
     ))
@@ -408,11 +408,11 @@ class RigidFluidCoupling(Application):
     def __init__(self, **kwargs):
 
         # Simulation options
-        output_dir = kwargs.pop("output_dir", None)
+        output_dir = kwargs.pop('output_dir', None)
 
         ## Fluid dynamics options
-        self.density_solid = kwargs.pop("density", 1000)
-        # self.n_fluid_particles = kwargs.pop("n_fluid_particles", 8000)
+        self.density_solid = kwargs.pop('density', 1000)
+        # self.n_fluid_particles = kwargs.pop('n_fluid_particles', 8000)
         self.dt = 1e-3
         self.duration = 3
 
@@ -430,18 +430,18 @@ class RigidFluidCoupling(Application):
         )
         animat_options.morphology.density = self.density_solid
         animat_options.spawn.position = [0, 0, self.tank_size[2]+0.05]
-        animat_options.control.drives.forward = kwargs.pop("drive", 4)
+        animat_options.control.drives.forward = kwargs.pop('drive', 4)
         animat_options.physics.viscous = False
         animat_options.physics.sph = True
-        animat_options.control.network.connectivity.weight_sens_hydro_freq = kwargs.pop("hydro_freq", -1)
-        animat_options.control.network.connectivity.weight_sens_hydro_amp = kwargs.pop("hydro_amp", -1)
+        animat_options.control.network.connectivity.weight_sens_hydro_freq = kwargs.pop('hydro_freq', -1)
+        animat_options.control.network.connectivity.weight_sens_hydro_amp = kwargs.pop('hydro_amp', -1)
         # Simulation options
         simulation_options = SimulationOptions.with_clargs(
             duration=self.duration,
             timestep=self.dt,
             fast=True,
             headless=True,
-            log_path=output_dir+"/rigid"
+            log_path=output_dir+'/rigid'
         )
         simulation_options.units.meters = 1
         simulation_options.units.seconds = 1
@@ -453,13 +453,13 @@ class RigidFluidCoupling(Application):
 
         super(RigidFluidCoupling, self).__init__()
         if output_dir:
-            self.args.append("--directory")
+            self.args.append('--directory')
             self.args.append(output_dir)
 
     def initialize(self):
         self.tank_volume = self.tank_size[0]*self.tank_size[1]*self.tank_size[2]
         # self._spacing = 1e3*(self.tank_volume/self.n_fluid_particles)**(1/3)
-        # print("Spacing: {} [mm]".format(self._spacing))
+        # print('Spacing: {} [mm]'.format(self._spacing))
         # self.spacing = self._spacing * 1e-3  # [m]
         # self.dx = self.spacing
         self.dx = 2e-2
@@ -572,7 +572,7 @@ class RigidFluidCoupling(Application):
         h = self.hdx * self.dx
         fluid = get_particle_array_wcsph(
             x=xf, y=yf, z=zf, h=h,
-            m=m, rho=rho, name="fluid"
+            m=m, rho=rho, name='fluid'
         )
 
         # Create particle array for tank
@@ -583,7 +583,7 @@ class RigidFluidCoupling(Application):
         V = self.dx**3
         tank = get_particle_array_wcsph(
             x=xt, y=yt, z=zt, h=h,
-            m=m, rho=rho, rad_s=rad_s, V=V, name="tank"
+            m=m, rho=rho, rad_s=rad_s, V=V, name='tank'
         )
         for name in ['fx', 'fy', 'fz']:
             tank.add_property(name)
@@ -612,18 +612,18 @@ class RigidFluidCoupling(Application):
                 V=V,
                 cs=cs,
                 body_id=body[i],
-                name="cube_{}".format(i)
+                name='cube_{}'.format(i)
             )
             for i in range(12)
         ]
 
-        print("Number of fluid particles: {}".format(
+        print('Number of fluid particles: {}'.format(
             fluid.get_number_of_particles()
         ))
-        print("Number of tank particles: {}".format(
+        print('Number of tank particles: {}'.format(
             tank.get_number_of_particles()
         ))
-        print("Number of salamander particles: {}".format(
+        print('Number of salamander particles: {}'.format(
             [cube[i].get_number_of_particles() for i in range(12)]
         ))
         return [fluid, tank] + cube
@@ -635,7 +635,7 @@ class RigidFluidCoupling(Application):
 
         # simulation = Simulation()
         # cubes = {
-        #     "cube_{}".format(i): RK2StepRigidBody(simulation=self.simulation)
+        #     'cube_{}'.format(i): RK2StepRigidBody(simulation=self.simulation)
         #     for i in range(12)
         # }
         # integrator = EPECIntegrator(
@@ -650,7 +650,7 @@ class RigidFluidCoupling(Application):
         )
 
         # dt = 0.125 * self.dx * self.hdx / (self.co * 1.1) / 2.
-        print("DT: %s" % self.dt)
+        print('DT: %s' % self.dt)
         # tf = 1.2  # 5
         solver = Solver(
             kernel=kernel,
@@ -661,7 +661,7 @@ class RigidFluidCoupling(Application):
             adaptive_timestep=False,  # False because otherwise not constant
             reorder_freq=0
         )
-        solver.set_output_fname("salamander")  # Does not work
+        solver.set_output_fname('salamander')  # Does not work
         return solver
 
     def create_equations(self):
@@ -844,14 +844,14 @@ def main():
     # for freq_feedback in np.linspace(-1, 1, 5):
     #     for amp_feedback in np.linspace(-1, 1, 5):
     try:
-        print("Density: {}".format(density))
+        print('Density: {}'.format(density))
         app = RigidFluidCoupling(
             density=density,
             drive=drive,
-            output_dir="benchmark_swimming_f{}_a{}".format(
+            output_dir='benchmark_swimming_f{}_a{}'.format(
                 freq_feedback,
                 amp_feedback
-            ).replace(".", "d").replace("-", "m"),
+            ).replace('.', 'd').replace('-', 'm'),
             hydro_freq=freq_feedback,
             hydro_amp=amp_feedback
         )
@@ -863,7 +863,7 @@ def main():
         )
         app.simulation.end()
     except Exception as err:
-        print("WATCH OUT THERE WAS AN ERROR!!!")
+        print('WATCH OUT THERE WAS AN ERROR!!!')
         traceback.print_exc(file=sys.stdout)
         print(str(err))
 
@@ -872,8 +872,8 @@ def profile():
     """Profile with cProfile"""
     import cProfile
     import pstats
-    cProfile.run("main()", "simulation.profile")
-    pstat = pstats.Stats("simulation.profile")
+    cProfile.run('main()', 'simulation.profile')
+    pstat = pstats.Stats('simulation.profile')
     pstat.sort_stats('time').print_stats(30)
     pstat.sort_stats('cumtime').print_stats(30)
 
@@ -882,8 +882,8 @@ def profile():
 def debug():
     """Debug"""
     particles = mesh_to_particles(9, dx=1e-2, show=True)
-    for i, ori in enumerate(["x", "y", "z"]):
-        print("{0}Min: {1} {0}Max: {2}".format(
+    for i, ori in enumerate(['x', 'y', 'z']):
+        print('{0}Min: {1} {0}Max: {2}'.format(
             ori,
             min(particles[i, :]),
             max(particles[i, :])

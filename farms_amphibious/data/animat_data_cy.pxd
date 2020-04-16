@@ -1,7 +1,12 @@
 """Animat data"""
 
-include "types.pxd"
-from .array cimport NetworkArray2D, NetworkArray3D
+include 'types.pxd'
+from .array cimport (
+    NetworkArray1D,
+    NetworkArray2D,
+    NetworkArray3D,
+    IntegerArray2D,
+)
 
 
 cdef class AnimatDataCy:
@@ -15,9 +20,9 @@ cdef class AnimatDataCy:
 cdef class NetworkParametersCy:
     """Network parameter"""
     cdef public OscillatorArrayCy oscillators
-    cdef public ConnectivityArrayCy connectivity
-    cdef public ConnectivityArrayCy contacts_connectivity
-    cdef public ConnectivityArrayCy hydro_connectivity
+    cdef public OscillatorConnectivityCy osc_connectivity
+    cdef public ContactConnectivityCy contacts_connectivity
+    cdef public HydroConnectivityCy hydro_connectivity
 
 
 cdef class OscillatorNetworkStateCy(NetworkArray3D):
@@ -47,20 +52,57 @@ cdef class OscillatorArrayCy(NetworkArray2D):
         return self.array[2][index]
 
 
-cdef class ConnectivityArrayCy(NetworkArray2D):
+cdef class ConnectivityCy:
     """Connectivity array"""
+
+    cdef readonly IntegerArray2D connections
+
+    cpdef INDEX input(self, connection_i)
+    cpdef INDEX output(self, connection_i)
+
+    cdef inline INDEX c_n_connections(self) nogil:
+        """Number of connections"""
+        return self.connections.array.shape[0]
+
+
+cdef class OscillatorConnectivityCy(ConnectivityCy):
+    """oscillator connectivity array"""
+
+    cdef readonly NetworkArray1D weights
+    cdef readonly NetworkArray1D desired_phases
 
     cdef inline CTYPE c_weight(self, unsigned int iteration) nogil:
         """Weight"""
-        return self.array[iteration][2]
+        return self.weights.array[iteration]
 
     cdef inline CTYPE c_desired_phase(self, unsigned int iteration) nogil:
         """Desired phase"""
-        return self.array[iteration][3]
+        return self.desired_phases.array[iteration]
 
-    cdef inline CTYPE c_weight_hydro_amplitude(self, unsigned int iteration) nogil:
+
+cdef class ContactConnectivityCy(ConnectivityCy):
+    """Contact connectivity array"""
+
+    cdef readonly NetworkArray1D weights
+
+    cdef inline CTYPE c_weight(self, unsigned int iteration) nogil:
+        """Weight"""
+        return self.weights.array[iteration]
+
+
+cdef class HydroConnectivityCy(ConnectivityCy):
+    """Hydrodynamics connectivity array"""
+
+    cdef readonly NetworkArray1D amplitude
+    cdef readonly NetworkArray1D frequency
+
+    cdef inline CTYPE c_weight_frequency(self, unsigned int iteration) nogil:
+        """Weight for hydrodynamics frequency"""
+        return self.frequency.array[iteration]
+
+    cdef inline CTYPE c_weight_amplitude(self, unsigned int iteration) nogil:
         """Weight for hydrodynamics amplitude"""
-        return self.array[iteration][3]
+        return self.amplitude.array[iteration]
 
 
 cdef class JointsArrayCy(NetworkArray2D):
@@ -153,13 +195,25 @@ cdef class HydrodynamicsArrayCy(NetworkArray3D):
     cpdef public CTYPEv3 torques(self)
 
     cdef inline CTYPE c_force_x(self, unsigned iteration, unsigned int index) nogil:
-        """Force z"""
+        """Force x"""
         return self.array[iteration][index][0]
 
     cdef inline CTYPE c_force_y(self, unsigned iteration, unsigned int index) nogil:
-        """Force z"""
+        """Force y"""
         return self.array[iteration][index][1]
 
     cdef inline CTYPE c_force_z(self, unsigned iteration, unsigned int index) nogil:
         """Force z"""
+        return self.array[iteration][index][2]
+
+    cdef inline CTYPE c_torque_x(self, unsigned iteration, unsigned int index) nogil:
+        """Torque x"""
+        return self.array[iteration][index][0]
+
+    cdef inline CTYPE c_torque_y(self, unsigned iteration, unsigned int index) nogil:
+        """Torque y"""
+        return self.array[iteration][index][1]
+
+    cdef inline CTYPE c_torque_z(self, unsigned iteration, unsigned int index) nogil:
+        """Torque z"""
         return self.array[iteration][index][2]

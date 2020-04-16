@@ -13,12 +13,12 @@ def main():
     timestep = 1e-3
     n_dim = 10
     freqs = np.array([
-        cas.SX.sym("freqs_{}".format(i))
+        cas.SX.sym('freqs_{}'.format(i))
         for i in range(n_dim)
     ])
     phases = np.array([
         [
-            cas.SX.sym("phases_{}".format(i))
+            cas.SX.sym('phases_{}'.format(i))
             if not i % 1 else 0
         ]
         for i in range(n_dim)
@@ -37,25 +37,25 @@ def main():
         phases_desired_vals[i+2, i] = 0
     coupling_weights = np.array([
         [
-            cas.SX.sym("w_{}_{}".format(i, j))
+            cas.SX.sym('w_{}_{}'.format(i, j))
             if coupling_weights_vals[i, j] != 0
-            else 0  # cas.SX.sym("0")
+            else 0  # cas.SX.sym('0')
             for j in range(n_dim)
         ] for i in range(n_dim)
     ])
     phases_desired = np.array([
         [
-            cas.SX.sym("theta_d_{}_{}".format(i, j))
+            cas.SX.sym('theta_d_{}_{}'.format(i, j))
             if coupling_weights_vals[i, j] != 0
-            else 0  # cas.SX.sym("0")
+            else 0  # cas.SX.sym('0')
             for j in range(n_dim)
         ] for i in range(n_dim)
     ])
-    print("phases:\n{}".format(phases))
+    print('phases:\n{}'.format(phases))
     phase_repeat = np.repeat(phases, n_dim, axis=1)
-    print("phases_repeat:\n{}".format(phase_repeat))
+    print('phases_repeat:\n{}'.format(phase_repeat))
     phase_diff = phase_repeat.T-phase_repeat
-    print("phases_diff:\n{}".format(phase_diff))
+    print('phases_diff:\n{}'.format(phase_diff))
     ode = (
         freqs
         + np.sum(
@@ -63,11 +63,11 @@ def main():
             axis=1
         )
     )
-    print("ODE:\n{}".format(ode))
+    print('ODE:\n{}'.format(ode))
 
-    print("Phases:\n{}".format(phases.T))
-    print("Freqs:\n{}".format(freqs))
-    # print("Coupling weights:\n{}".format(coupling_weights))
+    print('Phases:\n{}'.format(phases.T))
+    print('Freqs:\n{}'.format(freqs))
+    # print('Coupling weights:\n{}'.format(coupling_weights))
     coupling_weights_sym = np.array([
         coupling_weights[i, j]
         for i in range(n_dim)
@@ -80,15 +80,15 @@ def main():
         for j in range(n_dim)
         if isinstance(coupling_weights[i, j], cas.SX)
     ])
-    print("Coupling weights sym:\n{}".format(coupling_weights_sym))
+    print('Coupling weights sym:\n{}'.format(coupling_weights_sym))
     ode = {
-        "x": phases,
-        "p": cas.vertcat(
+        'x': phases,
+        'p': cas.vertcat(
             freqs,
             coupling_weights_sym,
             phases_desired_sym
         ),
-        "ode": ode
+        'ode': ode
     }
 
     integrator = cas.integrator(
@@ -96,12 +96,12 @@ def main():
         'cvodes',
         ode,
         {
-            "t0": 0,
-            "tf": timestep,
-            "jit": True,
-            # "step0": 1e-3,
-            # "abstol": 1e-3,
-            # "reltol": 1e-3
+            't0': 0,
+            'tf': timestep,
+            'jit': True,
+            # 'step0': 1e-3,
+            # 'abstol': 1e-3,
+            # 'reltol': 1e-3
         }
     )
     freqs_vals = 2*np.pi*np.ones(n_dim)
@@ -133,17 +133,17 @@ def main():
                     coupling_weights_vals_reshape,
                     phases_desired_vals_reshape
                 ])
-            )["xf"][:, 0]
+            )['xf'][:, 0]
         )
         phases_logs[sim_iteration, :] = phases_vals[:, 0]
     toc = time.time()
-    print("Time to simulate {} [s]: {} [s]".format(time_tot, toc-tic))
+    print('Time to simulate {} [s]: {} [s]'.format(time_tot, toc-tic))
 
-    plt.figure("Results")
+    plt.figure('Results')
     for i in range(n_dim):
-        plt.plot(times, np.sin(phases_logs[:, i]), label="CPG{}".format(i))
-        plt.xlabel("Time [s]")
-        plt.ylabel("Phase [rad]")
+        plt.plot(times, np.sin(phases_logs[:, i]), label='CPG{}'.format(i))
+        plt.xlabel('Time [s]')
+        plt.ylabel('Phase [rad]')
         plt.grid(True)
     plt.legend()
     plt.show()

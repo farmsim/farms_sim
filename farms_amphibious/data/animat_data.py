@@ -8,7 +8,9 @@ from .animat_data_cy import (
     NetworkParametersCy,
     OscillatorNetworkStateCy,
     OscillatorArrayCy,
-    ConnectivityArrayCy,
+    OscillatorConnectivityCy,
+    ContactConnectivityCy,
+    HydroConnectivityCy,
     JointsArrayCy,
     SensorsDataCy,
     ContactsArrayCy,
@@ -16,6 +18,15 @@ from .animat_data_cy import (
     GpsArrayCy,
     HydrodynamicsArrayCy
 )
+
+
+def to_array(array, iteration=None):
+    """To array or None"""
+    if array is not None:
+        array = np.array(array)
+        if iteration is not None:
+            array = array[:iteration]
+    return array
 
 
 class AnimatData(AnimatDataCy):
@@ -36,25 +47,18 @@ class AnimatData(AnimatDataCy):
         """From file"""
         return cls.from_dict(dd.io.load(filename), n_oscillators)
 
-    def to_dict(self):
+    def to_dict(self, iteration=None):
         """Convert data to dictionary"""
         return {
-            'state': np.array(self.state.array),
-            'network': self.network.to_dict(),
-            'joints': np.array(self.joints.array),
-            'sensors': self.sensors.to_dict(),
+            'state': to_array(self.state.array),
+            'network': self.network.to_dict(iteration),
+            'joints': to_array(self.joints.array),
+            'sensors': self.sensors.to_dict(iteration),
         }
 
-    def to_file(self, filename):
+    def to_file(self, filename, iteration=None):
         """Save data to file"""
-        dd.io.save(filename, self.to_dict())
-
-    def log(self, times, folder, extension):
-        """Log"""
-        self.state.log(times, folder, "network_state", extension)
-        self.network.log(times, folder, extension)
-        self.joints.log(times, folder, "joints", extension)
-        self.sensors.log(times, folder, extension)
+        dd.io.save(filename, self.to_dict(iteration))
 
     def plot(self, times):
         """Plot"""
@@ -72,35 +76,26 @@ class NetworkParameters(NetworkParametersCy):
             oscillators=OscillatorArray(
                 dictionary['oscillators']
             ),
-            connectivity=ConnectivityArray(
-                dictionary['connectivity']
+            osc_connectivity=OscillatorConnectivity.from_dict(
+                dictionary['osc_connectivity']
             ),
-            contacts_connectivity=ConnectivityArray(
+            contacts_connectivity=ContactConnectivity.from_dict(
                 dictionary['contacts_connectivity']
             ),
-            hydro_connectivity=ConnectivityArray(
+            hydro_connectivity=HydroConnectivity.from_dict(
                 dictionary['hydro_connectivity']
             ),
         )
 
-    def to_dict(self):
+    def to_dict(self, iteration=None):
         """Convert data to dictionary"""
+        assert iteration is None or isinstance(iteration, int)
         return {
-            'oscillators': np.array(self.oscillators.array),
-            'connectivity': np.array(self.connectivity.array),
-            'contacts_connectivity': np.array(self.contacts_connectivity.array),
-            'hydro_connectivity': np.array(self.hydro_connectivity.array),
+            'oscillators': to_array(self.oscillators.array),
+            'osc_connectivity': self.osc_connectivity.to_dict(),
+            'contacts_connectivity': self.contacts_connectivity.to_dict(),
+            'hydro_connectivity': self.hydro_connectivity.to_dict(),
         }
-
-    def log(self, times, folder, extension):
-        """Log"""
-        for data, name in [
-                [self.oscillators, "oscillators"],
-                [self.connectivity, "connectivity"],
-                [self.contacts_connectivity, "contacts_connectivity"],
-                [self.hydro_connectivity, "hydro_connectivity"]
-        ]:
-            data.log(times, folder, name, extension)
 
 
 class OscillatorNetworkState(OscillatorNetworkStateCy):
@@ -113,20 +108,20 @@ class OscillatorNetworkState(OscillatorNetworkStateCy):
 
     def plot_phases(self, times):
         """Plot phases"""
-        plt.figure("Network state phases")
+        plt.figure('Network state phases')
         for data in np.transpose(self.phases_all()):
             plt.plot(times, data[:len(times)])
-        plt.xlabel("Times [s]")
-        plt.ylabel("Phases [rad]")
+        plt.xlabel('Times [s]')
+        plt.ylabel('Phases [rad]')
         plt.grid(True)
 
     def plot_amplitudes(self, times):
         """Plot amplitudes"""
-        plt.figure("Network state amplitudes")
+        plt.figure('Network state amplitudes')
         for data in np.transpose(self.amplitudes_all()):
             plt.plot(times, data[:len(times)])
-        plt.xlabel("Times [s]")
-        plt.ylabel("Amplitudes")
+        plt.xlabel('Times [s]')
+        plt.ylabel('Amplitudes')
         plt.grid(True)
 
 
@@ -134,8 +129,67 @@ class OscillatorArray(OscillatorArrayCy):
     """Oscillator array"""
 
 
-class ConnectivityArray(ConnectivityArrayCy):
+class OscillatorConnectivity(OscillatorConnectivityCy):
     """Connectivity array"""
+
+    @classmethod
+    def from_dict(cls, dictionary):
+        """Load data from dictionary"""
+        return cls(
+            connections=dictionary['connections'],
+            weights=dictionary['weights'],
+            desired_phases=dictionary['desired_phases'],
+        )
+
+    def to_dict(self, iteration=None):
+        """Convert data to dictionary"""
+        assert iteration is None or isinstance(iteration, int)
+        return {
+            'connections': to_array(self.connections.array),
+            'weights': to_array(self.weights.array),
+            'desired_phases': to_array(self.desired_phases.array),
+        }
+
+
+class ContactConnectivity(ContactConnectivityCy):
+    """Connectivity array"""
+
+    @classmethod
+    def from_dict(cls, dictionary):
+        """Load data from dictionary"""
+        return cls(
+            connections=dictionary['connections'],
+            weights=dictionary['weights'],
+        )
+
+    def to_dict(self, iteration=None):
+        """Convert data to dictionary"""
+        return {
+            'connections': to_array(self.connections.array),
+            'weights': to_array(self.weights.array),
+        }
+
+
+class HydroConnectivity(HydroConnectivityCy):
+    """Connectivity array"""
+
+    @classmethod
+    def from_dict(cls, dictionary):
+        """Load data from dictionary"""
+        return cls(
+            connections=dictionary['connections'],
+            frequency=dictionary['frequency'],
+            amplitude=dictionary['amplitude'],
+        )
+
+    def to_dict(self, iteration=None):
+        """Convert data to dictionary"""
+        assert iteration is None or isinstance(iteration, int)
+        return {
+            'connections': to_array(self.connections.array),
+            'frequency': to_array(self.frequency.array),
+            'amplitude': to_array(self.amplitude.array),
+        }
 
 
 class JointsArray(JointsArrayCy):
@@ -155,24 +209,14 @@ class SensorsData(SensorsDataCy):
             hydrodynamics=HydrodynamicsArray(dictionary['hydrodynamics']),
         )
 
-    def to_dict(self):
+    def to_dict(self, iteration=None):
         """Convert data to dictionary"""
         return {
-            'contacts': np.array(self.contacts.array),
-            'proprioception': np.array(self.proprioception.array),
-            'gps': np.array(self.gps.array),
-            'hydrodynamics': np.array(self.hydrodynamics.array),
+            'contacts': to_array(self.contacts.array, iteration),
+            'proprioception': to_array(self.proprioception.array, iteration),
+            'gps': to_array(self.gps.array, iteration),
+            'hydrodynamics': to_array(self.hydrodynamics.array, iteration),
         }
-
-    def log(self, times, folder, extension):
-        """Log"""
-        for data, name in [
-                [self.contacts, "contacts"],
-                [self.proprioception, "proprioception"],
-                [self.gps, "gps"],
-                [self.hydrodynamics, "hydrodynamics"]
-        ]:
-            data.log(times, folder, name, extension)
 
     def plot(self, times):
         """Plot"""
@@ -195,62 +239,62 @@ class ContactsArray(ContactsArrayCy):
 
     def plot_ground_reaction_forces(self, times):
         """Plot ground reaction forces"""
-        plt.figure("Ground reaction forces")
+        plt.figure('Ground reaction forces')
         for sensor_i in range(self.size(1)):
             data = np.asarray(self.reaction_all(sensor_i))
             plt.plot(
                 times,
                 np.linalg.norm(data, axis=-1)[:len(times)],
-                label="Leg_{}".format(sensor_i)
+                label='Leg_{}'.format(sensor_i)
             )
         plt.legend()
-        plt.xlabel("Times [s]")
-        plt.ylabel("Forces [N]")
+        plt.xlabel('Times [s]')
+        plt.ylabel('Forces [N]')
         plt.grid(True)
 
     def plot_friction_forces(self, times):
         """Plot friction forces"""
-        plt.figure("Friction forces")
+        plt.figure('Friction forces')
         for sensor_i in range(self.size(1)):
             data = np.asarray(self.friction_all(sensor_i))
             plt.plot(
                 times,
                 np.linalg.norm(data, axis=-1)[:len(times)],
-                label="Leg_{}".format(sensor_i)
+                label='Leg_{}'.format(sensor_i)
             )
         plt.legend()
-        plt.xlabel("Times [s]")
-        plt.ylabel("Forces [N]")
+        plt.xlabel('Times [s]')
+        plt.ylabel('Forces [N]')
         plt.grid(True)
 
     def plot_friction_forces_ori(self, times, ori):
         """Plot friction forces"""
-        plt.figure("Friction forces (ori={})".format(ori))
+        plt.figure('Friction forces (ori={})'.format(ori))
         for sensor_i in range(self.size(1)):
             data = np.asarray(self.friction_all(sensor_i))
             plt.plot(
                 times,
                 data[:len(times), ori],
-                label="Leg_{}".format(sensor_i)
+                label='Leg_{}'.format(sensor_i)
             )
         plt.legend()
-        plt.xlabel("Times [s]")
-        plt.ylabel("Forces [N]")
+        plt.xlabel('Times [s]')
+        plt.ylabel('Forces [N]')
         plt.grid(True)
 
     def plot_total_forces(self, times):
         """Plot contact forces"""
-        plt.figure("Contact total forces")
+        plt.figure('Contact total forces')
         for sensor_i in range(self.size(1)):
             data = np.asarray(self.total_all(sensor_i))
             plt.plot(
                 times,
                 np.linalg.norm(data, axis=-1)[:len(times)],
-                label="Leg_{}".format(sensor_i)
+                label='Leg_{}'.format(sensor_i)
             )
         plt.legend()
-        plt.xlabel("Times [s]")
-        plt.ylabel("Forces [N]")
+        plt.xlabel('Times [s]')
+        plt.ylabel('Forces [N]')
         plt.grid(True)
 
 
@@ -270,116 +314,116 @@ class ProprioceptionArray(ProprioceptionArrayCy):
 
     def plot_positions(self, times):
         """Plot ground reaction forces"""
-        plt.figure("Joints positions")
+        plt.figure('Joints positions')
         for joint_i in range(self.size(1)):
             plt.plot(
                 times,
                 np.asarray(self.positions_all())[:len(times), joint_i],
-                label="Joint_{}".format(joint_i)
+                label='Joint_{}'.format(joint_i)
             )
         plt.legend()
-        plt.xlabel("Times [s]")
-        plt.ylabel("Joint position [rad]")
+        plt.xlabel('Times [s]')
+        plt.ylabel('Joint position [rad]')
         plt.grid(True)
 
     def plot_velocities(self, times):
         """Plot ground reaction forces"""
-        plt.figure("Joints velocities")
+        plt.figure('Joints velocities')
         for joint_i in range(self.size(1)):
             plt.plot(
                 times,
                 np.asarray(self.velocities_all())[:len(times), joint_i],
-                label="Joint_{}".format(joint_i)
+                label='Joint_{}'.format(joint_i)
             )
         plt.legend()
-        plt.xlabel("Times [s]")
-        plt.ylabel("Joint velocity [rad/s]")
+        plt.xlabel('Times [s]')
+        plt.ylabel('Joint velocity [rad/s]')
         plt.grid(True)
 
     def plot_forces(self, times):
         """Plot ground reaction forces"""
-        plt.figure("Joints forces")
+        plt.figure('Joints forces')
         for joint_i in range(self.size(1)):
             data = np.linalg.norm(np.asarray(self.forces_all()), axis=-1)
             plt.plot(
                 times,
                 data[:len(times), joint_i],
-                label="Joint_{}".format(joint_i)
+                label='Joint_{}'.format(joint_i)
             )
         plt.legend()
-        plt.xlabel("Times [s]")
-        plt.ylabel("Joint force [N]")
+        plt.xlabel('Times [s]')
+        plt.ylabel('Joint force [N]')
         plt.grid(True)
 
     def plot_torques(self, times):
         """Plot ground reaction torques"""
-        plt.figure("Joints torques")
+        plt.figure('Joints torques')
         for joint_i in range(self.size(1)):
             data = np.linalg.norm(np.asarray(self.torques_all()), axis=-1)
             plt.plot(
                 times,
                 data[:len(times), joint_i],
-                label="Joint_{}".format(joint_i)
+                label='Joint_{}'.format(joint_i)
             )
         plt.legend()
-        plt.xlabel("Times [s]")
-        plt.ylabel("Joint torque [Nm]")
+        plt.xlabel('Times [s]')
+        plt.ylabel('Joint torque [Nm]')
         plt.grid(True)
 
     def plot_motor_torques(self, times):
         """Plot ground reaction forces"""
-        plt.figure("Joints motor torques")
+        plt.figure('Joints motor torques')
         for joint_i in range(self.size(1)):
             plt.plot(
                 times,
                 np.asarray(self.motor_torques())[:len(times), joint_i],
-                label="Joint_{}".format(joint_i)
+                label='Joint_{}'.format(joint_i)
             )
         plt.legend()
-        plt.xlabel("Times [s]")
-        plt.ylabel("Joint torque [Nm]")
+        plt.xlabel('Times [s]')
+        plt.ylabel('Joint torque [Nm]')
         plt.grid(True)
 
     def plot_active_torques(self, times):
         """Plot joints active torques"""
-        plt.figure("Joints active torques")
+        plt.figure('Joints active torques')
         for joint_i in range(self.size(1)):
             plt.plot(
                 times,
                 np.asarray(self.active_torques())[:len(times), joint_i],
-                label="Joint_{}".format(joint_i)
+                label='Joint_{}'.format(joint_i)
             )
         plt.legend()
-        plt.xlabel("Times [s]")
-        plt.ylabel("Joint torque [Nm]")
+        plt.xlabel('Times [s]')
+        plt.ylabel('Joint torque [Nm]')
         plt.grid(True)
 
     def plot_spring_torques(self, times):
         """Plot joints spring torques"""
-        plt.figure("Joints spring torques")
+        plt.figure('Joints spring torques')
         for joint_i in range(self.size(1)):
             plt.plot(
                 times,
                 np.asarray(self.spring_torques())[:len(times), joint_i],
-                label="Joint_{}".format(joint_i)
+                label='Joint_{}'.format(joint_i)
             )
         plt.legend()
-        plt.xlabel("Times [s]")
-        plt.ylabel("Joint torque [Nm]")
+        plt.xlabel('Times [s]')
+        plt.ylabel('Joint torque [Nm]')
         plt.grid(True)
 
     def plot_damping_torques(self, times):
         """Plot joints damping torques"""
-        plt.figure("Joints damping torques")
+        plt.figure('Joints damping torques')
         for joint_i in range(self.size(1)):
             plt.plot(
                 times,
                 np.asarray(self.damping_torques())[:len(times), joint_i],
-                label="Joint_{}".format(joint_i)
+                label='Joint_{}'.format(joint_i)
             )
         plt.legend()
-        plt.xlabel("Times [s]")
-        plt.ylabel("Joint torque [Nm]")
+        plt.xlabel('Times [s]')
+        plt.ylabel('Joint torque [Nm]')
         plt.grid(True)
 
 
@@ -393,33 +437,33 @@ class GpsArray(GpsArrayCy):
 
     def plot_base_position(self, times, xaxis=0, yaxis=1):
         """Plot"""
-        plt.figure("GPS position")
+        plt.figure('GPS position')
         for link_i in range(self.size(1)):
             data = np.asarray(self.urdf_positions())[:len(times), link_i]
             plt.plot(
                 data[:, xaxis],
                 data[:, yaxis],
-                label="Link_{}".format(link_i)
+                label='Link_{}'.format(link_i)
             )
         plt.legend()
-        plt.xlabel("Position [m]")
-        plt.ylabel("Position [m]")
-        plt.axis("equal")
+        plt.xlabel('Position [m]')
+        plt.ylabel('Position [m]')
+        plt.axis('equal')
         plt.grid(True)
 
     def plot_base_velocity(self, times):
         """Plot"""
-        plt.figure("GPS velocities")
+        plt.figure('GPS velocities')
         for link_i in range(self.size(1)):
             data = np.asarray(self.com_lin_velocities())[:len(times), link_i]
             plt.plot(
                 times,
                 np.linalg.norm(data, axis=-1),
-                label="Link_{}".format(link_i)
+                label='Link_{}'.format(link_i)
             )
         plt.legend()
-        plt.xlabel("Time [s]")
-        plt.ylabel("Velocity [m/s]")
+        plt.xlabel('Time [s]')
+        plt.ylabel('Velocity [m/s]')
         plt.grid(True)
 
 
@@ -433,28 +477,28 @@ class HydrodynamicsArray(HydrodynamicsArrayCy):
 
     def plot_forces(self, times):
         """Plot"""
-        plt.figure("Hydrodynamic forces")
+        plt.figure('Hydrodynamic forces')
         for link_i in range(self.size(1)):
             data = np.asarray(self.forces())[:len(times), link_i]
             plt.plot(
                 times,
                 np.linalg.norm(data, axis=-1),
-                label="Link_{}".format(link_i)
+                label='Link_{}'.format(link_i)
             )
-        plt.xlabel("Time [s]")
-        plt.ylabel("Forces [N]")
+        plt.xlabel('Time [s]')
+        plt.ylabel('Forces [N]')
         plt.grid(True)
 
     def plot_torques(self, times):
         """Plot"""
-        plt.figure("Hydrodynamic torques")
+        plt.figure('Hydrodynamic torques')
         for link_i in range(self.size(1)):
             data = np.asarray(self.torques())[:len(times), link_i]
             plt.plot(
                 times,
                 np.linalg.norm(data, axis=-1),
-                label="Link_{}".format(link_i)
+                label='Link_{}'.format(link_i)
             )
-        plt.xlabel("Time [s]")
-        plt.ylabel("Torques [Nm]")
+        plt.xlabel('Time [s]')
+        plt.ylabel('Torques [Nm]')
         plt.grid(True)

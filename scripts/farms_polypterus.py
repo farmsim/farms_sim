@@ -35,8 +35,8 @@ def profile():
     """Profile with cProfile"""
     import cProfile
     import pstats
-    cProfile.run("main()", "simulation.profile")
-    pstat = pstats.Stats("simulation.profile")
+    cProfile.run('main()', 'simulation.profile')
+    pstat = pstats.Stats('simulation.profile')
     pstat.sort_stats('time').print_stats(30)
     pstat.sort_stats('cumtime').print_stats(30)
 
@@ -54,4 +54,4 @@ if __name__ == '__main__':
     # main()
     profile()
     # pycall()
-    print("Total simulation time: {} [s]".format(time.time() - TIC))
+    print('Total simulation time: {} [s]'.format(time.time() - TIC))

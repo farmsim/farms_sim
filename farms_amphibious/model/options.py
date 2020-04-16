@@ -19,22 +19,27 @@ class AmphibiousOptions(Options):
         self.show_hydrodynamics = kwargs.pop('show_hydrodynamics')
         self.transition = kwargs.pop('transition')
         if kwargs:
-            raise Exception("Unknown kwargs: {}".format(kwargs))
+            raise Exception('Unknown kwargs: {}'.format(kwargs))
 
     @classmethod
-    def from_options(cls, kwargs):
+    def default(cls):
+        """Deafault options"""
+        return cls.from_options({})
+
+    @classmethod
+    def from_options(cls, kwargs=None):
         """From options"""
         options = {}
         options['morphology'] = kwargs.pop(
-            "morphology",
+            'morphology',
             AmphibiousMorphologyOptions.from_options(kwargs)
         )
         options['spawn'] = kwargs.pop(
-            "spawn",
+            'spawn',
             AmphibiousSpawnOptions.from_options(kwargs)
         )
         options['physics'] = kwargs.pop(
-            "physics",
+            'physics',
             AmphibiousPhysicsOptions.from_options(kwargs)
         )
         if 'control' in kwargs:
@@ -62,11 +67,11 @@ class AmphibiousOptions(Options):
                     [0 for _ in range(options['morphology'].n_joints())]
                 )
 
-        options['collect_gps'] = kwargs.pop("collect_gps", False)
-        options['show_hydrodynamics'] = kwargs.pop("show_hydrodynamics", False)
-        options['transition'] = kwargs.pop("transition", False)
+        options['collect_gps'] = kwargs.pop('collect_gps', False)
+        options['show_hydrodynamics'] = kwargs.pop('show_hydrodynamics', False)
+        options['transition'] = kwargs.pop('transition', False)
         if kwargs:
-            raise Exception("Unknown kwargs: {}".format(kwargs))
+            raise Exception('Unknown kwargs: {}'.format(kwargs))
         return cls(**options)
 
 
@@ -86,17 +91,17 @@ class AmphibiousMorphologyOptions(Options):
         self.links_swimming = kwargs.pop('links_swimming')
         self.links_no_collisions = kwargs.pop('links_no_collisions')
         if kwargs:
-            raise Exception("Unknown kwargs: {}".format(kwargs))
+            raise Exception('Unknown kwargs: {}'.format(kwargs))
 
     @classmethod
     def from_options(cls, kwargs):
         """From options"""
         options = {}
         options['mesh_directory'] = kwargs.pop('mesh_directory', '')
-        options['density'] = kwargs.pop("density", 1000.0)
-        options['n_joints_body'] = kwargs.pop("n_joints_body", 11)
-        options['n_dof_legs'] = kwargs.pop("n_dof_legs", 4)
-        options['n_legs'] = kwargs.pop("n_legs", 4)
+        options['density'] = kwargs.pop('density', 1000.0)
+        options['n_joints_body'] = kwargs.pop('n_joints_body', 11)
+        options['n_dof_legs'] = kwargs.pop('n_dof_legs', 4)
+        options['n_legs'] = kwargs.pop('n_legs', 4)
         convention = AmphibiousConvention(**options)
         options['links'] = kwargs.pop('links', [
             convention.bodylink2name(i)
@@ -169,23 +174,23 @@ class AmphibiousSpawnOptions(Options):
         self.joints_positions = kwargs.pop('joints_positions')
         self.joints_velocities = kwargs.pop('joints_velocities')
         if kwargs:
-            raise Exception("Unknown kwargs: {}".format(kwargs))
+            raise Exception('Unknown kwargs: {}'.format(kwargs))
 
     @classmethod
     def from_options(cls, kwargs):
         """From options"""
         options = {}
         # Position in [m]
-        options['position'] = kwargs.pop("spawn_position", [0, 0, 0.1])
+        options['position'] = kwargs.pop('spawn_position', [0, 0, 0.1])
         # Orientation in [rad] (Euler angles)
-        options['orientation'] = kwargs.pop("spawn_orientation", [0, 0, 0])
+        options['orientation'] = kwargs.pop('spawn_orientation', [0, 0, 0])
         # Linear velocity in [m/s]
-        options['velocity_lin'] = kwargs.pop("spawn_velocity_lin", [0, 0, 0])
+        options['velocity_lin'] = kwargs.pop('spawn_velocity_lin', [0, 0, 0])
         # Angular velocity in [rad/s] (Euler angles)
-        options['velocity_ang'] = kwargs.pop("spawn_velocity_ang", [0, 0, 0])
+        options['velocity_ang'] = kwargs.pop('spawn_velocity_ang', [0, 0, 0])
         # Joints positions
-        options['joints_positions'] = kwargs.pop("joints_positions", None)
-        options['joints_velocities'] = kwargs.pop("joints_velocities", None)
+        options['joints_positions'] = kwargs.pop('joints_positions', None)
+        options['joints_velocities'] = kwargs.pop('joints_velocities', None)
         return cls(**options)
 
 
@@ -202,29 +207,29 @@ class AmphibiousPhysicsOptions(Options):
         self.buoyancy = kwargs.pop('buoyancy')
         self.water_surface = kwargs.pop('water_surface')
         if kwargs:
-            raise Exception("Unknown kwargs: {}".format(kwargs))
+            raise Exception('Unknown kwargs: {}'.format(kwargs))
 
     @classmethod
     def from_options(cls, kwargs):
         """From options"""
         options = {}
-        options['viscous'] = kwargs.pop("viscous", False)
-        options['resistive'] = kwargs.pop("resistive", False)
+        options['viscous'] = kwargs.pop('viscous', False)
+        options['resistive'] = kwargs.pop('resistive', False)
         options['viscous_coefficients'] = kwargs.pop(
-            "viscous_coefficients",
+            'viscous_coefficients',
             None
         )
         options['resistive_coefficients'] = kwargs.pop(
-            "resistive_coefficients",
+            'resistive_coefficients',
             None
         )
-        options['sph'] = kwargs.pop("sph", False)
+        options['sph'] = kwargs.pop('sph', False)
         options['buoyancy'] = kwargs.pop(
-            "buoyancy",
+            'buoyancy',
             (options['resistive'] or options['viscous']) and not options['sph']
         )
         options['water_surface'] = kwargs.pop(
-            "water_surface",
+            'water_surface',
             options['viscous'] or options['resistive'] or options['sph']
         )
         return cls(**options)
@@ -239,26 +244,26 @@ class AmphibiousControlOptions(Options):
         self.drives = AmphibiousDrives(**kwargs.pop('drives'))
         self.network = AmphibiousNetworkOptions(**kwargs.pop('network'))
         if kwargs:
-            raise Exception("Unknown kwargs: {}".format(kwargs))
+            raise Exception('Unknown kwargs: {}'.format(kwargs))
 
     @classmethod
     def from_options(cls, kwargs):
         """From options"""
         options = {}
         options['kinematics_file'] = kwargs.pop(
-            "kinematics_file",
-            ""
+            'kinematics_file',
+            ''
         )
         options['drives'] = kwargs.pop(
-            "drives",
+            'drives',
             AmphibiousDrives.from_options(kwargs)
         )
         # self.joints_controllers = kwargs.pop(
-        #     "joints_controllers",
+        #     'joints_controllers',
         #     AmphibiousJointsControllers(**options)
         # )
         options['network'] = kwargs.pop(
-            "network",
+            'network',
             AmphibiousNetworkOptions.from_options(kwargs)
         )
         return cls(**options)
@@ -274,7 +279,7 @@ class AmphibiousDrives(Options):
         self.left = kwargs.pop('left')
         self.right = kwargs.pop('right')
         if kwargs:
-            raise Exception("Unknown kwargs: {}".format(kwargs))
+            raise Exception('Unknown kwargs: {}'.format(kwargs))
 
     @classmethod
     def from_options(cls, kwargs):
@@ -292,12 +297,12 @@ class AmphibiousDrives(Options):
 
 #     def __init__(self, **kwargs):
 #         super(AmphibiousJointsControllers, self).__init__()
-#         self.body_p = kwargs.pop("body_p", 1e-1)
-#         self.body_d = kwargs.pop("body_d", 1e0)
-#         self.body_f = kwargs.pop("body_f", 1e1)
-#         self.legs_p = kwargs.pop("legs_p", 1e-1)
-#         self.legs_d = kwargs.pop("legs_d", 1e0)
-#         self.legs_f = kwargs.pop("legs_f", 1e1)
+#         self.body_p = kwargs.pop('body_p', 1e-1)
+#         self.body_d = kwargs.pop('body_d', 1e0)
+#         self.body_f = kwargs.pop('body_f', 1e1)
+#         self.legs_p = kwargs.pop('legs_p', 1e-1)
+#         self.legs_d = kwargs.pop('legs_d', 1e0)
+#         self.legs_f = kwargs.pop('legs_f', 1e1)
 
 
 class AmphibiousNetworkOptions(Options):
@@ -313,26 +318,26 @@ class AmphibiousNetworkOptions(Options):
         self.joints = AmphibiousJointsOptions(**joints)
         self.sensors = kwargs.pop('sensors')
         if kwargs:
-            raise Exception("Unknown kwargs: {}".format(kwargs))
+            raise Exception('Unknown kwargs: {}'.format(kwargs))
 
     @classmethod
     def from_options(cls, kwargs):
         """From options"""
         options = {}
         options['oscillators'] = kwargs.pop(
-            "oscillators",
+            'oscillators',
             AmphibiousOscillatorOptions.from_options(kwargs)
         )
         options['connectivity'] = kwargs.pop(
-            "connectivity",
+            'connectivity',
             AmphibiousConnectivityOptions.from_options(kwargs)
         )
         options['joints'] = kwargs.pop(
-            "joints",
+            'joints',
             AmphibiousJointsOptions.from_options(kwargs)
         )
         options['sensors'] = kwargs.pop(
-            "sensors",
+            'sensors',
             None
         )
         return cls(**options)
@@ -362,20 +367,20 @@ class AmphibiousOscillatorOptions(Options):
         self.body_freqs = kwargs.pop('body_freqs')
         self.legs_freqs = kwargs.pop('legs_freqs')
         if kwargs:
-            raise Exception("Unknown kwargs: {}".format(kwargs))
+            raise Exception('Unknown kwargs: {}'.format(kwargs))
 
     @classmethod
     def from_options(cls, kwargs):
         """From options"""
         options = {}
-        options['body_head_amplitude'] = kwargs.pop("body_head_amplitude", 0)
-        options['body_tail_amplitude'] = kwargs.pop("body_tail_amplitude", 0)
-        options['body_stand_amplitude'] = kwargs.pop("body_stand_amplitude", 0.2)
+        options['body_head_amplitude'] = kwargs.pop('body_head_amplitude', 0)
+        options['body_tail_amplitude'] = kwargs.pop('body_tail_amplitude', 0)
+        options['body_stand_amplitude'] = kwargs.pop('body_stand_amplitude', 0.2)
         options['_legs_amplitudes'] = kwargs.pop(
-            "legs_amplitude",
-            [0.8, np.pi/32, np.pi/4, np.pi/8]
+            'legs_amplitude',
+            [np.pi/4, np.pi/32, np.pi/4, np.pi/8]
         )
-        options['_body_stand_shift'] = kwargs.pop("body_stand_shift", np.pi/4)
+        options['_body_stand_shift'] = kwargs.pop('body_stand_shift', np.pi/4)
         options['body_nominal_amplitudes'] = kwargs.pop(
             'body_nominal_amplitudes',
             None
@@ -471,9 +476,9 @@ class AmphibiousConnectivityOptions(Options):
 
     def __init__(self, **kwargs):
         super(AmphibiousConnectivityOptions, self).__init__()
-        self.body_head_amplitude = kwargs.pop("body_head_amplitude")
-        self.body_phase_bias = kwargs.pop("body_phase_bias")
-        self.leg_phase_follow = kwargs.pop("leg_phase_follow")
+        self.body_head_amplitude = kwargs.pop('body_head_amplitude')
+        self.body_phase_bias = kwargs.pop('body_phase_bias')
+        self.leg_phase_follow = kwargs.pop('leg_phase_follow')
         self.weight_osc_body = kwargs.pop('weight_osc_body')
         self.weight_osc_legs_internal = kwargs.pop('weight_osc_legs_internal')
         self.weight_osc_legs_opposite = kwargs.pop('weight_osc_legs_opposite')
@@ -484,19 +489,19 @@ class AmphibiousConnectivityOptions(Options):
         self.weight_sens_hydro_freq = kwargs.pop('weight_sens_hydro_freq')
         self.weight_sens_hydro_amp = kwargs.pop('weight_sens_hydro_amp')
         if kwargs:
-            raise Exception("Unknown kwargs: {}".format(kwargs))
+            raise Exception('Unknown kwargs: {}'.format(kwargs))
 
     @classmethod
     def from_options(cls, kwargs):
         """From options"""
         options = {}
-        options['body_head_amplitude'] = kwargs.pop("body_head_amplitude", 0)
+        options['body_head_amplitude'] = kwargs.pop('body_head_amplitude', 0)
         options['body_phase_bias'] = kwargs.pop(
-            "body_phase_bias",
+            'body_phase_bias',
             None
         )
         options['leg_phase_follow'] = kwargs.pop(
-            "leg_phase_follow",
+            'leg_phase_follow',
             np.pi
         )
         for option_name, default_value in [
@@ -520,33 +525,33 @@ class AmphibiousJointsOptions(Options):
 
     def __init__(self, **kwargs):
         super(AmphibiousJointsOptions, self).__init__()
-        self._legs_offsets = kwargs.pop("_legs_offsets")
-        self._legs_offsets_swimming = kwargs.pop("_legs_offsets_swimming")
-        self.gain_amplitude = kwargs.pop("gain_amplitude")
-        self.gain_offset = kwargs.pop("gain_offset")
+        self._legs_offsets = kwargs.pop('_legs_offsets')
+        self._legs_offsets_swimming = kwargs.pop('_legs_offsets_swimming')
+        self.gain_amplitude = kwargs.pop('gain_amplitude')
+        self.gain_offset = kwargs.pop('gain_offset')
         # Joints offsets
-        self.offsets = kwargs.pop("offsets")
-        self.legs_offsets = kwargs.pop("legs_offsets")
-        self._body_offset = kwargs.pop("_body_offset")
-        self.body_offsets = kwargs.pop("body_offsets")
+        self.offsets = kwargs.pop('offsets')
+        self.legs_offsets = kwargs.pop('legs_offsets')
+        self._body_offset = kwargs.pop('_body_offset')
+        self.body_offsets = kwargs.pop('body_offsets')
         if kwargs:
-            raise Exception("Unknown kwargs: {}".format(kwargs))
+            raise Exception('Unknown kwargs: {}'.format(kwargs))
 
     @classmethod
     def from_options(cls, kwargs):
         """From options"""
         options = {}
         options['_legs_offsets'] = kwargs.pop(
-            "legs_offsets_walking",
+            'legs_offsets_walking',
             [0, np.pi/32, 0, np.pi/8]
         )
         options['_legs_offsets_swimming'] = kwargs.pop(
-            "legs_offsets_swimming",
+            'legs_offsets_swimming',
             [-2*np.pi/5, 0, 0, 0]
         )
-        options['gain_amplitude'] = kwargs.pop("gain_amplitude", None)
-        options['gain_offset'] = kwargs.pop("gain_offset", None)
-        options['offsets'] = kwargs.pop("joints_offsets", None)
+        options['gain_amplitude'] = kwargs.pop('gain_amplitude', None)
+        options['gain_offset'] = kwargs.pop('gain_offset', None)
+        options['offsets'] = kwargs.pop('joints_offsets', None)
         # Joints offsets
         options['legs_offsets'] = None
         options['_body_offset'] = 0

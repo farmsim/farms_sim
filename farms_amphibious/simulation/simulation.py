@@ -1,5 +1,6 @@
 """Amphibious simulation"""
 
+import os
 import time
 import numpy as np
 
@@ -155,7 +156,7 @@ class AmphibiousSimulation(Simulation):
             if self.animat().options.transition:
                 time_based_drive(
                     sim_step,
-                    self.options.n_iterations(),
+                    self.options.n_iterations,
                     self.interface
                 )
 
@@ -169,7 +170,7 @@ class AmphibiousSimulation(Simulation):
         self.animat().sensors.update(sim_step)
 
         # Physics step
-        if sim_step < self.options.n_iterations()-1:
+        if sim_step < self.options.n_iterations-1:
             # Swimming
             swimming_step(sim_step, self.animat())
 
@@ -244,6 +245,43 @@ class AmphibiousSimulation(Simulation):
             )
             self.interface.user_params.drive_turn().changed = False
 
+    def postprocess(self, iteration, log_path='', plot=False, video=''):
+        """Plot after simulation"""
+        times = np.arange(
+            0,
+            self.options.timestep*self.options.n_iterations,
+            self.options.timestep
+        )[:iteration]
+
+        # Log
+        if log_path:
+            pylog.info('Saving data to {}'.format(log_path))
+            self.animat().data.to_file(
+                os.path.join(
+                    log_path,
+                    'simulation.hdf5'
+                ),
+                iteration,
+            )
+            self.options.save(os.path.join(
+                log_path,
+                'simulation_options.yaml'
+            ))
+            self.animat().options.save(os.path.join(
+                log_path,
+                'animat_options.yaml'
+            ))
+
+        # Plot
+        if plot:
+            self.animat().data.plot(times)
+
+        # Record video
+        if video:
+            self.interface.video.save(
+                '{}.avi'.format(video)
+            )
+
 
 def main(simulation_options=None, animat_options=None):
     """Main"""
@@ -255,23 +293,23 @@ def main(simulation_options=None, animat_options=None):
         animat_options = AmphibiousOptions()
 
     # Setup simulation
-    pylog.debug("Creating simulation")
+    pylog.debug('Creating simulation')
     sim = AmphibiousSimulation(
         simulation_options=simulation_options,
         animat=Amphibious(
             animat_options,
             simulation_options.timestep,
-            simulation_options.n_iterations(),
+            simulation_options.n_iterations,
             simulation_options.units
         )
     )
 
     # Run simulation
-    pylog.debug("Running simulation")
+    pylog.debug('Running simulation')
     sim.run()
 
     # Analyse results
-    pylog.debug("Analysing simulation")
+    pylog.debug('Analysing simulation')
     sim.postprocess(
         iteration=sim.iteration,
         plot=simulation_options.plot,
@@ -281,7 +319,7 @@ def main(simulation_options=None, animat_options=None):
     )
     if simulation_options.log_path:
         np.save(
-            simulation_options.log_path+"/hydrodynamics.npy",
+            simulation_options.log_path+'/hydrodynamics.npy',
             sim.models.animat.data.sensors.hydrodynamics.array
         )
 
@@ -300,7 +338,7 @@ def main_parallel():
 
     # Run simulation
     pool.map(main, [sim_options, sim_options])
-    pylog.debug("Done")
+    pylog.debug('Done')
 
 
 if __name__ == '__main__':

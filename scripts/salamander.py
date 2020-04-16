@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
 """Run salamander simulation with bullet"""
 
+import os
 import time
 import matplotlib.pyplot as plt
+
+import farms_pylog as pylog
 from farms_models.utils import get_sdf_path
 from farms_bullet.simulation.options import SimulationOptions
 from farms_amphibious.model.options import AmphibiousOptions
-from farms_amphibious.experiment.simulation import (
-    simulation,
+from farms_amphibious.experiment.simulation import simulation, profile
+from farms_amphibious.experiment.options import (
     amphibious_options,
-    profile,
     get_animat_options,
 )
-import farms_pylog as pylog
 
 
 def main():
@@ -58,13 +59,26 @@ def main():
     simulation_options = SimulationOptions.load(simulation_options_filename)
 
     # Simulation
-    profile(
+    sim = profile(
         function=simulation,
         animat_sdf=sdf,
         animat_options=animat_options,
         simulation_options=simulation_options,
         arena_sdf=arena_sdf,
         use_controller=True,
+    )
+
+    # Post-processing
+    pylog.info('Simulation post-processing')
+    video_name = ''
+    log_path = 'salamander_results'
+    if not os.path.isdir(log_path):
+        os.mkdir(log_path)
+    sim.postprocess(
+        iteration=sim.iteration,
+        log_path=log_path,
+        plot=False,
+        video=video_name if not sim.options.headless else ''
     )
 
     # Plot

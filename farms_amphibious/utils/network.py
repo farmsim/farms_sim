@@ -59,10 +59,10 @@ def draw_nodes(positions, radius, color, prefix):
             position[0], position[1],
             '{}{}'.format(prefix, i),
             # transform=axes.transAxes,
-            # va="bottom",
-            # ha="left",
-            va="center",
-            ha="center",
+            # va='bottom',
+            # ha='left',
+            va='center',
+            ha='center',
             fontsize=8,
             color='k',
         )
@@ -207,8 +207,12 @@ def plot_network(n_oscillators, data, **kwargs):
         lambda osc0, osc1: True
     )
     connections = np.array([
-        connection
-        for connection in data.network.connectivity.array
+        [connection[0], connection[1], weight, phase]
+        for connection, weight, phase in zip(
+            data.network.osc_connectivity.connections.array,
+            data.network.osc_connectivity.weights.array,
+            data.network.osc_connectivity.desired_phases.array,
+        )
         if osc_conn_cond(connection[0], connection[1])
     ])
     options = {}
@@ -255,8 +259,11 @@ def plot_network(n_oscillators, data, **kwargs):
         lambda osc0, osc1: True
     )
     connections = np.array([
-        connection
-        for connection in data.network.contacts_connectivity.array
+        [connection[0], connection[1], weight]
+        for connection, weight in zip(
+            data.network.contacts_connectivity.connections.array,
+            data.network.contacts_connectivity.weights.array,
+        )
         if contact_conn_cond(connection[0], connection[1])
     ])
     options = {}
@@ -292,8 +299,12 @@ def plot_network(n_oscillators, data, **kwargs):
         lambda osc0, osc1: True
     )
     connections = np.array([
-        connection
-        for connection in data.network.hydro_connectivity.array
+        [connection[0], connection[1], frequency, amplitude]
+        for connection, frequency, amplitude in zip(
+            data.network.hydro_connectivity.connections.array,
+            data.network.hydro_connectivity.frequency.array,
+            data.network.hydro_connectivity.amplitude.array,
+        )
         if hydro_conn_cond(connection[0], connection[1])
     ])
     options = {}
@@ -321,7 +332,7 @@ def plot_network(n_oscillators, data, **kwargs):
         radius=radius,
         connectivity=[
             connection
-            for connection in data.network.hydro_connectivity.array
+            for connection in data.network.hydro_connectivity.connections.array
             if hydro_conn_cond(connection[0], connection[1])
         ],
         prefix='H_',
@@ -343,12 +354,12 @@ def plot_network(n_oscillators, data, **kwargs):
     ] = [
         kwargs.pop(key, True)
         for key in [
-                'show_oscillators',
-                'show_contacts',
-                'show_hydrodynamics',
-                'show_oscillator_connectivity',
-                'show_contacts_connectivity',
-                'show_hydrodynamics_connectivity',
+            'show_oscillators',
+            'show_contacts',
+            'show_hydrodynamics',
+            'show_oscillator_connectivity',
+            'show_contacts_connectivity',
+            'show_hydrodynamics_connectivity',
         ]
     ]
     if show_oscillator_connectivity:
@@ -374,7 +385,7 @@ def plot_network(n_oscillators, data, **kwargs):
             axes.add_artist(text)
     if use_colorbar:
         divider = make_axes_locatable(axes)
-        cax = divider.append_axes("right", size="5%", pad=0.05)
+        cax = divider.append_axes('right', size='5%', pad=0.05)
         pylog.debug('{}: {}, {}'.format(title, vmin, vmax))
         plt.colorbar(
             mappable=cm.ScalarMappable(

@@ -7,20 +7,20 @@ import matplotlib.pyplot as plt
 
 def main():
     """Main"""
-    fish_name = "snake_prickleback"
-    version_name = "version3"
+    fish_name = 'snake_prickleback'
+    version_name = 'version3'
 
     # Kinematics data from fish
     kinematics_file = os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
-        "..",
-        "farms_bullet",
-        "experiments",
-        "fish",
+        '..',
+        'farms_bullet',
+        'experiments',
+        'fish',
         fish_name,
         version_name,
-        "kinematics",
-        "kinematics.csv"
+        'kinematics',
+        'kinematics.csv'
     )
     kinematics = np.loadtxt(kinematics_file)
     pose_fish = kinematics[:, :3]
@@ -40,22 +40,22 @@ def main():
     # Simulation results
     simulation_file = os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
-        "fish_results",
-        "gps.npy",
+        'fish_results',
+        'gps.npy',
     )
     simulation = np.load(simulation_file)
     pose_sim = simulation[:, 0, :3]
     pose_sim[:, :2] += pose_fish[0, :2] - pose_sim[0, :2]
 
     # Plot kinematics
-    plt.plot(pose_fish[:, 0], pose_fish[:, 1], label="Fish data")
+    plt.plot(pose_fish[:, 0], pose_fish[:, 1], label='Fish data')
 
     # Plot simulation results
-    plt.plot(pose_sim[:, 0], pose_sim[:, 1], label="Simulation data")
+    plt.plot(pose_sim[:, 0], pose_sim[:, 1], label='Simulation data')
 
     # Plot options
-    plt.xlabel("X axis [m]")
-    plt.ylabel("Y axis [m]")
+    plt.xlabel('X axis [m]')
+    plt.ylabel('Y axis [m]')
     plt.legend()
     plt.axis('equal')
     plt.grid(True)

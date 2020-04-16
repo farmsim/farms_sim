@@ -16,7 +16,7 @@ from farms_amphibious.model.data import (
     AmphibiousOscillatorNetworkState,
     AmphibiousData,
 )
-from farms_amphibious.network.network import NetworkODE
+from farms_amphibious.control.network import NetworkODE
 from farms_amphibious.experiment.simulation import profile
 from farms_amphibious.utils.network import plot_networks_maps
 import farms_pylog as pylog
@@ -44,7 +44,7 @@ def animat_options():
                     'body_head_amplitude': 0,
                     'body_tail_amplitude': 0,
                     'body_stand_amplitude': 0.2,
-                    'legs_amplitude': [0.8, np.pi/32, np.pi/4, np.pi/8],
+                    'legs_amplitude': [np.pi/4, np.pi/32, np.pi/4, np.pi/8],
                     'body_stand_shift': np.pi/4,
                 }
             ),
@@ -121,10 +121,14 @@ def analysis(data, times, morphology):
             'O_{} <- O_{} (w={}, theta={})'.format(
                 int(connection[0]+0.5),
                 int(connection[1]+0.5),
-                connection[2],
-                connection[3],
+                weight,
+                phase,
             )
-            for connection in data.network.connectivity.array
+            for connection, weight, phase in zip(
+                data.network.osc_connectivity.connections.array,
+                data.network.osc_connectivity.weights.array,
+                data.network.osc_connectivity.desired_phases.array,
+            )
         ])
     )
     pylog.info(
@@ -133,21 +137,28 @@ def analysis(data, times, morphology):
             'O_{} <- contact_{} (frequency_gain={})'.format(
                 int(connection[0]+0.5),
                 int(connection[1]+0.5),
-                connection[2],
+                weight,
             )
-            for connection in data.network.contacts_connectivity.array
+            for connection, weight in zip(
+                data.network.contacts_connectivity.connections.array,
+                data.network.contacts_connectivity.weights.array,
+            )
         ])
     )
     pylog.info(
         'Hydrodynamics connectivity information'
         + sep.join([
-            'O_{} <- link_{} (phase_gain={}, amplitude_gain={})'.format(
+            'O_{} <- link_{} (frequency_gain={}, amplitude_gain={})'.format(
                 int(connection[0]+0.5),
                 int(connection[1]+0.5),
-                connection[2],
-                connection[3],
+                frequency,
+                amplitude,
             )
-            for connection in data.network.hydro_connectivity.array
+            for connection, frequency, amplitude in zip(
+                data.network.hydro_connectivity.connections.array,
+                data.network.hydro_connectivity.frequency.array,
+                data.network.hydro_connectivity.amplitude.array,
+            )
         ])
     )
     sep = '\n'
@@ -160,9 +171,9 @@ def analysis(data, times, morphology):
             '  - Hydro connectivity shape: {}',
         ])).format(
             np.shape(data.network.oscillators.array),
-            np.shape(data.network.connectivity.array),
-            np.shape(data.network.contacts_connectivity.array),
-            np.shape(data.network.hydro_connectivity.array),
+            np.shape(data.network.osc_connectivity.connections.array),
+            np.shape(data.network.contacts_connectivity.connections.array),
+            np.shape(data.network.hydro_connectivity.connections.array),
         )
     )
 

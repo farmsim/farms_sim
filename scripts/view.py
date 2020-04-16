@@ -50,9 +50,9 @@ def main(args=None):
                 try:
                     _sort_key(arg)
                 except ValueError:
-                    print("Error: file name is not supported")
-                    print("filename format accepted is *_number.npz"
-                          " or *_number.hdf5")
+                    print('Error: file name is not supported')
+                    print('filename format accepted is *_number.npz'
+                          ' or *_number.hdf5')
                     sys.exit(1)
                 files.extend(glob.glob(arg))
                 continue
@@ -87,7 +87,7 @@ def main(args=None):
     do_later(m.trait_set, files=files, **kw)
     for script in scripts:
         do_later(m.run_script, script)
-    print("Configure")
+    print('Configure')
     m.configure_traits()
 
 

@@ -14,24 +14,24 @@ import farms_bullet
 
 def get_files_from_extension(directory, extension):
     """Get hdf5 files"""
-    print("Loading files from {}".format(directory))
+    print('Loading files from {}'.format(directory))
     files = [
         filename
         for filename in os.listdir(directory)
         if extension in filename
     ]
     indices = [
-        int("".join(filter(str.isdigit, filename.replace(extension, ""))))
+        int(''.join(filter(str.isdigit, filename.replace(extension, ''))))
         for filename in files
     ]
     files = [filename for _, filename in sorted(zip(indices, files))]
-    print("Found files:\n{}".format(files))
+    print('Found files:\n{}'.format(files))
     return files
 
 
 def open_hdf5_file(filename):
     """Open hdf5 file"""
-    print("Opening file {}".format(filename))
+    print('Opening file {}'.format(filename))
     return h5py.File(filename, 'r')
 
 
@@ -75,7 +75,7 @@ def particles_as_objects():
     # obj.select = True  # select object
 
     # Create collection
-    collection_name = "Particles"
+    collection_name = 'Particles'
     if collection_name not in bpy.data.collections:
         bpy.data.collections.new(collection_name)
     collection = bpy.data.collections[collection_name]
@@ -83,8 +83,8 @@ def particles_as_objects():
         bpy.context.scene.collection.children.link(collection)
 
     # # Create mesh
-    # mesh = bpy.data.meshes.new("mesh")  # add a new mesh
-    # obj = bpy.data.objects.new("MyObject", mesh)  # add a new object using the mesh
+    # mesh = bpy.data.meshes.new('mesh')  # add a new mesh
+    # obj = bpy.data.objects.new('MyObject', mesh)  # add a new object using the mesh
     # # Add mesh to collection
     # collection.objects.link(obj)
     # # mesh = bpy.context.object.data
@@ -108,7 +108,7 @@ def particles_as_objects():
     #     rotation=(0, 0, 0)
     # )
     # sphere = bpy.context.object
-    # sphere.name = "sphere"
+    # sphere.name = 'sphere'
     # sphere.parent = obj
 
     # # Dupliverts
@@ -116,18 +116,18 @@ def particles_as_objects():
 
     # # Particles
     # # bpy.ops.mesh.select_all(action='DESELECT')
-    # particles_mod = obj.modifiers.new(name="ParticleSystem", type='PARTICLE_SYSTEM')
+    # particles_mod = obj.modifiers.new(name='ParticleSystem', type='PARTICLE_SYSTEM')
     # particles_sys = particles_mod.particle_system
     # # obj.modifier_add(type='PARTICLE_SYSTEM')
     # # bpy.context.space_data.context = 'PARTICLES'
-    # bpy.data.particles["ParticleSettings"].emit_from = 'VERT'
-    # bpy.data.particles["ParticleSettings"].physics_type = 'NO'
+    # bpy.data.particles['ParticleSettings'].emit_from = 'VERT'
+    # bpy.data.particles['ParticleSettings'].physics_type = 'NO'
 
     # Create materials
     materials = [None for _ in range(10)]
     for i, _ in enumerate(materials):
         color = np.random.ranf(4)
-        color_name = "color{}".format(i)
+        color_name = 'color{}'.format(i)
         materials[i] = bpy.data.materials.new(name=color_name)
         materials[i].diffuse_color = color
 
@@ -149,13 +149,13 @@ def particles_as_objects():
     #     rotation=(0, 0, 0)
     # )
     sphere = bpy.context.object
-    sphere.name = "original_sphere"
+    sphere.name = 'original_sphere'
     collection.objects.link(sphere)
     spheres = [None for _ in verts]
 
     # # Add materials to base element
     # for i, material in enumerate(materials):
-    #     print("Setting material {}".format(i))
+    #     print('Setting material {}'.format(i))
     #     sphere.data.materials.append(material)
     # # for mat_slot in sphere.material_slots:
     # #     mat = mat_slot.material
@@ -167,13 +167,13 @@ def particles_as_objects():
 
     # Copy sphere
     for i, vert in enumerate(verts):
-        print("Copying sphere {}".format(i))
+        print('Copying sphere {}'.format(i))
         # spheres[i] = sphere.copy()
-        spheres[i] = bpy.data.objects.new("sphere_{}".format(i), sphere.data)
+        spheres[i] = bpy.data.objects.new('sphere_{}'.format(i), sphere.data)
 
     # Link to collection
     for i, vert in enumerate(verts):
-        print("Linking sphere to collection {}".format(i))
+        print('Linking sphere to collection {}'.format(i))
         collection.objects.link(spheres[i])
 
     # Set positions
@@ -184,7 +184,7 @@ def particles_as_objects():
 
     # Set materials
     for i, vert in enumerate(verts):
-        print("Setting material {}".format(i))
+        print('Setting material {}'.format(i))
         material = materials[np.random.randint(low=0, high=9)]
         for _material in spheres[i].material_slots:
             _material.link = 'OBJECT'
@@ -192,7 +192,7 @@ def particles_as_objects():
 
     # # Keyframes
     # for i, vert in enumerate(verts):
-    #     print("Setting location and keyframes {}".format(i))
+    #     print('Setting location and keyframes {}'.format(i))
     #     for frame in range(10):
     #         # Set location
     #         spheres[i].location[0] = vert[0] + 10*np.sin(2*np.pi*0.1*frame)
@@ -215,7 +215,7 @@ def particles_as_objects():
 
     toc = time.time()
 
-    print("Total time for {} particles: {} [s]".format(len(verts), toc-tic))
+    print('Total time for {} particles: {} [s]'.format(len(verts), toc-tic))
 
 
 class FluidPlotter(object):
@@ -232,7 +232,7 @@ class FluidPlotter(object):
         particle_systems = self.domain.evaluated_get(self.degp).particle_systems
         particles = particle_systems[0].particles
         totalParticles = len(particles)
-        print("N_particles = {}".format(totalParticles))
+        print('N_particles = {}'.format(totalParticles))
 
         scene = bpy.context.scene
         cFrame = scene.frame_current
@@ -246,14 +246,14 @@ class FluidPlotter(object):
         # additionally set the location of all particle locations to flatList
         print(np.shape(self.data))
         frame = np.clip(cFrame, 0, len(self.data)-1)
-        particles.foreach_set("location", self.data[frame].flatten())
+        particles.foreach_set('location', self.data[frame].flatten())
 
         # # sin function as location of particles
         # data = 5.0*np.sin(cFrame/20.0)
         # flatList = [data]*(3*totalParticles)
 
         # # additionally set the location of all particle locations to flatList
-        # particles.foreach_set("location", flatList)
+        # particles.foreach_set('location', flatList)
         # print(np.shape(flatList))
 
 
@@ -268,19 +268,19 @@ def particles_as_particles():
     # Load data
     directory = (
         os.path.dirname(farms_bullet.__file__)
-        + "/../scripts/benchmark_swimming_f0d0_a0d0"
+        + '/../scripts/benchmark_swimming_f0d0_a0d0'
     )
-    files = get_files_from_extension(directory, extension=".hdf5")
+    files = get_files_from_extension(directory, extension='.hdf5')
     n_body = 12
     verts = [None for _ in files]
     for i, filename in enumerate(files):
-        data = open_hdf5_file("{}/{}".format(directory, filename))
-        particles = data["particles"]
-        fluid = particles["fluid"]
-        fluid_arrays = fluid["arrays"]
-        fluid_x = fluid_arrays["x"]
-        fluid_y = fluid_arrays["y"]
-        fluid_z = fluid_arrays["z"]
+        data = open_hdf5_file('{}/{}'.format(directory, filename))
+        particles = data['particles']
+        fluid = particles['fluid']
+        fluid_arrays = fluid['arrays']
+        fluid_x = fluid_arrays['x']
+        fluid_y = fluid_arrays['y']
+        fluid_z = fluid_arrays['z']
         verts[i] = np.column_stack((fluid_x, fluid_y, fluid_z))
 
     # dist = 10
@@ -294,7 +294,7 @@ def particles_as_particles():
     # ]
 
     # Create collection
-    collection_name = "Particles"
+    collection_name = 'Particles'
     if collection_name not in bpy.data.collections:
         bpy.data.collections.new(collection_name)
     collection = bpy.data.collections[collection_name]
@@ -311,7 +311,7 @@ def particles_as_particles():
         rotation=(0, 0, 0)
     )
     sphere = bpy.context.object
-    sphere.name = "original_sphere"
+    sphere.name = 'original_sphere'
     collection.objects.link(sphere)
 
     # Create original element
@@ -324,14 +324,14 @@ def particles_as_particles():
         rotation=(0, 0, 0)
     )
     domain = bpy.context.object
-    domain.name = "domain"
+    domain.name = 'domain'
     collection.objects.link(domain)
 
     # Create materials
     materials = [None for _ in range(10)]
     for i, _ in enumerate(materials):
         color = np.random.ranf(4)
-        color_name = "color{}".format(i)
+        color_name = 'color{}'.format(i)
         materials[i] = bpy.data.materials.new(name=color_name)
         materials[i].diffuse_color = color
 
@@ -341,11 +341,11 @@ def particles_as_particles():
 
     # Particles
     particles_mod = domain.modifiers.new(
-        name="ParticleSystem",
+        name='ParticleSystem',
         type='PARTICLE_SYSTEM'
     )
     # particles_sys = particles_mod.particle_system
-    particles_sys = bpy.data.particles["ParticleSystem"]
+    particles_sys = bpy.data.particles['ParticleSystem']
     particles_sys.count = len(verts[0])
     particles_sys.particle_size = 0.01
     particles_sys.frame_start = 1
@@ -383,7 +383,7 @@ def particles_as_particles():
 
     #     # additionally set the location of all particle locations to flatList
     #     frame = cFrame % len(verts)
-    #     particles.foreach_set("location", verts[frame])
+    #     particles.foreach_set('location', verts[frame])
 
     #clear the post frame handler
     bpy.app.handlers.frame_change_post.clear()
@@ -395,20 +395,20 @@ def particles_as_particles():
     # # Evaluate the depsgraph (Important step)
     # particle_systems = domain.evaluated_get(degp).particle_systems
 
-    # # All particles of first particle-system which has index "0"
+    # # All particles of first particle-system which has index '0'
     # particles = particle_systems[0].particles
 
     # # Total Particles
     # totalParticles = len(particles)
 
-    # particles.foreach_set("location", np.array(verts).reshape([3*len(verts)]))
+    # particles.foreach_set('location', np.array(verts).reshape([3*len(verts)]))
 
-    # # length of 1D array or list = 3*totalParticles, "3" due to XYZ in vector/location.
-    # # If the length is wrong then it will give you an error "internal error setting the array"
+    # # length of 1D array or list = 3*totalParticles, '3' due to XYZ in vector/location.
+    # # If the length is wrong then it will give you an error 'internal error setting the array'
     # flatList = [0]*(3*totalParticles)
 
     # # To get the loaction of all particles
-    # particles.foreach_get("location", flatList)
+    # particles.foreach_get('location', flatList)
 
     # print(flatList)
 
@@ -423,7 +423,7 @@ def particles_as_particles():
 
     # # # Set materials
     # # for i, vert in enumerate(verts):
-    # #     print("Setting material {}".format(i))
+    # #     print('Setting material {}'.format(i))
     # #     material = materials[np.random.randint(low=0, high=9)]
     # #     for _material in spheres[i].material_slots:
     # #         _material.link = 'OBJECT'
@@ -431,7 +431,7 @@ def particles_as_particles():
 
     toc = time.time()
 
-    print("Total time for {} particles: {} [s]".format(len(verts), toc-tic))
+    print('Total time for {} particles: {} [s]'.format(len(verts), toc-tic))
 
 
 def particles_as_dupliverts():
@@ -451,7 +451,7 @@ def particles_as_dupliverts():
     ])
 
     # Create collection
-    collection_name = "Particles"
+    collection_name = 'Particles'
     if collection_name not in bpy.data.collections:
         bpy.data.collections.new(collection_name)
     collection = bpy.data.collections[collection_name]
@@ -465,8 +465,8 @@ def particles_as_dupliverts():
     for particle_set in range(n_sets):
 
         # Create mesh
-        mesh = bpy.data.meshes.new("mesh")  # add a new mesh
-        obj = bpy.data.objects.new("MyObject", mesh)  # add a new object using the mesh
+        mesh = bpy.data.meshes.new('mesh')  # add a new mesh
+        obj = bpy.data.objects.new('MyObject', mesh)  # add a new object using the mesh
         # Add mesh to collection
         collection.objects.link(obj)
         # mesh = bpy.context.object.data
@@ -493,7 +493,7 @@ def particles_as_dupliverts():
             rotation=(0, 0, 0)
         )
         sphere = bpy.context.object
-        sphere.name = "sphere"
+        sphere.name = 'sphere'
         sphere.parent = obj
 
         # Dupliverts
@@ -501,7 +501,7 @@ def particles_as_dupliverts():
 
         # Create materials
         color = np.random.ranf(4)
-        color_name = "color{}".format(particle_set)
+        color_name = 'color{}'.format(particle_set)
         materials[particle_set] = bpy.data.materials.new(name=color_name)
         materials[particle_set].diffuse_color = color
         sphere.data.materials.append(materials[particle_set])
@@ -509,15 +509,15 @@ def particles_as_dupliverts():
 
     toc = time.time()
 
-    print("Total time for {} particles: {} [s]".format(len(verts), toc-tic))
+    print('Total time for {} particles: {} [s]'.format(len(verts), toc-tic))
 
 
 def profile():
     """Profile with cProfile"""
     import cProfile
     import pstats
-    cProfile.run("import bpy; main()", "simulation.profile")
-    pstat = pstats.Stats("simulation.profile")
+    cProfile.run('import bpy; main()', 'simulation.profile')
+    pstat = pstats.Stats('simulation.profile')
     pstat.sort_stats('time').print_stats(30)
     pstat.sort_stats('cumtime').print_stats(30)
 
