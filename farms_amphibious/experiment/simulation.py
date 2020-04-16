@@ -80,24 +80,6 @@ def simulation_setup(animat_sdf, arena_sdf, **kwargs):
     return sim
 
 
-def simulation_post(sim):
-    """Simulation post-processing"""
-    # Analyse results
-    pylog.info('Analysing simulation')
-    sim.postprocess(
-        iteration=sim.iteration,
-        plot=sim.options.plot,
-        log_path=sim.options.log_path,
-        log_extension=sim.options.log_extension,
-        record=sim.options.record and not sim.options.headless
-    )
-    if sim.options.log_path:
-        np.save(
-            sim.options.log_path+'/hydrodynamics.npy',
-            sim.animat().data.sensors.hydrodynamics.array
-        )
-
-
 def simulation(animat_sdf, arena_sdf, show_progress=True, **kwargs):
     """Simulation"""
 
@@ -115,14 +97,21 @@ def simulation(animat_sdf, arena_sdf, show_progress=True, **kwargs):
         # ))
         assert iteration >= 0
 
-    # Post-processing
-    pylog.info('Simulation post-processing')
-    simulation_post(sim)
-
     # Terminate simulation
     pylog.info('Terminating simulation')
     sim.end()
+
     return sim
+
+
+def simulation_post(sim, log_path='', plot=False, video=''):
+    """Simulation post-processing"""
+    sim.postprocess(
+        iteration=sim.iteration,
+        log_path=log_path,
+        plot=plot,
+        video=video if not sim.options.headless else ''
+    )
 
 
 def profile(function, **kwargs):

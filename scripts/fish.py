@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Run fish simulation with bullet"""
 
+import os
 import time
 import matplotlib.pyplot as plt
 from farms_models.utils import get_sdf_path, model_kinematics_files
@@ -37,9 +38,6 @@ def main():
             ]
         )
 
-        # Logging
-        simulation_options.log_path = 'fish_results'
-
         # Simulation
         sim = profile(
             function=simulation,
@@ -49,6 +47,19 @@ def main():
             use_controller=True,
             sampling=sampling_timestep,
             arena_sdf=arena_sdf,
+        )
+
+        # Post-processing
+        pylog.info('Simulation post-processing')
+        log_path = 'fish_results'
+        video_name = ''
+        if not os.path.isdir(log_path):
+            os.mkdir(log_path)
+        sim.postprocess(
+            iteration=sim.iteration,
+            log_path=log_path,
+            plot=False,
+            video=video_name if not sim.options.headless else ''
         )
         plt.show()
 

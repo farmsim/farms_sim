@@ -20,9 +20,13 @@ from .animat_data_cy import (
 )
 
 
-def to_array_or_none(array):
+def to_array(array, iteration=None):
     """To array or None"""
-    return np.array(array) if array is not None else None
+    if array is not None:
+        array = np.array(array)
+        if iteration is not None:
+            array = array[:iteration]
+    return array
 
 
 class AnimatData(AnimatDataCy):
@@ -43,18 +47,18 @@ class AnimatData(AnimatDataCy):
         """From file"""
         return cls.from_dict(dd.io.load(filename), n_oscillators)
 
-    def to_dict(self):
+    def to_dict(self, iteration=None):
         """Convert data to dictionary"""
         return {
-            'state': to_array_or_none(self.state.array),
-            'network': self.network.to_dict(),
-            'joints': to_array_or_none(self.joints.array),
-            'sensors': self.sensors.to_dict(),
+            'state': to_array(self.state.array),
+            'network': self.network.to_dict(iteration),
+            'joints': to_array(self.joints.array),
+            'sensors': self.sensors.to_dict(iteration),
         }
 
-    def to_file(self, filename):
+    def to_file(self, filename, iteration=None):
         """Save data to file"""
-        dd.io.save(filename, self.to_dict())
+        dd.io.save(filename, self.to_dict(iteration))
 
     def plot(self, times):
         """Plot"""
@@ -83,10 +87,11 @@ class NetworkParameters(NetworkParametersCy):
             ),
         )
 
-    def to_dict(self):
+    def to_dict(self, iteration=None):
         """Convert data to dictionary"""
+        assert iteration is None or isinstance(iteration, int)
         return {
-            'oscillators': to_array_or_none(self.oscillators.array),
+            'oscillators': to_array(self.oscillators.array),
             'osc_connectivity': self.osc_connectivity.to_dict(),
             'contacts_connectivity': self.contacts_connectivity.to_dict(),
             'hydro_connectivity': self.hydro_connectivity.to_dict(),
@@ -136,12 +141,13 @@ class OscillatorConnectivity(OscillatorConnectivityCy):
             desired_phases=dictionary['desired_phases'],
         )
 
-    def to_dict(self):
+    def to_dict(self, iteration=None):
         """Convert data to dictionary"""
+        assert iteration is None or isinstance(iteration, int)
         return {
-            'connections': to_array_or_none(self.connections.array),
-            'weights': to_array_or_none(self.weights.array),
-            'desired_phases': to_array_or_none(self.desired_phases.array),
+            'connections': to_array(self.connections.array),
+            'weights': to_array(self.weights.array),
+            'desired_phases': to_array(self.desired_phases.array),
         }
 
 
@@ -156,11 +162,11 @@ class ContactConnectivity(ContactConnectivityCy):
             weights=dictionary['weights'],
         )
 
-    def to_dict(self):
+    def to_dict(self, iteration=None):
         """Convert data to dictionary"""
         return {
-            'connections': to_array_or_none(self.connections.array),
-            'weights': to_array_or_none(self.weights.array),
+            'connections': to_array(self.connections.array),
+            'weights': to_array(self.weights.array),
         }
 
 
@@ -176,12 +182,13 @@ class HydroConnectivity(HydroConnectivityCy):
             amplitude=dictionary['amplitude'],
         )
 
-    def to_dict(self):
+    def to_dict(self, iteration=None):
         """Convert data to dictionary"""
+        assert iteration is None or isinstance(iteration, int)
         return {
-            'connections': to_array_or_none(self.connections.array),
-            'frequency': to_array_or_none(self.frequency.array),
-            'amplitude': to_array_or_none(self.amplitude.array),
+            'connections': to_array(self.connections.array),
+            'frequency': to_array(self.frequency.array),
+            'amplitude': to_array(self.amplitude.array),
         }
 
 
@@ -202,13 +209,13 @@ class SensorsData(SensorsDataCy):
             hydrodynamics=HydrodynamicsArray(dictionary['hydrodynamics']),
         )
 
-    def to_dict(self):
+    def to_dict(self, iteration=None):
         """Convert data to dictionary"""
         return {
-            'contacts': to_array_or_none(self.contacts.array),
-            'proprioception': to_array_or_none(self.proprioception.array),
-            'gps': to_array_or_none(self.gps.array),
-            'hydrodynamics': to_array_or_none(self.hydrodynamics.array),
+            'contacts': to_array(self.contacts.array, iteration),
+            'proprioception': to_array(self.proprioception.array, iteration),
+            'gps': to_array(self.gps.array, iteration),
+            'hydrodynamics': to_array(self.hydrodynamics.array, iteration),
         }
 
     def plot(self, times):

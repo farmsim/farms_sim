@@ -245,7 +245,7 @@ class AmphibiousSimulation(Simulation):
             )
             self.interface.user_params.drive_turn().changed = False
 
-    def postprocess(self, iteration, **kwargs):
+    def postprocess(self, iteration, log_path='', plot=False, video=''):
         """Plot after simulation"""
         times = np.arange(
             0,
@@ -254,13 +254,15 @@ class AmphibiousSimulation(Simulation):
         )[:iteration]
 
         # Log
-        log_path = kwargs.pop('log_path', None)
         if log_path:
             pylog.info('Saving data to {}'.format(log_path))
-            self.animat().data.to_file(os.path.join(
-                log_path,
-                'simulation.hdf5'
-            ))
+            self.animat().data.to_file(
+                os.path.join(
+                    log_path,
+                    'simulation.hdf5'
+                ),
+                iteration,
+            )
             self.options.save(os.path.join(
                 log_path,
                 'simulation_options.yaml'
@@ -271,15 +273,13 @@ class AmphibiousSimulation(Simulation):
             ))
 
         # Plot
-        plot = kwargs.pop('plot', None)
         if plot:
             self.animat().data.plot(times)
 
         # Record video
-        record = kwargs.pop('record', None)
-        if record:
+        if video:
             self.interface.video.save(
-                '{}.avi'.format(self.options.video_name)
+                '{}.avi'.format(video)
             )
 
 

@@ -36,7 +36,6 @@ def get_simulation_options(**kwargs):
     simulation_options.units.meters = 1
     simulation_options.units.seconds = 1
     simulation_options.units.kilograms = 1
-    simulation_options.arena = 'water'
 
     # Camera options
     simulation_options.video_yaw = 0
@@ -253,10 +252,24 @@ def fish_options(animat, version, kinematics_file, sampling_timestep, **kwargs):
     pylog.info(kinematics_file)
     kinematics = np.loadtxt(kinematics_file)
 
+    # Kinematics data handling
+    n_sample = 50
+    len_kinematics = np.shape(kinematics)[0]
+    pose = kinematics[:, :3]
+    position = np.ones(3)
+    position[:2] = pose[0, :2]
+    orientation = np.zeros(3)
+    orientation[2] = pose[0, 2]
+    velocity = np.zeros(3)
+    velocity[:2] = pose[n_sample, :2] - pose[0, :2]
+    velocity /= n_sample*sampling_timestep
+    kinematics[:, 3:] = ((kinematics[:, 3:] + np.pi) % (2*np.pi)) - np.pi
+
     # Simulation options
     sim_options = {}
     if 'timestep' in kwargs:
-        sim_options['timestep'] = kwargs.pop('timestep')
+        timestep = kwargs.pop('timestep')
+        sim_options['timestep'] = timestep
     simulation_options = get_simulation_options(**sim_options)
     simulation_options.n_iterations = int(
         (len_kinematics-1)
@@ -282,20 +295,6 @@ def fish_options(animat, version, kinematics_file, sampling_timestep, **kwargs):
     #         simulation_options.video_distance,
     #     )
     # )
-
-    # Kinematics data handling
-    n_sample = 50
-    len_kinematics = np.shape(kinematics)[0]
-    simulation_options.duration = (len_kinematics-1)*sampling_timestep
-    pose = kinematics[:, :3]
-    position = np.ones(3)
-    position[:2] = pose[0, :2]
-    orientation = np.zeros(3)
-    orientation[2] = pose[0, 2]
-    velocity = np.zeros(3)
-    velocity[:2] = pose[n_sample, :2] - pose[0, :2]
-    velocity /= n_sample*sampling_timestep
-    kinematics[:, 3:] = ((kinematics[:, 3:] + np.pi) % (2*np.pi)) - np.pi
 
     # Animat options
     n_joints = kinematics.shape[1]-3
