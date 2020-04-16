@@ -137,7 +137,7 @@ def get_pleurobot_options(**kwargs):
 
     # Amplitudes gains
     if gain_amplitude is None:
-        gain_amplitude = np.ones(13+4*4)  # np.ones(13+4*4)
+        gain_amplitude = [1]*(13+4*4)  # np.ones(13+4*4)
         gain_amplitude[6] = 0
         gain_amplitude[12] = 0
         for leg_i in range(2):
@@ -151,7 +151,7 @@ def get_pleurobot_options(**kwargs):
 
     # Offsets gains
     if gain_offset is None:
-        gain_offset = np.ones(13+4*4)
+        gain_offset = [1]*(13+4*4)
         gain_offset[6] = 0
         gain_offset[12] = 0
         for leg_i in range(2):
@@ -165,7 +165,7 @@ def get_pleurobot_options(**kwargs):
 
     # Joints joints_offsets
     if joints_offsets is None:
-        joints_offsets = np.zeros(13+4*4)
+        joints_offsets = [0]*(13+4*4)
         for leg_i in range(2):
             for side_i in range(2):
                 mirror = (1 if side_i else -1)
