@@ -156,7 +156,7 @@ class AmphibiousSimulation(Simulation):
             if self.animat().options.transition:
                 time_based_drive(
                     sim_step,
-                    self.options.n_iterations(),
+                    self.options.n_iterations,
                     self.interface
                 )
 
@@ -170,7 +170,7 @@ class AmphibiousSimulation(Simulation):
         self.animat().sensors.update(sim_step)
 
         # Physics step
-        if sim_step < self.options.n_iterations()-1:
+        if sim_step < self.options.n_iterations-1:
             # Swimming
             swimming_step(sim_step, self.animat())
 
@@ -249,7 +249,7 @@ class AmphibiousSimulation(Simulation):
         """Plot after simulation"""
         times = np.arange(
             0,
-            self.options.timestep*self.options.n_iterations(),
+            self.options.timestep*self.options.n_iterations,
             self.options.timestep
         )[:iteration]
 
@@ -299,7 +299,7 @@ def main(simulation_options=None, animat_options=None):
         animat=Amphibious(
             animat_options,
             simulation_options.timestep,
-            simulation_options.n_iterations(),
+            simulation_options.n_iterations,
             simulation_options.units
         )
     )

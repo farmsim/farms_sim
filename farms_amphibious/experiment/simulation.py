@@ -30,12 +30,12 @@ def simulation_setup(animat_sdf, arena_sdf, **kwargs):
     # Animat data
     animat_data = AmphibiousData.from_options(
         AmphibiousOscillatorNetworkState.default_state(
-            simulation_options.n_iterations(),
+            simulation_options.n_iterations,
             animat_options.morphology,
         ),
         animat_options.morphology,
         animat_options.control,
-        simulation_options.n_iterations()
+        simulation_options.n_iterations
     )
 
     # Animat controller
@@ -46,7 +46,7 @@ def simulation_setup(animat_sdf, arena_sdf, **kwargs):
                 animat_options=animat_options,
                 animat_data=animat_data,
                 timestep=simulation_options.timestep,
-                n_iterations=simulation_options.n_iterations(),
+                n_iterations=simulation_options.n_iterations,
                 sampling=kwargs.pop('sampling')
             )
         else:
@@ -65,7 +65,7 @@ def simulation_setup(animat_sdf, arena_sdf, **kwargs):
         options=animat_options,
         controller=animat_controller,
         timestep=simulation_options.timestep,
-        iterations=simulation_options.n_iterations(),
+        iterations=simulation_options.n_iterations,
         units=simulation_options.units,
     )
 

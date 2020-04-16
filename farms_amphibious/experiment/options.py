@@ -258,6 +258,12 @@ def fish_options(animat, version, kinematics_file, sampling_timestep, **kwargs):
     if 'timestep' in kwargs:
         sim_options['timestep'] = kwargs.pop('timestep')
     simulation_options = get_simulation_options(**sim_options)
+    simulation_options.n_iterations = int(
+        (len_kinematics-1)
+        *sampling_timestep
+        /simulation_options.timestep
+    )
+
     # get_animat_options(swimming=False)
     simulation_options.gravity = [0, 0, 0]
     # simulation_options.timestep = 1e-3
