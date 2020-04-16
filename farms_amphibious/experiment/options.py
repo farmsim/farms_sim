@@ -131,50 +131,6 @@ def get_pleurobot_options(**kwargs):
     sdf = get_sdf_path(name='pleurobot', version='0')
     pylog.info('Model SDF: {}'.format(sdf))
 
-    gain_amplitude = kwargs.pop('gain_amplitude', None)
-    gain_offset = kwargs.pop('gain_offset', None)
-    joints_offsets = kwargs.pop('joints_offsets', None)
-
-    # Amplitudes gains
-    if gain_amplitude is None:
-        gain_amplitude = [1]*(13+4*4)  # np.ones(13+4*4)
-        gain_amplitude[6] = 0
-        gain_amplitude[12] = 0
-        for leg_i in range(2):
-            for side_i in range(2):
-                mirror = (-1 if side_i else 1)
-                mirror_full = (1 if leg_i else -1)*(1 if side_i else -1)
-                gain_amplitude[13+2*leg_i*4+side_i*4+0] = mirror
-                gain_amplitude[13+2*leg_i*4+side_i*4+1] = mirror
-                gain_amplitude[13+2*leg_i*4+side_i*4+2] = -mirror
-                gain_amplitude[13+2*leg_i*4+side_i*4+3] = mirror_full
-
-    # Offsets gains
-    if gain_offset is None:
-        gain_offset = [1]*(13+4*4)
-        gain_offset[6] = 0
-        gain_offset[12] = 0
-        for leg_i in range(2):
-            for side_i in range(2):
-                mirror = (1 if side_i else -1)
-                mirror_full = (1 if leg_i else -1)*(1 if side_i else -1)
-                gain_offset[13+2*leg_i*4+side_i*4+0] = mirror
-                gain_offset[13+2*leg_i*4+side_i*4+1] = mirror
-                gain_offset[13+2*leg_i*4+side_i*4+2] = mirror_full
-                gain_offset[13+2*leg_i*4+side_i*4+3] = mirror_full
-
-    # Joints joints_offsets
-    if joints_offsets is None:
-        joints_offsets = [0]*(13+4*4)
-        for leg_i in range(2):
-            for side_i in range(2):
-                mirror = (1 if side_i else -1)
-                mirror_full = (1 if leg_i else -1)*(1 if side_i else -1)
-                joints_offsets[13+2*leg_i*4+side_i*4+0] = 0
-                joints_offsets[13+2*leg_i*4+side_i*4+1] = 0
-                joints_offsets[13+2*leg_i*4+side_i*4+2] = 0
-                joints_offsets[13+2*leg_i*4+side_i*4+3] = mirror_full*np.pi/8
-
     # Animat options
     links = kwargs.pop('links', ['base_link', 'Head'] + [
         'link{}'.format(i+1)
@@ -218,6 +174,56 @@ def get_pleurobot_options(**kwargs):
         for link in links
         if link not in feet+['Head', 'link_tail']
     ])
+
+    # Joint options
+    gain_amplitude = kwargs.pop('gain_amplitude', None)
+    gain_offset = kwargs.pop('gain_offset', None)
+    joints_offsets = kwargs.pop('joints_offsets', None)
+
+    # Amplitudes gains
+    if gain_amplitude is None:
+        gain_amplitude = [1]*(13+4*4)  # np.ones(13+4*4)
+        gain_amplitude[6] = 0
+        gain_amplitude[12] = 0
+        for leg_i in range(2):
+            for side_i in range(2):
+                mirror = (-1 if side_i else 1)
+                mirror_full = (1 if leg_i else -1)*(1 if side_i else -1)
+                gain_amplitude[13+2*leg_i*4+side_i*4+0] = mirror
+                gain_amplitude[13+2*leg_i*4+side_i*4+1] = mirror
+                gain_amplitude[13+2*leg_i*4+side_i*4+2] = -mirror
+                gain_amplitude[13+2*leg_i*4+side_i*4+3] = mirror_full
+        gain_amplitude = dict(zip(joints, gain_amplitude))
+
+    # Offsets gains
+    if gain_offset is None:
+        gain_offset = [1]*(13+4*4)
+        gain_offset[6] = 0
+        gain_offset[12] = 0
+        for leg_i in range(2):
+            for side_i in range(2):
+                mirror = (1 if side_i else -1)
+                mirror_full = (1 if leg_i else -1)*(1 if side_i else -1)
+                gain_offset[13+2*leg_i*4+side_i*4+0] = mirror
+                gain_offset[13+2*leg_i*4+side_i*4+1] = mirror
+                gain_offset[13+2*leg_i*4+side_i*4+2] = mirror_full
+                gain_offset[13+2*leg_i*4+side_i*4+3] = mirror_full
+        gain_offset = dict(zip(joints, gain_offset))
+
+    # Joints joints_offsets
+    if joints_offsets is None:
+        joints_offsets = [0]*(13+4*4)
+        for leg_i in range(2):
+            for side_i in range(2):
+                mirror = (1 if side_i else -1)
+                mirror_full = (1 if leg_i else -1)*(1 if side_i else -1)
+                joints_offsets[13+2*leg_i*4+side_i*4+0] = 0
+                joints_offsets[13+2*leg_i*4+side_i*4+1] = 0
+                joints_offsets[13+2*leg_i*4+side_i*4+2] = 0
+                joints_offsets[13+2*leg_i*4+side_i*4+3] = mirror_full*np.pi/8
+        joints_offsets = dict(zip(joints, joints_offsets))
+
+    # Animat options
     animat_options = get_animat_options(
         swimming=False,
         n_legs=4,

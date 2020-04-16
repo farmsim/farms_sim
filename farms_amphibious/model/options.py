@@ -56,15 +56,15 @@ class AmphibiousOptions(Options):
             )
             if options['control'].network.joints.gain_amplitude is None:
                 options['control'].network.joints.gain_amplitude = (
-                    [1 for _ in range(options['morphology'].n_joints())]
+                    {joint: 1 for joint in options['morphology'].joints}
                 )
             if options['control'].network.joints.gain_offset is None:
                 options['control'].network.joints.gain_offset = (
-                    [1 for _ in range(options['morphology'].n_joints())]
+                    {joint: 1 for joint in options['morphology'].joints}
                 )
             if options['control'].network.joints.offsets is None:
                 options['control'].network.joints.offsets = (
-                    [0 for _ in range(options['morphology'].n_joints())]
+                    {joint: 0 for joint in options['morphology'].joints}
                 )
 
         options['collect_gps'] = kwargs.pop('collect_gps', False)
