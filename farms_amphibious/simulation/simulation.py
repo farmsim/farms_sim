@@ -245,7 +245,14 @@ class AmphibiousSimulation(Simulation):
             )
             self.interface.user_params.drive_turn().changed = False
 
-    def postprocess(self, iteration, log_path='', plot=False, video=''):
+    def postprocess(
+            self,
+            iteration,
+            log_path='',
+            plot=False,
+            video='',
+            **kwargs
+    ):
         """Plot after simulation"""
         times = np.arange(
             0,
@@ -279,7 +286,9 @@ class AmphibiousSimulation(Simulation):
         # Record video
         if video:
             self.interface.video.save(
-                '{}.avi'.format(video)
+                video,
+                iteration=iteration,
+                writer=kwargs.pop('writer', 'ffmpeg')
             )
 
 

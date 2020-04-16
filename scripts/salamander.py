@@ -70,15 +70,19 @@ def main():
 
     # Post-processing
     pylog.info('Simulation post-processing')
-    video_name = ''
     log_path = 'salamander_results'
+    video_name = os.path.join(log_path, 'simulation.mp4')
     if not os.path.isdir(log_path):
         os.mkdir(log_path)
     sim.postprocess(
         iteration=sim.iteration,
         log_path=log_path,
         plot=False,
-        video=video_name if not sim.options.headless else ''
+        video=(
+            video_name
+            if sim.options.record and not sim.options.headless
+            else ''
+        )
     )
 
     # Plot
