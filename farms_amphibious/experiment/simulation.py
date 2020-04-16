@@ -129,12 +129,10 @@ def profile(function, **kwargs):
     """Profile with cProfile"""
     n_time = kwargs.pop('pstat_n_time', 30)
     n_cumtime = kwargs.pop('pstat_n_cumtime', 30)
-    cProfile.runctx(
-        statement='function(**kwargs)',
-        globals={},
-        locals={'function': function, 'kwargs': kwargs},
-        filename='simulation.profile'
-    )
+    prof = cProfile.Profile()
+    result = prof.runcall(function, **kwargs)
+    prof.dump_stats('simulation.profile')
     pstat = pstats.Stats('simulation.profile')
     pstat.sort_stats('time').print_stats(n_time)
     pstat.sort_stats('cumtime').print_stats(n_cumtime)
+    return result

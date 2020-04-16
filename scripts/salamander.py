@@ -58,7 +58,7 @@ def main():
     simulation_options = SimulationOptions.load(simulation_options_filename)
 
     # Simulation
-    profile(
+    sim = profile(
         function=simulation,
         animat_sdf=sdf,
         animat_options=animat_options,

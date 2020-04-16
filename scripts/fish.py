@@ -41,7 +41,7 @@ def main():
         simulation_options.log_path = 'fish_results'
 
         # Simulation
-        profile(
+        sim = profile(
             function=simulation,
             animat_sdf=animat_sdf,
             animat_options=animat_options,
