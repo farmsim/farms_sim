@@ -427,7 +427,7 @@ class AmphibiousJointsArray(JointsArray):
     @staticmethod
     def set_options(morphology, control):
         """Walking parameters"""
-        j_options = control.network.joints
+        j_options = control.joints
         n_body = morphology.n_joints_body
         n_dof_legs = morphology.n_dof_legs
         n_legs = morphology.n_legs

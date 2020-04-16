@@ -131,7 +131,7 @@ def get_pleurobot_options(**kwargs):
     sdf = get_sdf_path(name='pleurobot', version='0')
     pylog.info('Model SDF: {}'.format(sdf))
 
-    # Animat options
+    # Morphology information
     links = kwargs.pop('links', ['base_link', 'Head'] + [
         'link{}'.format(i+1)
         for i in range(27)

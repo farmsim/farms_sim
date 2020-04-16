@@ -50,20 +50,20 @@ class AmphibiousOptions(Options):
                     2*np.pi/options['morphology'].n_joints_body
                 )
             options['control'] = AmphibiousControlOptions.from_options(kwargs)
-            options['control'].network.update(
+            options['control'].update(
                 options['morphology'].n_joints_body,
                 options['morphology'].n_dof_legs
             )
-            if options['control'].network.joints.gain_amplitude is None:
-                options['control'].network.joints.gain_amplitude = (
+            if options['control'].joints.gain_amplitude is None:
+                options['control'].joints.gain_amplitude = (
                     {joint: 1 for joint in options['morphology'].joints}
                 )
-            if options['control'].network.joints.gain_offset is None:
-                options['control'].network.joints.gain_offset = (
+            if options['control'].joints.gain_offset is None:
+                options['control'].joints.gain_offset = (
                     {joint: 1 for joint in options['morphology'].joints}
                 )
-            if options['control'].network.joints.offsets is None:
-                options['control'].network.joints.offsets = (
+            if options['control'].joints.offsets is None:
+                options['control'].joints.offsets = (
                     {joint: 0 for joint in options['morphology'].joints}
                 )
 
@@ -240,9 +240,12 @@ class AmphibiousControlOptions(Options):
 
     def __init__(self, **kwargs):
         super(AmphibiousControlOptions, self).__init__()
-        self.kinematics_file = kwargs.pop('kinematics_file')
         self.drives = AmphibiousDrives(**kwargs.pop('drives'))
-        self.network = AmphibiousNetworkOptions(**kwargs.pop('network'))
+        self.kinematics_file = kwargs.pop('kinematics_file')
+        if not self.kinematics_file:
+            self.network = AmphibiousNetworkOptions(**kwargs.pop('network'))
+            self.joints = AmphibiousJointsOptions(**kwargs.pop('joints'))
+            self.sensors = kwargs.pop('sensors')
         if kwargs:
             raise Exception('Unknown kwargs: {}'.format(kwargs))
 
@@ -266,7 +269,20 @@ class AmphibiousControlOptions(Options):
             'network',
             AmphibiousNetworkOptions.from_options(kwargs)
         )
+        options['joints'] = kwargs.pop(
+            'joints',
+            AmphibiousJointsOptions.from_options(kwargs)
+        )
+        options['sensors'] = kwargs.pop(
+            'sensors',
+            None
+        )
         return cls(**options)
+
+    def update(self, n_joints_body, n_dof_legs):
+        """Update"""
+        self.joints.update(n_joints_body, n_dof_legs)
+        self.network.oscillators.update(n_joints_body, n_dof_legs)
 
 
 class AmphibiousDrives(Options):
@@ -312,11 +328,8 @@ class AmphibiousNetworkOptions(Options):
         super(AmphibiousNetworkOptions, self).__init__()
         oscillators = kwargs.pop('oscillators')
         connectivity = kwargs.pop('connectivity')
-        joints = kwargs.pop('joints')
         self.oscillators = AmphibiousOscillatorOptions(**oscillators)
         self.connectivity = AmphibiousConnectivityOptions(**connectivity)
-        self.joints = AmphibiousJointsOptions(**joints)
-        self.sensors = kwargs.pop('sensors')
         if kwargs:
             raise Exception('Unknown kwargs: {}'.format(kwargs))
 
@@ -332,20 +345,7 @@ class AmphibiousNetworkOptions(Options):
             'connectivity',
             AmphibiousConnectivityOptions.from_options(kwargs)
         )
-        options['joints'] = kwargs.pop(
-            'joints',
-            AmphibiousJointsOptions.from_options(kwargs)
-        )
-        options['sensors'] = kwargs.pop(
-            'sensors',
-            None
-        )
         return cls(**options)
-
-    def update(self, n_joints_body, n_dof_legs):
-        """Update"""
-        self.oscillators.update(n_joints_body, n_dof_legs)
-        self.joints.update(n_joints_body, n_dof_legs)
 
 
 class AmphibiousOscillatorOptions(Options):
