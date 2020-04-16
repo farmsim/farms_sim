@@ -6,6 +6,7 @@ import time
 import matplotlib.pyplot as plt
 
 import farms_pylog as pylog
+from farms_amphibious.utils.network import plot_networks_maps
 from farms_amphibious.experiment.simulation import simulation, profile
 from farms_amphibious.experiment.options import (
     get_pleurobot_options,
@@ -45,6 +46,9 @@ def main():
         plot=False,
         video=video_name if not sim.options.headless else ''
     )
+
+    # Plot network
+    plot_networks_maps(animat_options.morphology, sim.animat().data)
 
     # Plot
     plt.show()
