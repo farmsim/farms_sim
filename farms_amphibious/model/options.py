@@ -360,8 +360,8 @@ class AmphibiousOscillatorOptions(Options):
         self.body_head_amplitude = kwargs.pop('body_head_amplitude')
         self.body_tail_amplitude = kwargs.pop('body_tail_amplitude')
         self.body_stand_amplitude = kwargs.pop('body_stand_amplitude')
-        self._legs_amplitudes = kwargs.pop('_legs_amplitudes')
-        self._body_stand_shift = kwargs.pop('_body_stand_shift')
+        self.legs_amplitudes = kwargs.pop('legs_amplitudes')
+        self.body_stand_shift = kwargs.pop('body_stand_shift')
         self.body_nominal_amplitudes = kwargs.pop('body_nominal_amplitudes')
         self.legs_nominal_amplitudes = kwargs.pop('legs_nominal_amplitudes')
         self.body_freqs = kwargs.pop('body_freqs')
@@ -376,11 +376,11 @@ class AmphibiousOscillatorOptions(Options):
         options['body_head_amplitude'] = kwargs.pop('body_head_amplitude', 0)
         options['body_tail_amplitude'] = kwargs.pop('body_tail_amplitude', 0)
         options['body_stand_amplitude'] = kwargs.pop('body_stand_amplitude', 0.2)
-        options['_legs_amplitudes'] = kwargs.pop(
+        options['legs_amplitudes'] = kwargs.pop(
             'legs_amplitude',
             [np.pi/4, np.pi/32, np.pi/4, np.pi/8]
         )
-        options['_body_stand_shift'] = kwargs.pop('body_stand_shift', np.pi/4)
+        options['body_stand_shift'] = kwargs.pop('body_stand_shift', np.pi/4)
         options['body_nominal_amplitudes'] = kwargs.pop(
             'body_nominal_amplitudes',
             None
@@ -425,35 +425,34 @@ class AmphibiousOscillatorOptions(Options):
 
     def set_body_stand_shift(self, value, n_joints_body):
         """Body stand shift"""
-        self._body_stand_shift = value
+        self.body_stand_shift = value
         self.set_body_nominal_amplitudes(n_joints_body)
 
     def set_body_nominal_amplitudes(self, n_joints_body):
         """Set body nominal amplitudes"""
-        body_stand_shift = np.pi/4
         self.body_nominal_amplitudes = [
             [
                 [0, float(0.3*self.body_stand_amplitude*np.sin(
-                    2*np.pi*joint_i/n_joints_body - body_stand_shift
+                    2*np.pi*joint_i/n_joints_body - self.body_stand_shift
                 ))],
                 [3, float(self.body_stand_amplitude*np.sin(
-                    2*np.pi*joint_i/n_joints_body - body_stand_shift
+                    2*np.pi*joint_i/n_joints_body - self.body_stand_shift
                 ))],
                 [3, 0.1*joint_i/n_joints_body],
                 [5, 0.1*joint_i/n_joints_body+0.5],
                 [5, 0],
-                [6, 0]
+                [6, 0],
             ]
             for joint_i in range(n_joints_body)
         ]
 
     def get_legs_amplitudes(self):
         """Body legs amplitude"""
-        return self._legs_amplitudes
+        return self.legs_amplitudes
 
     def set_legs_amplitudes(self, values, n_dof_legs):
         """Body legs amplitude"""
-        self._legs_amplitudes = values
+        self.legs_amplitudes = values
         self.set_legs_nominal_amplitudes(n_dof_legs)
 
     def set_legs_nominal_amplitudes(self, n_dof_legs):
@@ -462,10 +461,10 @@ class AmphibiousOscillatorOptions(Options):
             [
                 [0, 0],
                 [1, 0],
-                [1, 0.7*self._legs_amplitudes[joint_i]],
-                [3, self._legs_amplitudes[joint_i]],
+                [1, 0.7*self.legs_amplitudes[joint_i]],
+                [3, self.legs_amplitudes[joint_i]],
                 [3, 0],
-                [6, 0]
+                [6, 0],
             ]
             for joint_i in range(n_dof_legs)
         ]
