@@ -62,6 +62,12 @@ class AmphibiousOptions(Options):
                 options['control'].joints.offsets = (
                     {joint: 0 for joint in options['morphology'].joints}
                 )
+            if options['control'].network.osc_init is None:
+                options['control'].network.osc_init = (
+                    AmphibiousNetworkOptions.default_osc_init(
+                        options['morphology'].n_joints(),
+                    ).tolist()
+                )
             if options['control'].network.osc2osc is None:
                 options['control'].network.osc2osc = (
                     AmphibiousNetworkOptions.default_osc2osc(
@@ -391,6 +397,11 @@ class AmphibiousNetworkOptions(Options):
         #     AmphibiousConnectivityOptions.from_options(kwargs)
         # )
         return cls(**options)
+
+    @staticmethod
+    def default_osc_init(n_joints):
+        """Default state"""
+        return 1e-3*np.arange(5*n_joints)
 
     @staticmethod
     def default_osc2osc(

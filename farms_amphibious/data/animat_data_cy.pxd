@@ -34,6 +34,7 @@ cdef class OscillatorNetworkStateCy(NetworkArray3D):
 cdef class OscillatorArrayCy(NetworkArray2D):
     """Oscillator array"""
     cpdef public CTYPEv1 freqs(self)
+    cpdef unsigned int n_oscillators(self)
 
     cdef inline unsigned int c_n_oscillators(self) nogil:
         """Number of oscillators"""

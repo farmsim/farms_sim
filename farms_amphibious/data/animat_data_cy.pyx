@@ -85,6 +85,10 @@ cdef class OscillatorArrayCy(NetworkArray2D):
         """From each parameter"""
         return cls(np.array([freqs, rates, amplitudes]))
 
+    cpdef unsigned int n_oscillators(self):
+        """Number of oscillators"""
+        return self.array.shape[1]
+
     cpdef CTYPEv1 freqs(self):
         """Frequencies"""
         return self.array[0]
