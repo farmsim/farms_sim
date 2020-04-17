@@ -286,18 +286,11 @@ class AmphibiousControlOptions(Options):
     def from_options(cls, kwargs):
         """From options"""
         options = {}
-        options['kinematics_file'] = kwargs.pop(
-            'kinematics_file',
-            ''
-        )
+        options['kinematics_file'] = kwargs.pop('kinematics_file', '')
         options['drives'] = kwargs.pop(
             'drives',
             AmphibiousDrives.from_options(kwargs)
         )
-        # self.joints_controllers = kwargs.pop(
-        #     'joints_controllers',
-        #     AmphibiousJointsControllers(**options)
-        # )
         options['network'] = kwargs.pop(
             'network',
             AmphibiousNetworkOptions.from_options(kwargs)
@@ -341,28 +334,13 @@ class AmphibiousDrives(Options):
         return cls(**options)
 
 
-# class AmphibiousJointsControllers(Options):
-#     """Amphibious joints controllers"""
-
-#     def __init__(self, **kwargs):
-#         super(AmphibiousJointsControllers, self).__init__()
-#         self.body_p = kwargs.pop('body_p', 1e-1)
-#         self.body_d = kwargs.pop('body_d', 1e0)
-#         self.body_f = kwargs.pop('body_f', 1e1)
-#         self.legs_p = kwargs.pop('legs_p', 1e-1)
-#         self.legs_d = kwargs.pop('legs_d', 1e0)
-#         self.legs_f = kwargs.pop('legs_f', 1e1)
-
-
 class AmphibiousNetworkOptions(Options):
     """Amphibious network options"""
 
     def __init__(self, **kwargs):
         super(AmphibiousNetworkOptions, self).__init__()
         oscillators = kwargs.pop('oscillators')
-        # connectivity = kwargs.pop('connectivity')
         self.oscillators = AmphibiousOscillatorOptions(**oscillators)
-        # self.connectivity = AmphibiousConnectivityOptions(**connectivity)
 
         # State
         self.state_init = kwargs.pop('state_init', None)
@@ -778,55 +756,6 @@ class AmphibiousOscillatorOptions(Options):
             ]
             for joint_i in range(n_dof_legs)
         ]
-
-
-# class AmphibiousConnectivityOptions(Options):
-#     """Amphibious connectivity options"""
-
-#     def __init__(self, **kwargs):
-#         super(AmphibiousConnectivityOptions, self).__init__()
-#         self.body_head_amplitude = kwargs.pop('body_head_amplitude')
-#         # self.body_phase_bias = kwargs.pop('body_phase_bias')
-#         # self.leg_phase_follow = kwargs.pop('leg_phase_follow')
-#         # self.weight_osc_body = kwargs.pop('weight_osc_body')
-#         # self.weight_osc_legs_internal = kwargs.pop('weight_osc_legs_internal')
-#         # self.weight_osc_legs_opposite = kwargs.pop('weight_osc_legs_opposite')
-#         # self.weight_osc_legs_following = kwargs.pop('weight_osc_legs_following')
-#         # self.weight_osc_legs2body = kwargs.pop('weight_osc_legs2body')
-#         # self.weight_sens_contact_i = kwargs.pop('weight_sens_contact_i')
-#         # self.weight_sens_contact_e = kwargs.pop('weight_sens_contact_e')
-#         # self.weight_sens_hydro_freq = kwargs.pop('weight_sens_hydro_freq')
-#         # self.weight_sens_hydro_amp = kwargs.pop('weight_sens_hydro_amp')
-#         if kwargs:
-#             raise Exception('Unknown kwargs: {}'.format(kwargs))
-
-#     @classmethod
-#     def from_options(cls, kwargs):
-#         """From options"""
-#         options = {}
-#         options['body_head_amplitude'] = kwargs.pop('body_head_amplitude', 0)
-#         # options['body_phase_bias'] = kwargs.pop(
-#         #     'body_phase_bias',
-#         #     None
-#         # )
-#         # options['leg_phase_follow'] = kwargs.pop(
-#         #     'leg_phase_follow',
-#         #     np.pi
-#         # )
-#         for option_name, default_value in [
-#                 # ['weight_osc_body', 1e3],
-#                 # ['weight_osc_body', 1e3],
-#                 # ['weight_osc_legs_internal', 1e3],
-#                 # ['weight_osc_legs_opposite', 1e0],
-#                 # ['weight_osc_legs_following', 1e0],
-#                 # ['weight_osc_legs2body', 3e1],
-#                 # ['weight_sens_contact_i', -2e0],
-#                 # ['weight_sens_contact_e', 2e0],
-#                 # ['weight_sens_hydro_freq', -1],
-#                 # ['weight_sens_hydro_amp', 1],
-#         ]:
-#             options[option_name] = kwargs.pop(option_name, default_value)
-#         return cls(**options)
 
 
 class AmphibiousJointsOptions(Options):
