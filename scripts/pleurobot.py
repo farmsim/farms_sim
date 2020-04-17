@@ -49,13 +49,13 @@ def main():
 
     # Post-processing
     pylog.info('Simulation post-processing')
-    log_path = 'pleurobot_results' if prompt('Save data', False) else ''
+    log_path = 'pleurobot_results'
     video_name = os.path.join(log_path, 'simulation.mp4')
     if log_path and not os.path.isdir(log_path):
         os.mkdir(log_path)
     sim.postprocess(
         iteration=sim.iteration,
-        log_path=log_path,
+        log_path=log_path if prompt('Save data', False) else '',
         plot=prompt('Show plots', False),
         video=video_name if sim.options.record else ''
     )

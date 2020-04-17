@@ -36,14 +36,14 @@ def main():
         ],
         weight_osc_body=1e1,
         weight_osc_legs_internal=3e1,
-        weight_osc_legs_opposite=3e0,
-        weight_osc_legs_following=3e0,
-        weight_osc_legs2body=3e1,
+        weight_osc_legs_opposite=1e-2,
+        weight_osc_legs_following=1e-2,
+        weight_osc_legs2body=1e0,
         weight_sens_contact_i=-2e0,
         weight_sens_contact_e=2e0,
         weight_sens_hydro_freq=-1e-1,
         weight_sens_hydro_amp=-1e-1,
-        body_stand_amplitude=0.4,
+        body_stand_amplitude=0.3,
     )
 
     (
@@ -73,13 +73,13 @@ def main():
 
     # Post-processing
     pylog.info('Simulation post-processing')
-    log_path = 'salamander_results' if prompt('Save data', False) else ''
+    log_path = 'salamander_results'
     video_name = os.path.join(log_path, 'simulation.mp4')
     if log_path and not os.path.isdir(log_path):
         os.mkdir(log_path)
     sim.postprocess(
         iteration=sim.iteration,
-        log_path=log_path,
+        log_path=log_path if prompt('Save data', False) else '',
         plot=prompt('Show plots', False),
         video=video_name if sim.options.record else ''
     )
