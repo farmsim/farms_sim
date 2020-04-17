@@ -38,9 +38,9 @@ def get_simulation_options(**kwargs):
     simulation_options.units.kilograms = 1
 
     # Camera options
-    simulation_options.video_yaw = 0
-    simulation_options.video_pitch = -30
-    simulation_options.video_distance = 1
+    # simulation_options.video_yaw = 0
+    # simulation_options.video_pitch = -30
+    # simulation_options.video_distance = 1
     # simulation_options.video_name = (
     #     'transition_videos/swim2walk_y{}_p{}_d{}'.format(
     #         simulation_options.video_yaw,
@@ -151,14 +151,6 @@ def get_pleurobot_options(**kwargs):
         'j10',
         'j11',
         'j_tail',
-        'HindLimbLeft_Yaw',
-        'HindLimbLeft_Pitch',
-        'HindLimbLeft_Roll',
-        'HindLimbLeft_Elbow',
-        'HindLimbRight_Yaw',
-        'HindLimbRight_Pitch',
-        'HindLimbRight_Roll',
-        'HindLimbRight_Elbow',
         'ForearmLeft_Yaw',
         'ForearmLeft_Pitch',
         'ForearmLeft_Roll',
@@ -167,6 +159,14 @@ def get_pleurobot_options(**kwargs):
         'ForearmRight_Pitch',
         'ForearmRight_Roll',
         'ForearmRight_Elbow',
+        'HindLimbLeft_Yaw',
+        'HindLimbLeft_Pitch',
+        'HindLimbLeft_Roll',
+        'HindLimbLeft_Elbow',
+        'HindLimbRight_Yaw',
+        'HindLimbRight_Pitch',
+        'HindLimbRight_Roll',
+        'HindLimbRight_Elbow',
     ])
     feet = kwargs.pop('feet', ['link{}'.format(i+1) for i in [14, 18, 22, 26]])
     links_no_collisions = kwargs.pop('links_no_collisions', [
@@ -182,7 +182,7 @@ def get_pleurobot_options(**kwargs):
 
     # Amplitudes gains
     if gain_amplitude is None:
-        gain_amplitude = [1]*(13+4*4)  # np.ones(13+4*4)
+        gain_amplitude = [-1]*(13+4*4)  # np.ones(13+4*4)
         gain_amplitude[6] = 0
         gain_amplitude[12] = 0
         for leg_i in range(2):
@@ -192,7 +192,7 @@ def get_pleurobot_options(**kwargs):
                 gain_amplitude[13+2*leg_i*4+side_i*4+0] = mirror
                 gain_amplitude[13+2*leg_i*4+side_i*4+1] = mirror
                 gain_amplitude[13+2*leg_i*4+side_i*4+2] = -mirror
-                gain_amplitude[13+2*leg_i*4+side_i*4+3] = mirror_full
+                gain_amplitude[13+2*leg_i*4+side_i*4+3] = mirror
         gain_amplitude = dict(zip(joints, gain_amplitude))
 
     # Offsets gains
@@ -218,9 +218,9 @@ def get_pleurobot_options(**kwargs):
                 mirror = (1 if side_i else -1)
                 mirror_full = (1 if leg_i else -1)*(1 if side_i else -1)
                 joints_offsets[13+2*leg_i*4+side_i*4+0] = 0
-                joints_offsets[13+2*leg_i*4+side_i*4+1] = 0
-                joints_offsets[13+2*leg_i*4+side_i*4+2] = 0
-                joints_offsets[13+2*leg_i*4+side_i*4+3] = mirror_full*np.pi/8
+                joints_offsets[13+2*leg_i*4+side_i*4+1] = mirror*np.pi/16 if leg_i else mirror*np.pi/8
+                joints_offsets[13+2*leg_i*4+side_i*4+2] = 0 if leg_i else -mirror*np.pi/3
+                joints_offsets[13+2*leg_i*4+side_i*4+3] = -mirror*np.pi/4 if leg_i else mirror*np.pi/16
         joints_offsets = dict(zip(joints, joints_offsets))
 
     # Animat options
@@ -231,19 +231,19 @@ def get_pleurobot_options(**kwargs):
         n_joints_body=13,
         body_head_amplitude=0,
         body_tail_amplitude=0,
-        body_stand_amplitude=0.3,
+        body_stand_amplitude=kwargs.pop('body_stand_amplitude', 0.3),
         # body_stand_shift=np.pi/4,
         # legs_amplitude=[0.8, np.pi/32, np.pi/4, np.pi/8],
         # legs_offsets_walking=[0, np.pi/32, 0, np.pi/8],
         # legs_offsets_swimming=[-2*np.pi/5, 0, 0, 0],
-        body_stand_shift=kwargs.pop('body_stand_shift', np.pi/4,),
+        body_stand_shift=kwargs.pop('body_stand_shift', np.pi/4),
         legs_amplitude=kwargs.pop(
             'legs_amplitude',
-            [np.pi/4, np.pi/8, np.pi/8, np.pi/8],
+            [np.pi/8, np.pi/32, np.pi/8, np.pi/8],
         ),
         legs_offsets_walking=kwargs.pop(
             'legs_offsets_walking',
-            [0, -np.pi/16, -np.pi/16, 0],
+            [0, -np.pi/32, -np.pi/16, 0],
         ),
         legs_offsets_swimming=kwargs.pop(
             'legs_offsets_swimming',
@@ -254,7 +254,7 @@ def get_pleurobot_options(**kwargs):
         joints_offsets=joints_offsets,
         weight_osc_body=kwargs.pop('weight_osc_body', 1e0),
         weight_osc_legs_internal=kwargs.pop('weight_osc_legs_internal', 3e1),
-        weight_osc_legs_opposite=kwargs.pop('weight_osc_legs_opoosite', 3e0),
+        weight_osc_legs_opposite=kwargs.pop('weight_osc_legs_opposite', 3e0),
         weight_osc_legs_following=kwargs.pop('weight_osc_legs_following', 3e0),
         weight_osc_legs2body=kwargs.pop('weight_osc_legs2body', 1e1),
         weight_sens_contact_i=kwargs.pop('weight_sens_contact_i', 0),
