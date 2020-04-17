@@ -39,9 +39,12 @@ class AmphibiousData(AnimatData):
                 control.network.oscillators,
                 control.drives,
             ),
-            osc_connectivity=AmphibiousOscillatorConnectivity.from_options(
-                morphology,
-                control.network.connectivity,
+            # osc_connectivity=AmphibiousOscillatorConnectivity.from_options(
+            #     morphology,
+            #     control.network.connectivity,
+            # ),
+            osc_connectivity=OscillatorConnectivity.from_connectivity(
+                control.network.osc2osc
             ),
             # contacts_connectivity=AmphibiousContactsConnectivity.from_options(
             #     morphology,
@@ -198,233 +201,233 @@ class AmphibiousOscillatorArray(OscillatorArray):
         self.amplitudes_desired()[:] = amplitudes
 
 
-class AmphibiousOscillatorConnectivity(OscillatorConnectivity):
-    """Connectivity array"""
+# class AmphibiousOscillatorConnectivity(OscillatorConnectivity):
+#     """Connectivity array"""
 
-    @staticmethod
-    def set_options(morphology, connectivity_options, verbose=False):
-        """Walking parameters"""
-        # osc_options = control.network.oscillators
-        n_body_joints = morphology.n_joints_body
-        connectivity, weights, desired_phases = [], [], []
-        body_amplitude = connectivity_options.weight_osc_body
-        legs_amplitude_internal = connectivity_options.weight_osc_legs_internal
-        legs_amplitude_opposite = connectivity_options.weight_osc_legs_opposite
-        legs_amplitude_following = connectivity_options.weight_osc_legs_following
-        legs2body_amplitude = connectivity_options.weight_osc_legs2body
+#     @staticmethod
+#     def set_options(morphology, connectivity_options, verbose=False):
+#         """Walking parameters"""
+#         # osc_options = control.network.oscillators
+#         n_body_joints = morphology.n_joints_body
+#         connectivity, weights, desired_phases = [], [], []
+#         body_amplitude = connectivity_options.weight_osc_body
+#         legs_amplitude_internal = connectivity_options.weight_osc_legs_internal
+#         legs_amplitude_opposite = connectivity_options.weight_osc_legs_opposite
+#         legs_amplitude_following = connectivity_options.weight_osc_legs_following
+#         legs2body_amplitude = connectivity_options.weight_osc_legs2body
 
-        # # Amplitudes
-        # amplitudes = [
-        #     osc_options.body_stand_amplitude*np.sin(
-        #         2*np.pi*i/n_body_joints
-        #         - osc_options.body_stand_shift
-        #     )
-        #     for i in range(n_body_joints)
-        # ]
+#         # # Amplitudes
+#         # amplitudes = [
+#         #     osc_options.body_stand_amplitude*np.sin(
+#         #         2*np.pi*i/n_body_joints
+#         #         - osc_options.body_stand_shift
+#         #     )
+#         #     for i in range(n_body_joints)
+#         # ]
 
-        # Body
-        convention = AmphibiousConvention(**morphology)
-        for i in range(n_body_joints):
-            for sides in [[1, 0], [0, 1]]:
-                connectivity.append([
-                    convention.bodyosc2index(joint_i=i, side=sides[0]),
-                    convention.bodyosc2index(joint_i=i, side=sides[1]),
-                ])
-                weights.append(body_amplitude)
-                desired_phases.append(np.pi)
-        for i in range(n_body_joints-1):
-            # i - i+1
-            phase_diff = connectivity_options.body_phase_bias
-            phase_follow = connectivity_options.leg_phase_follow
-            # phase_diff = np.pi/11
-            for side in range(2):
-                for osc, phase in [
-                        [[i+1, i], phase_diff],
-                        [[i, i+1], -phase_diff]
-                ]:
-                    connectivity.append([
-                        convention.bodyosc2index(joint_i=osc[0], side=side),
-                        convention.bodyosc2index(joint_i=osc[1], side=side),
-                    ])
-                    weights.append(body_amplitude)
-                    desired_phases.append(phase)
+#         # Body
+#         convention = AmphibiousConvention(**morphology)
+#         for i in range(n_body_joints):
+#             for sides in [[1, 0], [0, 1]]:
+#                 connectivity.append([
+#                     convention.bodyosc2index(joint_i=i, side=sides[0]),
+#                     convention.bodyosc2index(joint_i=i, side=sides[1]),
+#                 ])
+#                 weights.append(body_amplitude)
+#                 desired_phases.append(np.pi)
+#         for i in range(n_body_joints-1):
+#             # i - i+1
+#             phase_diff = connectivity_options.body_phase_bias
+#             phase_follow = connectivity_options.leg_phase_follow
+#             # phase_diff = np.pi/11
+#             for side in range(2):
+#                 for osc, phase in [
+#                         [[i+1, i], phase_diff],
+#                         [[i, i+1], -phase_diff]
+#                 ]:
+#                     connectivity.append([
+#                         convention.bodyosc2index(joint_i=osc[0], side=side),
+#                         convention.bodyosc2index(joint_i=osc[1], side=side),
+#                     ])
+#                     weights.append(body_amplitude)
+#                     desired_phases.append(phase)
 
-        # Legs (internal)
-        for leg_i in range(morphology.n_legs//2):
-            for side_i in range(2):
-                _options = {
-                    'leg_i': leg_i,
-                    'side_i': side_i
-                }
-                # X - X
-                for joint_i in range(morphology.n_dof_legs):
-                    for sides in [[1, 0], [0, 1]]:
-                        connectivity.append([
-                            convention.legosc2index(
-                                **_options,
-                                joint_i=joint_i,
-                                side=sides[0]
-                            ),
-                            convention.legosc2index(
-                                **_options,
-                                joint_i=joint_i,
-                                side=sides[1]
-                            ),
-                        ])
-                        weights.append(legs_amplitude_internal)
-                        desired_phases.append(np.pi)
+#         # Legs (internal)
+#         for leg_i in range(morphology.n_legs//2):
+#             for side_i in range(2):
+#                 _options = {
+#                     'leg_i': leg_i,
+#                     'side_i': side_i
+#                 }
+#                 # X - X
+#                 for joint_i in range(morphology.n_dof_legs):
+#                     for sides in [[1, 0], [0, 1]]:
+#                         connectivity.append([
+#                             convention.legosc2index(
+#                                 **_options,
+#                                 joint_i=joint_i,
+#                                 side=sides[0]
+#                             ),
+#                             convention.legosc2index(
+#                                 **_options,
+#                                 joint_i=joint_i,
+#                                 side=sides[1]
+#                             ),
+#                         ])
+#                         weights.append(legs_amplitude_internal)
+#                         desired_phases.append(np.pi)
 
-                # Following
-                internal_connectivity = []
-                if morphology.n_dof_legs > 1:
-                    # 0 - 1
-                    internal_connectivity.extend([
-                        [[1, 0], 0, 0.5*np.pi],
-                        [[0, 1], 0, -0.5*np.pi],
-                        [[1, 0], 1, 0.5*np.pi],
-                        [[0, 1], 1, -0.5*np.pi],
-                    ])
-                if morphology.n_dof_legs > 2:
-                    # 0 - 2
-                    internal_connectivity.extend([
-                        [[2, 0], 0, 0],
-                        [[0, 2], 0, 0],
-                        [[2, 0], 1, 0],
-                        [[0, 2], 1, 0],
-                    ])
-                if morphology.n_dof_legs > 3:
-                    # 1 - 3
-                    internal_connectivity.extend([
-                        [[3, 1], 0, 0],
-                        [[1, 3], 0, 0],
-                        [[3, 1], 1, 0],
-                        [[1, 3], 1, 0],
-                    ])
-                for joints, side, phase in internal_connectivity:
-                    connectivity.append([
-                        convention.legosc2index(
-                            **_options,
-                            joint_i=joints[0],
-                            side=side,
-                        ),
-                        convention.legosc2index(
-                            **_options,
-                            joint_i=joints[1],
-                            side=side,
-                        ),
-                    ])
-                    weights.append(legs_amplitude_internal)
-                    desired_phases.append(phase)
+#                 # Following
+#                 internal_connectivity = []
+#                 if morphology.n_dof_legs > 1:
+#                     # 0 - 1
+#                     internal_connectivity.extend([
+#                         [[1, 0], 0, 0.5*np.pi],
+#                         [[0, 1], 0, -0.5*np.pi],
+#                         [[1, 0], 1, 0.5*np.pi],
+#                         [[0, 1], 1, -0.5*np.pi],
+#                     ])
+#                 if morphology.n_dof_legs > 2:
+#                     # 0 - 2
+#                     internal_connectivity.extend([
+#                         [[2, 0], 0, 0],
+#                         [[0, 2], 0, 0],
+#                         [[2, 0], 1, 0],
+#                         [[0, 2], 1, 0],
+#                     ])
+#                 if morphology.n_dof_legs > 3:
+#                     # 1 - 3
+#                     internal_connectivity.extend([
+#                         [[3, 1], 0, 0],
+#                         [[1, 3], 0, 0],
+#                         [[3, 1], 1, 0],
+#                         [[1, 3], 1, 0],
+#                     ])
+#                 for joints, side, phase in internal_connectivity:
+#                     connectivity.append([
+#                         convention.legosc2index(
+#                             **_options,
+#                             joint_i=joints[0],
+#                             side=side,
+#                         ),
+#                         convention.legosc2index(
+#                             **_options,
+#                             joint_i=joints[1],
+#                             side=side,
+#                         ),
+#                     ])
+#                     weights.append(legs_amplitude_internal)
+#                     desired_phases.append(phase)
 
-        # Opposite leg interaction
-        for leg_i in range(morphology.n_legs//2):
-            for joint_i in range(morphology.n_dof_legs):
-                for side in range(2):
-                    _options = {
-                        'joint_i': joint_i,
-                        'side': side
-                    }
-                    for sides in [[1, 0], [0, 1]]:
-                        connectivity.append([
-                            convention.legosc2index(
-                                leg_i=leg_i,
-                                side_i=sides[0],
-                                **_options
-                            ),
-                            convention.legosc2index(
-                                leg_i=leg_i,
-                                side_i=sides[1],
-                                **_options
-                            ),
-                        ])
-                        weights.append(legs_amplitude_opposite)
-                        desired_phases.append(np.pi)
+#         # Opposite leg interaction
+#         for leg_i in range(morphology.n_legs//2):
+#             for joint_i in range(morphology.n_dof_legs):
+#                 for side in range(2):
+#                     _options = {
+#                         'joint_i': joint_i,
+#                         'side': side
+#                     }
+#                     for sides in [[1, 0], [0, 1]]:
+#                         connectivity.append([
+#                             convention.legosc2index(
+#                                 leg_i=leg_i,
+#                                 side_i=sides[0],
+#                                 **_options
+#                             ),
+#                             convention.legosc2index(
+#                                 leg_i=leg_i,
+#                                 side_i=sides[1],
+#                                 **_options
+#                             ),
+#                         ])
+#                         weights.append(legs_amplitude_opposite)
+#                         desired_phases.append(np.pi)
 
-        # Following leg interaction
-        for leg_pre in range(morphology.n_legs//2-1):
-            for side_i in range(2):
-                for side in range(2):
-                    _options = {
-                        'side_i': side_i,
-                        'side': side,
-                        'joint_i': 0,
-                    }
-                    for legs, phase in [
-                            [[leg_pre, leg_pre+1], phase_follow],
-                            [[leg_pre+1, leg_pre], -phase_follow],
-                    ]:
-                        connectivity.append([
-                            convention.legosc2index(
-                                leg_i=legs[0],
-                                **_options
-                            ),
-                            convention.legosc2index(
-                                leg_i=legs[1],
-                                **_options
-                            ),
-                        ])
-                        weights.append(legs_amplitude_following)
-                        desired_phases.append(phase)
+#         # Following leg interaction
+#         for leg_pre in range(morphology.n_legs//2-1):
+#             for side_i in range(2):
+#                 for side in range(2):
+#                     _options = {
+#                         'side_i': side_i,
+#                         'side': side,
+#                         'joint_i': 0,
+#                     }
+#                     for legs, phase in [
+#                             [[leg_pre, leg_pre+1], phase_follow],
+#                             [[leg_pre+1, leg_pre], -phase_follow],
+#                     ]:
+#                         connectivity.append([
+#                             convention.legosc2index(
+#                                 leg_i=legs[0],
+#                                 **_options
+#                             ),
+#                             convention.legosc2index(
+#                                 leg_i=legs[1],
+#                                 **_options
+#                             ),
+#                         ])
+#                         weights.append(legs_amplitude_following)
+#                         desired_phases.append(phase)
 
-        # Body-legs interaction
-        for leg_i in range(morphology.n_legs//2):
-            for side_i in range(2):
-                for i in range(n_body_joints):  # [0, 1, 7, 8, 9, 10]
-                    for side_leg in range(2): # Muscle facing front/back
-                        for lateral in range(2):
-                            walk_phase = (
-                                0
-                                if i in [0, 1, 7, 8, 9, 10]
-                                else np.pi
-                            )
-                            # Forelimbs
-                            connectivity.append([
-                                convention.bodyosc2index(
-                                    joint_i=i,
-                                    side=(side_i+lateral)%2
-                                ),
-                                convention.legosc2index(
-                                    leg_i=leg_i,
-                                    side_i=side_i,
-                                    joint_i=0,
-                                    side=(side_i+side_leg)%2
-                                ),
-                            ])
-                            weights.append(legs2body_amplitude)
-                            desired_phases.append(
-                                walk_phase
-                                + np.pi*(side_i+1)
-                                + lateral*np.pi
-                                + side_leg*np.pi
-                                + leg_i*np.pi
-                            )
-        if verbose:
-            with np.printoptions(
-                    suppress=True,
-                    precision=3,
-                    threshold=sys.maxsize
-            ):
-                pylog.debug('Oscillator connectivity:\n{}'.format(
-                    np.array(connectivity, dtype=DTYPE)
-                ))
-        return connectivity, weights, desired_phases
+#         # Body-legs interaction
+#         for leg_i in range(morphology.n_legs//2):
+#             for side_i in range(2):
+#                 for i in range(n_body_joints):  # [0, 1, 7, 8, 9, 10]
+#                     for side_leg in range(2): # Muscle facing front/back
+#                         for lateral in range(2):
+#                             walk_phase = (
+#                                 0
+#                                 if i in [0, 1, 7, 8, 9, 10]
+#                                 else np.pi
+#                             )
+#                             # Forelimbs
+#                             connectivity.append([
+#                                 convention.bodyosc2index(
+#                                     joint_i=i,
+#                                     side=(side_i+lateral)%2
+#                                 ),
+#                                 convention.legosc2index(
+#                                     leg_i=leg_i,
+#                                     side_i=side_i,
+#                                     joint_i=0,
+#                                     side=(side_i+side_leg)%2
+#                                 ),
+#                             ])
+#                             weights.append(legs2body_amplitude)
+#                             desired_phases.append(
+#                                 walk_phase
+#                                 + np.pi*(side_i+1)
+#                                 + lateral*np.pi
+#                                 + side_leg*np.pi
+#                                 + leg_i*np.pi
+#                             )
+#         if verbose:
+#             with np.printoptions(
+#                     suppress=True,
+#                     precision=3,
+#                     threshold=sys.maxsize
+#             ):
+#                 pylog.debug('Oscillator connectivity:\n{}'.format(
+#                     np.array(connectivity, dtype=DTYPE)
+#                 ))
+#         return connectivity, weights, desired_phases
 
-    @classmethod
-    def from_options(cls, morphology, control):
-        """Parameters for walking"""
-        connectivity, weights, phases = cls.set_options(morphology, control)
-        return cls(
-            np.array(connectivity, dtype=ITYPE),
-            np.array(weights, dtype=DTYPE),
-            np.array(phases, dtype=DTYPE),
-        )
+#     @classmethod
+#     def from_options(cls, morphology, control):
+#         """Parameters for walking"""
+#         connectivity, weights, phases = cls.set_options(morphology, control)
+#         return cls(
+#             np.array(connectivity, dtype=ITYPE),
+#             np.array(weights, dtype=DTYPE),
+#             np.array(phases, dtype=DTYPE),
+#         )
 
-    def update(self, morphology, control):
-        """Update from options
+#     def update(self, morphology, control):
+#         """Update from options
 
-        :param options: Animat options
+#         :param options: Animat options
 
-        """
+#         """
 
 
 class AmphibiousJointsArray(JointsArray):

@@ -154,6 +154,27 @@ class OscillatorConnectivity(OscillatorConnectivityCy):
             'desired_phases': to_array(self.desired_phases.array),
         }
 
+    @classmethod
+    def from_connectivity(cls, connectivity):
+        """From connectivity"""
+        connections = [
+            [connection['in'], connection['out']]
+            for connection in connectivity
+        ]
+        weights = [
+            connection['weight']
+            for connection in connectivity
+        ]
+        phase_bias = [
+            connection['phase_bias']
+            for connection in connectivity
+        ]
+        return cls(
+            connections=np.array(connections, dtype=ITYPE),
+            weights=np.array(weights, dtype=DTYPE),
+            desired_phases=np.array(phase_bias, dtype=DTYPE),
+        )
+
 
 class ContactConnectivity(ContactConnectivityCy):
     """Connectivity array"""
@@ -166,7 +187,7 @@ class ContactConnectivity(ContactConnectivityCy):
             weights=dictionary['weights'],
         )
 
-    def to_dict(self, iteration=None):
+    def to_dict(self, _iteration=None):
         """Convert data to dictionary"""
         return {
             'connections': to_array(self.connections.array),
