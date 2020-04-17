@@ -62,9 +62,9 @@ class AmphibiousOptions(Options):
                 options['control'].joints.offsets = (
                     {joint: 0 for joint in options['morphology'].joints}
                 )
-            if options['control'].network.osc_init is None:
-                options['control'].network.osc_init = (
-                    AmphibiousNetworkOptions.default_osc_init(
+            if options['control'].network.state_init is None:
+                options['control'].network.state_init = (
+                    AmphibiousNetworkOptions.default_state_init(
                         options['morphology'].n_joints(),
                     ).tolist()
                 )
@@ -364,9 +364,11 @@ class AmphibiousNetworkOptions(Options):
         self.oscillators = AmphibiousOscillatorOptions(**oscillators)
         # self.connectivity = AmphibiousConnectivityOptions(**connectivity)
 
+        # State
+        self.state_init = kwargs.pop('state_init', None)
+
         # Nodes
         self.osc_nodes = kwargs.pop('osc_nodes', None)
-        self.osc_init = kwargs.pop('osc_init', None)
         self.osc_freqs = kwargs.pop('osc_freqs', None)
         self.osc_rates = kwargs.pop('osc_rates', None)
         self.osc_amplitudes = kwargs.pop('osc_amplitudes', None)
@@ -399,7 +401,7 @@ class AmphibiousNetworkOptions(Options):
         return cls(**options)
 
     @staticmethod
-    def default_osc_init(n_joints):
+    def default_state_init(n_joints):
         """Default state"""
         return 1e-3*np.arange(5*n_joints)
 
