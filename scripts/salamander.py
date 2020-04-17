@@ -9,6 +9,8 @@ import farms_pylog as pylog
 from farms_models.utils import get_sdf_path
 from farms_bullet.simulation.options import SimulationOptions
 from farms_amphibious.model.options import AmphibiousOptions
+from farms_amphibious.utils.utils import prompt
+from farms_amphibious.utils.network import plot_networks_maps
 from farms_amphibious.experiment.simulation import simulation, profile
 from farms_amphibious.experiment.options import (
     amphibious_options,
@@ -70,20 +72,20 @@ def main():
 
     # Post-processing
     pylog.info('Simulation post-processing')
-    log_path = 'salamander_results'
+    log_path = 'salamander_results' if prompt('Save data', False) else ''
     video_name = os.path.join(log_path, 'simulation.mp4')
-    if not os.path.isdir(log_path):
+    if log_path and not os.path.isdir(log_path):
         os.mkdir(log_path)
     sim.postprocess(
         iteration=sim.iteration,
         log_path=log_path,
-        plot=False,
-        video=(
-            video_name
-            if sim.options.record and not sim.options.headless
-            else ''
-        )
+        plot=prompt('Show plots', False),
+        video=video_name if sim.options.record else ''
     )
+
+    # Plot network
+    if prompt('Show connectivity maps', False):
+        plot_networks_maps(animat_options.morphology, sim.animat().data)
 
     # Plot
     plt.show()
