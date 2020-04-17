@@ -291,6 +291,12 @@ class SensorsData(SensorsDataCy):
 class ContactsArray(ContactsArrayCy):
     """Sensor array"""
 
+    @classmethod
+    def from_size(cls, n_contacts, n_iterations):
+        """From size"""
+        contacts = np.zeros([n_iterations, n_contacts, 9], dtype=DTYPE)
+        return cls(contacts)
+
     def plot(self, times):
         """Plot"""
         self.plot_ground_reaction_forces(times)
@@ -362,6 +368,12 @@ class ContactsArray(ContactsArrayCy):
 
 class ProprioceptionArray(ProprioceptionArrayCy):
     """Proprioception array"""
+
+    @classmethod
+    def from_size(cls, n_joints, n_iterations):
+        """From size"""
+        proprioception = np.zeros([n_iterations, n_joints, 12], dtype=DTYPE)
+        return cls(proprioception)
 
     def plot(self, times):
         """Plot"""
@@ -492,6 +504,12 @@ class ProprioceptionArray(ProprioceptionArrayCy):
 class GpsArray(GpsArrayCy):
     """Gps array"""
 
+    @classmethod
+    def from_size(cls, n_links, n_iterations):
+        """From size"""
+        gps = np.zeros([n_iterations, n_links, 20], dtype=DTYPE)
+        return cls(gps)
+
     def plot(self, times):
         """Plot"""
         self.plot_base_position(times, xaxis=0, yaxis=1)
@@ -531,6 +549,12 @@ class GpsArray(GpsArrayCy):
 
 class HydrodynamicsArray(HydrodynamicsArrayCy):
     """Hydrodynamics array"""
+
+    @classmethod
+    def from_size(cls, n_links, n_iterations):
+        """From size"""
+        hydrodynamics = np.zeros([n_iterations, n_links, 6], dtype=DTYPE)
+        return cls(hydrodynamics)
 
     def plot(self, times):
         """Plot"""

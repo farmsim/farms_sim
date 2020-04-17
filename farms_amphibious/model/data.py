@@ -1,10 +1,8 @@
 """Animat data"""
 
-import sys
 import numpy as np
 from scipy import interpolate
 
-import farms_pylog as pylog
 from ..data.animat_data import (
     OscillatorNetworkState,
     AnimatData,
@@ -66,19 +64,35 @@ class AmphibiousData(AnimatData):
             control,
         )
         sensors = SensorsData(
-            contacts=AmphibiousContactsArray.from_options(
+            # contacts=AmphibiousContactsArray.from_options(
+            #     morphology.n_legs,
+            #     n_iterations,
+            # ),
+            # proprioception=AmphibiousProprioceptionArray.from_options(
+            #     morphology.n_joints(),
+            #     n_iterations,
+            # ),
+            # gps=AmphibiousGpsArray.from_options(
+            #     morphology.n_links(),
+            #     n_iterations,
+            # ),
+            # hydrodynamics=AmphibiousHydrodynamicsArray.from_options(
+            #     morphology.n_links_body(),
+            #     n_iterations,
+            # )
+            contacts=ContactsArray.from_size(
                 morphology.n_legs,
                 n_iterations,
             ),
-            proprioception=AmphibiousProprioceptionArray.from_options(
+            proprioception=ProprioceptionArray.from_size(
                 morphology.n_joints(),
                 n_iterations,
             ),
-            gps=AmphibiousGpsArray.from_options(
+            gps=GpsArray.from_size(
                 morphology.n_links(),
                 n_iterations,
             ),
-            hydrodynamics=AmphibiousHydrodynamicsArray.from_options(
+            hydrodynamics=HydrodynamicsArray.from_size(
                 morphology.n_links_body(),
                 n_iterations,
             )
@@ -487,14 +501,14 @@ class AmphibiousJointsArray(JointsArray):
         self.offsets()[:] = offsets
 
 
-class AmphibiousContactsArray(ContactsArray):
-    """Amphibious contacts sensors array"""
+# class AmphibiousContactsArray(ContactsArray):
+#     """Amphibious contacts sensors array"""
 
-    @classmethod
-    def from_options(cls, n_contacts, n_iterations):
-        """Default"""
-        contacts = np.zeros([n_iterations, n_contacts, 9], dtype=DTYPE)  # x, y, z
-        return cls(contacts)
+#     @classmethod
+#     def from_options(cls, n_contacts, n_iterations):
+#         """Default"""
+#         contacts = np.zeros([n_iterations, n_contacts, 9], dtype=DTYPE)  # x, y, z
+#         return cls(contacts)
 
 
 # class AmphibiousContactsConnectivity(ContactConnectivity):
@@ -576,31 +590,31 @@ class AmphibiousContactsArray(ContactsArray):
 #         )
 
 
-class AmphibiousProprioceptionArray(ProprioceptionArray):
-    """Amphibious proprioception sensors array"""
+# class AmphibiousProprioceptionArray(ProprioceptionArray):
+#     """Amphibious proprioception sensors array"""
 
-    @classmethod
-    def from_options(cls, n_joints, n_iterations):
-        """Default"""
-        proprioception = np.zeros([n_iterations, n_joints, 12], dtype=DTYPE)
-        return cls(proprioception)
-
-
-class AmphibiousGpsArray(GpsArray):
-    """Amphibious gps sensors array"""
-
-    @classmethod
-    def from_options(cls, n_links, n_iterations):
-        """Default"""
-        gps = np.zeros([n_iterations, n_links, 20], dtype=DTYPE)
-        return cls(gps)
+#     @classmethod
+#     def from_options(cls, n_joints, n_iterations):
+#         """Default"""
+#         proprioception = np.zeros([n_iterations, n_joints, 12], dtype=DTYPE)
+#         return cls(proprioception)
 
 
-class AmphibiousHydrodynamicsArray(HydrodynamicsArray):
-    """Amphibious hydrodynamics sensors array"""
+# class AmphibiousGpsArray(GpsArray):
+#     """Amphibious gps sensors array"""
 
-    @classmethod
-    def from_options(cls, n_links, n_iterations):
-        """Default"""
-        hydrodynamics = np.zeros([n_iterations, n_links, 6], dtype=DTYPE)  # Fxyz, Mxyz
-        return cls(hydrodynamics)
+#     @classmethod
+#     def from_options(cls, n_links, n_iterations):
+#         """Default"""
+#         gps = np.zeros([n_iterations, n_links, 20], dtype=DTYPE)
+#         return cls(gps)
+
+
+# class AmphibiousHydrodynamicsArray(HydrodynamicsArray):
+#     """Amphibious hydrodynamics sensors array"""
+
+#     @classmethod
+#     def from_options(cls, n_links, n_iterations):
+#         """Default"""
+#         hydrodynamics = np.zeros([n_iterations, n_links, 6], dtype=DTYPE)  # Fxyz, Mxyz
+#         return cls(hydrodynamics)
