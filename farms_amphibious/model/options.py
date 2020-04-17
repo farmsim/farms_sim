@@ -74,6 +74,14 @@ class AmphibiousOptions(Options):
                         kwargs.pop('weight_sens_contact_i', -2e0),
                     )
                 )
+            if options['control'].network.hydro2osc is None:
+                options['control'].network.hydro2osc = (
+                    AmphibiousNetworkOptions.default_hydro2osc(
+                        options['morphology'],
+                        kwargs.pop('weight_sens_hydro_freq', -1),
+                        kwargs.pop('weight_sens_hydro_amp', 1),
+                    )
+                )
 
         options['collect_gps'] = kwargs.pop('collect_gps', False)
         options['show_hydrodynamics'] = kwargs.pop('show_hydrodynamics', False)
@@ -405,6 +413,25 @@ class AmphibiousNetworkOptions(Options):
                                 })
         return connectivity
 
+    @staticmethod
+    def default_hydro2osc(morphology, weight_frequency, weight_amplitude):
+        """Default"""
+        connectivity = []
+        # morphology.n_legs
+        convention = AmphibiousConvention(**morphology)
+        for joint_i in range(morphology.n_joints_body):
+            for side_osc in range(2):
+                connectivity.append({
+                    'in': convention.bodyosc2index(
+                        joint_i=joint_i,
+                        side=side_osc
+                    ),
+                    'out': joint_i+1,
+                    'weight_frequency': weight_frequency,
+                    'weight_amplitude': weight_amplitude,
+                })
+        return connectivity
+
 
 class AmphibiousOscillatorOptions(Options):
     """Amphibious oscillator options
@@ -543,8 +570,8 @@ class AmphibiousConnectivityOptions(Options):
         self.weight_osc_legs2body = kwargs.pop('weight_osc_legs2body')
         # self.weight_sens_contact_i = kwargs.pop('weight_sens_contact_i')
         # self.weight_sens_contact_e = kwargs.pop('weight_sens_contact_e')
-        self.weight_sens_hydro_freq = kwargs.pop('weight_sens_hydro_freq')
-        self.weight_sens_hydro_amp = kwargs.pop('weight_sens_hydro_amp')
+        # self.weight_sens_hydro_freq = kwargs.pop('weight_sens_hydro_freq')
+        # self.weight_sens_hydro_amp = kwargs.pop('weight_sens_hydro_amp')
         if kwargs:
             raise Exception('Unknown kwargs: {}'.format(kwargs))
 
@@ -570,8 +597,8 @@ class AmphibiousConnectivityOptions(Options):
                 ['weight_osc_legs2body', 3e1],
                 # ['weight_sens_contact_i', -2e0],
                 # ['weight_sens_contact_e', 2e0],
-                ['weight_sens_hydro_freq', -1],
-                ['weight_sens_hydro_amp', 1],
+                # ['weight_sens_hydro_freq', -1],
+                # ['weight_sens_hydro_amp', 1],
         ]:
             options[option_name] = kwargs.pop(option_name, default_value)
         return cls(**options)

@@ -50,9 +50,12 @@ class AmphibiousData(AnimatData):
             contacts_connectivity=ContactConnectivity.from_connectivity(
                 control.network.contact2osc
             ),
-            hydro_connectivity=AmphibiousHydroConnectivity.from_options(
-                morphology,
-                control.network.connectivity,
+            # hydro_connectivity=AmphibiousHydroConnectivity.from_options(
+            #     morphology,
+            #     control.network.connectivity,
+            # ),
+            hydro_connectivity=HydroConnectivity.from_connectivity(
+                control.network.hydro2osc,
             ),
         )
         joints = AmphibiousJointsArray.from_options(
@@ -537,37 +540,37 @@ class AmphibiousContactsArray(ContactsArray):
 #         )
 
 
-class AmphibiousHydroConnectivity(HydroConnectivity):
-    """Amphibious hydro connectivity array"""
+# class AmphibiousHydroConnectivity(HydroConnectivity):
+#     """Amphibious hydro connectivity array"""
 
-    @classmethod
-    def from_options(cls, morphology, connectivity_options, verbose=False):
-        """Default"""
-        connectivity = []
-        frequencies = []
-        amplitudes = []
-        # morphology.n_legs
-        convention = AmphibiousConvention(**morphology)
-        for joint_i in range(morphology.n_joints_body):
-            for side_osc in range(2):
-                connectivity.append([
-                    convention.bodyosc2index(
-                        joint_i=joint_i,
-                        side=side_osc
-                    ),
-                    joint_i+1,
-                ])
-                frequencies.append(connectivity_options.weight_sens_hydro_freq)
-                amplitudes.append(connectivity_options.weight_sens_hydro_amp)
-        if verbose:
-            pylog.debug('Hydro connectivity:\n{}'.format(
-                np.array(connectivity, dtype=ITYPE)
-            ))
-        return cls(
-            connections=np.array(connectivity, dtype=ITYPE),
-            frequency=np.array(frequencies, dtype=DTYPE),
-            amplitude=np.array(amplitudes, dtype=DTYPE),
-        )
+#     @classmethod
+#     def from_options(cls, morphology, connectivity_options, verbose=False):
+#         """Default"""
+#         connectivity = []
+#         frequencies = []
+#         amplitudes = []
+#         # morphology.n_legs
+#         convention = AmphibiousConvention(**morphology)
+#         for joint_i in range(morphology.n_joints_body):
+#             for side_osc in range(2):
+#                 connectivity.append([
+#                     convention.bodyosc2index(
+#                         joint_i=joint_i,
+#                         side=side_osc
+#                     ),
+#                     joint_i+1,
+#                 ])
+#                 frequencies.append(connectivity_options.weight_sens_hydro_freq)
+#                 amplitudes.append(connectivity_options.weight_sens_hydro_amp)
+#         if verbose:
+#             pylog.debug('Hydro connectivity:\n{}'.format(
+#                 np.array(connectivity, dtype=ITYPE)
+#             ))
+#         return cls(
+#             connections=np.array(connectivity, dtype=ITYPE),
+#             frequency=np.array(frequencies, dtype=DTYPE),
+#             amplitude=np.array(amplitudes, dtype=DTYPE),
+#         )
 
 
 class AmphibiousProprioceptionArray(ProprioceptionArray):

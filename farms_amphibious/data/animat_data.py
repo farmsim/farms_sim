@@ -211,6 +211,27 @@ class HydroConnectivity(HydroConnectivityCy):
             'amplitude': to_array(self.amplitude.array),
         }
 
+    @classmethod
+    def from_connectivity(cls, connectivity):
+        """From connectivity"""
+        connections = [
+            [connection['in'], connection['out']]
+            for connection in connectivity
+        ]
+        weights_frequency = [
+            connection['weight_frequency']
+            for connection in connectivity
+        ]
+        weights_amplitude = [
+            connection['weight_amplitude']
+            for connection in connectivity
+        ]
+        return cls(
+            connections=np.array(connections, dtype=ITYPE),
+            frequency=np.array(weights_frequency, dtype=DTYPE),
+            amplitude=np.array(weights_amplitude, dtype=DTYPE),
+        )
+
 
 class JointsArray(JointsArrayCy):
     """Oscillator array"""
