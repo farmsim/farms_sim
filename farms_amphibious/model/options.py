@@ -359,12 +359,15 @@ class AmphibiousNetworkOptions(Options):
         # self.connectivity = AmphibiousConnectivityOptions(**connectivity)
 
         # Nodes
-        self._oscillators = kwargs.pop('_oscillators', None)  # Rename
-        self.oscillators_init = kwargs.pop('oscillators_init', None)
-        self.drives = kwargs.pop('drives', None)
-        self.drives_init = kwargs.pop('drives_init', None)
-        self.contacts = kwargs.pop('contacts', None)
-        self.hydro = kwargs.pop('hydro', None)
+        self.osc_nodes = kwargs.pop('osc_nodes', None)
+        self.osc_init = kwargs.pop('osc_init', None)
+        self.osc_freqs = kwargs.pop('osc_freqs', None)
+        self.osc_rates = kwargs.pop('osc_rates', None)
+        self.osc_amplitudes = kwargs.pop('osc_amplitudes', None)
+        self.drive_nodes = kwargs.pop('drive_nodes', None)
+        self.drive_init = kwargs.pop('drive_init', None)
+        self.contacts_nodes = kwargs.pop('contacts_nodes', None)
+        self.hydro_nodes = kwargs.pop('hydro_nodes', None)
 
         # Connections
         self.osc2osc = kwargs.pop('osc2osc', None)
