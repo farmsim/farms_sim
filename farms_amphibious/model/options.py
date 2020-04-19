@@ -46,60 +46,10 @@ class AmphibiousOptions(Options):
             options['control'] = kwargs.pop('control')
         else:
             options['control'] = AmphibiousControlOptions.from_options(kwargs)
-            options['control'].update(
-                options['morphology'].n_joints_body,
-                options['morphology'].n_dof_legs
+            options['control'].defaults_from_morphology(
+                options['morphology'],
+                kwargs
             )
-            if options['control'].joints.gain_amplitude is None:
-                options['control'].joints.gain_amplitude = (
-                    {joint: 1 for joint in options['morphology'].joints}
-                )
-            if options['control'].joints.gain_offset is None:
-                options['control'].joints.gain_offset = (
-                    {joint: 1 for joint in options['morphology'].joints}
-                )
-            if options['control'].joints.offsets is None:
-                options['control'].joints.offsets = (
-                    {joint: 0 for joint in options['morphology'].joints}
-                )
-            if options['control'].network.state_init is None:
-                options['control'].network.state_init = (
-                    AmphibiousNetworkOptions.default_state_init(
-                        options['morphology'].n_joints(),
-                    ).tolist()
-                )
-            if options['control'].network.osc2osc is None:
-                options['control'].network.osc2osc = (
-                    AmphibiousNetworkOptions.default_osc2osc(
-                        options['morphology'],
-                        kwargs.pop('weight_osc_body', 1e3),
-                        kwargs.pop(
-                            'body_phase_bias',
-                            2*np.pi/options['morphology'].n_joints_body
-                        ),
-                        kwargs.pop('weight_osc_legs_internal', 1e3),
-                        kwargs.pop('weight_osc_legs_opposite', 1e0),
-                        kwargs.pop('weight_osc_legs_following', 1e0),
-                        kwargs.pop('weight_osc_legs2body', 3e1),
-                        kwargs.pop('leg_phase_follow', np.pi),                    )
-                )
-            if options['control'].network.contact2osc is None:
-                options['control'].network.contact2osc = (
-                    AmphibiousNetworkOptions.default_contact2osc(
-                        options['morphology'],
-                        kwargs.pop('weight_sens_contact_e', 2e0),
-                        kwargs.pop('weight_sens_contact_i', -2e0),
-                    )
-                )
-            if options['control'].network.hydro2osc is None:
-                options['control'].network.hydro2osc = (
-                    AmphibiousNetworkOptions.default_hydro2osc(
-                        options['morphology'],
-                        kwargs.pop('weight_sens_hydro_freq', -1),
-                        kwargs.pop('weight_sens_hydro_amp', 1),
-                    )
-                )
-
         options['collect_gps'] = kwargs.pop('collect_gps', False)
         options['show_hydrodynamics'] = kwargs.pop('show_hydrodynamics', False)
         options['transition'] = kwargs.pop('transition', False)
@@ -304,6 +254,62 @@ class AmphibiousControlOptions(Options):
             None
         )
         return cls(**options)
+
+    def defaults_from_morphology(self, morphology, kwargs):
+        """Defaults from morphology"""
+        if self.joints.gain_amplitude is None:
+            self.joints.gain_amplitude = (
+                {joint: 1 for joint in morphology.joints}
+            )
+        if self.joints.gain_offset is None:
+            self.joints.gain_offset = (
+                {joint: 1 for joint in morphology.joints}
+            )
+        if self.joints.offsets is None:
+            self.joints.offsets = (
+                {joint: 0 for joint in morphology.joints}
+            )
+        if self.network.state_init is None:
+            self.network.state_init = (
+                AmphibiousNetworkOptions.default_state_init(
+                    morphology.n_joints(),
+                ).tolist()
+            )
+        if self.network.osc2osc is None:
+            self.network.osc2osc = (
+                AmphibiousNetworkOptions.default_osc2osc(
+                    morphology,
+                    kwargs.pop('weight_osc_body', 1e3),
+                    kwargs.pop(
+                        'body_phase_bias',
+                        2*np.pi/morphology.n_joints_body
+                    ),
+                    kwargs.pop('weight_osc_legs_internal', 1e3),
+                    kwargs.pop('weight_osc_legs_opposite', 1e0),
+                    kwargs.pop('weight_osc_legs_following', 1e0),
+                    kwargs.pop('weight_osc_legs2body', 3e1),
+                    kwargs.pop('leg_phase_follow', np.pi),                    )
+            )
+        if self.network.contact2osc is None:
+            self.network.contact2osc = (
+                AmphibiousNetworkOptions.default_contact2osc(
+                    morphology,
+                    kwargs.pop('weight_sens_contact_e', 2e0),
+                    kwargs.pop('weight_sens_contact_i', -2e0),
+                )
+            )
+        if self.network.hydro2osc is None:
+            self.network.hydro2osc = (
+                AmphibiousNetworkOptions.default_hydro2osc(
+                    morphology,
+                    kwargs.pop('weight_sens_hydro_freq', -1),
+                    kwargs.pop('weight_sens_hydro_amp', 1),
+                )
+            )
+        self.update(
+            morphology.n_joints_body,
+            morphology.n_dof_legs
+        )
 
     def update(self, n_joints_body, n_dof_legs):
         """Update"""
@@ -546,7 +552,6 @@ class AmphibiousNetworkOptions(Options):
                         })
 
         # Body-legs interaction
-        morphology.n_joints_body//2
         for leg_i in range(morphology.n_legs//2):
             for side_i in range(2):
                 for i in range(n_body_joints):  # [0, 1, 7, 8, 9, 10]
@@ -571,7 +576,7 @@ class AmphibiousNetworkOptions(Options):
                                     joint_i=0,
                                     side=(side_i+side_leg)%2
                                 ),
-                                'weight': 100*weight_limb2body,
+                                'weight': weight_limb2body,
                                 'phase_bias': (
                                     walk_phase
                                     + np.pi*(side_i+1)
