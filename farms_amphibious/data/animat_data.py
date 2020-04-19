@@ -20,6 +20,10 @@ from .animat_data_cy import (
 )
 
 
+DTYPE = np.float64
+ITYPE = np.uintc
+
+
 def to_array(array, iteration=None):
     """To array or None"""
     if array is not None:
@@ -101,6 +105,14 @@ class NetworkParameters(NetworkParametersCy):
 class OscillatorNetworkState(OscillatorNetworkStateCy):
     """Network state"""
 
+    @classmethod
+    def from_initial_state(cls, initial_state, n_iterations):
+        """From initial state"""
+        state_size = len(initial_state)
+        state_array = np.zeros([n_iterations, 2, state_size], dtype=DTYPE)
+        state_array[0, 0, :] = initial_state
+        return cls(state_array, n_oscillators=2*state_size//5)
+
     def plot(self, times):
         """Plot"""
         self.plot_phases(times)
@@ -150,6 +162,27 @@ class OscillatorConnectivity(OscillatorConnectivityCy):
             'desired_phases': to_array(self.desired_phases.array),
         }
 
+    @classmethod
+    def from_connectivity(cls, connectivity):
+        """From connectivity"""
+        connections = [
+            [connection['in'], connection['out']]
+            for connection in connectivity
+        ]
+        weights = [
+            connection['weight']
+            for connection in connectivity
+        ]
+        phase_bias = [
+            connection['phase_bias']
+            for connection in connectivity
+        ]
+        return cls(
+            connections=np.array(connections, dtype=ITYPE),
+            weights=np.array(weights, dtype=DTYPE),
+            desired_phases=np.array(phase_bias, dtype=DTYPE),
+        )
+
 
 class ContactConnectivity(ContactConnectivityCy):
     """Connectivity array"""
@@ -162,12 +195,28 @@ class ContactConnectivity(ContactConnectivityCy):
             weights=dictionary['weights'],
         )
 
-    def to_dict(self, iteration=None):
+    def to_dict(self, _iteration=None):
         """Convert data to dictionary"""
         return {
             'connections': to_array(self.connections.array),
             'weights': to_array(self.weights.array),
         }
+
+    @classmethod
+    def from_connectivity(cls, connectivity):
+        """From connectivity"""
+        connections = [
+            [connection['in'], connection['out']]
+            for connection in connectivity
+        ]
+        weights = [
+            connection['weight']
+            for connection in connectivity
+        ]
+        return cls(
+            np.array(connections, dtype=ITYPE),
+            np.array(weights, dtype=DTYPE),
+        )
 
 
 class HydroConnectivity(HydroConnectivityCy):
@@ -190,6 +239,27 @@ class HydroConnectivity(HydroConnectivityCy):
             'frequency': to_array(self.frequency.array),
             'amplitude': to_array(self.amplitude.array),
         }
+
+    @classmethod
+    def from_connectivity(cls, connectivity):
+        """From connectivity"""
+        connections = [
+            [connection['in'], connection['out']]
+            for connection in connectivity
+        ]
+        weights_frequency = [
+            connection['weight_frequency']
+            for connection in connectivity
+        ]
+        weights_amplitude = [
+            connection['weight_amplitude']
+            for connection in connectivity
+        ]
+        return cls(
+            connections=np.array(connections, dtype=ITYPE),
+            frequency=np.array(weights_frequency, dtype=DTYPE),
+            amplitude=np.array(weights_amplitude, dtype=DTYPE),
+        )
 
 
 class JointsArray(JointsArrayCy):
@@ -228,6 +298,12 @@ class SensorsData(SensorsDataCy):
 
 class ContactsArray(ContactsArrayCy):
     """Sensor array"""
+
+    @classmethod
+    def from_size(cls, n_contacts, n_iterations):
+        """From size"""
+        contacts = np.zeros([n_iterations, n_contacts, 9], dtype=DTYPE)
+        return cls(contacts)
 
     def plot(self, times):
         """Plot"""
@@ -300,6 +376,12 @@ class ContactsArray(ContactsArrayCy):
 
 class ProprioceptionArray(ProprioceptionArrayCy):
     """Proprioception array"""
+
+    @classmethod
+    def from_size(cls, n_joints, n_iterations):
+        """From size"""
+        proprioception = np.zeros([n_iterations, n_joints, 12], dtype=DTYPE)
+        return cls(proprioception)
 
     def plot(self, times):
         """Plot"""
@@ -430,6 +512,12 @@ class ProprioceptionArray(ProprioceptionArrayCy):
 class GpsArray(GpsArrayCy):
     """Gps array"""
 
+    @classmethod
+    def from_size(cls, n_links, n_iterations):
+        """From size"""
+        gps = np.zeros([n_iterations, n_links, 20], dtype=DTYPE)
+        return cls(gps)
+
     def plot(self, times):
         """Plot"""
         self.plot_base_position(times, xaxis=0, yaxis=1)
@@ -469,6 +557,12 @@ class GpsArray(GpsArrayCy):
 
 class HydrodynamicsArray(HydrodynamicsArrayCy):
     """Hydrodynamics array"""
+
+    @classmethod
+    def from_size(cls, n_links, n_iterations):
+        """From size"""
+        hydrodynamics = np.zeros([n_iterations, n_links, 6], dtype=DTYPE)
+        return cls(hydrodynamics)
 
     def plot(self, times):
         """Plot"""

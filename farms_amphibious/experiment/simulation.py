@@ -9,7 +9,7 @@ from ..simulation.simulation import AmphibiousSimulation
 from ..control.controller import AmphibiousController
 from ..control.kinematics import AmphibiousKinematics
 from ..model.animat import Amphibious
-from ..model.data import AmphibiousOscillatorNetworkState, AmphibiousData
+from ..model.data import AmphibiousData
 from .options import get_animat_options, get_simulation_options
 
 
@@ -29,10 +29,7 @@ def simulation_setup(animat_sdf, arena_sdf, **kwargs):
 
     # Animat data
     animat_data = AmphibiousData.from_options(
-        AmphibiousOscillatorNetworkState.default_state(
-            simulation_options.n_iterations,
-            animat_options.morphology,
-        ),
+        animat_options.control.network.state_init,
         animat_options.morphology,
         animat_options.control,
         simulation_options.n_iterations

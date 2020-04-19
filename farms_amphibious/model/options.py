@@ -45,28 +45,11 @@ class AmphibiousOptions(Options):
         if 'control' in kwargs:
             options['control'] = kwargs.pop('control')
         else:
-            if 'body_phase_bias' not in kwargs:
-                kwargs['body_phase_bias'] = (
-                    2*np.pi/options['morphology'].n_joints_body
-                )
             options['control'] = AmphibiousControlOptions.from_options(kwargs)
-            options['control'].network.update(
-                options['morphology'].n_joints_body,
-                options['morphology'].n_dof_legs
+            options['control'].defaults_from_morphology(
+                options['morphology'],
+                kwargs
             )
-            if options['control'].network.joints.gain_amplitude is None:
-                options['control'].network.joints.gain_amplitude = (
-                    [1 for _ in range(options['morphology'].n_joints())]
-                )
-            if options['control'].network.joints.gain_offset is None:
-                options['control'].network.joints.gain_offset = (
-                    [1 for _ in range(options['morphology'].n_joints())]
-                )
-            if options['control'].network.joints.offsets is None:
-                options['control'].network.joints.offsets = (
-                    [0 for _ in range(options['morphology'].n_joints())]
-                )
-
         options['collect_gps'] = kwargs.pop('collect_gps', False)
         options['show_hydrodynamics'] = kwargs.pop('show_hydrodynamics', False)
         options['transition'] = kwargs.pop('transition', False)
@@ -240,9 +223,12 @@ class AmphibiousControlOptions(Options):
 
     def __init__(self, **kwargs):
         super(AmphibiousControlOptions, self).__init__()
-        self.kinematics_file = kwargs.pop('kinematics_file')
         self.drives = AmphibiousDrives(**kwargs.pop('drives'))
-        self.network = AmphibiousNetworkOptions(**kwargs.pop('network'))
+        self.kinematics_file = kwargs.pop('kinematics_file')
+        if not self.kinematics_file:
+            self.network = AmphibiousNetworkOptions(**kwargs.pop('network'))
+            self.joints = AmphibiousJointsOptions(**kwargs.pop('joints'))
+            self.sensors = kwargs.pop('sensors')
         if kwargs:
             raise Exception('Unknown kwargs: {}'.format(kwargs))
 
@@ -250,23 +236,85 @@ class AmphibiousControlOptions(Options):
     def from_options(cls, kwargs):
         """From options"""
         options = {}
-        options['kinematics_file'] = kwargs.pop(
-            'kinematics_file',
-            ''
-        )
+        options['kinematics_file'] = kwargs.pop('kinematics_file', '')
         options['drives'] = kwargs.pop(
             'drives',
             AmphibiousDrives.from_options(kwargs)
         )
-        # self.joints_controllers = kwargs.pop(
-        #     'joints_controllers',
-        #     AmphibiousJointsControllers(**options)
-        # )
         options['network'] = kwargs.pop(
             'network',
             AmphibiousNetworkOptions.from_options(kwargs)
         )
+        options['joints'] = kwargs.pop(
+            'joints',
+            AmphibiousJointsOptions.from_options(kwargs)
+        )
+        options['sensors'] = kwargs.pop(
+            'sensors',
+            None
+        )
         return cls(**options)
+
+    def defaults_from_morphology(self, morphology, kwargs):
+        """Defaults from morphology"""
+        if self.joints.gain_amplitude is None:
+            self.joints.gain_amplitude = (
+                {joint: 1 for joint in morphology.joints}
+            )
+        if self.joints.gain_offset is None:
+            self.joints.gain_offset = (
+                {joint: 1 for joint in morphology.joints}
+            )
+        if self.joints.offsets is None:
+            self.joints.offsets = (
+                {joint: 0 for joint in morphology.joints}
+            )
+        if self.network.state_init is None:
+            self.network.state_init = (
+                AmphibiousNetworkOptions.default_state_init(
+                    morphology.n_joints(),
+                ).tolist()
+            )
+        if self.network.osc2osc is None:
+            self.network.osc2osc = (
+                AmphibiousNetworkOptions.default_osc2osc(
+                    morphology,
+                    kwargs.pop('weight_osc_body', 1e3),
+                    kwargs.pop(
+                        'body_phase_bias',
+                        2*np.pi/morphology.n_joints_body
+                    ),
+                    kwargs.pop('weight_osc_legs_internal', 1e3),
+                    kwargs.pop('weight_osc_legs_opposite', 1e0),
+                    kwargs.pop('weight_osc_legs_following', 1e0),
+                    kwargs.pop('weight_osc_legs2body', 3e1),
+                    kwargs.pop('leg_phase_follow', np.pi),                    )
+            )
+        if self.network.contact2osc is None:
+            self.network.contact2osc = (
+                AmphibiousNetworkOptions.default_contact2osc(
+                    morphology,
+                    kwargs.pop('weight_sens_contact_e', 2e0),
+                    kwargs.pop('weight_sens_contact_i', -2e0),
+                )
+            )
+        if self.network.hydro2osc is None:
+            self.network.hydro2osc = (
+                AmphibiousNetworkOptions.default_hydro2osc(
+                    morphology,
+                    kwargs.pop('weight_sens_hydro_freq', -1),
+                    kwargs.pop('weight_sens_hydro_amp', 1),
+                )
+            )
+        self.update(
+            morphology.n_joints_body,
+            morphology.n_dof_legs
+        )
+
+    def update(self, n_joints_body, n_dof_legs):
+        """Update"""
+        self.joints.update(n_joints_body, n_dof_legs)
+        self.network.oscillators.update(n_joints_body, n_dof_legs)
 
 
 class AmphibiousDrives(Options):
@@ -292,31 +340,33 @@ class AmphibiousDrives(Options):
         return cls(**options)
 
 
-# class AmphibiousJointsControllers(Options):
-#     """Amphibious joints controllers"""
-
-#     def __init__(self, **kwargs):
-#         super(AmphibiousJointsControllers, self).__init__()
-#         self.body_p = kwargs.pop('body_p', 1e-1)
-#         self.body_d = kwargs.pop('body_d', 1e0)
-#         self.body_f = kwargs.pop('body_f', 1e1)
-#         self.legs_p = kwargs.pop('legs_p', 1e-1)
-#         self.legs_d = kwargs.pop('legs_d', 1e0)
-#         self.legs_f = kwargs.pop('legs_f', 1e1)
-
-
 class AmphibiousNetworkOptions(Options):
     """Amphibious network options"""
 
     def __init__(self, **kwargs):
         super(AmphibiousNetworkOptions, self).__init__()
         oscillators = kwargs.pop('oscillators')
-        connectivity = kwargs.pop('connectivity')
-        joints = kwargs.pop('joints')
         self.oscillators = AmphibiousOscillatorOptions(**oscillators)
-        self.connectivity = AmphibiousConnectivityOptions(**connectivity)
-        self.joints = AmphibiousJointsOptions(**joints)
-        self.sensors = kwargs.pop('sensors')
+
+        # State
+        self.state_init = kwargs.pop('state_init', None)
+
+        # Nodes
+        self.osc_nodes = kwargs.pop('osc_nodes', None)
+        self.osc_freqs = kwargs.pop('osc_freqs', None)
+        self.osc_rates = kwargs.pop('osc_rates', None)
+        self.osc_amplitudes = kwargs.pop('osc_amplitudes', None)
+        self.drive_nodes = kwargs.pop('drive_nodes', None)
+        self.drive_init = kwargs.pop('drive_init', None)
+        self.contacts_nodes = kwargs.pop('contacts_nodes', None)
+        self.hydro_nodes = kwargs.pop('hydro_nodes', None)
+
+        # Connections
+        self.osc2osc = kwargs.pop('osc2osc', None)
+        self.drive2osc = kwargs.pop('drive2osc', None)
+        self.contact2osc = kwargs.pop('contact2osc', None)
+        self.hydro2osc = kwargs.pop('hydro2osc', None)
+
         if kwargs:
             raise Exception('Unknown kwargs: {}'.format(kwargs))
 
@@ -328,24 +378,267 @@ class AmphibiousNetworkOptions(Options):
             'oscillators',
             AmphibiousOscillatorOptions.from_options(kwargs)
         )
-        options['connectivity'] = kwargs.pop(
-            'connectivity',
-            AmphibiousConnectivityOptions.from_options(kwargs)
-        )
-        options['joints'] = kwargs.pop(
-            'joints',
-            AmphibiousJointsOptions.from_options(kwargs)
-        )
-        options['sensors'] = kwargs.pop(
-            'sensors',
-            None
-        )
+        # options['connectivity'] = kwargs.pop(
+        #     'connectivity',
+        #     AmphibiousConnectivityOptions.from_options(kwargs)
+        # )
         return cls(**options)
 
-    def update(self, n_joints_body, n_dof_legs):
-        """Update"""
-        self.oscillators.update(n_joints_body, n_dof_legs)
-        self.joints.update(n_joints_body, n_dof_legs)
+    @staticmethod
+    def default_state_init(n_joints):
+        """Default state"""
+        return 1e-3*np.arange(5*n_joints)
+
+    @staticmethod
+    def default_osc2osc(
+            morphology,
+            weight_body2body,
+            phase_body2body,
+            weight_intralimb,
+            weight_interlimb_opposite,
+            weight_interlimb_following,
+            weight_limb2body,
+            phase_limb_follow,
+    ):
+        """Default oscillartors to oscillators connectivity"""
+        connectivity = []
+        n_body_joints = morphology.n_joints_body
+        # body_amplitude = connectivity_options.weight_osc_body
+        # phase_diff = connectivity_options.body_phase_bias
+        # legs_amplitude_internal = connectivity_options.weight_osc_legs_internal
+        # legs_amplitude_opposite = connectivity_options.weight_osc_legs_opposite
+        # legs_amplitude_following = connectivity_options.weight_osc_legs_following
+        # legs2body_amplitude = connectivity_options.weight_osc_legs2body
+        # phase_follow = connectivity_options.leg_phase_follow
+
+        # Body
+        convention = AmphibiousConvention(**morphology)
+        for i in range(n_body_joints):
+            for sides in [[1, 0], [0, 1]]:
+                connectivity.append({
+                    'in': convention.bodyosc2index(joint_i=i, side=sides[0]),
+                    'out': convention.bodyosc2index(joint_i=i, side=sides[1]),
+                    'weight': weight_body2body,
+                    'phase_bias': np.pi,
+                })
+        for i in range(n_body_joints-1):
+            for side in range(2):
+                for osc, phase in [
+                        [[i+1, i], phase_body2body],
+                        [[i, i+1], -phase_body2body]
+                ]:
+                    connectivity.append({
+                        'in': convention.bodyosc2index(joint_i=osc[0], side=side),
+                        'out': convention.bodyosc2index(joint_i=osc[1], side=side),
+                        'weight': weight_body2body,
+                        'phase_bias': phase,
+                    })
+
+        # Legs (internal)
+        for leg_i in range(morphology.n_legs//2):
+            for side_i in range(2):
+                _options = {
+                    'leg_i': leg_i,
+                    'side_i': side_i
+                }
+                # X - X
+                for joint_i in range(morphology.n_dof_legs):
+                    for sides in [[1, 0], [0, 1]]:
+                        connectivity.append({
+                            'in': convention.legosc2index(
+                                **_options,
+                                joint_i=joint_i,
+                                side=sides[0]
+                            ),
+                            'out': convention.legosc2index(
+                                **_options,
+                                joint_i=joint_i,
+                                side=sides[1]
+                            ),
+                            'weight': weight_intralimb,
+                            'phase_bias': np.pi,
+                        })
+
+                # Following
+                internal_connectivity = []
+                if morphology.n_dof_legs > 1:
+                    # 0 - 1
+                    internal_connectivity.extend([
+                        [[1, 0], 0, 0.5*np.pi],
+                        [[0, 1], 0, -0.5*np.pi],
+                        [[1, 0], 1, 0.5*np.pi],
+                        [[0, 1], 1, -0.5*np.pi],
+                    ])
+                if morphology.n_dof_legs > 2:
+                    # 0 - 2
+                    internal_connectivity.extend([
+                        [[2, 0], 0, 0],
+                        [[0, 2], 0, 0],
+                        [[2, 0], 1, 0],
+                        [[0, 2], 1, 0],
+                    ])
+                if morphology.n_dof_legs > 3:
+                    # 1 - 3
+                    internal_connectivity.extend([
+                        [[3, 1], 0, 0],
+                        [[1, 3], 0, 0],
+                        [[3, 1], 1, 0],
+                        [[1, 3], 1, 0],
+                    ])
+                for joints, side, phase in internal_connectivity:
+                    connectivity.append({
+                        'in': convention.legosc2index(
+                            **_options,
+                            joint_i=joints[0],
+                            side=side,
+                        ),
+                        'out': convention.legosc2index(
+                            **_options,
+                            joint_i=joints[1],
+                            side=side,
+                        ),
+                        'weight': weight_intralimb,
+                        'phase_bias': phase,
+                    })
+
+        # Opposite leg interaction
+        for leg_i in range(morphology.n_legs//2):
+            for joint_i in range(morphology.n_dof_legs):
+                for side in range(2):
+                    _options = {
+                        'joint_i': joint_i,
+                        'side': side
+                    }
+                    for sides in [[1, 0], [0, 1]]:
+                        connectivity.append({
+                            'in': convention.legosc2index(
+                                leg_i=leg_i,
+                                side_i=sides[0],
+                                **_options
+                            ),
+                            'out': convention.legosc2index(
+                                leg_i=leg_i,
+                                side_i=sides[1],
+                                **_options
+                            ),
+                            'weight': weight_interlimb_opposite,
+                            'phase_bias': np.pi,
+                        })
+
+        # Following leg interaction
+        for leg_pre in range(morphology.n_legs//2-1):
+            for side_i in range(2):
+                for side in range(2):
+                    _options = {
+                        'side_i': side_i,
+                        'side': side,
+                        'joint_i': 0,
+                    }
+                    for legs, phase in [
+                            [[leg_pre, leg_pre+1], phase_limb_follow],
+                            [[leg_pre+1, leg_pre], -phase_limb_follow],
+                    ]:
+                        connectivity.append({
+                            'in': convention.legosc2index(
+                                leg_i=legs[0],
+                                **_options
+                            ),
+                            'out': convention.legosc2index(
+                                leg_i=legs[1],
+                                **_options
+                            ),
+                            'weight': weight_interlimb_following,
+                            'phase_bias': phase,
+                        })
+
+        # Body-legs interaction
+        for leg_i in range(morphology.n_legs//2):
+            for side_i in range(2):
+                for i in range(n_body_joints):  # [0, 1, 7, 8, 9, 10]
+                    for side_leg in range(2): # Muscle facing front/back
+                        for lateral in range(2):
+                            walk_phase = (
+                                # i*2*np.pi/(n_body_joints-1)+0.5*np.pi
+                                i*2*np.pi/(n_body_joints-1)+0.5*np.pi
+                                # 0
+                                # if np.cos(i*2*np.pi/(n_body_joints-1)) < 0
+                                # else np.pi
+                            )
+                            # Forelimbs
+                            connectivity.append({
+                                'in': convention.bodyosc2index(
+                                    joint_i=i,
+                                    side=(side_i+lateral)%2
+                                ),
+                                'out': convention.legosc2index(
+                                    leg_i=leg_i,
+                                    side_i=side_i,
+                                    joint_i=0,
+                                    side=(side_i+side_leg)%2
+                                ),
+                                'weight': weight_limb2body,
+                                'phase_bias': (
+                                    walk_phase
+                                    + np.pi*(side_i+1)
+                                    + lateral*np.pi
+                                    + side_leg*np.pi
+                                    + leg_i*np.pi
+                                ),
+                            })
+        return connectivity
+
+    @staticmethod
+    def default_contact2osc(morphology, weight_e, weight_i):
+        """Default contact sensors to oscillators connectivity"""
+        connectivity = []
+        convention = AmphibiousConvention(**morphology)
+        for leg_i in range(morphology.n_legs//2):
+            for side_i in range(2):
+                for joint_i in range(morphology.n_dof_legs):
+                    for side_o in range(2):
+                        for sensor_leg_i in range(morphology.n_legs//2):
+                            for sensor_side_i in range(2):
+                                weight = (
+                                    weight_e
+                                    if (
+                                        (leg_i == sensor_leg_i)
+                                        != (side_i == sensor_side_i)
+                                    )
+                                    else weight_i
+                                )
+                                connectivity.append({
+                                    'in': convention.legosc2index(
+                                        leg_i=leg_i,
+                                        side_i=side_i,
+                                        joint_i=joint_i,
+                                        side=side_o
+                                    ),
+                                    'out': convention.contactleglink2index(
+                                        leg_i=sensor_leg_i,
+                                        side_i=sensor_side_i
+                                    ),
+                                    'weight': weight,
+                                })
+        return connectivity
+
+    @staticmethod
+    def default_hydro2osc(morphology, weight_frequency, weight_amplitude):
+        """Default hydrodynamics sensors to oscillators connectivity"""
+        connectivity = []
+        # morphology.n_legs
+        convention = AmphibiousConvention(**morphology)
+        for joint_i in range(morphology.n_joints_body):
+            for side_osc in range(2):
+                connectivity.append({
+                    'in': convention.bodyosc2index(
+                        joint_i=joint_i,
+                        side=side_osc
+                    ),
+                    'out': joint_i+1,
+                    'weight_frequency': weight_frequency,
+                    'weight_amplitude': weight_amplitude,
+                })
+        return connectivity
 
 
 class AmphibiousOscillatorOptions(Options):
@@ -432,12 +725,12 @@ class AmphibiousOscillatorOptions(Options):
         """Set body nominal amplitudes"""
         self.body_nominal_amplitudes = [
             [
-                [0, float(0.3*self.body_stand_amplitude*np.sin(
-                    2*np.pi*joint_i/n_joints_body - self.body_stand_shift
-                ))],
-                [3, float(self.body_stand_amplitude*np.sin(
-                    2*np.pi*joint_i/n_joints_body - self.body_stand_shift
-                ))],
+                [0, 0.3*self.body_stand_amplitude  # float(0.3*self.body_stand_amplitude*np.sin(
+                    # 2*np.pi*joint_i/n_joints_body - self.body_stand_shift))
+                ],
+                [3, self.body_stand_amplitude  # float(self.body_stand_amplitude*np.sin(
+                    # 2*np.pi*joint_i/n_joints_body - self.body_stand_shift))
+                ],
                 [3, 0.1*joint_i/n_joints_body],
                 [5, 0.1*joint_i/n_joints_body+0.5],
                 [5, 0],
@@ -468,55 +761,6 @@ class AmphibiousOscillatorOptions(Options):
             ]
             for joint_i in range(n_dof_legs)
         ]
-
-
-class AmphibiousConnectivityOptions(Options):
-    """Amphibious connectivity options"""
-
-    def __init__(self, **kwargs):
-        super(AmphibiousConnectivityOptions, self).__init__()
-        self.body_head_amplitude = kwargs.pop('body_head_amplitude')
-        self.body_phase_bias = kwargs.pop('body_phase_bias')
-        self.leg_phase_follow = kwargs.pop('leg_phase_follow')
-        self.weight_osc_body = kwargs.pop('weight_osc_body')
-        self.weight_osc_legs_internal = kwargs.pop('weight_osc_legs_internal')
-        self.weight_osc_legs_opposite = kwargs.pop('weight_osc_legs_opposite')
-        self.weight_osc_legs_following = kwargs.pop('weight_osc_legs_following')
-        self.weight_osc_legs2body = kwargs.pop('weight_osc_legs2body')
-        self.weight_sens_contact_i = kwargs.pop('weight_sens_contact_i')
-        self.weight_sens_contact_e = kwargs.pop('weight_sens_contact_e')
-        self.weight_sens_hydro_freq = kwargs.pop('weight_sens_hydro_freq')
-        self.weight_sens_hydro_amp = kwargs.pop('weight_sens_hydro_amp')
-        if kwargs:
-            raise Exception('Unknown kwargs: {}'.format(kwargs))
-
-    @classmethod
-    def from_options(cls, kwargs):
-        """From options"""
-        options = {}
-        options['body_head_amplitude'] = kwargs.pop('body_head_amplitude', 0)
-        options['body_phase_bias'] = kwargs.pop(
-            'body_phase_bias',
-            None
-        )
-        options['leg_phase_follow'] = kwargs.pop(
-            'leg_phase_follow',
-            np.pi
-        )
-        for option_name, default_value in [
-                ['weight_osc_body', 1e3],
-                ['weight_osc_body', 1e3],
-                ['weight_osc_legs_internal', 1e3],
-                ['weight_osc_legs_opposite', 1e0],
-                ['weight_osc_legs_following', 1e0],
-                ['weight_osc_legs2body', 3e1],
-                ['weight_sens_contact_i', -2e0],
-                ['weight_sens_contact_e', 2e0],
-                ['weight_sens_hydro_freq', -1],
-                ['weight_sens_hydro_amp', 1],
-        ]:
-            options[option_name] = kwargs.pop(option_name, default_value)
-        return cls(**options)
 
 
 class AmphibiousJointsOptions(Options):

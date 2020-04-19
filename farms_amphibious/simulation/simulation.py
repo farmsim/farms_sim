@@ -100,23 +100,25 @@ class AmphibiousSimulation(Simulation):
                 ),
                 timestep=self.options.timestep,
                 rotating_camera=self.options.rotating_camera,
-                top_camera=self.options.top_camera
+                top_camera=self.options.top_camera,
+                pitch=simulation_options.video_pitch,
+                yaw=simulation_options.video_yaw,
             )
             self.interface.init_debug(animat_options=self.animat().options)
 
-        if self.options.record and not self.options.headless:
+        if self.options.record:
             skips = int(2e-2/simulation_options.timestep)  # 50 fps
             self.interface.init_video(
                 target_identity=self.animat().identity(),
                 simulation_options=simulation_options,
-                fps=1./(skips*simulation_options.timestep),
+                # fps=1./(skips*simulation_options.timestep),
                 pitch=simulation_options.video_pitch,
                 yaw=simulation_options.video_yaw,
-                skips=skips,
+                # skips=skips,
                 motion_filter=2*skips*simulation_options.timestep,
-                distance=1,
+                # distance=1,
                 rotating_camera=self.options.rotating_camera,
-                top_camera=self.options.top_camera
+                # top_camera=self.options.top_camera
             )
         # Real-time handling
         self.tic_rt = np.zeros(2)
@@ -187,10 +189,9 @@ class AmphibiousSimulation(Simulation):
 
         # Camera
         if not self.options.headless:
-            if self.options.record:
-                self.interface.video.record(sim_step)
-            # User camera
             self.interface.camera.update()
+        if self.options.record:
+            self.interface.video.record(sim_step)
 
         # Real-time
         if not self.options.headless:
@@ -216,7 +217,7 @@ class AmphibiousSimulation(Simulation):
         # Body offset
         if self.interface.user_params.body_offset().changed:
             animat = self.animat()
-            animat.options.control.network.joints.set_body_offsets(
+            animat.options.control.joints.set_body_offsets(
                 self.interface.user_params.body_offset().value,
                 animat.options.morphology.n_joints_body
             )

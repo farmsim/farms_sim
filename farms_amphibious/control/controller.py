@@ -41,15 +41,18 @@ class AmphibiousController(ModelController):
             ]
             for side in range(2)
         ]
-        self.gain_amplitude = np.array(
-            animat_options.control.network.joints.gain_amplitude
-        )
-        self.gain_offset = np.array(
-            animat_options.control.network.joints.gain_offset
-        )
-        self.joints_offsets = np.array(
-            animat_options.control.network.joints.offsets
-        )
+        self.gain_amplitude = np.array([
+            animat_options.control.joints.gain_amplitude[joint]
+            for joint in joints
+        ])
+        self.gain_offset = np.array([
+            animat_options.control.joints.gain_offset[joint]
+            for joint in joints
+        ])
+        self.joints_offsets = np.array([
+            animat_options.control.joints.offsets[joint]
+            for joint in joints
+        ])
 
     def control_step(self, iteration, time, timestep):
         """Control step"""
