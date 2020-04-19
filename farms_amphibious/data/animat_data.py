@@ -8,7 +8,7 @@ from .animat_data_cy import (
     NetworkParametersCy,
     OscillatorNetworkStateCy,
     DriveArrayCy,
-    OscillatorArrayCy,
+    OscillatorsCy,
     OscillatorConnectivityCy,
     ContactConnectivityCy,
     HydroConnectivityCy,
@@ -81,7 +81,7 @@ class NetworkParameters(NetworkParametersCy):
             drives=DriveArray(
                 dictionary['drives']
             ),
-            oscillators=OscillatorArray(
+            oscillators=Oscillators.from_dict(
                 dictionary['oscillators']
             ),
             osc_connectivity=OscillatorConnectivity.from_dict(
@@ -100,7 +100,7 @@ class NetworkParameters(NetworkParametersCy):
         assert iteration is None or isinstance(iteration, int)
         return {
             'drives': to_array(self.drives.array),
-            'oscillators': to_array(self.oscillators.array),
+            'oscillators': self.oscillators.to_dict(),
             'osc_connectivity': self.osc_connectivity.to_dict(),
             'contacts_connectivity': self.contacts_connectivity.to_dict(),
             'hydro_connectivity': self.hydro_connectivity.to_dict(),
@@ -154,8 +154,44 @@ class DriveArray(DriveArrayCy):
         return cls(drive_array)
 
 
-class OscillatorArray(OscillatorArrayCy):
+class Oscillators(OscillatorsCy):
     """Oscillator array"""
+
+    @classmethod
+    def from_dict(cls, dictionary):
+        """Load data from dictionary"""
+        return cls(
+            intrinsic_frequencies=dictionary['intrinsic_frequencies'],
+            nominal_amplitudes=dictionary['nominal_amplitudes'],
+            rates=dictionary['rates'],
+        )
+
+    def to_dict(self, iteration=None):
+        """Convert data to dictionary"""
+        assert iteration is None or isinstance(iteration, int)
+        return {
+            'intrinsic_frequencies': to_array(self.intrinsic_frequencies.array),
+            'nominal_amplitudes': to_array(self.nominal_amplitudes.array),
+            'rates': to_array(self.rates.array),
+        }
+
+    @classmethod
+    def from_options(cls, network):
+        """Default"""
+        freqs, amplitudes = [
+            np.array([
+                [
+                    freq['gain'],
+                    freq['bias'],
+                    freq['low'],
+                    freq['high'],
+                    freq['saturation'],
+                ]
+                for freq in option
+            ], dtype=DTYPE)
+            for option in [network.osc_frequencies, network.osc_amplitudes]
+        ]
+        return cls(freqs, amplitudes, np.array(network.osc_rates, dtype=DTYPE))
 
 
 class OscillatorConnectivity(OscillatorConnectivityCy):

@@ -66,7 +66,7 @@ class AmphibiousController(ModelController):
                 outputs[self.groups[0]]
                 - outputs[self.groups[1]]
             )
-            + self.gain_offset*self.network.offsets()[iteration]
+            + self.gain_offset*self.network.offsets(iteration)
             + self.joints_offsets
         )
 
@@ -100,11 +100,11 @@ class AmphibiousController(ModelController):
 
     def update(self, options):
         """Update drives"""
-        self.animat_data.network.oscillators.update(
-            options.morphology,
-            options.control.network.oscillators,
-            options.control.drives,
-        )
+        # self.animat_data.network.oscillators.update(
+        #     options.morphology,
+        #     options.control.network.oscillators,
+        #     options.control.drives,
+        # )
         self.animat_data.joints.update(
             options.morphology,
             options.control,

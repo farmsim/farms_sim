@@ -79,37 +79,46 @@ cdef class OscillatorNetworkStateCy(NetworkArray3D):
         return self.array[iteration, 1, self.n_oscillators:]
 
 
-cdef class OscillatorArrayCy(NetworkArray2D):
+cdef class OscillatorsCy:
     """Oscillator array"""
 
-    @classmethod
-    def from_parameters(cls, freqs, rates, amplitudes):
-        """From each parameter"""
-        return cls(np.array([freqs, rates, amplitudes]))
+    def __init__(self, intrinsic_frequencies, nominal_amplitudes, rates):
+        super(OscillatorsCy, self).__init__()
+        self.intrinsic_frequencies = DriveDependentArrayCy(intrinsic_frequencies)
+        self.nominal_amplitudes = DriveDependentArrayCy(nominal_amplitudes)
+        self.rates = NetworkArray1D(rates)
 
-    cpdef unsigned int n_oscillators(self):
-        """Number of oscillators"""
-        return self.array.shape[1]
+# cdef class OscillatorArrayCy(NetworkArray2D):
+#     """Oscillator array"""
 
-    cpdef CTYPEv1 freqs(self):
-        """Frequencies"""
-        return self.array[0]
+#     @classmethod
+#     def from_parameters(cls, freqs, rates, amplitudes):
+#         """From each parameter"""
+#         return cls(np.array([freqs, rates, amplitudes]))
 
-    def set_freqs(self, value):
-        """Frequencies"""
-        self.array[0, :] = value
+#     cpdef unsigned int n_oscillators(self):
+#         """Number of oscillators"""
+#         return self.array.shape[1]
 
-    def amplitudes_rates(self):
-        """Amplitudes rates"""
-        return self.array[1]
+#     cpdef CTYPEv1 freqs(self):
+#         """Frequencies"""
+#         return self.array[0]
 
-    def amplitudes_desired(self):
-        """Amplitudes desired"""
-        return self.array[2]
+#     def set_freqs(self, value):
+#         """Frequencies"""
+#         self.array[0, :] = value
 
-    def set_amplitudes_desired(self, value):
-        """Amplitudes desired"""
-        self.array[2, :] = value
+#     def amplitudes_rates(self):
+#         """Amplitudes rates"""
+#         return self.array[1]
+
+#     def amplitudes_desired(self):
+#         """Amplitudes desired"""
+#         return self.array[2]
+
+#     def set_amplitudes_desired(self, value):
+#         """Amplitudes desired"""
+#         self.array[2, :] = value
 
 
 cdef class ConnectivityCy:

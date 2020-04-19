@@ -9,6 +9,7 @@ cimport numpy as np
 from libc.math cimport sin, fabs  # cos,
 # from libc.stdlib cimport malloc, free
 # from cython.parallel import prange
+# from libc.stdio cimport printf
 
 
 cdef inline CTYPE phase(
@@ -43,9 +44,11 @@ cdef inline CTYPE saturation(CTYPE value, CTYPE multiplier) nogil:
 
 
 cpdef inline void ode_dphase(
+    unsigned int iteration,
     CTYPEv1 state,
     CTYPEv1 dstate,
-    OscillatorArrayCy oscillators,
+    DriveArrayCy drives,
+    OscillatorsCy oscillators,
     OscillatorConnectivityCy connectivity,
 ) nogil:
     """Oscillator phase ODE
@@ -56,7 +59,7 @@ cpdef inline void ode_dphase(
     cdef unsigned int i, i0, i1, n_oscillators = oscillators.c_n_oscillators()
     for i in range(n_oscillators):  # , nogil=True):
         # Intrinsic frequency
-        dstate[i] = oscillators.c_angular_frequency(i)
+        dstate[i] = oscillators.c_angular_frequency(i, drives.c_speed(iteration))
     for i in range(connectivity.c_n_connections()):
         i0 = connectivity.connections.array[i][0]
         i1 = connectivity.connections.array[i][1]
@@ -67,9 +70,11 @@ cpdef inline void ode_dphase(
 
 
 cpdef inline void ode_damplitude(
+    unsigned int iteration,
     CTYPEv1 state,
     CTYPEv1 dstate,
-    OscillatorArrayCy oscillators,
+    DriveArrayCy drives,
+    OscillatorsCy oscillators,
 ) nogil:
     """Oscillator amplitude ODE
 
@@ -80,7 +85,7 @@ cpdef inline void ode_damplitude(
     for i in range(n_oscillators):  # , nogil=True):
         # rate*(nominal_amplitude - amplitude)
         dstate[n_oscillators+i] = oscillators.c_rate(i)*(
-            oscillators.c_nominal_amplitude(i)
+            oscillators.c_nominal_amplitude(i, drives.c_speed(iteration))
             - amplitude(state, i, n_oscillators)
         )
 
@@ -207,14 +212,18 @@ cpdef inline CTYPEv1 ode_oscillators_sparse(
 ) nogil:
     """Complete CPG network ODE"""
     ode_dphase(
+        iteration=iteration,
         state=state,
         dstate=data.state.array[iteration][1],
+        drives=data.network.drives,
         oscillators=data.network.oscillators,
         connectivity=data.network.osc_connectivity,
     )
     ode_damplitude(
+        iteration=iteration,
         state=state,
         dstate=data.state.array[iteration][1],
+        drives=data.network.drives,
         oscillators=data.network.oscillators,
     )
     ode_contacts(
@@ -242,62 +251,62 @@ cpdef inline CTYPEv1 ode_oscillators_sparse(
     return data.state.array[iteration][1]
 
 
-cpdef inline CTYPEv1 ode_oscillators_sparse_no_sensors(
-    CTYPE time,
-    CTYPEv1 state,
-    unsigned int iteration,
-    AnimatDataCy data,
-) nogil:
-    """CPG network ODE using no sensors"""
-    ode_dphase(
-        state=state,
-        dstate=data.state.array[iteration][1],
-        oscillators=data.network.oscillators,
-        connectivity=data.network.osc_connectivity,
-    )
-    ode_damplitude(
-        state=state,
-        dstate=data.state.array[iteration][1],
-        oscillators=data.network.oscillators,
-    )
-    ode_joints(
-        state=state,
-        dstate=data.state.array[iteration][1],
-        joints=data.joints,
-        n_oscillators=data.network.oscillators.c_n_oscillators(),
-    )
-    return data.state.array[iteration][1]
+# cpdef inline CTYPEv1 ode_oscillators_sparse_no_sensors(
+#     CTYPE time,
+#     CTYPEv1 state,
+#     unsigned int iteration,
+#     AnimatDataCy data,
+# ) nogil:
+#     """CPG network ODE using no sensors"""
+#     ode_dphase(
+#         state=state,
+#         dstate=data.state.array[iteration][1],
+#         oscillators=data.network.oscillators,
+#         connectivity=data.network.osc_connectivity,
+#     )
+#     ode_damplitude(
+#         state=state,
+#         dstate=data.state.array[iteration][1],
+#         oscillators=data.network.oscillators,
+#     )
+#     ode_joints(
+#         state=state,
+#         dstate=data.state.array[iteration][1],
+#         joints=data.joints,
+#         n_oscillators=data.network.oscillators.c_n_oscillators(),
+#     )
+#     return data.state.array[iteration][1]
 
 
-cpdef inline CTYPEv1 ode_oscillators_sparse_tegotae(
-    CTYPE time,
-    CTYPEv1 state,
-    unsigned int iteration,
-    AnimatDataCy data,
-) nogil:
-    """CPG network ODE using Tegotae"""
-    ode_dphase(
-        state=state,
-        dstate=data.state.array[iteration][1],
-        oscillators=data.network.oscillators,
-        connectivity=data.network.osc_connectivity,
-    )
-    ode_damplitude(
-        state=state,
-        dstate=data.state.array[iteration][1],
-        oscillators=data.network.oscillators,
-    )
-    ode_joints(
-        state=state,
-        dstate=data.state.array[iteration][1],
-        joints=data.joints,
-        n_oscillators=data.network.oscillators.c_n_oscillators(),
-    )
-    ode_contacts_tegotae(
-        iteration=iteration,
-        state=state,
-        dstate=data.state.array[iteration][1],
-        contacts=data.sensors.contacts,
-        contacts_connectivity=data.network.contacts_connectivity,
-    )
-    return data.state.array[iteration][1]
+# cpdef inline CTYPEv1 ode_oscillators_sparse_tegotae(
+#     CTYPE time,
+#     CTYPEv1 state,
+#     unsigned int iteration,
+#     AnimatDataCy data,
+# ) nogil:
+#     """CPG network ODE using Tegotae"""
+#     ode_dphase(
+#         state=state,
+#         dstate=data.state.array[iteration][1],
+#         oscillators=data.network.oscillators,
+#         connectivity=data.network.osc_connectivity,
+#     )
+#     ode_damplitude(
+#         state=state,
+#         dstate=data.state.array[iteration][1],
+#         oscillators=data.network.oscillators,
+#     )
+#     ode_joints(
+#         state=state,
+#         dstate=data.state.array[iteration][1],
+#         joints=data.joints,
+#         n_oscillators=data.network.oscillators.c_n_oscillators(),
+#     )
+#     ode_contacts_tegotae(
+#         iteration=iteration,
+#         state=state,
+#         dstate=data.state.array[iteration][1],
+#         contacts=data.sensors.contacts,
+#         contacts_connectivity=data.network.contacts_connectivity,
+#     )
+#     return data.state.array[iteration][1]

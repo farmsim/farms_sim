@@ -4,7 +4,8 @@ include '../data/types.pxd'
 from ..data.animat_data_cy cimport (
     AnimatDataCy,
     NetworkParametersCy,
-    OscillatorArrayCy,
+    DriveArrayCy,
+    OscillatorsCy,
     OscillatorConnectivityCy,
     ContactConnectivityCy,
     HydroConnectivityCy,
@@ -15,17 +16,21 @@ from ..data.animat_data_cy cimport (
 
 
 cpdef void ode_dphase(
+    unsigned int iteration,
     CTYPEv1 state,
     CTYPEv1 dstate,
-    OscillatorArrayCy oscillators,
+    DriveArrayCy drives,
+    OscillatorsCy oscillators,
     OscillatorConnectivityCy connectivity,
 ) nogil
 
 
 cpdef void ode_damplitude(
+    unsigned int iteration,
     CTYPEv1 state,
     CTYPEv1 dstate,
-    OscillatorArrayCy oscillators,
+    DriveArrayCy drives,
+    OscillatorsCy oscillators,
 ) nogil
 
 
@@ -73,17 +78,17 @@ cpdef CTYPEv1 ode_oscillators_sparse(
 ) nogil
 
 
-cpdef CTYPEv1 ode_oscillators_sparse_no_sensors(
-    CTYPE time,
-    CTYPEv1 state,
-    unsigned int iteration,
-    AnimatDataCy data,
-) nogil
+# cpdef CTYPEv1 ode_oscillators_sparse_no_sensors(
+#     CTYPE time,
+#     CTYPEv1 state,
+#     unsigned int iteration,
+#     AnimatDataCy data,
+# ) nogil
 
 
-cpdef CTYPEv1 ode_oscillators_sparse_tegotae(
-    CTYPE time,
-    CTYPEv1 state,
-    unsigned int iteration,
-    AnimatDataCy data,
-) nogil
+# cpdef CTYPEv1 ode_oscillators_sparse_tegotae(
+#     CTYPE time,
+#     CTYPEv1 state,
+#     unsigned int iteration,
+#     AnimatDataCy data,
+# ) nogil

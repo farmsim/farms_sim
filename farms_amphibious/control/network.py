@@ -4,8 +4,8 @@ import numpy as np
 from scipy import integrate
 from .ode import (
     ode_oscillators_sparse,
-    ode_oscillators_sparse_no_sensors,
-    ode_oscillators_sparse_tegotae,
+    # ode_oscillators_sparse_no_sensors,
+    # ode_oscillators_sparse_tegotae,
 )
 
 
@@ -65,9 +65,13 @@ class NetworkODE:
             ]
         )
 
-    def offsets(self):
+    def offsets(self, iteration=None):
         """Offset"""
-        return self.data.state.array[:, 0, 2*self.n_oscillators:]
+        return (
+            self.data.state.array[iteration, 0, 2*self.n_oscillators:]
+            if iteration is not None
+            else self.data.state.array[:, 0, 2*self.n_oscillators:]
+        )
 
     def outputs(self, iteration=None):
         """Outputs"""
