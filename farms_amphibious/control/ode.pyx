@@ -238,6 +238,7 @@ cpdef inline CTYPEv1 ode_oscillators_sparse(
         joints=data.joints,
         n_oscillators=data.network.oscillators.c_n_oscillators(),
     )
+    data.network.drives.array[iteration+1] = data.network.drives.array[iteration]
     return data.state.array[iteration][1]
 
 

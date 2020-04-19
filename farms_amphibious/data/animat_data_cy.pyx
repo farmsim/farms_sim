@@ -20,12 +20,14 @@ cdef class NetworkParametersCy:
 
     def __init__(
             self,
+            drives,
             oscillators,
             osc_connectivity,
             contacts_connectivity,
             hydro_connectivity
     ):
         super(NetworkParametersCy, self).__init__()
+        self.drives = drives
         self.oscillators = oscillators
         self.osc_connectivity = osc_connectivity
         self.contacts_connectivity = contacts_connectivity
@@ -202,6 +204,23 @@ cdef class HydroConnectivityCy(ConnectivityCy):
         else:
             self.frequency = NetworkArray1D(None)
             self.amplitude = NetworkArray1D(None)
+
+
+cdef class DriveDependentArrayCy(NetworkArray2D):
+    """Drive dependent array"""
+
+    @classmethod
+    def from_parameters(cls, gain, bias, low, high, saturation):
+        """From each parameter"""
+        return cls(np.array([gain, bias, low, high, saturation]))
+
+    cdef CTYPE value(self, unsigned int index, CTYPE drive):
+        """Value for a given drive"""
+        return (
+            self.gain[index]*drive + self.bias[index]
+            if self.low[index] <= drive <= self.high[index]
+            else self.saturation[index]
+        )
 
 
 cdef class JointsArrayCy(NetworkArray2D):

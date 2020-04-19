@@ -7,6 +7,7 @@ from ..data.animat_data import (
     OscillatorNetworkState,
     AnimatData,
     NetworkParameters,
+    DriveArray,
     OscillatorArray,
     OscillatorConnectivity,
     ContactConnectivity,
@@ -29,13 +30,24 @@ class AmphibiousData(AnimatData):
     """Amphibious network parameter"""
 
     @classmethod
-    def from_options(cls, initial_state, morphology, control, n_iterations):
+    def from_options(
+            cls,
+            initial_drive,
+            initial_state,
+            morphology,
+            control,
+            n_iterations
+    ):
         """Default amphibious newtwork parameters"""
         state = OscillatorNetworkState.from_initial_state(
             initial_state,
             n_iterations,
         )
         network = NetworkParameters(
+            drives=DriveArray.from_initial_drive(
+                initial_drive,
+                n_iterations,
+            ),
             oscillators=AmphibiousOscillatorArray.from_options(
                 morphology,
                 control.network.oscillators,

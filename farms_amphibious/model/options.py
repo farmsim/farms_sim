@@ -269,6 +269,10 @@ class AmphibiousControlOptions(Options):
             self.joints.offsets = (
                 {joint: 0 for joint in morphology.joints}
             )
+        if self.network.drive_init is None:
+            self.network.drive_init = (
+                [4, 0]
+            )
         if self.network.state_init is None:
             self.network.state_init = (
                 AmphibiousNetworkOptions.default_state_init(
@@ -288,7 +292,8 @@ class AmphibiousControlOptions(Options):
                     kwargs.pop('weight_osc_legs_opposite', 1e0),
                     kwargs.pop('weight_osc_legs_following', 1e0),
                     kwargs.pop('weight_osc_legs2body', 3e1),
-                    kwargs.pop('leg_phase_follow', np.pi),                    )
+                    kwargs.pop('leg_phase_follow', np.pi),
+                )
             )
         if self.network.contact2osc is None:
             self.network.contact2osc = (
@@ -378,10 +383,22 @@ class AmphibiousNetworkOptions(Options):
             'oscillators',
             AmphibiousOscillatorOptions.from_options(kwargs)
         )
-        # options['connectivity'] = kwargs.pop(
-        #     'connectivity',
-        #     AmphibiousConnectivityOptions.from_options(kwargs)
-        # )
+        for option in [
+                'osc_nodes',
+                'osc_nodes',
+                'osc_freqs',
+                'osc_rates',
+                'osc_amplitudes',
+                'drive_nodes',
+                'drive_init',
+                'contacts_nodes',
+                'hydro_nodes',
+                'osc2osc',
+                'drive2osc',
+                'contact2osc',
+                'hydro2osc',
+        ]:
+            options[option] = kwargs.pop(option, None)
         return cls(**options)
 
     @staticmethod

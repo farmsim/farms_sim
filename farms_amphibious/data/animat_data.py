@@ -7,6 +7,7 @@ from .animat_data_cy import (
     AnimatDataCy,
     NetworkParametersCy,
     OscillatorNetworkStateCy,
+    DriveArrayCy,
     OscillatorArrayCy,
     OscillatorConnectivityCy,
     ContactConnectivityCy,
@@ -77,6 +78,9 @@ class NetworkParameters(NetworkParametersCy):
     def from_dict(cls, dictionary):
         """Load data from dictionary"""
         return cls(
+            drives=DriveArray(
+                dictionary['drives']
+            ),
             oscillators=OscillatorArray(
                 dictionary['oscillators']
             ),
@@ -95,6 +99,7 @@ class NetworkParameters(NetworkParametersCy):
         """Convert data to dictionary"""
         assert iteration is None or isinstance(iteration, int)
         return {
+            'drives': to_array(self.drives.array),
             'oscillators': to_array(self.oscillators.array),
             'osc_connectivity': self.osc_connectivity.to_dict(),
             'contacts_connectivity': self.contacts_connectivity.to_dict(),
@@ -135,6 +140,18 @@ class OscillatorNetworkState(OscillatorNetworkStateCy):
         plt.xlabel('Times [s]')
         plt.ylabel('Amplitudes')
         plt.grid(True)
+
+
+class DriveArray(DriveArrayCy):
+    """Drive array"""
+
+    @classmethod
+    def from_initial_drive(cls, initial_drives, n_iterations):
+        """From initial drive"""
+        drive_size = len(initial_drives)
+        drive_array = np.zeros([n_iterations, drive_size], dtype=DTYPE)
+        drive_array[0, :] = initial_drives
+        return cls(drive_array)
 
 
 class OscillatorArray(OscillatorArrayCy):

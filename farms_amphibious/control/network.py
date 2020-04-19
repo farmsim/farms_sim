@@ -23,9 +23,9 @@ class NetworkODE:
         self.solver.set_integrator('dopri5')
         self.solver.set_initial_value(y=self.data.state.array[0, 0, :], t=0.0)
 
-    def control_step(self, iteration, time, timestep, check=False):
+    def control_step(self, iteration, time, timestep, checks=False):
         """Control step"""
-        if check:
+        if checks:
             assert np.array_equal(
                 self.solver.y,
                 self.data.state.array[iteration, 0, :]
@@ -34,7 +34,7 @@ class NetworkODE:
         self.data.state.array[iteration+1, 0, :] = (
             self.solver.integrate(time+timestep)
         )
-        if check:
+        if checks:
             assert self.solver.successful()
             assert abs(time+timestep-self.solver.t) < 1e-6*timestep, (
                 'ODE solver time: {} [s] != Simulation time: {} [s]'.format(
