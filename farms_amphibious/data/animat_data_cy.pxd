@@ -26,7 +26,7 @@ cdef class NetworkParametersCy:
     cdef public HydroConnectivityCy hydro_connectivity
 
 
-cdef class OscillatorNetworkStateCy(NetworkArray3D):
+cdef class OscillatorNetworkStateCy(NetworkArray2D):
     """Network state"""
     cdef public unsigned int n_oscillators
     cdef public unsigned int _iterations

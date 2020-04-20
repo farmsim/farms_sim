@@ -114,8 +114,8 @@ class OscillatorNetworkState(OscillatorNetworkStateCy):
     def from_initial_state(cls, initial_state, n_iterations):
         """From initial state"""
         state_size = len(initial_state)
-        state_array = np.zeros([n_iterations, 2, state_size], dtype=DTYPE)
-        state_array[0, 0, :] = initial_state
+        state_array = np.zeros([n_iterations, state_size], dtype=DTYPE)
+        state_array[0, :] = initial_state
         return cls(state_array, n_oscillators=2*state_size//5)
 
     def plot(self, times):

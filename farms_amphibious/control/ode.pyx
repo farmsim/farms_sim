@@ -213,6 +213,7 @@ cpdef inline void ode_joints(
 cpdef inline CTYPEv1 ode_oscillators_sparse(
     CTYPE time,
     CTYPEv1 state,
+    CTYPEv1 dstate,
     unsigned int iteration,
     AnimatDataCy data,
 ) nogil:
@@ -220,7 +221,7 @@ cpdef inline CTYPEv1 ode_oscillators_sparse(
     ode_dphase(
         iteration=iteration,
         state=state,
-        dstate=data.state.array[iteration][1],
+        dstate=dstate,
         drives=data.network.drives,
         oscillators=data.network.oscillators,
         connectivity=data.network.osc_connectivity,
@@ -228,21 +229,21 @@ cpdef inline CTYPEv1 ode_oscillators_sparse(
     ode_damplitude(
         iteration=iteration,
         state=state,
-        dstate=data.state.array[iteration][1],
+        dstate=dstate,
         drives=data.network.drives,
         oscillators=data.network.oscillators,
     )
     ode_contacts(
         iteration=iteration,
         state=state,
-        dstate=data.state.array[iteration][1],
+        dstate=dstate,
         contacts=data.sensors.contacts,
         contacts_connectivity=data.network.contacts_connectivity,
     )
     ode_hydro(
         iteration=iteration,
         state=state,
-        dstate=data.state.array[iteration][1],
+        dstate=dstate,
         hydrodynamics=data.sensors.hydrodynamics,
         hydro_connectivity=data.network.hydro_connectivity,
         n_oscillators=data.network.oscillators.c_n_oscillators(),
@@ -250,18 +251,19 @@ cpdef inline CTYPEv1 ode_oscillators_sparse(
     ode_joints(
         iteration=iteration,
         state=state,
-        dstate=data.state.array[iteration][1],
+        dstate=dstate,
         drives=data.network.drives,
         joints=data.joints,
         n_oscillators=data.network.oscillators.c_n_oscillators(),
     )
     data.network.drives.array[iteration+1] = data.network.drives.array[iteration]
-    return data.state.array[iteration][1]
+    return dstate
 
 
 cpdef inline CTYPEv1 ode_oscillators_sparse_no_sensors(
     CTYPE time,
     CTYPEv1 state,
+    CTYPEv1 dstate,
     unsigned int iteration,
     AnimatDataCy data,
 ) nogil:
@@ -269,7 +271,7 @@ cpdef inline CTYPEv1 ode_oscillators_sparse_no_sensors(
     ode_dphase(
         iteration=iteration,
         state=state,
-        dstate=data.state.array[iteration][1],
+        dstate=dstate,
         drives=data.network.drives,
         oscillators=data.network.oscillators,
         connectivity=data.network.osc_connectivity,
@@ -277,25 +279,26 @@ cpdef inline CTYPEv1 ode_oscillators_sparse_no_sensors(
     ode_damplitude(
         iteration=iteration,
         state=state,
-        dstate=data.state.array[iteration][1],
+        dstate=dstate,
         drives=data.network.drives,
         oscillators=data.network.oscillators,
     )
     ode_joints(
         iteration=iteration,
         state=state,
-        dstate=data.state.array[iteration][1],
+        dstate=dstate,
         drives=data.network.drives,
         joints=data.joints,
         n_oscillators=data.network.oscillators.c_n_oscillators(),
     )
     data.network.drives.array[iteration+1] = data.network.drives.array[iteration]
-    return data.state.array[iteration][1]
+    return dstate
 
 
 cpdef inline CTYPEv1 ode_oscillators_sparse_tegotae(
     CTYPE time,
     CTYPEv1 state,
+    CTYPEv1 dstate,
     unsigned int iteration,
     AnimatDataCy data,
 ) nogil:
@@ -303,7 +306,7 @@ cpdef inline CTYPEv1 ode_oscillators_sparse_tegotae(
     ode_dphase(
         iteration=iteration,
         state=state,
-        dstate=data.state.array[iteration][1],
+        dstate=dstate,
         drives=data.network.drives,
         oscillators=data.network.oscillators,
         connectivity=data.network.osc_connectivity,
@@ -311,24 +314,24 @@ cpdef inline CTYPEv1 ode_oscillators_sparse_tegotae(
     ode_damplitude(
         iteration=iteration,
         state=state,
-        dstate=data.state.array[iteration][1],
+        dstate=dstate,
         drives=data.network.drives,
         oscillators=data.network.oscillators,
     )
     ode_contacts_tegotae(
         iteration=iteration,
         state=state,
-        dstate=data.state.array[iteration][1],
+        dstate=dstate,
         contacts=data.sensors.contacts,
         contacts_connectivity=data.network.contacts_connectivity,
     )
     ode_joints(
         iteration=iteration,
         state=state,
-        dstate=data.state.array[iteration][1],
+        dstate=dstate,
         drives=data.network.drives,
         joints=data.joints,
         n_oscillators=data.network.oscillators.c_n_oscillators(),
     )
     data.network.drives.array[iteration+1] = data.network.drives.array[iteration]
-    return data.state.array[iteration][1]
+    return dstate

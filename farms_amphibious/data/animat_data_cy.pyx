@@ -34,7 +34,7 @@ cdef class NetworkParametersCy:
         self.hydro_connectivity = hydro_connectivity
 
 
-cdef class OscillatorNetworkStateCy(NetworkArray3D):
+cdef class OscillatorNetworkStateCy(NetworkArray2D):
     """Network state"""
 
     def __init__(self, state, n_oscillators):
@@ -56,27 +56,19 @@ cdef class OscillatorNetworkStateCy(NetworkArray3D):
 
     def phases(self, unsigned int iteration):
         """Phases"""
-        return self.array[iteration, 0, :self.n_oscillators]
+        return self.array[iteration, :self.n_oscillators]
 
     def phases_all(self):
         """Phases"""
-        return self.array[:, 0, :self.n_oscillators]
+        return self.array[:, :self.n_oscillators]
 
     def amplitudes(self, unsigned int iteration):
         """Amplitudes"""
-        return self.array[iteration, 0, self.n_oscillators:]
+        return self.array[iteration, self.n_oscillators:]
 
     def amplitudes_all(self):
         """Phases"""
-        return self.array[:, 0, self.n_oscillators:]
-
-    def dphases(self, unsigned int iteration):
-        """Phases derivative"""
-        return self.array[iteration, 1, :self.n_oscillators]
-
-    def damplitudes(self, unsigned int iteration):
-        """Amplitudes derivative"""
-        return self.array[iteration, 1, self.n_oscillators:]
+        return self.array[:, self.n_oscillators:]
 
 
 cdef class DriveDependentArrayCy(NetworkArray2D):

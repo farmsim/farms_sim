@@ -64,7 +64,7 @@ def simulation(times, morphology, control):
 
     # Animat data
     animat_data = AmphibiousData.from_options(
-        control.network.drive_init,
+        control.network.drives_init,
         control.network.state_init,
         morphology,
         control,
