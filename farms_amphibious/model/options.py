@@ -730,15 +730,6 @@ class AmphibiousJointsOptions(Options):
         """Joints """
         convention = AmphibiousConvention(**morphology)
         if self.offsets is None:
-            legs_offsets_walking = kwargs.pop(
-                'legs_offsets_walking',
-                [0, np.pi/32, 0, np.pi/8]
-            )
-            legs_offsets_swimming = kwargs.pop(
-                'legs_offsets_swimming',
-                [-2*np.pi/5, 0, 0, 0]
-            )
-            # raise Exception
             self.offsets = [None]*morphology.n_joints()
             # Turning body
             for joint_i in range(morphology.n_joints_body):
@@ -751,6 +742,26 @@ class AmphibiousJointsOptions(Options):
                         'saturation': 0,
                     }
             # Turning legs
+            legs_offsets_walking = kwargs.pop(
+                'legs_offsets_walking',
+                [0, np.pi/32, 0, np.pi/8]
+            )
+            legs_offsets_swimming = kwargs.pop(
+                'legs_offsets_swimming',
+                [-2*np.pi/5, 0, 0, 0]
+            )
+            leg_turn_gain = kwargs.pop(
+                'leg_turn_gain',
+                [-1, 1]
+            )
+            leg_side_turn_gain = kwargs.pop(
+                'leg_side_turn_gain',
+                [-1, 1]
+            )
+            leg_joint_turn_gain = kwargs.pop(
+                'leg_joint_turn_gain',
+                [1, 0, 0, 0]
+            )
             for leg_i in range(morphology.n_legs//2):
                 for side_i in range(2):
                     for joint_i in range(morphology.n_dof_legs):
@@ -759,7 +770,11 @@ class AmphibiousJointsOptions(Options):
                             side_i=side_i,
                             joint_i=joint_i,
                         )] = {
-                            'gain': (1 if leg_i else -1)*(1 if side_i else -1),
+                            'gain': (
+                                leg_turn_gain[leg_i]
+                                *leg_side_turn_gain[side_i]
+                                *leg_joint_turn_gain[joint_i]
+                            ),
                             'bias': legs_offsets_walking[joint_i],
                             'low': 1,
                             'high': 3,
