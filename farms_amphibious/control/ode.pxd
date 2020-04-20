@@ -80,17 +80,17 @@ cpdef CTYPEv1 ode_oscillators_sparse(
 ) nogil
 
 
-# cpdef CTYPEv1 ode_oscillators_sparse_no_sensors(
-#     CTYPE time,
-#     CTYPEv1 state,
-#     unsigned int iteration,
-#     AnimatDataCy data,
-# ) nogil
+cpdef CTYPEv1 ode_oscillators_sparse_no_sensors(
+    CTYPE time,
+    CTYPEv1 state,
+    unsigned int iteration,
+    AnimatDataCy data,
+) nogil
 
 
-# cpdef CTYPEv1 ode_oscillators_sparse_tegotae(
-#     CTYPE time,
-#     CTYPEv1 state,
-#     unsigned int iteration,
-#     AnimatDataCy data,
-# ) nogil
+cpdef CTYPEv1 ode_oscillators_sparse_tegotae(
+    CTYPE time,
+    CTYPEv1 state,
+    unsigned int iteration,
+    AnimatDataCy data,
+) nogil

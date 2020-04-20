@@ -259,62 +259,76 @@ cpdef inline CTYPEv1 ode_oscillators_sparse(
     return data.state.array[iteration][1]
 
 
-# cpdef inline CTYPEv1 ode_oscillators_sparse_no_sensors(
-#     CTYPE time,
-#     CTYPEv1 state,
-#     unsigned int iteration,
-#     AnimatDataCy data,
-# ) nogil:
-#     """CPG network ODE using no sensors"""
-#     ode_dphase(
-#         state=state,
-#         dstate=data.state.array[iteration][1],
-#         oscillators=data.network.oscillators,
-#         connectivity=data.network.osc_connectivity,
-#     )
-#     ode_damplitude(
-#         state=state,
-#         dstate=data.state.array[iteration][1],
-#         oscillators=data.network.oscillators,
-#     )
-#     ode_joints(
-#         state=state,
-#         dstate=data.state.array[iteration][1],
-#         joints=data.joints,
-#         n_oscillators=data.network.oscillators.c_n_oscillators(),
-#     )
-#     return data.state.array[iteration][1]
+cpdef inline CTYPEv1 ode_oscillators_sparse_no_sensors(
+    CTYPE time,
+    CTYPEv1 state,
+    unsigned int iteration,
+    AnimatDataCy data,
+) nogil:
+    """CPG network ODE using no sensors"""
+    ode_dphase(
+        iteration=iteration,
+        state=state,
+        dstate=data.state.array[iteration][1],
+        drives=data.network.drives,
+        oscillators=data.network.oscillators,
+        connectivity=data.network.osc_connectivity,
+    )
+    ode_damplitude(
+        iteration=iteration,
+        state=state,
+        dstate=data.state.array[iteration][1],
+        drives=data.network.drives,
+        oscillators=data.network.oscillators,
+    )
+    ode_joints(
+        iteration=iteration,
+        state=state,
+        dstate=data.state.array[iteration][1],
+        drives=data.network.drives,
+        joints=data.joints,
+        n_oscillators=data.network.oscillators.c_n_oscillators(),
+    )
+    data.network.drives.array[iteration+1] = data.network.drives.array[iteration]
+    return data.state.array[iteration][1]
 
 
-# cpdef inline CTYPEv1 ode_oscillators_sparse_tegotae(
-#     CTYPE time,
-#     CTYPEv1 state,
-#     unsigned int iteration,
-#     AnimatDataCy data,
-# ) nogil:
-#     """CPG network ODE using Tegotae"""
-#     ode_dphase(
-#         state=state,
-#         dstate=data.state.array[iteration][1],
-#         oscillators=data.network.oscillators,
-#         connectivity=data.network.osc_connectivity,
-#     )
-#     ode_damplitude(
-#         state=state,
-#         dstate=data.state.array[iteration][1],
-#         oscillators=data.network.oscillators,
-#     )
-#     ode_joints(
-#         state=state,
-#         dstate=data.state.array[iteration][1],
-#         joints=data.joints,
-#         n_oscillators=data.network.oscillators.c_n_oscillators(),
-#     )
-#     ode_contacts_tegotae(
-#         iteration=iteration,
-#         state=state,
-#         dstate=data.state.array[iteration][1],
-#         contacts=data.sensors.contacts,
-#         contacts_connectivity=data.network.contacts_connectivity,
-#     )
-#     return data.state.array[iteration][1]
+cpdef inline CTYPEv1 ode_oscillators_sparse_tegotae(
+    CTYPE time,
+    CTYPEv1 state,
+    unsigned int iteration,
+    AnimatDataCy data,
+) nogil:
+    """CPG network ODE using Tegotae"""
+    ode_dphase(
+        iteration=iteration,
+        state=state,
+        dstate=data.state.array[iteration][1],
+        drives=data.network.drives,
+        oscillators=data.network.oscillators,
+        connectivity=data.network.osc_connectivity,
+    )
+    ode_damplitude(
+        iteration=iteration,
+        state=state,
+        dstate=data.state.array[iteration][1],
+        drives=data.network.drives,
+        oscillators=data.network.oscillators,
+    )
+    ode_contacts_tegotae(
+        iteration=iteration,
+        state=state,
+        dstate=data.state.array[iteration][1],
+        contacts=data.sensors.contacts,
+        contacts_connectivity=data.network.contacts_connectivity,
+    )
+    ode_joints(
+        iteration=iteration,
+        state=state,
+        dstate=data.state.array[iteration][1],
+        drives=data.network.drives,
+        joints=data.joints,
+        n_oscillators=data.network.oscillators.c_n_oscillators(),
+    )
+    data.network.drives.array[iteration+1] = data.network.drives.array[iteration]
+    return data.state.array[iteration][1]
