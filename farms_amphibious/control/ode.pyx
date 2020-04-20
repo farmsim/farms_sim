@@ -61,8 +61,8 @@ cpdef inline void ode_dphase(
         # Intrinsic frequency
         dstate[i] = oscillators.c_angular_frequency(i, drives.c_speed(iteration))
     for i in range(connectivity.c_n_connections()):
-        i0 = connectivity.connections.array[i][0]
-        i1 = connectivity.connections.array[i][1]
+        i0 = connectivity.connections.array[i, 0]
+        i1 = connectivity.connections.array[i, 1]
         dstate[i0] += state[n_oscillators+i1]*connectivity.c_weight(i)*sin(
             phase(state, i1) - phase(state, i0)
             - connectivity.c_desired_phase(i)
@@ -105,13 +105,13 @@ cpdef inline void ode_contacts(
     cdef CTYPE contact_force
     cdef unsigned int i, i0, i1
     for i in range(contacts_connectivity.c_n_connections()):
-        i0 = contacts_connectivity.connections.array[i][0]
-        i1 = contacts_connectivity.connections.array[i][1]
+        i0 = contacts_connectivity.connections.array[i, 0]
+        i1 = contacts_connectivity.connections.array[i, 1]
         # contact_weight*contact_force
         # contact_force = (
-        #     contacts.array[iteration][i1][0]**2
-        #     + contacts.array[iteration][i1][1]**2
-        #     + contacts.array[iteration][i1][2]**2
+        #     contacts.array[iteration, i1, 0]**2
+        #     + contacts.array[iteration, i1, 1]**2
+        #     + contacts.array[iteration, i1, 2]**2
         # )**0.5
         contact_force = fabs(contacts.c_force_z(iteration, i1))
         dstate[i0] += (
@@ -137,13 +137,13 @@ cpdef inline void ode_contacts_tegotae(
     cdef CTYPE contact_force
     cdef unsigned int i, i0, i1
     for i in range(contacts_connectivity.c_n_connections()):
-        i0 = contacts_connectivity.connections.array[i][0]
-        i1 = contacts_connectivity.connections.array[i][1]
+        i0 = contacts_connectivity.connections.array[i, 0]
+        i1 = contacts_connectivity.connections.array[i, 1]
         # contact_weight*contact_force
         # contact_force = (
-        #     contacts.array[iteration][i1][0]**2
-        #     + contacts.array[iteration][i1][1]**2
-        #     + contacts.array[iteration][i1][2]**2
+        #     contacts.array[iteration, i1, 0]**2
+        #     + contacts.array[iteration, i1, 1]**2
+        #     + contacts.array[iteration, i1, 2]**2
         # )**0.5
         contact_force = fabs(contacts.c_force_z(iteration, i1))
         dstate[i0] += (
@@ -169,8 +169,8 @@ cpdef inline void ode_hydro(
     cdef CTYPE hydro_force
     cdef unsigned int i, i0, i1
     for i in range(hydro_connectivity.c_n_connections()):
-        i0 = hydro_connectivity.connections.array[i][0]
-        i1 = hydro_connectivity.connections.array[i][1]
+        i0 = hydro_connectivity.connections.array[i, 0]
+        i1 = hydro_connectivity.connections.array[i, 1]
         hydro_force = fabs(hydrodynamics.c_force_y(iteration, i1))
         # dfrequency += hydro_weight*hydro_force
         dstate[i0] += (
