@@ -5,17 +5,15 @@ import time
 import numpy as np
 
 from farms_bullet.simulation.simulation import Simulation
-from farms_bullet.simulation.options import SimulationOptions
 from farms_bullet.simulation.simulator import real_time_handing
 from farms_bullet.model.model import SimulationModels
 from farms_bullet.interface.interface import Interfaces
 import farms_pylog as pylog
 
-from ..model.animat import Amphibious
-from ..model.options import AmphibiousOptions
+from .interface import AmphibiousUserParameters
 
 
-def swimming_step(sim_step, animat):
+def swimming_step(iteration, animat):
     """Swimming step"""
     physics_options = animat.options.physics
     if (
@@ -30,41 +28,41 @@ def swimming_step(sim_step, animat):
         )
         if physics_options.viscous:
             animat.viscous_swimming_forces(
-                sim_step,
+                iteration,
                 water_surface=water_surface,
                 coefficients=physics_options.viscous_coefficients,
                 buoyancy=physics_options.buoyancy,
             )
         if physics_options.resistive:
             animat.resistive_swimming_forces(
-                sim_step,
+                iteration,
                 water_surface=water_surface,
                 coefficients=physics_options.resistive_coefficients,
                 buoyancy=physics_options.buoyancy,
             )
         animat.apply_swimming_forces(
-            sim_step,
+            iteration,
             water_surface=water_surface,
         )
         if animat.options.show_hydrodynamics:
             animat.draw_hydrodynamics(
-                sim_step,
+                iteration,
                 water_surface=water_surface,
             )
 
 
-def time_based_drive(sim_step, n_iterations, interface):
+def time_based_drive(iteration, n_iterations, interface):
     """Switch drive based on time"""
     interface.user_params.drive_speed().value = (
-        1+4*sim_step/n_iterations
+        1+4*iteration/n_iterations
     )
     interface.user_params.drive_speed().changed = True
 
 
-def gps_based_drive(sim_step, animat, interface):
+def gps_based_drive(iteration, animat, interface):
     """Switch drive based on position"""
     distance = animat.data.sensors.gps.com_position(
-        iteration=sim_step-1 if sim_step else 0,
+        iteration=iteration-1 if iteration else 0,
         link_i=0
     )[0]
     swim_distance = 3
@@ -90,7 +88,9 @@ class AmphibiousSimulation(Simulation):
             options=simulation_options
         )
         # Interface
-        self.interface = Interfaces(int(10*1e-3/simulation_options.timestep))
+        self.interface = Interfaces(
+            user_params=AmphibiousUserParameters(self.animat().options)
+        )
         if not self.options.headless:
             self.interface.init_camera(
                 target_identity=(
@@ -104,7 +104,6 @@ class AmphibiousSimulation(Simulation):
                 pitch=simulation_options.video_pitch,
                 yaw=simulation_options.video_yaw,
             )
-            self.interface.init_debug(animat_options=self.animat().options)
 
         if self.options.record:
             skips = int(2e-2/simulation_options.timestep)  # 50 fps
@@ -130,10 +129,10 @@ class AmphibiousSimulation(Simulation):
         """Salamander animat"""
         return self.models[0]
 
-    def pre_step(self, sim_step):
+    def pre_step(self, iteration):
         """New step"""
         play = True
-        # if not(sim_step % 10000) and sim_step > 0:
+        # if not(iteration % 10000) and iteration > 0:
         #     pybullet.restoreState(self.simulation_state)
         #     state = self.animat().data.state
         #     state.array[self.animat().data.iteration] = (
@@ -141,14 +140,14 @@ class AmphibiousSimulation(Simulation):
         #     )
         if not self.options.headless:
             play = self.interface.user_params.play().value
-            if not sim_step % 100:
+            if not iteration % 100:
                 self.interface.user_params.update()
             if not play:
                 time.sleep(0.5)
                 self.interface.user_params.update()
         return play
 
-    def step(self, sim_step):
+    def step(self, iteration):
         """Simulation step"""
         self.tic_rt[0] = time.time()
         # Interface
@@ -157,41 +156,41 @@ class AmphibiousSimulation(Simulation):
             # Drive changes depending on simulation time
             if self.animat().options.transition:
                 time_based_drive(
-                    sim_step,
+                    iteration,
                     self.options.n_iterations,
                     self.interface
                 )
 
             # GPS based drive
-            # gps_based_drive(sim_step, self.animat, self.interface)
+            # gps_based_drive(iteration, self.animat, self.interface)
 
             # Update interface
-            self.animat_interface()
+            self.animat_interface(iteration)
 
         # Animat sensors
-        self.animat().sensors.update(sim_step)
+        self.animat().sensors.update(iteration)
 
         # Physics step
-        if sim_step < self.options.n_iterations-1:
+        if iteration < self.options.n_iterations-1:
             # Swimming
-            swimming_step(sim_step, self.animat())
+            swimming_step(iteration, self.animat())
 
             # Update animat controller
             if self.animat().controller is not None:
                 self.animat().controller.control_step(
-                    iteration=sim_step,
-                    time=sim_step*self.options.timestep,
+                    iteration=iteration,
+                    time=iteration*self.options.timestep,
                     timestep=self.options.timestep,
                 )
 
-    def post_step(self, sim_step):
+    def post_step(self, iteration):
         """Post step"""
 
         # Camera
         if not self.options.headless:
             self.interface.camera.update()
         if self.options.record:
-            self.interface.video.record(sim_step)
+            self.interface.video.record(iteration)
 
         # Real-time
         if not self.options.headless:
@@ -206,43 +205,27 @@ class AmphibiousSimulation(Simulation):
                     rtl=self.interface.user_params.rtl().value
                 )
 
-    def animat_interface(self):
+    def animat_interface(self, iteration):
         """Animat interface"""
+        animat = self.animat()
+
         # Camera zoom
         if self.interface.user_params.zoom().changed:
             self.interface.camera.set_zoom(
                 self.interface.user_params.zoom().value
             )
 
-        # Body offset
-        if self.interface.user_params.body_offset().changed:
-            animat = self.animat()
-            animat.options.control.joints.set_body_offsets(
-                self.interface.user_params.body_offset().value,
-                animat.options.morphology.n_joints_body
-            )
-            self.animat().controller.update(
-                animat.options
-            )
-            self.interface.user_params.body_offset().changed = False
-
         # Drives
         if self.interface.user_params.drive_speed().changed:
-            self.animat().options.control.drives.forward = (
+            animat.data.network.drives.array[iteration, 0] = (
                 self.interface.user_params.drive_speed().value
-            )
-            self.animat().controller.update(
-                self.animat().options
             )
             self.interface.user_params.drive_speed().changed = False
 
         # Turning
         if self.interface.user_params.drive_turn().changed:
-            self.animat().options.control.drives.turning = (
+            animat.data.network.drives.array[iteration, 1] = (
                 self.interface.user_params.drive_turn().value
-            )
-            self.animat().controller.update(
-                self.animat().options
             )
             self.interface.user_params.drive_turn().changed = False
 
@@ -291,66 +274,3 @@ class AmphibiousSimulation(Simulation):
                 iteration=iteration,
                 writer=kwargs.pop('writer', 'ffmpeg')
             )
-
-
-def main(simulation_options=None, animat_options=None):
-    """Main"""
-
-    # Parse command line arguments
-    if not simulation_options:
-        simulation_options = SimulationOptions.with_clargs()
-    if not animat_options:
-        animat_options = AmphibiousOptions()
-
-    # Setup simulation
-    pylog.debug('Creating simulation')
-    sim = AmphibiousSimulation(
-        simulation_options=simulation_options,
-        animat=Amphibious(
-            animat_options,
-            simulation_options.timestep,
-            simulation_options.n_iterations,
-            simulation_options.units
-        )
-    )
-
-    # Run simulation
-    pylog.debug('Running simulation')
-    sim.run()
-
-    # Analyse results
-    pylog.debug('Analysing simulation')
-    sim.postprocess(
-        iteration=sim.iteration,
-        plot=simulation_options.plot,
-        log_path=simulation_options.log_path,
-        log_extension=simulation_options.log_extension,
-        record=sim.options.record and not sim.options.headless
-    )
-    if simulation_options.log_path:
-        np.save(
-            simulation_options.log_path+'/hydrodynamics.npy',
-            sim.models.animat.data.sensors.hydrodynamics.array
-        )
-
-    sim.end()
-
-
-def main_parallel():
-    """Simulation with multiprocessing"""
-    from multiprocessing import Pool
-
-    # Parse command line arguments
-    sim_options = SimulationOptions.with_clargs()
-
-    # Create Pool
-    pool = Pool(2)
-
-    # Run simulation
-    pool.map(main, [sim_options, sim_options])
-    pylog.debug('Done')
-
-
-if __name__ == '__main__':
-    # main_parallel()
-    main()

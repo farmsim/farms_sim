@@ -48,10 +48,6 @@ def animat_options():
         'sensors': None,
     })
     control.defaults_from_morphology(morphology, {})
-    control.update(
-        morphology.n_joints_body,
-        morphology.n_dof_legs,
-    )
     return morphology, control
 
 
@@ -68,6 +64,7 @@ def simulation(times, morphology, control):
 
     # Animat data
     animat_data = AmphibiousData.from_options(
+        control.network.drives_init,
         control.network.state_init,
         morphology,
         control,
@@ -101,8 +98,8 @@ def analysis(data, times, morphology):
             'Oscillator connectivity information'
             + sep.join([
                 'O_{} <- O_{} (w={}, theta={})'.format(
-                    int(connection[0]+0.5),
-                    int(connection[1]+0.5),
+                    connection[0],
+                    connection[1],
                     weight,
                     phase,
                 )
@@ -117,8 +114,8 @@ def analysis(data, times, morphology):
             'Contacts connectivity information'
             + sep.join([
                 'O_{} <- contact_{} (frequency_gain={})'.format(
-                    int(connection[0]+0.5),
-                    int(connection[1]+0.5),
+                    connection[0],
+                    connection[1],
                     weight,
                 )
                 for connection, weight in zip(
@@ -131,8 +128,8 @@ def analysis(data, times, morphology):
             'Hydrodynamics connectivity information'
             + sep.join([
                 'O_{} <- link_{} (frequency_gain={}, amplitude_gain={})'.format(
-                    int(connection[0]+0.5),
-                    int(connection[1]+0.5),
+                    connection[0],
+                    connection[1],
                     frequency,
                     amplitude,
                 )
@@ -147,12 +144,17 @@ def analysis(data, times, morphology):
         pylog.info(
             (sep.join([
                 'Network infromation:',
-                '  - Oscillators shape: {}',
+                '  - Oscillators:',
+                '     - Intrinsic frequencies: {}',
+                '     - Nominal amplitudes: {}',
+                '     - Rates: {}',
                 '  - Connectivity shape: {}',
                 '  - Contacts connectivity shape: {}',
                 '  - Hydro connectivity shape: {}',
             ])).format(
-                np.shape(data.network.oscillators.array),
+                np.shape(data.network.oscillators.intrinsic_frequencies.array),
+                np.shape(data.network.oscillators.nominal_amplitudes.array),
+                np.shape(data.network.oscillators.rates.array),
                 np.shape(data.network.osc_connectivity.connections.array),
                 np.shape(data.network.contacts_connectivity.connections.array),
                 np.shape(data.network.hydro_connectivity.connections.array),

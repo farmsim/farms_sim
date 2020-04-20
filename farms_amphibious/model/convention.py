@@ -99,6 +99,12 @@ class AmphibiousConvention:
         assert 0 <= joint_i < n_legs_dof, 'Joint must be < {}, got {}'.format(n_legs_dof, joint_i)
         return 'link_leg_{}_{}_{}'.format(leg_i, 'R' if side_i else 'L', joint_i)
 
+    def bodyjoint2index(self, joint_i):
+        """bodyjoint2index"""
+        n_body = self.n_joints_body
+        assert 0 <= joint_i < n_body, 'Body joint must be < {}, got {}'.format(n_body, joint_i)
+        return joint_i
+
     def legjoint2index(self, leg_i, side_i, joint_i):
         """legjoint2index"""
         n_legs = self.n_legs

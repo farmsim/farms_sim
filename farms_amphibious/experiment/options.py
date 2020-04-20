@@ -12,7 +12,6 @@ def get_animat_options(swimming=False, **kwargs):
     """Get animat options - Should load a config file in the future"""
     scale = 1
     animat_options = AmphibiousOptions.from_options(kwargs)
-    # animat_options.control.drives.forward = 4
 
     if swimming:
         # Swiming
@@ -25,7 +24,6 @@ def get_animat_options(swimming=False, **kwargs):
         animat_options.physics.viscous = True
         animat_options.physics.buoyancy = True
         animat_options.physics.water_surface = True
-
 
     return animat_options
 
@@ -229,14 +227,14 @@ def get_pleurobot_options(**kwargs):
         n_legs=4,
         n_dof_legs=4,
         n_joints_body=13,
-        body_head_amplitude=0,
-        body_tail_amplitude=0,
-        body_stand_amplitude=kwargs.pop('body_stand_amplitude', 0.3),
+        # body_head_amplitude=0,
+        # body_tail_amplitude=0,
+        body_stand_amplitude=kwargs.pop('body_stand_amplitude', 0.2),
         # body_stand_shift=np.pi/4,
         # legs_amplitude=[0.8, np.pi/32, np.pi/4, np.pi/8],
         # legs_offsets_walking=[0, np.pi/32, 0, np.pi/8],
         # legs_offsets_swimming=[-2*np.pi/5, 0, 0, 0],
-        body_stand_shift=kwargs.pop('body_stand_shift', np.pi/4),
+        # body_stand_shift=kwargs.pop('body_stand_shift', np.pi/4),
         legs_amplitude=kwargs.pop(
             'legs_amplitude',
             [np.pi/8, np.pi/32, np.pi/8, np.pi/8],
@@ -251,7 +249,7 @@ def get_pleurobot_options(**kwargs):
         ),
         gain_amplitude=gain_amplitude,
         gain_offset=gain_offset,
-        joints_offsets=joints_offsets,
+        offsets_bias=joints_offsets,
         weight_osc_body=kwargs.pop('weight_osc_body', 1e0),
         weight_osc_legs_internal=kwargs.pop('weight_osc_legs_internal', 3e1),
         weight_osc_legs_opposite=kwargs.pop('weight_osc_legs_opposite', 3e0),

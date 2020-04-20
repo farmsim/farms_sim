@@ -1,14 +1,15 @@
 """Cython code"""
 
-import time
+# import time
 # import numpy as np
+# cimport numpy as np
 
-cimport cython
-cimport numpy as np
+# cimport cython
+# from cython.parallel import prange
 
 from libc.math cimport sin, fabs  # cos,
 # from libc.stdlib cimport malloc, free
-# from cython.parallel import prange
+# from libc.stdio cimport printf
 
 
 cdef inline CTYPE phase(
@@ -43,9 +44,11 @@ cdef inline CTYPE saturation(CTYPE value, CTYPE multiplier) nogil:
 
 
 cpdef inline void ode_dphase(
+    unsigned int iteration,
     CTYPEv1 state,
     CTYPEv1 dstate,
-    OscillatorArrayCy oscillators,
+    DriveArrayCy drives,
+    OscillatorsCy oscillators,
     OscillatorConnectivityCy connectivity,
 ) nogil:
     """Oscillator phase ODE
@@ -56,10 +59,10 @@ cpdef inline void ode_dphase(
     cdef unsigned int i, i0, i1, n_oscillators = oscillators.c_n_oscillators()
     for i in range(n_oscillators):  # , nogil=True):
         # Intrinsic frequency
-        dstate[i] = oscillators.c_angular_frequency(i)
+        dstate[i] = oscillators.c_angular_frequency(i, drives.c_speed(iteration))
     for i in range(connectivity.c_n_connections()):
-        i0 = connectivity.connections.array[i][0]
-        i1 = connectivity.connections.array[i][1]
+        i0 = connectivity.connections.array[i, 0]
+        i1 = connectivity.connections.array[i, 1]
         dstate[i0] += state[n_oscillators+i1]*connectivity.c_weight(i)*sin(
             phase(state, i1) - phase(state, i0)
             - connectivity.c_desired_phase(i)
@@ -67,9 +70,11 @@ cpdef inline void ode_dphase(
 
 
 cpdef inline void ode_damplitude(
+    unsigned int iteration,
     CTYPEv1 state,
     CTYPEv1 dstate,
-    OscillatorArrayCy oscillators,
+    DriveArrayCy drives,
+    OscillatorsCy oscillators,
 ) nogil:
     """Oscillator amplitude ODE
 
@@ -80,7 +85,7 @@ cpdef inline void ode_damplitude(
     for i in range(n_oscillators):  # , nogil=True):
         # rate*(nominal_amplitude - amplitude)
         dstate[n_oscillators+i] = oscillators.c_rate(i)*(
-            oscillators.c_nominal_amplitude(i)
+            oscillators.c_nominal_amplitude(i, drives.c_speed(iteration))
             - amplitude(state, i, n_oscillators)
         )
 
@@ -100,13 +105,13 @@ cpdef inline void ode_contacts(
     cdef CTYPE contact_force
     cdef unsigned int i, i0, i1
     for i in range(contacts_connectivity.c_n_connections()):
-        i0 = contacts_connectivity.connections.array[i][0]
-        i1 = contacts_connectivity.connections.array[i][1]
+        i0 = contacts_connectivity.connections.array[i, 0]
+        i1 = contacts_connectivity.connections.array[i, 1]
         # contact_weight*contact_force
         # contact_force = (
-        #     contacts.array[iteration][i1][0]**2
-        #     + contacts.array[iteration][i1][1]**2
-        #     + contacts.array[iteration][i1][2]**2
+        #     contacts.array[iteration, i1, 0]**2
+        #     + contacts.array[iteration, i1, 1]**2
+        #     + contacts.array[iteration, i1, 2]**2
         # )**0.5
         contact_force = fabs(contacts.c_force_z(iteration, i1))
         dstate[i0] += (
@@ -132,13 +137,13 @@ cpdef inline void ode_contacts_tegotae(
     cdef CTYPE contact_force
     cdef unsigned int i, i0, i1
     for i in range(contacts_connectivity.c_n_connections()):
-        i0 = contacts_connectivity.connections.array[i][0]
-        i1 = contacts_connectivity.connections.array[i][1]
+        i0 = contacts_connectivity.connections.array[i, 0]
+        i1 = contacts_connectivity.connections.array[i, 1]
         # contact_weight*contact_force
         # contact_force = (
-        #     contacts.array[iteration][i1][0]**2
-        #     + contacts.array[iteration][i1][1]**2
-        #     + contacts.array[iteration][i1][2]**2
+        #     contacts.array[iteration, i1, 0]**2
+        #     + contacts.array[iteration, i1, 1]**2
+        #     + contacts.array[iteration, i1, 2]**2
         # )**0.5
         contact_force = fabs(contacts.c_force_z(iteration, i1))
         dstate[i0] += (
@@ -164,8 +169,8 @@ cpdef inline void ode_hydro(
     cdef CTYPE hydro_force
     cdef unsigned int i, i0, i1
     for i in range(hydro_connectivity.c_n_connections()):
-        i0 = hydro_connectivity.connections.array[i][0]
-        i1 = hydro_connectivity.connections.array[i][1]
+        i0 = hydro_connectivity.connections.array[i, 0]
+        i1 = hydro_connectivity.connections.array[i, 1]
         hydro_force = fabs(hydrodynamics.c_force_y(iteration, i1))
         # dfrequency += hydro_weight*hydro_force
         dstate[i0] += (
@@ -178,8 +183,10 @@ cpdef inline void ode_hydro(
 
 
 cpdef inline void ode_joints(
+    unsigned int iteration,
     CTYPEv1 state,
     CTYPEv1 dstate,
+    DriveArrayCy drives,
     JointsArrayCy joints,
     unsigned int n_oscillators,
 ) nogil:
@@ -188,11 +195,15 @@ cpdef inline void ode_joints(
     d_joints_offset = rate*(joints_offset_desired - joints_offset)
 
     """
-    cdef unsigned int i, n_joints = joints.c_n_joints()
-    for i in range(n_joints):
+    cdef unsigned int joint_i, n_joints = joints.c_n_joints()
+    for joint_i in range(n_joints):
         # rate*(joints_offset_desired - joints_offset)
-        dstate[2*n_oscillators+i] = joints.c_rate(i)*(
-            joints.c_offset_desired(i) - joint_offset(state, i, n_oscillators)
+        dstate[2*n_oscillators+joint_i] = joints.c_rate(joint_i)*(
+            joints.c_offset_desired(
+                joint_i,
+                drives.c_turn(iteration),
+                drives.c_speed(iteration),
+            ) - joint_offset(state, joint_i, n_oscillators)
         )
 
 
@@ -202,101 +213,125 @@ cpdef inline void ode_joints(
 cpdef inline CTYPEv1 ode_oscillators_sparse(
     CTYPE time,
     CTYPEv1 state,
+    CTYPEv1 dstate,
     unsigned int iteration,
     AnimatDataCy data,
 ) nogil:
     """Complete CPG network ODE"""
     ode_dphase(
+        iteration=iteration,
         state=state,
-        dstate=data.state.array[iteration][1],
+        dstate=dstate,
+        drives=data.network.drives,
         oscillators=data.network.oscillators,
         connectivity=data.network.osc_connectivity,
     )
     ode_damplitude(
+        iteration=iteration,
         state=state,
-        dstate=data.state.array[iteration][1],
+        dstate=dstate,
+        drives=data.network.drives,
         oscillators=data.network.oscillators,
     )
     ode_contacts(
         iteration=iteration,
         state=state,
-        dstate=data.state.array[iteration][1],
+        dstate=dstate,
         contacts=data.sensors.contacts,
         contacts_connectivity=data.network.contacts_connectivity,
     )
     ode_hydro(
         iteration=iteration,
         state=state,
-        dstate=data.state.array[iteration][1],
+        dstate=dstate,
         hydrodynamics=data.sensors.hydrodynamics,
         hydro_connectivity=data.network.hydro_connectivity,
         n_oscillators=data.network.oscillators.c_n_oscillators(),
     )
     ode_joints(
+        iteration=iteration,
         state=state,
-        dstate=data.state.array[iteration][1],
+        dstate=dstate,
+        drives=data.network.drives,
         joints=data.joints,
         n_oscillators=data.network.oscillators.c_n_oscillators(),
     )
-    return data.state.array[iteration][1]
+    data.network.drives.array[iteration+1] = data.network.drives.array[iteration]
+    return dstate
 
 
 cpdef inline CTYPEv1 ode_oscillators_sparse_no_sensors(
     CTYPE time,
     CTYPEv1 state,
+    CTYPEv1 dstate,
     unsigned int iteration,
     AnimatDataCy data,
 ) nogil:
     """CPG network ODE using no sensors"""
     ode_dphase(
+        iteration=iteration,
         state=state,
-        dstate=data.state.array[iteration][1],
+        dstate=dstate,
+        drives=data.network.drives,
         oscillators=data.network.oscillators,
         connectivity=data.network.osc_connectivity,
     )
     ode_damplitude(
+        iteration=iteration,
         state=state,
-        dstate=data.state.array[iteration][1],
+        dstate=dstate,
+        drives=data.network.drives,
         oscillators=data.network.oscillators,
     )
     ode_joints(
+        iteration=iteration,
         state=state,
-        dstate=data.state.array[iteration][1],
+        dstate=dstate,
+        drives=data.network.drives,
         joints=data.joints,
         n_oscillators=data.network.oscillators.c_n_oscillators(),
     )
-    return data.state.array[iteration][1]
+    data.network.drives.array[iteration+1] = data.network.drives.array[iteration]
+    return dstate
 
 
 cpdef inline CTYPEv1 ode_oscillators_sparse_tegotae(
     CTYPE time,
     CTYPEv1 state,
+    CTYPEv1 dstate,
     unsigned int iteration,
     AnimatDataCy data,
 ) nogil:
     """CPG network ODE using Tegotae"""
     ode_dphase(
+        iteration=iteration,
         state=state,
-        dstate=data.state.array[iteration][1],
+        dstate=dstate,
+        drives=data.network.drives,
         oscillators=data.network.oscillators,
         connectivity=data.network.osc_connectivity,
     )
     ode_damplitude(
+        iteration=iteration,
         state=state,
-        dstate=data.state.array[iteration][1],
+        dstate=dstate,
+        drives=data.network.drives,
         oscillators=data.network.oscillators,
-    )
-    ode_joints(
-        state=state,
-        dstate=data.state.array[iteration][1],
-        joints=data.joints,
-        n_oscillators=data.network.oscillators.c_n_oscillators(),
     )
     ode_contacts_tegotae(
         iteration=iteration,
         state=state,
-        dstate=data.state.array[iteration][1],
+        dstate=dstate,
         contacts=data.sensors.contacts,
         contacts_connectivity=data.network.contacts_connectivity,
     )
-    return data.state.array[iteration][1]
+    ode_joints(
+        iteration=iteration,
+        state=state,
+        dstate=dstate,
+        drives=data.network.drives,
+        joints=data.joints,
+        n_oscillators=data.network.oscillators.c_n_oscillators(),
+    )
+    data.network.drives.array[iteration+1] = data.network.drives.array[iteration]
+    return dstate

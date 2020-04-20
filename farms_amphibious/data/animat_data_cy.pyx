@@ -20,19 +20,21 @@ cdef class NetworkParametersCy:
 
     def __init__(
             self,
+            drives,
             oscillators,
             osc_connectivity,
             contacts_connectivity,
             hydro_connectivity
     ):
         super(NetworkParametersCy, self).__init__()
+        self.drives = drives
         self.oscillators = oscillators
         self.osc_connectivity = osc_connectivity
         self.contacts_connectivity = contacts_connectivity
         self.hydro_connectivity = hydro_connectivity
 
 
-cdef class OscillatorNetworkStateCy(NetworkArray3D):
+cdef class OscillatorNetworkStateCy(NetworkArray2D):
     """Network state"""
 
     def __init__(self, state, n_oscillators):
@@ -54,60 +56,46 @@ cdef class OscillatorNetworkStateCy(NetworkArray3D):
 
     def phases(self, unsigned int iteration):
         """Phases"""
-        return self.array[iteration, 0, :self.n_oscillators]
+        return self.array[iteration, :self.n_oscillators]
 
     def phases_all(self):
         """Phases"""
-        return self.array[:, 0, :self.n_oscillators]
+        return self.array[:, :self.n_oscillators]
 
     def amplitudes(self, unsigned int iteration):
         """Amplitudes"""
-        return self.array[iteration, 0, self.n_oscillators:]
+        return self.array[iteration, self.n_oscillators:]
 
     def amplitudes_all(self):
         """Phases"""
-        return self.array[:, 0, self.n_oscillators:]
-
-    def dphases(self, unsigned int iteration):
-        """Phases derivative"""
-        return self.array[iteration, 1, :self.n_oscillators]
-
-    def damplitudes(self, unsigned int iteration):
-        """Amplitudes derivative"""
-        return self.array[iteration, 1, self.n_oscillators:]
+        return self.array[:, self.n_oscillators:]
 
 
-cdef class OscillatorArrayCy(NetworkArray2D):
-    """Oscillator array"""
+cdef class DriveDependentArrayCy(NetworkArray2D):
+    """Drive dependent array"""
 
     @classmethod
-    def from_parameters(cls, freqs, rates, amplitudes):
+    def from_parameters(cls, gain, bias, low, high, saturation):
         """From each parameter"""
-        return cls(np.array([freqs, rates, amplitudes]))
+        return cls(np.array([gain, bias, low, high, saturation]))
 
-    cpdef unsigned int n_oscillators(self):
-        """Number of oscillators"""
-        return self.array.shape[1]
+    cdef CTYPE value(self, unsigned int index, CTYPE drive):
+        """Value for a given drive"""
+        return (
+            self.gain[index]*drive + self.bias[index]
+            if self.low[index] <= drive <= self.high[index]
+            else self.saturation[index]
+        )
 
-    cpdef CTYPEv1 freqs(self):
-        """Frequencies"""
-        return self.array[0]
 
-    def set_freqs(self, value):
-        """Frequencies"""
-        self.array[0, :] = value
+cdef class OscillatorsCy:
+    """Oscillator array"""
 
-    def amplitudes_rates(self):
-        """Amplitudes rates"""
-        return self.array[1]
-
-    def amplitudes_desired(self):
-        """Amplitudes desired"""
-        return self.array[2]
-
-    def set_amplitudes_desired(self, value):
-        """Amplitudes desired"""
-        self.array[2, :] = value
+    def __init__(self, intrinsic_frequencies, nominal_amplitudes, rates):
+        super(OscillatorsCy, self).__init__()
+        self.intrinsic_frequencies = DriveDependentArrayCy(intrinsic_frequencies)
+        self.nominal_amplitudes = DriveDependentArrayCy(nominal_amplitudes)
+        self.rates = NetworkArray1D(rates)
 
 
 cdef class ConnectivityCy:
@@ -202,31 +190,6 @@ cdef class HydroConnectivityCy(ConnectivityCy):
         else:
             self.frequency = NetworkArray1D(None)
             self.amplitude = NetworkArray1D(None)
-
-
-cdef class JointsArrayCy(NetworkArray2D):
-    """Oscillator array"""
-
-    @classmethod
-    def from_parameters(cls, offsets, rates):
-        """From each parameter"""
-        return cls(np.array([offsets, rates]))
-
-    def offsets(self):
-        """Joints angles offsets"""
-        return self.array[0]
-
-    def rates(self):
-        """Joints angles offsets rates"""
-        return self.array[1]
-
-    def set_body_offset(self, value, n_body_joints=11):
-        """Body offset"""
-        self.array[0, :n_body_joints] = value
-
-    def set_legs_offset(self, value, n_body_joints=11):
-        """Legs offset"""
-        self.array[0, n_body_joints:] = value
 
 
 cdef class SensorsDataCy:

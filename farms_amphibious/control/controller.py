@@ -49,8 +49,8 @@ class AmphibiousController(ModelController):
             animat_options.control.joints.gain_offset[joint]
             for joint in joints
         ])
-        self.joints_offsets = np.array([
-            animat_options.control.joints.offsets[joint]
+        self.joints_bias = np.array([
+            animat_options.control.joints.offsets_bias[joint]
             for joint in joints
         ])
 
@@ -66,8 +66,8 @@ class AmphibiousController(ModelController):
                 outputs[self.groups[0]]
                 - outputs[self.groups[1]]
             )
-            + self.gain_offset*self.network.offsets()[iteration]
-            + self.joints_offsets
+            + self.gain_offset*self.network.offsets(iteration)
+            + self.joints_bias
         )
 
     def torques(self, iteration):
@@ -97,15 +97,3 @@ class AmphibiousController(ModelController):
         proprioception.array[iteration, :, 10] = spring_torques
         proprioception.array[iteration, :, 11] = damping_torques
         return torques
-
-    def update(self, options):
-        """Update drives"""
-        self.animat_data.network.oscillators.update(
-            options.morphology,
-            options.control.network.oscillators,
-            options.control.drives,
-        )
-        self.animat_data.joints.update(
-            options.morphology,
-            options.control,
-        )

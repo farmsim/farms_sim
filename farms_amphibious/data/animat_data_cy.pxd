@@ -19,38 +19,98 @@ cdef class AnimatDataCy:
 
 cdef class NetworkParametersCy:
     """Network parameter"""
-    cdef public OscillatorArrayCy oscillators
+    cdef public DriveArrayCy drives
+    cdef public OscillatorsCy oscillators
     cdef public OscillatorConnectivityCy osc_connectivity
     cdef public ContactConnectivityCy contacts_connectivity
     cdef public HydroConnectivityCy hydro_connectivity
 
 
-cdef class OscillatorNetworkStateCy(NetworkArray3D):
+cdef class OscillatorNetworkStateCy(NetworkArray2D):
     """Network state"""
     cdef public unsigned int n_oscillators
     cdef public unsigned int _iterations
 
 
-cdef class OscillatorArrayCy(NetworkArray2D):
+cdef class DriveArrayCy(NetworkArray2D):
+    """Drive array"""
+
+    cdef inline CTYPE c_speed(self, unsigned int iteration) nogil:
+        """Value"""
+        return self.array[iteration, 0]
+
+    cdef inline CTYPE c_turn(self, unsigned int iteration) nogil:
+        """Value"""
+        return self.array[iteration, 1]
+
+
+cdef class DriveDependentArrayCy(NetworkArray2D):
+    """Drive dependent array"""
+
+    cdef public CTYPE value(self, unsigned int index, CTYPE drive)
+
+    cdef inline unsigned int c_n_nodes(self) nogil:
+        """Number of nodes"""
+        return self.array.shape[0]
+
+    cdef inline CTYPE c_gain(self, unsigned int index) nogil:
+        """Gain"""
+        return self.array[index, 0]
+
+    cdef inline CTYPE c_bias(self, unsigned int index) nogil:
+        """Bias"""
+        return self.array[index, 1]
+
+    cdef inline CTYPE c_low(self, unsigned int index) nogil:
+        """Low"""
+        return self.array[index, 2]
+
+    cdef inline CTYPE c_high(self, unsigned int index) nogil:
+        """High"""
+        return self.array[index, 3]
+
+    cdef inline CTYPE c_saturation(self, unsigned int index) nogil:
+        """Saturation"""
+        return self.array[index, 4]
+
+    cdef inline CTYPE c_value(self, unsigned int index, CTYPE drive) nogil:
+        """Value"""
+        return (
+            (self.c_gain(index)*drive + self.c_bias(index))
+            if self.c_low(index) <= drive <= self.c_high(index)
+            else self.c_saturation(index)
+        )
+
+    cdef inline CTYPE c_value_mod(self, unsigned int index, CTYPE drive1, CTYPE drive2) nogil:
+        """Value"""
+        return (
+            (self.c_gain(index)*drive1 + self.c_bias(index))
+            if self.c_low(index) <= drive2 <= self.c_high(index)
+            else self.c_saturation(index)
+        )
+
+
+cdef class OscillatorsCy:
     """Oscillator array"""
-    cpdef public CTYPEv1 freqs(self)
-    cpdef unsigned int n_oscillators(self)
+    cdef public DriveDependentArrayCy intrinsic_frequencies
+    cdef public DriveDependentArrayCy nominal_amplitudes
+    cdef public NetworkArray1D rates
 
     cdef inline unsigned int c_n_oscillators(self) nogil:
         """Number of oscillators"""
-        return self.array.shape[1]
+        return self.rates.array.shape[0]
 
-    cdef inline CTYPE c_angular_frequency(self, unsigned int index) nogil:
+    cdef inline CTYPE c_angular_frequency(self, unsigned int index, CTYPE drive) nogil:
         """Angular frequency"""
-        return self.array[0][index]
+        return self.intrinsic_frequencies.c_value(index, drive)
+
+    cdef inline CTYPE c_nominal_amplitude(self, unsigned int index, CTYPE drive) nogil:
+        """Nominal amplitude"""
+        return self.nominal_amplitudes.c_value(index, drive)
 
     cdef inline CTYPE c_rate(self, unsigned int index) nogil:
         """Rate"""
-        return self.array[1][index]
-
-    cdef inline CTYPE c_nominal_amplitude(self, unsigned int index) nogil:
-        """Nominal amplitude"""
-        return self.array[2][index]
+        return self.rates.array[index]
 
 
 cdef class ConnectivityCy:
@@ -106,20 +166,20 @@ cdef class HydroConnectivityCy(ConnectivityCy):
         return self.amplitude.array[iteration]
 
 
-cdef class JointsArrayCy(NetworkArray2D):
-    """Oscillator array"""
+cdef class JointsArrayCy(DriveDependentArrayCy):
+    """Drive dependent joints"""
 
     cdef inline unsigned int c_n_joints(self) nogil:
         """Number of joints"""
-        return self.array.shape[1]
+        return self.c_n_nodes()
 
-    cdef inline CTYPE c_offset_desired(self, unsigned int index) nogil:
+    cdef inline CTYPE c_offset_desired(self, unsigned int index, CTYPE drive1, CTYPE drive2) nogil:
         """Desired offset"""
-        return self.array[0][index]
+        return self.c_value_mod(index, drive1, drive2)
 
     cdef inline CTYPE c_rate(self, unsigned int index) nogil:
         """Rate"""
-        return self.array[1][index]
+        return self.array[index, 5]
 
 
 cdef class SensorsDataCy:
@@ -142,15 +202,15 @@ cdef class ContactsArrayCy(NetworkArray3D):
 
     cdef inline CTYPE c_force_x(self, unsigned iteration, unsigned int index) nogil:
         """Force z"""
-        return self.array[iteration][index][0]
+        return self.array[iteration, index, 0]
 
     cdef inline CTYPE c_force_y(self, unsigned iteration, unsigned int index) nogil:
         """Force z"""
-        return self.array[iteration][index][1]
+        return self.array[iteration, index, 1]
 
     cdef inline CTYPE c_force_z(self, unsigned iteration, unsigned int index) nogil:
         """Force z"""
-        return self.array[iteration][index][2]
+        return self.array[iteration, index, 2]
 
 
 cdef class ProprioceptionArrayCy(NetworkArray3D):
@@ -197,24 +257,24 @@ cdef class HydrodynamicsArrayCy(NetworkArray3D):
 
     cdef inline CTYPE c_force_x(self, unsigned iteration, unsigned int index) nogil:
         """Force x"""
-        return self.array[iteration][index][0]
+        return self.array[iteration, index, 0]
 
     cdef inline CTYPE c_force_y(self, unsigned iteration, unsigned int index) nogil:
         """Force y"""
-        return self.array[iteration][index][1]
+        return self.array[iteration, index, 1]
 
     cdef inline CTYPE c_force_z(self, unsigned iteration, unsigned int index) nogil:
         """Force z"""
-        return self.array[iteration][index][2]
+        return self.array[iteration, index, 2]
 
     cdef inline CTYPE c_torque_x(self, unsigned iteration, unsigned int index) nogil:
         """Torque x"""
-        return self.array[iteration][index][0]
+        return self.array[iteration, index, 0]
 
     cdef inline CTYPE c_torque_y(self, unsigned iteration, unsigned int index) nogil:
         """Torque y"""
-        return self.array[iteration][index][1]
+        return self.array[iteration, index, 1]
 
     cdef inline CTYPE c_torque_z(self, unsigned iteration, unsigned int index) nogil:
         """Torque z"""
-        return self.array[iteration][index][2]
+        return self.array[iteration, index, 2]
