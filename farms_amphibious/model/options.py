@@ -312,6 +312,7 @@ class AmphibiousControlOptions(Options):
                     kwargs.pop('weight_osc_legs_following', 1e0),
                     kwargs.pop('weight_osc_legs2body', 3e1),
                     kwargs.pop('leg_phase_follow', np.pi),
+                    kwargs.pop('body_stand_shift', 0.5*np.pi),
                 )
             )
         if self.network.contact2osc is None:
@@ -513,6 +514,7 @@ class AmphibiousNetworkOptions(Options):
             weight_interlimb_following,
             weight_limb2body,
             phase_limb_follow,
+            body_stand_shift,
     ):
         """Default oscillartors to oscillators connectivity"""
         connectivity = []
@@ -673,7 +675,7 @@ class AmphibiousNetworkOptions(Options):
                         for lateral in range(2):
                             walk_phase = (
                                 # i*2*np.pi/(n_body_joints-1)+0.5*np.pi
-                                i*2*np.pi/(n_body_joints-1)+0.5*np.pi
+                                i*2*np.pi/(n_body_joints-1) + body_stand_shift
                                 # 0
                                 # if np.cos(i*2*np.pi/(n_body_joints-1)) < 0
                                 # else np.pi

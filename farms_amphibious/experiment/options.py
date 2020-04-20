@@ -12,7 +12,6 @@ def get_animat_options(swimming=False, **kwargs):
     """Get animat options - Should load a config file in the future"""
     scale = 1
     animat_options = AmphibiousOptions.from_options(kwargs)
-    # animat_options.control.drives.forward = 4
 
     if swimming:
         # Swiming
@@ -25,7 +24,6 @@ def get_animat_options(swimming=False, **kwargs):
         animat_options.physics.viscous = True
         animat_options.physics.buoyancy = True
         animat_options.physics.water_surface = True
-
 
     return animat_options
 
