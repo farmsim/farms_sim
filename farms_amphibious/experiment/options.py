@@ -110,16 +110,16 @@ def amphibious_options(animat_options, use_water_arena=True):
 
     # Arena
     if use_water_arena:
-        arena_sdf = get_water_arena(water_surface=-0.1)
+        arena = get_water_arena(water_surface=-0.1)
         set_swimming_options(animat_options, water_surface=-0.1)
     else:
-        arena_sdf = get_flat_arena()
+        arena = get_flat_arena()
         set_no_swimming_options(animat_options)
 
     # Simulation
     simulation_options = get_simulation_options()
 
-    return (simulation_options, arena_sdf)
+    return (simulation_options, arena)
 
 
 def get_pleurobot_options(**kwargs):
@@ -353,7 +353,7 @@ def fish_options(animat, version, kinematics_file, sampling_timestep, **kwargs):
     ))
 
     # Arena
-    arena_sdf = get_flat_arena()
+    arena = get_flat_arena()
 
     # Animat options
     animat_options.spawn.position = position.tolist()
@@ -369,7 +369,7 @@ def fish_options(animat, version, kinematics_file, sampling_timestep, **kwargs):
 
     return (
         animat_options,
-        arena_sdf,
+        arena,
         simulation_options,
         kinematics,
     )

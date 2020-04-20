@@ -24,7 +24,7 @@ def main():
         # Get options
         (
             animat_options,
-            arena_sdf,
+            arena,
             simulation_options,
             _kinematics,
         ) = fish_options(
@@ -46,7 +46,7 @@ def main():
             simulation_options=simulation_options,
             use_controller=True,
             sampling=sampling_timestep,
-            arena_sdf=arena_sdf,
+            arena=arena,
         )
 
         # Post-processing

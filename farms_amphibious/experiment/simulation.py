@@ -3,7 +3,6 @@
 
 import pstats
 import cProfile
-import numpy as np
 import farms_pylog as pylog
 from ..simulation.simulation import AmphibiousSimulation
 from ..control.controller import AmphibiousController
@@ -13,7 +12,7 @@ from ..model.data import AmphibiousData
 from .options import get_animat_options, get_simulation_options
 
 
-def simulation_setup(animat_sdf, arena_sdf, **kwargs):
+def simulation_setup(animat_sdf, arena, **kwargs):
     """Simulation setup"""
     # Get options
     animat_options = kwargs.pop(
@@ -73,17 +72,17 @@ def simulation_setup(animat_sdf, arena_sdf, **kwargs):
     sim = AmphibiousSimulation(
         simulation_options=simulation_options,
         animat=animat,
-        arena=arena_sdf,
+        arena=arena,
     )
     return sim
 
 
-def simulation(animat_sdf, arena_sdf, show_progress=True, **kwargs):
+def simulation(animat_sdf, arena, show_progress=True, **kwargs):
     """Simulation"""
 
     # Instatiate simulation
     pylog.info('Creating simulation')
-    sim = simulation_setup(animat_sdf, arena_sdf, **kwargs)
+    sim = simulation_setup(animat_sdf, arena, **kwargs)
 
     # Run simulation
     pylog.info('Running simulation')

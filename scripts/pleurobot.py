@@ -34,7 +34,7 @@ def main():
 
     (
         simulation_options,
-        arena_sdf,
+        arena,
     ) = amphibious_options(animat_options, use_water_arena=False)
 
     # Simulation
@@ -43,7 +43,7 @@ def main():
         animat_sdf=sdf,
         animat_options=animat_options,
         simulation_options=simulation_options,
-        arena_sdf=arena_sdf,
+        arena=arena,
         use_controller=True,
     )
 
