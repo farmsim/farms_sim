@@ -63,8 +63,10 @@ cpdef void ode_hydro(
 
 
 cpdef void ode_joints(
+    unsigned int iteration,
     CTYPEv1 state,
     CTYPEv1 dstate,
+    DriveArrayCy drives,
     JointsArrayCy joints,
     unsigned int n_oscillators,
 ) nogil

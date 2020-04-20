@@ -318,6 +318,21 @@ class HydroConnectivity(HydroConnectivityCy):
 class JointsArray(JointsArrayCy):
     """Oscillator array"""
 
+    @classmethod
+    def from_options(cls, joints):
+        """Default"""
+        return cls(np.array([
+            [
+                offset['gain'],
+                offset['bias'],
+                offset['low'],
+                offset['high'],
+                offset['saturation'],
+                rate,
+            ]
+            for offset, rate in zip(joints.offsets, joints.rates)
+        ], dtype=DTYPE))
+
 
 class SensorsData(SensorsDataCy):
     """SensorsData"""

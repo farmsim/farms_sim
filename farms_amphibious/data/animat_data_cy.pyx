@@ -79,6 +79,23 @@ cdef class OscillatorNetworkStateCy(NetworkArray3D):
         return self.array[iteration, 1, self.n_oscillators:]
 
 
+cdef class DriveDependentArrayCy(NetworkArray2D):
+    """Drive dependent array"""
+
+    @classmethod
+    def from_parameters(cls, gain, bias, low, high, saturation):
+        """From each parameter"""
+        return cls(np.array([gain, bias, low, high, saturation]))
+
+    cdef CTYPE value(self, unsigned int index, CTYPE drive):
+        """Value for a given drive"""
+        return (
+            self.gain[index]*drive + self.bias[index]
+            if self.low[index] <= drive <= self.high[index]
+            else self.saturation[index]
+        )
+
+
 cdef class OscillatorsCy:
     """Oscillator array"""
 
@@ -87,38 +104,6 @@ cdef class OscillatorsCy:
         self.intrinsic_frequencies = DriveDependentArrayCy(intrinsic_frequencies)
         self.nominal_amplitudes = DriveDependentArrayCy(nominal_amplitudes)
         self.rates = NetworkArray1D(rates)
-
-# cdef class OscillatorArrayCy(NetworkArray2D):
-#     """Oscillator array"""
-
-#     @classmethod
-#     def from_parameters(cls, freqs, rates, amplitudes):
-#         """From each parameter"""
-#         return cls(np.array([freqs, rates, amplitudes]))
-
-#     cpdef unsigned int n_oscillators(self):
-#         """Number of oscillators"""
-#         return self.array.shape[1]
-
-#     cpdef CTYPEv1 freqs(self):
-#         """Frequencies"""
-#         return self.array[0]
-
-#     def set_freqs(self, value):
-#         """Frequencies"""
-#         self.array[0, :] = value
-
-#     def amplitudes_rates(self):
-#         """Amplitudes rates"""
-#         return self.array[1]
-
-#     def amplitudes_desired(self):
-#         """Amplitudes desired"""
-#         return self.array[2]
-
-#     def set_amplitudes_desired(self, value):
-#         """Amplitudes desired"""
-#         self.array[2, :] = value
 
 
 cdef class ConnectivityCy:
@@ -213,48 +198,6 @@ cdef class HydroConnectivityCy(ConnectivityCy):
         else:
             self.frequency = NetworkArray1D(None)
             self.amplitude = NetworkArray1D(None)
-
-
-cdef class DriveDependentArrayCy(NetworkArray2D):
-    """Drive dependent array"""
-
-    @classmethod
-    def from_parameters(cls, gain, bias, low, high, saturation):
-        """From each parameter"""
-        return cls(np.array([gain, bias, low, high, saturation]))
-
-    cdef CTYPE value(self, unsigned int index, CTYPE drive):
-        """Value for a given drive"""
-        return (
-            self.gain[index]*drive + self.bias[index]
-            if self.low[index] <= drive <= self.high[index]
-            else self.saturation[index]
-        )
-
-
-cdef class JointsArrayCy(NetworkArray2D):
-    """Oscillator array"""
-
-    @classmethod
-    def from_parameters(cls, offsets, rates):
-        """From each parameter"""
-        return cls(np.array([offsets, rates]))
-
-    def offsets(self):
-        """Joints angles offsets"""
-        return self.array[0]
-
-    def rates(self):
-        """Joints angles offsets rates"""
-        return self.array[1]
-
-    def set_body_offset(self, value, n_body_joints=11):
-        """Body offset"""
-        self.array[0, :n_body_joints] = value
-
-    def set_legs_offset(self, value, n_body_joints=11):
-        """Legs offset"""
-        self.array[0, n_body_joints:] = value
 
 
 cdef class SensorsDataCy:

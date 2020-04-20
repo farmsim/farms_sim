@@ -257,18 +257,6 @@ class AmphibiousControlOptions(Options):
 
     def defaults_from_morphology(self, morphology, kwargs):
         """Defaults from morphology"""
-        if self.joints.gain_amplitude is None:
-            self.joints.gain_amplitude = (
-                {joint: 1 for joint in morphology.joints}
-            )
-        if self.joints.gain_offset is None:
-            self.joints.gain_offset = (
-                {joint: 1 for joint in morphology.joints}
-            )
-        if self.joints.offsets is None:
-            self.joints.offsets = (
-                {joint: 0 for joint in morphology.joints}
-            )
         if self.network.drive_init is None:
             self.network.drive_init = (
                 [2, 0]
@@ -331,15 +319,7 @@ class AmphibiousControlOptions(Options):
                     kwargs.pop('weight_sens_hydro_amp', 1),
                 )
             )
-        self.update(
-            morphology.n_joints_body,
-            morphology.n_dof_legs
-        )
-
-    def update(self, n_joints_body, n_dof_legs):
-        """Update"""
-        self.joints.update(n_joints_body, n_dof_legs)
-        # self.network.oscillators.update(n_joints_body, n_dof_legs)
+        self.joints.defaults_from_morphology(morphology, kwargs)
 
 
 class AmphibiousDrives(Options):
@@ -370,8 +350,6 @@ class AmphibiousNetworkOptions(Options):
 
     def __init__(self, **kwargs):
         super(AmphibiousNetworkOptions, self).__init__()
-        # oscillators = kwargs.pop('oscillators')
-        # self.oscillators = AmphibiousOscillatorOptions(**oscillators)
 
         # State
         self.state_init = kwargs.pop('state_init', None)
@@ -399,10 +377,6 @@ class AmphibiousNetworkOptions(Options):
     def from_options(cls, kwargs):
         """From options"""
         options = {}
-        # options['oscillators'] = kwargs.pop(
-        #     'oscillators',
-        #     AmphibiousOscillatorOptions.from_options(kwargs)
-        # )
         for option in [
                 'osc_nodes',
                 'osc_nodes',
@@ -494,7 +468,6 @@ class AmphibiousNetworkOptions(Options):
                             'high': 3,
                             'saturation': 0,
                         }
-        # pylog.debug('Amplitudes along body: abs({})'.format(amplitudes[:11]))
         return amplitudes
 
     @staticmethod
@@ -757,142 +730,16 @@ class AmphibiousNetworkOptions(Options):
         return connectivity
 
 
-# class AmphibiousOscillatorOptions(Options):
-#     """Amphibious oscillator options
-
-#     Includes frequencies, amplitudes rates and nominal amplitudes
-
-#     """
-
-#     def __init__(self, **kwargs):
-#         super(AmphibiousOscillatorOptions, self).__init__()
-#         self.body_head_amplitude = kwargs.pop('body_head_amplitude')
-#         self.body_tail_amplitude = kwargs.pop('body_tail_amplitude')
-#         self.body_stand_amplitude = kwargs.pop('body_stand_amplitude')
-#         self.legs_amplitudes = kwargs.pop('legs_amplitudes')
-#         self.body_stand_shift = kwargs.pop('body_stand_shift')
-#         self.body_nominal_amplitudes = kwargs.pop('body_nominal_amplitudes')
-#         self.legs_nominal_amplitudes = kwargs.pop('legs_nominal_amplitudes')
-#         self.body_freqs = kwargs.pop('body_freqs')
-#         self.legs_freqs = kwargs.pop('legs_freqs')
-#         if kwargs:
-#             raise Exception('Unknown kwargs: {}'.format(kwargs))
-
-#     @classmethod
-#     def from_options(cls, kwargs):
-#         """From options"""
-#         options = {}
-#         options['body_head_amplitude'] = kwargs.pop('body_head_amplitude', 0)
-#         options['body_tail_amplitude'] = kwargs.pop('body_tail_amplitude', 0)
-#         options['body_stand_amplitude'] = kwargs.pop('body_stand_amplitude', 0.2)
-#         options['legs_amplitudes'] = kwargs.pop(
-#             'legs_amplitude',
-#             [np.pi/4, np.pi/32, np.pi/4, np.pi/8]
-#         )
-#         options['body_stand_shift'] = kwargs.pop('body_stand_shift', np.pi/4)
-#         options['body_nominal_amplitudes'] = kwargs.pop(
-#             'body_nominal_amplitudes',
-#             None
-#         )
-#         options['legs_nominal_amplitudes'] = kwargs.pop(
-#             'legs_nominal_amplitudes',
-#             None
-#         )
-
-#         # Frequencies
-#         options['body_freqs'] = [
-#             [0, 0],
-#             [1, 0],
-#             [1, 1.5],
-#             [5, 4],
-#             [5, 0],
-#             [6, 0]
-#         ]
-#         options['legs_freqs'] = [
-#             [0, 0],
-#             [1, 0],
-#             [1, 0.5],
-#             [3, 1.5],
-#             [3, 0],
-#             [6, 0]
-#         ]
-#         return cls(**options)
-
-#     # def update(self, n_joints_body, n_dof_legs):
-#     #     """Update all"""
-#     #     self.set_body_nominal_amplitudes(n_joints_body)
-#     #     self.set_legs_nominal_amplitudes(n_dof_legs)
-
-#     def get_body_stand_amplitude(self):
-#         """Body stand amplitude"""
-#         return self.body_stand_amplitude
-
-#     def set_body_stand_amplitude(self, value, n_joints_body):
-#         """Body stand amplitude"""
-#         self.body_stand_amplitude = value
-#         self.set_body_nominal_amplitudes(n_joints_body)
-
-#     def set_body_stand_shift(self, value, n_joints_body):
-#         """Body stand shift"""
-#         self.body_stand_shift = value
-#         self.set_body_nominal_amplitudes(n_joints_body)
-
-#     def set_body_nominal_amplitudes(self, n_joints_body):
-#         """Set body nominal amplitudes"""
-#         self.body_nominal_amplitudes = [
-#             [
-#                 [0, 0.3*self.body_stand_amplitude  # float(0.3*self.body_stand_amplitude*np.sin(
-#                     # 2*np.pi*joint_i/n_joints_body - self.body_stand_shift))
-#                 ],
-#                 [3, self.body_stand_amplitude  # float(self.body_stand_amplitude*np.sin(
-#                     # 2*np.pi*joint_i/n_joints_body - self.body_stand_shift))
-#                 ],
-#                 [3, 0.1*joint_i/n_joints_body],
-#                 [5, 0.1*joint_i/n_joints_body+0.5],
-#                 [5, 0],
-#                 [6, 0],
-#             ]
-#             for joint_i in range(n_joints_body)
-#         ]
-
-#     def get_legs_amplitudes(self):
-#         """Body legs amplitude"""
-#         return self.legs_amplitudes
-
-#     def set_legs_amplitudes(self, values, n_dof_legs):
-#         """Body legs amplitude"""
-#         self.legs_amplitudes = values
-#         self.set_legs_nominal_amplitudes(n_dof_legs)
-
-#     def set_legs_nominal_amplitudes(self, n_dof_legs):
-#         """Set legs nominal amplitudes"""
-#         self.legs_nominal_amplitudes = [
-#             [
-#                 [0, 0],
-#                 [1, 0],
-#                 [1, 0.7*self.legs_amplitudes[joint_i]],
-#                 [3, self.legs_amplitudes[joint_i]],
-#                 [3, 0],
-#                 [6, 0],
-#             ]
-#             for joint_i in range(n_dof_legs)
-#         ]
-
-
 class AmphibiousJointsOptions(Options):
     """Amphibious joints options"""
 
     def __init__(self, **kwargs):
         super(AmphibiousJointsOptions, self).__init__()
-        self._legs_offsets = kwargs.pop('_legs_offsets')
-        self._legs_offsets_swimming = kwargs.pop('_legs_offsets_swimming')
+        self.offsets = kwargs.pop('offsets')
+        self.rates = kwargs.pop('rates')
         self.gain_amplitude = kwargs.pop('gain_amplitude')
         self.gain_offset = kwargs.pop('gain_offset')
-        # Joints offsets
-        self.offsets = kwargs.pop('offsets')
-        self.legs_offsets = kwargs.pop('legs_offsets')
-        self._body_offset = kwargs.pop('_body_offset')
-        self.body_offsets = kwargs.pop('body_offsets')
+        self.offsets_bias = kwargs.pop('offsets_bias')
         if kwargs:
             raise Exception('Unknown kwargs: {}'.format(kwargs))
 
@@ -900,62 +747,63 @@ class AmphibiousJointsOptions(Options):
     def from_options(cls, kwargs):
         """From options"""
         options = {}
-        options['_legs_offsets'] = kwargs.pop(
-            'legs_offsets_walking',
-            [0, np.pi/32, 0, np.pi/8]
-        )
-        options['_legs_offsets_swimming'] = kwargs.pop(
-            'legs_offsets_swimming',
-            [-2*np.pi/5, 0, 0, 0]
-        )
+        options['offsets'] = kwargs.pop('offsets', None)
+        options['rates'] = kwargs.pop('rates', None)
         options['gain_amplitude'] = kwargs.pop('gain_amplitude', None)
         options['gain_offset'] = kwargs.pop('gain_offset', None)
-        options['offsets'] = kwargs.pop('joints_offsets', None)
-        # Joints offsets
-        options['legs_offsets'] = None
-        options['_body_offset'] = 0
-        options['body_offsets'] = None
+        options['offsets_bias'] = kwargs.pop('offsets_bias', None)
         return cls(**options)
 
-    def update(self, n_joints_body, n_dof_legs):
-        """Update"""
-        self.update_body_offsets(n_joints_body)
-        self.update_legs_offsets(n_dof_legs)
-
-    def get_legs_offsets(self):
-        """Get legs offsets"""
-        return self._legs_offsets
-
-    def set_legs_offsets(self, values, n_dof_legs):
-        """Set legs offsets"""
-        self._legs_offsets = values
-        self.update_legs_offsets(n_dof_legs)
-
-    def update_legs_offsets(self, n_dof_legs):
-        """Set legs joints offsets"""
-        self.legs_offsets = [
-            [
-                [0, self._legs_offsets_swimming[joint_i]],
-                [1, self._legs_offsets_swimming[joint_i]],
-                [1, self._legs_offsets[joint_i]],
-                [3, self._legs_offsets[joint_i]],
-                [3, self._legs_offsets_swimming[joint_i]],
-                [6, self._legs_offsets_swimming[joint_i]]
-            ]
-            for joint_i in range(n_dof_legs)
-        ]
-
-    def set_body_offsets(self, value, n_joints_body):
-        """Set body offsets"""
-        self._body_offset = value
-        self.update_body_offsets(n_joints_body)
-
-    def update_body_offsets(self, n_joints_body):
-        """Set body joints offsets"""
-        self.body_offsets = [
-            [
-                [0, self._body_offset],
-                [6, self._body_offset]
-            ]
-            for joint_i in range(n_joints_body)
-        ]
+    def defaults_from_morphology(self, morphology, kwargs):
+        """Joints """
+        convention = AmphibiousConvention(**morphology)
+        if self.offsets is None:
+            legs_offsets_walking = kwargs.pop(
+                'legs_offsets_walking',
+                [0, np.pi/32, 0, np.pi/8]
+            )
+            legs_offsets_swimming = kwargs.pop(
+                'legs_offsets_swimming',
+                [-2*np.pi/5, 0, 0, 0]
+            )
+            # raise Exception
+            self.offsets = [None]*morphology.n_joints()
+            # Turning body
+            for joint_i in range(morphology.n_joints_body):
+                for side_i in range(2):
+                    self.offsets[convention.bodyjoint2index(joint_i=joint_i)] = {
+                        'gain': 1,
+                        'bias': 0,
+                        'low': 1,
+                        'high': 5,
+                        'saturation': 0,
+                    }
+            # Turning legs
+            for leg_i in range(morphology.n_legs//2):
+                for side_i in range(2):
+                    for joint_i in range(morphology.n_dof_legs):
+                        self.offsets[convention.legjoint2index(
+                            leg_i=leg_i,
+                            side_i=side_i,
+                            joint_i=joint_i,
+                        )] = {
+                            'gain': (1 if leg_i else -1)*(1 if side_i else -1),
+                            'bias': legs_offsets_walking[joint_i],
+                            'low': 1,
+                            'high': 3,
+                            'saturation': legs_offsets_swimming[joint_i],
+                        }
+        if self.rates is None:
+            self.rates = [5]*morphology.n_joints()
+        if self.gain_amplitude is None:
+            self.gain_amplitude = (
+                {joint: 1 for joint in morphology.joints}
+            )
+        if self.gain_offset is None:
+            self.gain_offset = (
+                {joint: 1 for joint in morphology.joints}
+            )
+        if self.offsets_bias is None:
+            self.offsets_bias = (
+                {joint: 0 for joint in morphology.joints}
+            )

@@ -249,7 +249,7 @@ def get_pleurobot_options(**kwargs):
         ),
         gain_amplitude=gain_amplitude,
         gain_offset=gain_offset,
-        joints_offsets=joints_offsets,
+        offsets_bias=joints_offsets,
         weight_osc_body=kwargs.pop('weight_osc_body', 1e0),
         weight_osc_legs_internal=kwargs.pop('weight_osc_legs_internal', 3e1),
         weight_osc_legs_opposite=kwargs.pop('weight_osc_legs_opposite', 3e0),

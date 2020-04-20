@@ -1,14 +1,14 @@
 """Cython code"""
 
-import time
+# import time
 # import numpy as np
+# cimport numpy as np
 
-cimport cython
-cimport numpy as np
+# cimport cython
+# from cython.parallel import prange
 
 from libc.math cimport sin, fabs  # cos,
 # from libc.stdlib cimport malloc, free
-# from cython.parallel import prange
 # from libc.stdio cimport printf
 
 
@@ -183,8 +183,10 @@ cpdef inline void ode_hydro(
 
 
 cpdef inline void ode_joints(
+    unsigned int iteration,
     CTYPEv1 state,
     CTYPEv1 dstate,
+    DriveArrayCy drives,
     JointsArrayCy joints,
     unsigned int n_oscillators,
 ) nogil:
@@ -193,11 +195,15 @@ cpdef inline void ode_joints(
     d_joints_offset = rate*(joints_offset_desired - joints_offset)
 
     """
-    cdef unsigned int i, n_joints = joints.c_n_joints()
-    for i in range(n_joints):
+    cdef unsigned int joint_i, n_joints = joints.c_n_joints()
+    for joint_i in range(n_joints):
         # rate*(joints_offset_desired - joints_offset)
-        dstate[2*n_oscillators+i] = joints.c_rate(i)*(
-            joints.c_offset_desired(i) - joint_offset(state, i, n_oscillators)
+        dstate[2*n_oscillators+joint_i] = joints.c_rate(joint_i)*(
+            joints.c_offset_desired(
+                joint_i,
+                drives.c_turn(iteration),
+                drives.c_speed(iteration),
+            ) - joint_offset(state, joint_i, n_oscillators)
         )
 
 
@@ -242,8 +248,10 @@ cpdef inline CTYPEv1 ode_oscillators_sparse(
         n_oscillators=data.network.oscillators.c_n_oscillators(),
     )
     ode_joints(
+        iteration=iteration,
         state=state,
         dstate=data.state.array[iteration][1],
+        drives=data.network.drives,
         joints=data.joints,
         n_oscillators=data.network.oscillators.c_n_oscillators(),
     )

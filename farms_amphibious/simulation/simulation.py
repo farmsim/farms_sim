@@ -208,6 +208,7 @@ class AmphibiousSimulation(Simulation):
 
     def animat_interface(self, iteration):
         """Animat interface"""
+        animat = self.animat()
 
         # Camera zoom
         if self.interface.user_params.zoom().changed:
@@ -216,42 +217,28 @@ class AmphibiousSimulation(Simulation):
             )
 
         # Body offset
+        # TODO: Remove
         if self.interface.user_params.body_offset().changed:
-            animat = self.animat()
             animat.options.control.joints.set_body_offsets(
                 self.interface.user_params.body_offset().value,
                 animat.options.morphology.n_joints_body
             )
-            self.animat().controller.update(
+            animat.controller.update(
                 animat.options
             )
             self.interface.user_params.body_offset().changed = False
 
         # Drives
         if self.interface.user_params.drive_speed().changed:
-            self.animat().data.network.drives.array[iteration, 0] = (
+            animat.data.network.drives.array[iteration, 0] = (
                 self.interface.user_params.drive_speed().value
-            )
-            # TODO: Remove
-            self.animat().options.control.drives.forward = (
-                self.interface.user_params.drive_speed().value
-            )
-            self.animat().controller.update(
-                self.animat().options
             )
             self.interface.user_params.drive_speed().changed = False
 
         # Turning
         if self.interface.user_params.drive_turn().changed:
-            self.animat().data.network.drives.array[iteration, 1] = (
+            animat.data.network.drives.array[iteration, 1] = (
                 self.interface.user_params.drive_turn().value
-            )
-            # TODO: Remove
-            self.animat().options.control.drives.turning = (
-                self.interface.user_params.drive_turn().value
-            )
-            self.animat().controller.update(
-                self.animat().options
             )
             self.interface.user_params.drive_turn().changed = False
 
