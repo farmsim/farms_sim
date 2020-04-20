@@ -27,7 +27,7 @@ class AmphibiousData(AnimatData):
     @classmethod
     def from_options(
             cls,
-            initial_drive,
+            initial_drives,
             initial_state,
             morphology,
             control,
@@ -40,7 +40,7 @@ class AmphibiousData(AnimatData):
         )
         network = NetworkParameters(
             drives=DriveArray.from_initial_drive(
-                initial_drive,
+                initial_drives,
                 n_iterations,
             ),
             oscillators=Oscillators.from_options(

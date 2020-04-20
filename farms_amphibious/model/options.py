@@ -223,7 +223,6 @@ class AmphibiousControlOptions(Options):
 
     def __init__(self, **kwargs):
         super(AmphibiousControlOptions, self).__init__()
-        self.drives = AmphibiousDrives(**kwargs.pop('drives'))
         self.kinematics_file = kwargs.pop('kinematics_file')
         if not self.kinematics_file:
             self.network = AmphibiousNetworkOptions(**kwargs.pop('network'))
@@ -237,10 +236,6 @@ class AmphibiousControlOptions(Options):
         """From options"""
         options = {}
         options['kinematics_file'] = kwargs.pop('kinematics_file', '')
-        options['drives'] = kwargs.pop(
-            'drives',
-            AmphibiousDrives.from_options(kwargs)
-        )
         options['network'] = kwargs.pop(
             'network',
             AmphibiousNetworkOptions.from_options(kwargs)
@@ -257,8 +252,8 @@ class AmphibiousControlOptions(Options):
 
     def defaults_from_morphology(self, morphology, kwargs):
         """Defaults from morphology"""
-        if self.network.drive_init is None:
-            self.network.drive_init = (
+        if self.network.drives_init is None:
+            self.network.drives_init = (
                 [2, 0]
             )
         if self.network.state_init is None:
@@ -322,29 +317,6 @@ class AmphibiousControlOptions(Options):
         self.joints.defaults_from_morphology(morphology, kwargs)
 
 
-class AmphibiousDrives(Options):
-    """Amphibious drives"""
-
-    def __init__(self, **kwargs):
-        super(AmphibiousDrives, self).__init__()
-        self.forward = kwargs.pop('forward')
-        self.turning = kwargs.pop('turning')
-        self.left = kwargs.pop('left')
-        self.right = kwargs.pop('right')
-        if kwargs:
-            raise Exception('Unknown kwargs: {}'.format(kwargs))
-
-    @classmethod
-    def from_options(cls, kwargs):
-        """From options"""
-        options = {}
-        options['forward'] = kwargs.pop('drive_forward', 2)
-        options['turning'] = kwargs.pop('drive_turn', 0)
-        options['left'] = kwargs.pop('drive_left', 0)
-        options['right'] = kwargs.pop('drive_right', 0)
-        return cls(**options)
-
-
 class AmphibiousNetworkOptions(Options):
     """Amphibious network options"""
 
@@ -360,7 +332,7 @@ class AmphibiousNetworkOptions(Options):
         self.osc_rates = kwargs.pop('osc_rates', None)
         self.osc_amplitudes = kwargs.pop('osc_amplitudes', None)
         self.drive_nodes = kwargs.pop('drive_nodes', None)
-        self.drive_init = kwargs.pop('drive_init', None)
+        self.drives_init = kwargs.pop('drives_init', None)
         self.contacts_nodes = kwargs.pop('contacts_nodes', None)
         self.hydro_nodes = kwargs.pop('hydro_nodes', None)
 
@@ -384,7 +356,7 @@ class AmphibiousNetworkOptions(Options):
                 'osc_rates',
                 'osc_amplitudes',
                 'drive_nodes',
-                'drive_init',
+                'drives_init',
                 'contacts_nodes',
                 'hydro_nodes',
                 'osc2osc',
@@ -462,8 +434,8 @@ class AmphibiousNetworkOptions(Options):
                             joint_i,
                             side=side,
                         )] = {
-                            'gain': 0.5*amplitude,
-                            'bias': 0*amplitude,
+                            'gain': 0,
+                            'bias': amplitude,
                             'low': 1,
                             'high': 3,
                             'saturation': 0,

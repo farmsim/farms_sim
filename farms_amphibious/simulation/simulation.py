@@ -5,14 +5,12 @@ import time
 import numpy as np
 
 from farms_bullet.simulation.simulation import Simulation
-from farms_bullet.simulation.options import SimulationOptions
 from farms_bullet.simulation.simulator import real_time_handing
 from farms_bullet.model.model import SimulationModels
 from farms_bullet.interface.interface import Interfaces
 import farms_pylog as pylog
 
-from ..model.animat import Amphibious
-from ..model.options import AmphibiousOptions
+from .interface import AmphibiousUserParameters
 
 
 def swimming_step(iteration, animat):
@@ -90,7 +88,9 @@ class AmphibiousSimulation(Simulation):
             options=simulation_options
         )
         # Interface
-        self.interface = Interfaces(int(10*1e-3/simulation_options.timestep))
+        self.interface = Interfaces(
+            user_params=AmphibiousUserParameters(self.animat().options)
+        )
         if not self.options.headless:
             self.interface.init_camera(
                 target_identity=(
@@ -104,7 +104,6 @@ class AmphibiousSimulation(Simulation):
                 pitch=simulation_options.video_pitch,
                 yaw=simulation_options.video_yaw,
             )
-            self.interface.init_debug(animat_options=self.animat().options)
 
         if self.options.record:
             skips = int(2e-2/simulation_options.timestep)  # 50 fps
@@ -216,18 +215,6 @@ class AmphibiousSimulation(Simulation):
                 self.interface.user_params.zoom().value
             )
 
-        # Body offset
-        # TODO: Remove
-        if self.interface.user_params.body_offset().changed:
-            animat.options.control.joints.set_body_offsets(
-                self.interface.user_params.body_offset().value,
-                animat.options.morphology.n_joints_body
-            )
-            animat.controller.update(
-                animat.options
-            )
-            self.interface.user_params.body_offset().changed = False
-
         # Drives
         if self.interface.user_params.drive_speed().changed:
             animat.data.network.drives.array[iteration, 0] = (
@@ -287,66 +274,3 @@ class AmphibiousSimulation(Simulation):
                 iteration=iteration,
                 writer=kwargs.pop('writer', 'ffmpeg')
             )
-
-
-def main(simulation_options=None, animat_options=None):
-    """Main"""
-
-    # Parse command line arguments
-    if not simulation_options:
-        simulation_options = SimulationOptions.with_clargs()
-    if not animat_options:
-        animat_options = AmphibiousOptions()
-
-    # Setup simulation
-    pylog.debug('Creating simulation')
-    sim = AmphibiousSimulation(
-        simulation_options=simulation_options,
-        animat=Amphibious(
-            animat_options,
-            simulation_options.timestep,
-            simulation_options.n_iterations,
-            simulation_options.units
-        )
-    )
-
-    # Run simulation
-    pylog.debug('Running simulation')
-    sim.run()
-
-    # Analyse results
-    pylog.debug('Analysing simulation')
-    sim.postprocess(
-        iteration=sim.iteration,
-        plot=simulation_options.plot,
-        log_path=simulation_options.log_path,
-        log_extension=simulation_options.log_extension,
-        record=sim.options.record and not sim.options.headless
-    )
-    if simulation_options.log_path:
-        np.save(
-            simulation_options.log_path+'/hydrodynamics.npy',
-            sim.models.animat.data.sensors.hydrodynamics.array
-        )
-
-    sim.end()
-
-
-def main_parallel():
-    """Simulation with multiprocessing"""
-    from multiprocessing import Pool
-
-    # Parse command line arguments
-    sim_options = SimulationOptions.with_clargs()
-
-    # Create Pool
-    pool = Pool(2)
-
-    # Run simulation
-    pool.map(main, [sim_options, sim_options])
-    pylog.debug('Done')
-
-
-if __name__ == '__main__':
-    # main_parallel()
-    main()
