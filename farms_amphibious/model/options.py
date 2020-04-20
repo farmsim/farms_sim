@@ -302,14 +302,14 @@ class AmphibiousControlOptions(Options):
             self.network.osc2osc = (
                 AmphibiousNetworkOptions.default_osc2osc(
                     morphology,
-                    kwargs.pop('weight_osc_body', 1e3),
+                    kwargs.pop('weight_osc_body', 1e0),
                     kwargs.pop(
                         'body_phase_bias',
                         2*np.pi/morphology.n_joints_body
                     ),
-                    kwargs.pop('weight_osc_legs_internal', 1e3),
-                    kwargs.pop('weight_osc_legs_opposite', 1e0),
-                    kwargs.pop('weight_osc_legs_following', 1e0),
+                    kwargs.pop('weight_osc_legs_internal', 3e1),
+                    kwargs.pop('weight_osc_legs_opposite', 1e1),
+                    kwargs.pop('weight_osc_legs_following', 1e1),
                     kwargs.pop('weight_osc_legs2body', 3e1),
                     kwargs.pop('leg_phase_follow', np.pi),
                     kwargs.pop('body_stand_shift', 0.5*np.pi),
