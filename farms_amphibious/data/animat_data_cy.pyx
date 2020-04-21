@@ -6,49 +6,16 @@ cimport numpy as np
 
 cdef class AnimatDataCy:
     """Network parameter"""
-
-    def __init__(self, state=None, network=None, joints=None, sensors=None):
-        super(AnimatDataCy, self).__init__()
-        self.state = state
-        self.network = network
-        self.joints = joints
-        self.sensors = sensors
+    pass
 
 
 cdef class NetworkParametersCy:
     """Network parameter"""
-
-    def __init__(
-            self,
-            drives,
-            oscillators,
-            osc_connectivity,
-            contacts_connectivity,
-            hydro_connectivity
-    ):
-        super(NetworkParametersCy, self).__init__()
-        self.drives = drives
-        self.oscillators = oscillators
-        self.osc_connectivity = osc_connectivity
-        self.contacts_connectivity = contacts_connectivity
-        self.hydro_connectivity = hydro_connectivity
-
-
-cdef class OscillatorNetworkStateCy(NetworkArray2D):
-    """Network state"""
-
-    def __init__(self, state, n_oscillators):
-        super(OscillatorNetworkStateCy, self).__init__(state)
-        self.n_oscillators = n_oscillators
+    pass
 
 
 cdef class DriveDependentArrayCy(NetworkArray2D):
     """Drive dependent array"""
-
-    @classmethod
-    def from_parameters(cls, gain, bias, low, high, saturation):
-        """From each parameter"""
-        return cls(np.array([gain, bias, low, high, saturation]))
 
     cdef DTYPE value(self, unsigned int index, DTYPE drive):
         """Value for a given drive"""
@@ -61,12 +28,7 @@ cdef class DriveDependentArrayCy(NetworkArray2D):
 
 cdef class OscillatorsCy:
     """Oscillator array"""
-
-    def __init__(self, intrinsic_frequencies, nominal_amplitudes, rates):
-        super(OscillatorsCy, self).__init__()
-        self.intrinsic_frequencies = DriveDependentArrayCy(intrinsic_frequencies)
-        self.nominal_amplitudes = DriveDependentArrayCy(nominal_amplitudes)
-        self.rates = NetworkArray1D(rates)
+    pass
 
 
 cdef class ConnectivityCy:

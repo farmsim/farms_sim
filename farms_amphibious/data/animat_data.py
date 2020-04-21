@@ -3,12 +3,15 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import deepdish as dd
+from .array import NetworkArray1D
 from .animat_data_cy import (
     AnimatDataCy,
     NetworkParametersCy,
     OscillatorNetworkStateCy,
     DriveArrayCy,
+    DriveDependentArrayCy,
     OscillatorsCy,
+    ConnectivityCy,
     OscillatorConnectivityCy,
     ContactConnectivityCy,
     HydroConnectivityCy,
@@ -36,6 +39,13 @@ def to_array(array, iteration=None):
 
 class AnimatData(AnimatDataCy):
     """Animat data"""
+
+    def __init__(self, state=None, network=None, joints=None, sensors=None):
+        super(AnimatData, self).__init__()
+        self.state = state
+        self.network = network
+        self.joints = joints
+        self.sensors = sensors
 
     @classmethod
     def from_dict(cls, dictionary, n_oscillators=0):
@@ -74,6 +84,21 @@ class AnimatData(AnimatDataCy):
 class NetworkParameters(NetworkParametersCy):
     """Network parameter"""
 
+    def __init__(
+            self,
+            drives,
+            oscillators,
+            osc_connectivity,
+            contacts_connectivity,
+            hydro_connectivity
+    ):
+        super(NetworkParameters, self).__init__()
+        self.drives = drives
+        self.oscillators = oscillators
+        self.osc_connectivity = osc_connectivity
+        self.contacts_connectivity = contacts_connectivity
+        self.hydro_connectivity = hydro_connectivity
+
     @classmethod
     def from_dict(cls, dictionary):
         """Load data from dictionary"""
@@ -109,6 +134,10 @@ class NetworkParameters(NetworkParametersCy):
 
 class OscillatorNetworkState(OscillatorNetworkStateCy):
     """Network state"""
+
+    def __init__(self, state, n_oscillators):
+        super(OscillatorNetworkState, self).__init__(state)
+        self.n_oscillators = n_oscillators
 
     @classmethod
     def from_options(cls, state, animat_options):
@@ -183,8 +212,23 @@ class DriveArray(DriveArrayCy):
         return cls(drive_array)
 
 
+class DriveDependentArray(DriveDependentArrayCy):
+    """Drive dependent array"""
+
+    @classmethod
+    def from_vectors(cls, gain, bias, low, high, saturation):
+        """From each parameter"""
+        return cls(np.array([gain, bias, low, high, saturation]))
+
+
 class Oscillators(OscillatorsCy):
     """Oscillator array"""
+
+    def __init__(self, intrinsic_frequencies, nominal_amplitudes, rates):
+        super(Oscillators, self).__init__()
+        self.intrinsic_frequencies = DriveDependentArray(intrinsic_frequencies)
+        self.nominal_amplitudes = DriveDependentArray(nominal_amplitudes)
+        self.rates = NetworkArray1D(rates)
 
     @classmethod
     def from_dict(cls, dictionary):

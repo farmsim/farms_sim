@@ -29,7 +29,6 @@ cdef class NetworkParametersCy:
 cdef class OscillatorNetworkStateCy(NetworkArray2D):
     """Network state"""
     cdef public unsigned int n_oscillators
-    cdef public unsigned int _iterations
 
 
 cdef class DriveArrayCy(NetworkArray2D):
