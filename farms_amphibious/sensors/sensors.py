@@ -19,9 +19,8 @@ class AmphibiousGPS(LinksStatesSensor):
         """Update sensor"""
         if self.options.collect_gps:
             self.collect(iteration, self.links)
-        # elif self.options.control.drives.forward > 3:
-        #     self.collect(iteration, self.links[:12])
-        # else:
-        #     self.collect(iteration, [self.links[0]])
         else:
-            self.collect(iteration, self.links[:self.options.morphology.n_joints_body])
+            self.collect(
+                iteration,
+                self.links[:self.options.morphology.n_links_body()]
+            )

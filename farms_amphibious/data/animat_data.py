@@ -21,8 +21,8 @@ from .animat_data_cy import (
 )
 
 
-DTYPE = np.float64
-ITYPE = np.uintc
+NPDTYPE = np.float64
+NPITYPE = np.uintc
 
 
 def to_array(array, iteration=None):
@@ -143,7 +143,7 @@ class OscillatorNetworkState(OscillatorNetworkStateCy):
     def from_initial_state(cls, initial_state, n_iterations):
         """From initial state"""
         state_size = len(initial_state)
-        state_array = np.zeros([n_iterations, state_size], dtype=DTYPE)
+        state_array = np.zeros([n_iterations, state_size], dtype=NPDTYPE)
         state_array[0, :] = initial_state
         return cls(state_array, n_oscillators=2*state_size//5)
 
@@ -178,7 +178,7 @@ class DriveArray(DriveArrayCy):
     def from_initial_drive(cls, initial_drives, n_iterations):
         """From initial drive"""
         drive_size = len(initial_drives)
-        drive_array = np.zeros([n_iterations, drive_size], dtype=DTYPE)
+        drive_array = np.zeros([n_iterations, drive_size], dtype=NPDTYPE)
         drive_array[0, :] = initial_drives
         return cls(drive_array)
 
@@ -217,10 +217,10 @@ class Oscillators(OscillatorsCy):
                     freq['saturation'],
                 ]
                 for freq in option
-            ], dtype=DTYPE)
+            ], dtype=NPDTYPE)
             for option in [network.osc_frequencies, network.osc_amplitudes]
         ]
-        return cls(freqs, amplitudes, np.array(network.osc_rates, dtype=DTYPE))
+        return cls(freqs, amplitudes, np.array(network.osc_rates, dtype=NPDTYPE))
 
 
 class OscillatorConnectivity(OscillatorConnectivityCy):
@@ -260,9 +260,9 @@ class OscillatorConnectivity(OscillatorConnectivityCy):
             for connection in connectivity
         ]
         return cls(
-            connections=np.array(connections, dtype=ITYPE),
-            weights=np.array(weights, dtype=DTYPE),
-            desired_phases=np.array(phase_bias, dtype=DTYPE),
+            connections=np.array(connections, dtype=NPITYPE),
+            weights=np.array(weights, dtype=NPDTYPE),
+            desired_phases=np.array(phase_bias, dtype=NPDTYPE),
         )
 
 
@@ -296,8 +296,8 @@ class ContactConnectivity(ContactConnectivityCy):
             for connection in connectivity
         ]
         return cls(
-            np.array(connections, dtype=ITYPE),
-            np.array(weights, dtype=DTYPE),
+            np.array(connections, dtype=NPITYPE),
+            np.array(weights, dtype=NPDTYPE),
         )
 
 
@@ -338,9 +338,9 @@ class HydroConnectivity(HydroConnectivityCy):
             for connection in connectivity
         ]
         return cls(
-            connections=np.array(connections, dtype=ITYPE),
-            frequency=np.array(weights_frequency, dtype=DTYPE),
-            amplitude=np.array(weights_amplitude, dtype=DTYPE),
+            connections=np.array(connections, dtype=NPITYPE),
+            frequency=np.array(weights_frequency, dtype=NPDTYPE),
+            amplitude=np.array(weights_amplitude, dtype=NPDTYPE),
         )
 
 
@@ -360,7 +360,7 @@ class JointsArray(JointsArrayCy):
                 rate,
             ]
             for offset, rate in zip(joints.offsets, joints.rates)
-        ], dtype=DTYPE))
+        ], dtype=NPDTYPE))
 
 
 class SensorsData(SensorsDataCy):
@@ -404,7 +404,7 @@ class ContactsArray(ContactsArrayCy):
     @classmethod
     def from_size(cls, n_contacts, n_iterations):
         """From size"""
-        contacts = np.zeros([n_iterations, n_contacts, 9], dtype=DTYPE)
+        contacts = np.zeros([n_iterations, n_contacts, 9], dtype=NPDTYPE)
         return cls(contacts)
 
     def reaction(self, iteration, sensor_i):
@@ -506,7 +506,7 @@ class ProprioceptionArray(ProprioceptionArrayCy):
     @classmethod
     def from_size(cls, n_joints, n_iterations):
         """From size"""
-        proprioception = np.zeros([n_iterations, n_joints, 12], dtype=DTYPE)
+        proprioception = np.zeros([n_iterations, n_joints, 12], dtype=NPDTYPE)
         return cls(proprioception)
 
     @classmethod
@@ -718,7 +718,7 @@ class GpsArray(GpsArrayCy):
     @classmethod
     def from_size(cls, n_links, n_iterations):
         """From size"""
-        gps = np.zeros([n_iterations, n_links, 20], dtype=DTYPE)
+        gps = np.zeros([n_iterations, n_links, 20], dtype=NPDTYPE)
         return cls(gps)
 
     @classmethod
@@ -801,7 +801,7 @@ class HydrodynamicsArray(HydrodynamicsArrayCy):
     @classmethod
     def from_size(cls, n_links, n_iterations):
         """From size"""
-        hydrodynamics = np.zeros([n_iterations, n_links, 6], dtype=DTYPE)
+        hydrodynamics = np.zeros([n_iterations, n_links, 6], dtype=NPDTYPE)
         return cls(hydrodynamics)
 
     @classmethod

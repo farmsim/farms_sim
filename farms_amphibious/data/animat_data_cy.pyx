@@ -50,7 +50,7 @@ cdef class DriveDependentArrayCy(NetworkArray2D):
         """From each parameter"""
         return cls(np.array([gain, bias, low, high, saturation]))
 
-    cdef CTYPE value(self, unsigned int index, CTYPE drive):
+    cdef DTYPE value(self, unsigned int index, DTYPE drive):
         """Value for a given drive"""
         return (
             self.gain[index]*drive + self.bias[index]

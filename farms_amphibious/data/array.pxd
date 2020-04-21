@@ -10,17 +10,17 @@ cdef class NetworkArray:
 
 cdef class NetworkArray1D(NetworkArray):
     """Network array"""
-    cdef readonly CTYPEv1 array
+    cdef readonly DTYPEv1 array
 
 
 cdef class NetworkArray2D(NetworkArray):
     """Network array"""
-    cdef readonly CTYPEv2 array
+    cdef readonly DTYPEv2 array
 
 
 cdef class NetworkArray3D(NetworkArray):
     """Network array"""
-    cdef readonly CTYPEv3 array
+    cdef readonly DTYPEv3 array
 
 
 cdef class IntegerArray2D(NetworkArray):
