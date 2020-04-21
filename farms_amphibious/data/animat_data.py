@@ -111,6 +111,35 @@ class OscillatorNetworkState(OscillatorNetworkStateCy):
     """Network state"""
 
     @classmethod
+    def from_options(cls, state, animat_options):
+        """From options"""
+        return cls(
+            state=state,
+            n_oscillators=2*animat_options.morphology.n_joints()
+        )
+
+    @classmethod
+    def from_solver(cls, solver, n_oscillators):
+        """From solver"""
+        return cls(solver.state, n_oscillators, solver.iteration)
+
+    def phases(self, iteration):
+        """Phases"""
+        return self.array[iteration, :self.n_oscillators]
+
+    def phases_all(self):
+        """Phases"""
+        return self.array[:, :self.n_oscillators]
+
+    def amplitudes(self, iteration):
+        """Amplitudes"""
+        return self.array[iteration, self.n_oscillators:]
+
+    def amplitudes_all(self):
+        """Phases"""
+        return self.array[:, self.n_oscillators:]
+
+    @classmethod
     def from_initial_state(cls, initial_state, n_iterations):
         """From initial state"""
         state_size = len(initial_state)
@@ -368,10 +397,39 @@ class ContactsArray(ContactsArrayCy):
     """Sensor array"""
 
     @classmethod
+    def from_parameters(cls, n_iterations, n_contacts):
+        """From parameters"""
+        return cls(np.zeros([n_iterations, n_contacts, 9]))
+
+    @classmethod
     def from_size(cls, n_contacts, n_iterations):
         """From size"""
         contacts = np.zeros([n_iterations, n_contacts, 9], dtype=DTYPE)
         return cls(contacts)
+
+    def reaction(self, iteration, sensor_i):
+        """Reaction force"""
+        return self.array[iteration, sensor_i, 0:3]
+
+    def reaction_all(self, sensor_i):
+        """Reaction force"""
+        return self.array[:, sensor_i, 0:3]
+
+    def friction(self, iteration, sensor_i):
+        """Friction force"""
+        return self.array[iteration, sensor_i, 3:6]
+
+    def friction_all(self, sensor_i):
+        """Friction force"""
+        return self.array[:, sensor_i, 3:6]
+
+    def total(self, iteration, sensor_i):
+        """Total force"""
+        return self.array[iteration, sensor_i, 6:9]
+
+    def total_all(self, sensor_i):
+        """Total force"""
+        return self.array[:, sensor_i, 6:9]
 
     def plot(self, times):
         """Plot"""
@@ -450,6 +508,83 @@ class ProprioceptionArray(ProprioceptionArrayCy):
         """From size"""
         proprioception = np.zeros([n_iterations, n_joints, 12], dtype=DTYPE)
         return cls(proprioception)
+
+    @classmethod
+    def from_parameters(cls, n_iterations, n_joints):
+        """From parameters"""
+        return cls(np.zeros([n_iterations, n_joints, 12]))
+
+    def position(self, iteration, joint_i):
+        """Joint position"""
+        return self.array[iteration, joint_i, 0]
+
+    def positions(self, iteration):
+        """Joints positions"""
+        return self.array[iteration, :, 0]
+
+    def positions_all(self):
+        """Joints positions"""
+        return self.array[:, :, 0]
+
+    def velocity(self, iteration, joint_i):
+        """Joint velocity"""
+        return self.array[iteration, joint_i, 1]
+
+    def velocities(self, iteration):
+        """Joints velocities"""
+        return self.array[iteration, :, 1]
+
+    def velocities_all(self):
+        """Joints velocities"""
+        return self.array[:, :, 1]
+
+    def force(self, iteration, joint_i):
+        """Joint force"""
+        return self.array[iteration, joint_i, 2:5]
+
+    def forces_all(self):
+        """Joints forces"""
+        return self.array[:, :, 2:5]
+
+    def torque(self, iteration, joint_i):
+        """Joint torque"""
+        return self.array[iteration, joint_i, 5:8]
+
+    def torques_all(self):
+        """Joints torques"""
+        return self.array[:, :, 5:8]
+
+    def motor_torque(self, iteration, joint_i):
+        """Joint velocity"""
+        return self.array[iteration, joint_i, 8]
+
+    def motor_torques(self):
+        """Joint velocity"""
+        return self.array[:, :, 8]
+
+    def active(self, iteration, joint_i):
+        """Active torque"""
+        return self.array[iteration, joint_i, 9]
+
+    def active_torques(self):
+        """Active torques"""
+        return self.array[:, :, 9]
+
+    def spring(self, iteration, joint_i):
+        """Passive spring torque"""
+        return self.array[iteration, joint_i, 10]
+
+    def spring_torques(self):
+        """Spring torques"""
+        return self.array[:, :, 10]
+
+    def damping(self, iteration, joint_i):
+        """passive damping torque"""
+        return self.array[iteration, joint_i, 11]
+
+    def damping_torques(self):
+        """Damping torques"""
+        return self.array[:, :, 11]
 
     def plot(self, times):
         """Plot"""
@@ -586,6 +721,43 @@ class GpsArray(GpsArrayCy):
         gps = np.zeros([n_iterations, n_links, 20], dtype=DTYPE)
         return cls(gps)
 
+    @classmethod
+    def from_parameters(cls, n_iterations, n_links):
+        """From parameters"""
+        return cls(np.zeros([n_iterations, n_links, 20]))
+
+    def com_position(self, iteration, link_i):
+        """CoM position of a link"""
+        return self.array[iteration, link_i, 0:3]
+
+    def com_orientation(self, iteration, link_i):
+        """CoM orientation of a link"""
+        return self.array[iteration, link_i, 3:7]
+
+    def urdf_position(self, iteration, link_i):
+        """URDF position of a link"""
+        return self.array[iteration, link_i, 7:10]
+
+    def urdf_positions(self):
+        """URDF position of a link"""
+        return self.array[:, :, 7:10]
+
+    def urdf_orientation(self, iteration, link_i):
+        """URDF orientation of a link"""
+        return self.array[iteration, link_i, 10:14]
+
+    def com_lin_velocity(self, iteration, link_i):
+        """CoM linear velocity of a link"""
+        return self.array[iteration, link_i, 14:17]
+
+    def com_lin_velocities(self):
+        """CoM linear velocities"""
+        return self.array[:, :, 14:17]
+
+    def com_ang_velocity(self, iteration, link_i):
+        """CoM angular velocity of a link"""
+        return self.array[iteration, link_i, 17:20]
+
     def plot(self, times):
         """Plot"""
         self.plot_base_position(times, xaxis=0, yaxis=1)
@@ -631,6 +803,19 @@ class HydrodynamicsArray(HydrodynamicsArrayCy):
         """From size"""
         hydrodynamics = np.zeros([n_iterations, n_links, 6], dtype=DTYPE)
         return cls(hydrodynamics)
+
+    @classmethod
+    def from_parameters(cls, n_iterations, n_links):
+        """From parameters"""
+        return cls(np.zeros([n_iterations, n_links, 6]))
+
+    def forces(self):
+        """Forces"""
+        return self.array[:, :, 0:3]
+
+    def torques(self):
+        """Torques"""
+        return self.array[:, :, 3:6]
 
     def plot(self, times):
         """Plot"""

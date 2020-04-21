@@ -102,21 +102,21 @@ cpdef inline void ode_contacts(
     Can affect d_phase and d_amplitude
 
     """
-    cdef CTYPE contact_force
+    cdef CTYPE contact_reaction
     cdef unsigned int i, i0, i1
     for i in range(contacts_connectivity.c_n_connections()):
         i0 = contacts_connectivity.connections.array[i, 0]
         i1 = contacts_connectivity.connections.array[i, 1]
-        # contact_weight*contact_force
-        # contact_force = (
+        # contact_weight*contact_reaction
+        # contact_reaction = (
         #     contacts.array[iteration, i1, 0]**2
         #     + contacts.array[iteration, i1, 1]**2
         #     + contacts.array[iteration, i1, 2]**2
         # )**0.5
-        contact_force = fabs(contacts.c_force_z(iteration, i1))
+        contact_reaction = fabs(contacts.c_reaction_z(iteration, i1))
         dstate[i0] += (
             contacts_connectivity.c_weight(i)
-            *saturation(contact_force, 10)  # Saturation
+            *saturation(contact_reaction, 10)  # Saturation
             # *cos(state[i0])
             # *sin(state[i0])  # For Tegotae
         )
@@ -134,21 +134,21 @@ cpdef inline void ode_contacts_tegotae(
     Can affect d_phase and d_amplitude
 
     """
-    cdef CTYPE contact_force
+    cdef CTYPE contact_reaction
     cdef unsigned int i, i0, i1
     for i in range(contacts_connectivity.c_n_connections()):
         i0 = contacts_connectivity.connections.array[i, 0]
         i1 = contacts_connectivity.connections.array[i, 1]
-        # contact_weight*contact_force
-        # contact_force = (
+        # contact_weight*contact_reaction
+        # contact_reaction = (
         #     contacts.array[iteration, i1, 0]**2
         #     + contacts.array[iteration, i1, 1]**2
         #     + contacts.array[iteration, i1, 2]**2
         # )**0.5
-        contact_force = fabs(contacts.c_force_z(iteration, i1))
+        contact_reaction = fabs(contacts.c_reaction_z(iteration, i1))
         dstate[i0] += (
             contacts_connectivity.c_weight(i)
-            *saturation(contact_force, 10)  # Saturation
+            *saturation(contact_reaction, 10)  # Saturation
             *sin(state[i0])  # For Tegotae
         )
 

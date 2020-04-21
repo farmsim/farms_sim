@@ -118,8 +118,8 @@ cdef class ConnectivityCy:
 
     cdef readonly IntegerArray2D connections
 
-    cpdef INDEX input(self, connection_i)
-    cpdef INDEX output(self, connection_i)
+    cpdef INDEX input(self, unsigned int connection_i)
+    cpdef INDEX output(self, unsigned int connection_i)
 
     cdef inline INDEX c_n_connections(self) nogil:
         """Number of connections"""
@@ -193,67 +193,173 @@ cdef class SensorsDataCy:
 cdef class ContactsArrayCy(NetworkArray3D):
     """Sensor array"""
 
-    cpdef CTYPEv1 reaction(self, unsigned int iteration, unsigned int sensor_i)
-    cpdef CTYPEv2 reaction_all(self, unsigned int sensor_i)
-    cpdef CTYPEv1 friction(self, unsigned int iteration, unsigned int sensor_i)
-    cpdef CTYPEv2 friction_all(self, unsigned int sensor_i)
-    cpdef CTYPEv1 total(self, unsigned int iteration, unsigned int sensor_i)
-    cpdef CTYPEv2 total_all(self, unsigned int sensor_i)
+    cdef inline CTYPEv1 c_all(self, unsigned iteration, unsigned int index) nogil:
+        """Reaction"""
+        return self.array[iteration, index, :]
 
-    cdef inline CTYPE c_force_x(self, unsigned iteration, unsigned int index) nogil:
-        """Force z"""
+    cdef inline CTYPEv1 c_reaction(self, unsigned iteration, unsigned int index) nogil:
+        """Reaction"""
+        return self.array[iteration, index, 0:3]
+
+    cdef inline CTYPE c_reaction_x(self, unsigned iteration, unsigned int index) nogil:
+        """Reaction x"""
         return self.array[iteration, index, 0]
 
-    cdef inline CTYPE c_force_y(self, unsigned iteration, unsigned int index) nogil:
-        """Force z"""
+    cdef inline CTYPE c_reaction_y(self, unsigned iteration, unsigned int index) nogil:
+        """Reaction y"""
         return self.array[iteration, index, 1]
 
-    cdef inline CTYPE c_force_z(self, unsigned iteration, unsigned int index) nogil:
-        """Force z"""
+    cdef inline CTYPE c_reaction_z(self, unsigned iteration, unsigned int index) nogil:
+        """Reaction z"""
         return self.array[iteration, index, 2]
+
+    cdef inline CTYPEv1 c_friction(self, unsigned iteration, unsigned int index) nogil:
+        """Friction"""
+        return self.array[iteration, index, 3:6]
+
+    cdef inline CTYPE c_friction_x(self, unsigned iteration, unsigned int index) nogil:
+        """Friction x"""
+        return self.array[iteration, index, 3]
+
+    cdef inline CTYPE c_friction_y(self, unsigned iteration, unsigned int index) nogil:
+        """Friction y"""
+        return self.array[iteration, index, 4]
+
+    cdef inline CTYPE c_friction_z(self, unsigned iteration, unsigned int index) nogil:
+        """Friction z"""
+        return self.array[iteration, index, 5]
+
+    cdef inline CTYPEv1 c_total(self, unsigned iteration, unsigned int index) nogil:
+        """Total"""
+        return self.array[iteration, index, 6:9]
+
+    cdef inline CTYPE c_total_x(self, unsigned iteration, unsigned int index) nogil:
+        """Total x"""
+        return self.array[iteration, index, 6]
+
+    cdef inline CTYPE c_total_y(self, unsigned iteration, unsigned int index) nogil:
+        """Total y"""
+        return self.array[iteration, index, 7]
+
+    cdef inline CTYPE c_total_z(self, unsigned iteration, unsigned int index) nogil:
+        """Total z"""
+        return self.array[iteration, index, 8]
 
 
 cdef class ProprioceptionArrayCy(NetworkArray3D):
     """Proprioception array"""
 
-    cpdef CTYPE position(self, unsigned int iteration, unsigned int joint_i)
-    cpdef CTYPEv1 positions(self, unsigned int iteration)
-    cpdef CTYPEv2 positions_all(self)
-    cpdef CTYPE velocity(self, unsigned int iteration, unsigned int joint_i)
-    cpdef CTYPEv1 velocities(self, unsigned int iteration)
-    cpdef CTYPEv2 velocities_all(self)
-    cpdef CTYPEv1 force(self, unsigned int iteration, unsigned int joint_i)
-    cpdef CTYPEv3 forces_all(self)
-    cpdef CTYPEv1 torque(self, unsigned int iteration, unsigned int joint_i)
-    cpdef CTYPEv3 torques_all(self)
-    cpdef CTYPE motor_torque(self, unsigned int iteration, unsigned int joint_i)
-    cpdef CTYPEv2 motor_torques(self)
-    cpdef CTYPE active(self, unsigned int iteration, unsigned int joint_i)
-    cpdef CTYPEv2 active_torques(self)
-    cpdef CTYPE spring(self, unsigned int iteration, unsigned int joint_i)
-    cpdef CTYPEv2 spring_torques(self)
-    cpdef CTYPE damping(self, unsigned int iteration, unsigned int joint_i)
-    cpdef CTYPEv2 damping_torques(self)
+    cdef inline CTYPE position_cy(self, unsigned int iteration, unsigned int joint_i):
+        """Joint position"""
+        return self.array[iteration, joint_i, 0]
+
+    cdef inline CTYPEv1 positions_cy(self, unsigned int iteration):
+        """Joints positions"""
+        return self.array[iteration, :, 0]
+
+    cdef inline CTYPEv2 positions_all_cy(self):
+        """Joints positions"""
+        return self.array[:, :, 0]
+
+    cdef inline CTYPE velocity_cy(self, unsigned int iteration, unsigned int joint_i):
+        """Joint velocity"""
+        return self.array[iteration, joint_i, 1]
+
+    cdef inline CTYPEv1 velocities_cy(self, unsigned int iteration):
+        """Joints velocities"""
+        return self.array[iteration, :, 1]
+
+    cdef inline CTYPEv2 velocities_all_cy(self):
+        """Joints velocities"""
+        return self.array[:, :, 1]
+
+    cdef inline CTYPEv1 force_cy(self, unsigned int iteration, unsigned int joint_i):
+        """Joint force"""
+        return self.array[iteration, joint_i, 2:5]
+
+    cdef inline CTYPEv3 forces_all_cy(self):
+        """Joints forces"""
+        return self.array[:, :, 2:5]
+
+    cdef inline CTYPEv1 torque_cy(self, unsigned int iteration, unsigned int joint_i):
+        """Joint torque"""
+        return self.array[iteration, joint_i, 5:8]
+
+    cdef inline CTYPEv3 torques_all_cy(self):
+        """Joints torques"""
+        return self.array[:, :, 5:8]
+
+    cdef inline CTYPE motor_torque_cy(self, unsigned int iteration, unsigned int joint_i):
+        """Joint velocity"""
+        return self.array[iteration, joint_i, 8]
+
+    cdef inline CTYPEv2 motor_torques_cy(self):
+        """Joint velocity"""
+        return self.array[:, :, 8]
+
+    cdef inline CTYPE active_cy(self, unsigned int iteration, unsigned int joint_i):
+        """Active torque"""
+        return self.array[iteration, joint_i, 9]
+
+    cdef inline CTYPEv2 active_torques_cy(self):
+        """Active torques"""
+        return self.array[:, :, 9]
+
+    cdef inline CTYPE spring_cy(self, unsigned int iteration, unsigned int joint_i):
+        """Passive spring torque"""
+        return self.array[iteration, joint_i, 10]
+
+    cdef inline CTYPEv2 spring_torques_cy(self):
+        """Spring torques"""
+        return self.array[:, :, 10]
+
+    cdef inline CTYPE damping_cy(self, unsigned int iteration, unsigned int joint_i):
+        """passive damping torque"""
+        return self.array[iteration, joint_i, 11]
+
+    cdef inline CTYPEv2 damping_torques_cy(self):
+        """Damping torques"""
+        return self.array[:, :, 11]
 
 
 cdef class GpsArrayCy(NetworkArray3D):
     """Gps array"""
 
-    cpdef public CTYPEv1 com_position(self, unsigned int iteration, unsigned int link_i)
-    cpdef public CTYPEv1 com_orientation(self, unsigned int iteration, unsigned int link_i)
-    cpdef public CTYPEv1 urdf_position(self, unsigned int iteration, unsigned int link_i)
-    cpdef public CTYPEv3 urdf_positions(self)
-    cpdef public CTYPEv1 urdf_orientation(self, unsigned int iteration, unsigned int link_i)
-    cpdef public CTYPEv1 com_lin_velocity(self, unsigned int iteration, unsigned int link_i)
-    cpdef public CTYPEv3 com_lin_velocities(self)
-    cpdef public CTYPEv1 com_ang_velocity(self, unsigned int iteration, unsigned int link_i)
+    cdef inline CTYPEv1 com_position_cy(self, unsigned int iteration, unsigned int link_i):
+        """CoM position of a link"""
+        return self.array[iteration, link_i, 0:3]
+
+    cdef inline CTYPEv1 com_orientation_cy(self, unsigned int iteration, unsigned int link_i):
+        """CoM orientation of a link"""
+        return self.array[iteration, link_i, 3:7]
+
+    cdef inline CTYPEv1 urdf_position_cy(self, unsigned int iteration, unsigned int link_i):
+        """URDF position of a link"""
+        return self.array[iteration, link_i, 7:10]
+
+    cdef inline CTYPEv3 urdf_positions_cy(self):
+        """URDF position of a link"""
+        return self.array[:, :, 7:10]
+
+    cdef inline CTYPEv1 urdf_orientation_cy(self, unsigned int iteration, unsigned int link_i):
+        """URDF orientation of a link"""
+        return self.array[iteration, link_i, 10:14]
+
+    cdef inline CTYPEv1 com_lin_velocity_cy(self, unsigned int iteration, unsigned int link_i):
+        """CoM linear velocity of a link"""
+        return self.array[iteration, link_i, 14:17]
+
+    cdef inline CTYPEv3 com_lin_velocities_cy(self):
+        """CoM linear velocities"""
+        return self.array[:, :, 14:17]
+
+    cdef inline CTYPEv1 com_ang_velocity_cy(self, unsigned int iteration, unsigned int link_i):
+        """CoM angular velocity of a link"""
+        return self.array[iteration, link_i, 17:20]
 
 
 cdef class HydrodynamicsArrayCy(NetworkArray3D):
     """Hydrodynamics array"""
-
-    cpdef public CTYPEv3 forces(self)
-    cpdef public CTYPEv3 torques(self)
 
     cdef inline CTYPE c_force_x(self, unsigned iteration, unsigned int index) nogil:
         """Force x"""
