@@ -114,7 +114,7 @@ class AmphibiousSimulation(Simulation):
                 pitch=simulation_options.video_pitch,
                 yaw=simulation_options.video_yaw,
                 # skips=skips,
-                motion_filter=2*skips*simulation_options.timestep,
+                motion_filter=10*skips*simulation_options.timestep,
                 # distance=1,
                 rotating_camera=self.options.rotating_camera,
                 # top_camera=self.options.top_camera
