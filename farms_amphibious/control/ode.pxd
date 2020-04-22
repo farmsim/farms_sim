@@ -1,6 +1,10 @@
 """Cython controller code"""
 
 include '../data/types.pxd'
+from farms_bullet.data.data_cy cimport (
+    ContactsArrayCy,
+    HydrodynamicsArrayCy,
+)
 from ..data.animat_data_cy cimport (
     AnimatDataCy,
     NetworkParametersCy,
@@ -9,8 +13,6 @@ from ..data.animat_data_cy cimport (
     OscillatorConnectivityCy,
     ContactConnectivityCy,
     HydroConnectivityCy,
-    ContactsArrayCy,
-    HydrodynamicsArrayCy,
     JointsArrayCy,
 )
 
