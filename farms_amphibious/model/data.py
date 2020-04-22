@@ -1,8 +1,12 @@
 """Animat data"""
 
-import numpy as np
-from scipy import interpolate
-
+from farms_bullet.data.data import (
+    SensorsData,
+    ContactsArray,
+    ProprioceptionArray,
+    GpsArray,
+    HydrodynamicsArray,
+)
 from ..data.animat_data import (
     OscillatorNetworkState,
     AnimatData,
@@ -13,11 +17,6 @@ from ..data.animat_data import (
     ContactConnectivity,
     HydroConnectivity,
     JointsArray,
-    SensorsData,
-    ContactsArray,
-    ProprioceptionArray,
-    GpsArray,
-    HydrodynamicsArray
 )
 
 

@@ -1,6 +1,10 @@
 """Cython controller code"""
 
 include '../data/types.pxd'
+from farms_bullet.data.data_cy cimport (
+    ContactsArrayCy,
+    HydrodynamicsArrayCy,
+)
 from ..data.animat_data_cy cimport (
     AnimatDataCy,
     NetworkParametersCy,
@@ -9,16 +13,14 @@ from ..data.animat_data_cy cimport (
     OscillatorConnectivityCy,
     ContactConnectivityCy,
     HydroConnectivityCy,
-    ContactsArrayCy,
-    HydrodynamicsArrayCy,
     JointsArrayCy,
 )
 
 
 cpdef void ode_dphase(
     unsigned int iteration,
-    CTYPEv1 state,
-    CTYPEv1 dstate,
+    DTYPEv1 state,
+    DTYPEv1 dstate,
     DriveArrayCy drives,
     OscillatorsCy oscillators,
     OscillatorConnectivityCy connectivity,
@@ -27,8 +29,8 @@ cpdef void ode_dphase(
 
 cpdef void ode_damplitude(
     unsigned int iteration,
-    CTYPEv1 state,
-    CTYPEv1 dstate,
+    DTYPEv1 state,
+    DTYPEv1 dstate,
     DriveArrayCy drives,
     OscillatorsCy oscillators,
 ) nogil
@@ -36,8 +38,8 @@ cpdef void ode_damplitude(
 
 cpdef void ode_contacts(
     unsigned int iteration,
-    CTYPEv1 state,
-    CTYPEv1 dstate,
+    DTYPEv1 state,
+    DTYPEv1 dstate,
     ContactsArrayCy contacts,
     ContactConnectivityCy contacts_connectivity,
 ) nogil
@@ -45,8 +47,8 @@ cpdef void ode_contacts(
 
 cpdef void ode_contacts_tegotae(
     unsigned int iteration,
-    CTYPEv1 state,
-    CTYPEv1 dstate,
+    DTYPEv1 state,
+    DTYPEv1 dstate,
     ContactsArrayCy contacts,
     ContactConnectivityCy contacts_connectivity,
 ) nogil
@@ -54,8 +56,8 @@ cpdef void ode_contacts_tegotae(
 
 cpdef void ode_hydro(
     unsigned int iteration,
-    CTYPEv1 state,
-    CTYPEv1 dstate,
+    DTYPEv1 state,
+    DTYPEv1 dstate,
     HydrodynamicsArrayCy hydrodynamics,
     HydroConnectivityCy hydro_connectivity,
     unsigned int n_oscillators,
@@ -64,36 +66,36 @@ cpdef void ode_hydro(
 
 cpdef void ode_joints(
     unsigned int iteration,
-    CTYPEv1 state,
-    CTYPEv1 dstate,
+    DTYPEv1 state,
+    DTYPEv1 dstate,
     DriveArrayCy drives,
     JointsArrayCy joints,
     unsigned int n_oscillators,
 ) nogil
 
 
-cpdef CTYPEv1 ode_oscillators_sparse(
-    CTYPE time,
-    CTYPEv1 state,
-    CTYPEv1 dstate,
+cpdef DTYPEv1 ode_oscillators_sparse(
+    DTYPE time,
+    DTYPEv1 state,
+    DTYPEv1 dstate,
     unsigned int iteration,
     AnimatDataCy data,
 ) nogil
 
 
-cpdef CTYPEv1 ode_oscillators_sparse_no_sensors(
-    CTYPE time,
-    CTYPEv1 state,
-    CTYPEv1 dstate,
+cpdef DTYPEv1 ode_oscillators_sparse_no_sensors(
+    DTYPE time,
+    DTYPEv1 state,
+    DTYPEv1 dstate,
     unsigned int iteration,
     AnimatDataCy data,
 ) nogil
 
 
-cpdef CTYPEv1 ode_oscillators_sparse_tegotae(
-    CTYPE time,
-    CTYPEv1 state,
-    CTYPEv1 dstate,
+cpdef DTYPEv1 ode_oscillators_sparse_tegotae(
+    DTYPE time,
+    DTYPEv1 state,
+    DTYPEv1 dstate,
     unsigned int iteration,
     AnimatDataCy data,
 ) nogil

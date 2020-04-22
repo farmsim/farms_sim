@@ -5,7 +5,7 @@ import numpy as np
 cimport numpy as np
 
 
-cdef class NetworkArray(object):
+cdef class DoubleArray(object):
     """Network array"""
 
     cpdef unsigned int size(self, unsigned int index):
@@ -41,31 +41,31 @@ cdef class NetworkArray(object):
             raise Exception(msg.format(self.array.ndim, extension))
 
 
-cdef class NetworkArray1D(NetworkArray):
+cdef class DoubleArray1D(DoubleArray):
     """Network array"""
 
     def __init__(self, array):
-        super(NetworkArray1D, self).__init__()
+        super(DoubleArray1D, self).__init__()
         self.array = array
 
 
-cdef class NetworkArray2D(NetworkArray):
+cdef class DoubleArray2D(DoubleArray):
     """Network array"""
 
     def __init__(self, array):
-        super(NetworkArray2D, self).__init__()
+        super(DoubleArray2D, self).__init__()
         self.array = array
 
 
-cdef class NetworkArray3D(NetworkArray):
+cdef class DoubleArray3D(DoubleArray):
     """Network array"""
 
     def __init__(self, array):
-        super(NetworkArray3D, self).__init__()
+        super(DoubleArray3D, self).__init__()
         self.array = array
 
 
-cdef class IntegerArray2D(NetworkArray):
+cdef class IntegerArray2D(DoubleArray):
     """Network array"""
 
     def __init__(self, array):

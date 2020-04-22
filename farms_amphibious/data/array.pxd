@@ -3,26 +3,26 @@
 include 'types.pxd'
 
 
-cdef class NetworkArray:
+cdef class DoubleArray:
     """Network array"""
     cpdef public unsigned int size(self, unsigned int index)
 
 
-cdef class NetworkArray1D(NetworkArray):
+cdef class DoubleArray1D(DoubleArray):
     """Network array"""
-    cdef readonly CTYPEv1 array
+    cdef readonly DTYPEv1 array
 
 
-cdef class NetworkArray2D(NetworkArray):
+cdef class DoubleArray2D(DoubleArray):
     """Network array"""
-    cdef readonly CTYPEv2 array
+    cdef readonly DTYPEv2 array
 
 
-cdef class NetworkArray3D(NetworkArray):
+cdef class DoubleArray3D(DoubleArray):
     """Network array"""
-    cdef readonly CTYPEv3 array
+    cdef readonly DTYPEv3 array
 
 
-cdef class IntegerArray2D(NetworkArray):
+cdef class IntegerArray2D(DoubleArray):
     """Network array"""
-    cdef readonly INDEXv2 array
+    cdef readonly UITYPEv2 array

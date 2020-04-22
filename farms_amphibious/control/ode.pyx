@@ -12,16 +12,16 @@ from libc.math cimport sin, fabs  # cos,
 # from libc.stdio cimport printf
 
 
-cdef inline CTYPE phase(
-    CTYPEv1 state,
+cdef inline DTYPE phase(
+    DTYPEv1 state,
     unsigned int index
 ) nogil:
     """Phase"""
     return state[index]
 
 
-cdef inline CTYPE amplitude(
-    CTYPEv1 state,
+cdef inline DTYPE amplitude(
+    DTYPEv1 state,
     unsigned int index,
     unsigned int n_oscillators,
 ) nogil:
@@ -29,8 +29,8 @@ cdef inline CTYPE amplitude(
     return state[index+n_oscillators]
 
 
-cdef inline CTYPE joint_offset(
-    CTYPEv1 state,
+cdef inline DTYPE joint_offset(
+    DTYPEv1 state,
     unsigned int index,
     unsigned int n_oscillators,
 ) nogil:
@@ -38,15 +38,15 @@ cdef inline CTYPE joint_offset(
     return state[index+2*n_oscillators]
 
 
-cdef inline CTYPE saturation(CTYPE value, CTYPE multiplier) nogil:
+cdef inline DTYPE saturation(DTYPE value, DTYPE multiplier) nogil:
     """Saturation from 0 to 1"""
     return multiplier*value/(1+multiplier*value)
 
 
 cpdef inline void ode_dphase(
     unsigned int iteration,
-    CTYPEv1 state,
-    CTYPEv1 dstate,
+    DTYPEv1 state,
+    DTYPEv1 dstate,
     DriveArrayCy drives,
     OscillatorsCy oscillators,
     OscillatorConnectivityCy connectivity,
@@ -71,8 +71,8 @@ cpdef inline void ode_dphase(
 
 cpdef inline void ode_damplitude(
     unsigned int iteration,
-    CTYPEv1 state,
-    CTYPEv1 dstate,
+    DTYPEv1 state,
+    DTYPEv1 dstate,
     DriveArrayCy drives,
     OscillatorsCy oscillators,
 ) nogil:
@@ -92,8 +92,8 @@ cpdef inline void ode_damplitude(
 
 cpdef inline void ode_contacts(
     unsigned int iteration,
-    CTYPEv1 state,
-    CTYPEv1 dstate,
+    DTYPEv1 state,
+    DTYPEv1 dstate,
     ContactsArrayCy contacts,
     ContactConnectivityCy contacts_connectivity,
 ) nogil:
@@ -102,21 +102,21 @@ cpdef inline void ode_contacts(
     Can affect d_phase and d_amplitude
 
     """
-    cdef CTYPE contact_force
+    cdef DTYPE contact_reaction
     cdef unsigned int i, i0, i1
     for i in range(contacts_connectivity.c_n_connections()):
         i0 = contacts_connectivity.connections.array[i, 0]
         i1 = contacts_connectivity.connections.array[i, 1]
-        # contact_weight*contact_force
-        # contact_force = (
+        # contact_weight*contact_reaction
+        # contact_reaction = (
         #     contacts.array[iteration, i1, 0]**2
         #     + contacts.array[iteration, i1, 1]**2
         #     + contacts.array[iteration, i1, 2]**2
         # )**0.5
-        contact_force = fabs(contacts.c_force_z(iteration, i1))
+        contact_reaction = fabs(contacts.c_reaction_z(iteration, i1))
         dstate[i0] += (
             contacts_connectivity.c_weight(i)
-            *saturation(contact_force, 10)  # Saturation
+            *saturation(contact_reaction, 10)  # Saturation
             # *cos(state[i0])
             # *sin(state[i0])  # For Tegotae
         )
@@ -124,8 +124,8 @@ cpdef inline void ode_contacts(
 
 cpdef inline void ode_contacts_tegotae(
     unsigned int iteration,
-    CTYPEv1 state,
-    CTYPEv1 dstate,
+    DTYPEv1 state,
+    DTYPEv1 dstate,
     ContactsArrayCy contacts,
     ContactConnectivityCy contacts_connectivity,
 ) nogil:
@@ -134,29 +134,29 @@ cpdef inline void ode_contacts_tegotae(
     Can affect d_phase and d_amplitude
 
     """
-    cdef CTYPE contact_force
+    cdef DTYPE contact_reaction
     cdef unsigned int i, i0, i1
     for i in range(contacts_connectivity.c_n_connections()):
         i0 = contacts_connectivity.connections.array[i, 0]
         i1 = contacts_connectivity.connections.array[i, 1]
-        # contact_weight*contact_force
-        # contact_force = (
+        # contact_weight*contact_reaction
+        # contact_reaction = (
         #     contacts.array[iteration, i1, 0]**2
         #     + contacts.array[iteration, i1, 1]**2
         #     + contacts.array[iteration, i1, 2]**2
         # )**0.5
-        contact_force = fabs(contacts.c_force_z(iteration, i1))
+        contact_reaction = fabs(contacts.c_reaction_z(iteration, i1))
         dstate[i0] += (
             contacts_connectivity.c_weight(i)
-            *saturation(contact_force, 10)  # Saturation
+            *saturation(contact_reaction, 10)  # Saturation
             *sin(state[i0])  # For Tegotae
         )
 
 
 cpdef inline void ode_hydro(
     unsigned int iteration,
-    CTYPEv1 state,
-    CTYPEv1 dstate,
+    DTYPEv1 state,
+    DTYPEv1 dstate,
     HydrodynamicsArrayCy hydrodynamics,
     HydroConnectivityCy hydro_connectivity,
     unsigned int n_oscillators,
@@ -166,7 +166,7 @@ cpdef inline void ode_hydro(
     Can affect d_phase and d_amplitude
 
     """
-    cdef CTYPE hydro_force
+    cdef DTYPE hydro_force
     cdef unsigned int i, i0, i1
     for i in range(hydro_connectivity.c_n_connections()):
         i0 = hydro_connectivity.connections.array[i, 0]
@@ -184,8 +184,8 @@ cpdef inline void ode_hydro(
 
 cpdef inline void ode_joints(
     unsigned int iteration,
-    CTYPEv1 state,
-    CTYPEv1 dstate,
+    DTYPEv1 state,
+    DTYPEv1 dstate,
     DriveArrayCy drives,
     JointsArrayCy joints,
     unsigned int n_oscillators,
@@ -210,10 +210,10 @@ cpdef inline void ode_joints(
 ## ODEs
 
 
-cpdef inline CTYPEv1 ode_oscillators_sparse(
-    CTYPE time,
-    CTYPEv1 state,
-    CTYPEv1 dstate,
+cpdef inline DTYPEv1 ode_oscillators_sparse(
+    DTYPE time,
+    DTYPEv1 state,
+    DTYPEv1 dstate,
     unsigned int iteration,
     AnimatDataCy data,
 ) nogil:
@@ -260,10 +260,10 @@ cpdef inline CTYPEv1 ode_oscillators_sparse(
     return dstate
 
 
-cpdef inline CTYPEv1 ode_oscillators_sparse_no_sensors(
-    CTYPE time,
-    CTYPEv1 state,
-    CTYPEv1 dstate,
+cpdef inline DTYPEv1 ode_oscillators_sparse_no_sensors(
+    DTYPE time,
+    DTYPEv1 state,
+    DTYPEv1 dstate,
     unsigned int iteration,
     AnimatDataCy data,
 ) nogil:
@@ -295,10 +295,10 @@ cpdef inline CTYPEv1 ode_oscillators_sparse_no_sensors(
     return dstate
 
 
-cpdef inline CTYPEv1 ode_oscillators_sparse_tegotae(
-    CTYPE time,
-    CTYPEv1 state,
-    CTYPEv1 dstate,
+cpdef inline DTYPEv1 ode_oscillators_sparse_tegotae(
+    DTYPE time,
+    DTYPEv1 state,
+    DTYPEv1 dstate,
     unsigned int iteration,
     AnimatDataCy data,
 ) nogil:
