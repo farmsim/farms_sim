@@ -117,10 +117,10 @@ cdef class ConnectivityCy:
 
     cdef readonly IntegerArray2D connections
 
-    cpdef INDEX input(self, unsigned int connection_i)
-    cpdef INDEX output(self, unsigned int connection_i)
+    cpdef UITYPE input(self, unsigned int connection_i)
+    cpdef UITYPE output(self, unsigned int connection_i)
 
-    cdef inline INDEX c_n_connections(self) nogil:
+    cdef inline UITYPE c_n_connections(self) nogil:
         """Number of connections"""
         return self.connections.array.shape[0]
 

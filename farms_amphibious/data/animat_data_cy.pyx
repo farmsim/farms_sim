@@ -46,11 +46,11 @@ cdef class ConnectivityCy:
         else:
             self.connections = IntegerArray2D(None)
 
-    cpdef INDEX input(self, unsigned int connection_i):
+    cpdef UITYPE input(self, unsigned int connection_i):
         """Node input"""
         self.array[connection_i, 0]
 
-    cpdef INDEX output(self, unsigned int connection_i):
+    cpdef UITYPE output(self, unsigned int connection_i):
         """Node input"""
         self.array[connection_i, 1]
 

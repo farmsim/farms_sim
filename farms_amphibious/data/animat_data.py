@@ -25,7 +25,7 @@ from .animat_data_cy import (
 
 
 NPDTYPE = np.float64
-NPITYPE = np.uintc
+NPUITYPE = np.uintc
 
 
 def to_array(array, iteration=None):
@@ -304,7 +304,7 @@ class OscillatorConnectivity(OscillatorConnectivityCy):
             for connection in connectivity
         ]
         return cls(
-            connections=np.array(connections, dtype=NPITYPE),
+            connections=np.array(connections, dtype=NPUITYPE),
             weights=np.array(weights, dtype=NPDTYPE),
             desired_phases=np.array(phase_bias, dtype=NPDTYPE),
         )
@@ -340,7 +340,7 @@ class ContactConnectivity(ContactConnectivityCy):
             for connection in connectivity
         ]
         return cls(
-            np.array(connections, dtype=NPITYPE),
+            np.array(connections, dtype=NPUITYPE),
             np.array(weights, dtype=NPDTYPE),
         )
 
@@ -382,7 +382,7 @@ class HydroConnectivity(HydroConnectivityCy):
             for connection in connectivity
         ]
         return cls(
-            connections=np.array(connections, dtype=NPITYPE),
+            connections=np.array(connections, dtype=NPUITYPE),
             frequency=np.array(weights_frequency, dtype=NPDTYPE),
             amplitude=np.array(weights_amplitude, dtype=NPDTYPE),
         )

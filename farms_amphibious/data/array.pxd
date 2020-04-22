@@ -25,4 +25,4 @@ cdef class DoubleArray3D(DoubleArray):
 
 cdef class IntegerArray2D(DoubleArray):
     """Network array"""
-    cdef readonly INDEXv2 array
+    cdef readonly UITYPEv2 array
