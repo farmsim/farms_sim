@@ -54,7 +54,7 @@ def animat_options():
 def run_simulation(network, n_iterations, timestep):
     """Run simulation"""
     for iteration in range(n_iterations-1):
-        network.control_step(iteration, iteration*timestep, timestep)
+        network.step(iteration, iteration*timestep, timestep)
 
 
 def simulation(times, morphology, control):

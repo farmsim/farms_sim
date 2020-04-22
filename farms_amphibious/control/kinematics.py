@@ -61,7 +61,7 @@ class AmphibiousKinematics(ModelController):
         self.animat_data = animat_data
         self._timestep = timestep
 
-    def control_step(self, iteration, time, timestep):
+    def step(self, iteration, time, timestep):
         """Control step"""
         self.animat_data.iteration = iteration
 

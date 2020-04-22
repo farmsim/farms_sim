@@ -1,8 +1,5 @@
 """Animat data"""
 
-import numpy as np
-from scipy import interpolate
-
 from ..data.animat_data import (
     OscillatorNetworkState,
     AnimatData,

@@ -54,9 +54,9 @@ class AmphibiousController(ModelController):
             for joint in joints
         ])
 
-    def control_step(self, iteration, time, timestep):
+    def step(self, iteration, time, timestep):
         """Control step"""
-        self.network.control_step(iteration, time, timestep)
+        self.network.step(iteration, time, timestep)
 
     def positions(self, iteration):
         """Postions"""

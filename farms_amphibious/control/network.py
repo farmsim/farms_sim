@@ -25,7 +25,7 @@ class NetworkODE:
         self.solver.set_initial_value(y=initial_state, t=0.0)
         self.dstate = np.zeros_like(initial_state)
 
-    def control_step(self, iteration, time, timestep, checks=False):
+    def step(self, iteration, time, timestep, checks=False):
         """Control step"""
         if checks:
             assert np.array_equal(

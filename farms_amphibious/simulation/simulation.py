@@ -177,7 +177,7 @@ class AmphibiousSimulation(Simulation):
 
             # Update animat controller
             if self.animat().controller is not None:
-                self.animat().controller.control_step(
+                self.animat().controller.step(
                     iteration=iteration,
                     time=iteration*self.options.timestep,
                     timestep=self.options.timestep,
