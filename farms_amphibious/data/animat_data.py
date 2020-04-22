@@ -3,7 +3,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import deepdish as dd
-from .array import NetworkArray1D
+from .array import DoubleArray1D
 from .animat_data_cy import (
     AnimatDataCy,
     NetworkParametersCy,
@@ -228,7 +228,7 @@ class Oscillators(OscillatorsCy):
         super(Oscillators, self).__init__()
         self.intrinsic_frequencies = DriveDependentArray(intrinsic_frequencies)
         self.nominal_amplitudes = DriveDependentArray(nominal_amplitudes)
-        self.rates = NetworkArray1D(rates)
+        self.rates = DoubleArray1D(rates)
 
     @classmethod
     def from_dict(cls, dictionary):

@@ -14,7 +14,7 @@ cdef class NetworkParametersCy:
     pass
 
 
-cdef class DriveDependentArrayCy(NetworkArray2D):
+cdef class DriveDependentArrayCy(DoubleArray2D):
     """Drive dependent array"""
 
     cdef DTYPE value(self, unsigned int index, DTYPE drive):
@@ -74,11 +74,11 @@ cdef class OscillatorConnectivityCy(ConnectivityCy):
                     len(desired_phases),
                 )
             )
-            self.weights = NetworkArray1D(weights)
-            self.desired_phases = NetworkArray1D(desired_phases)
+            self.weights = DoubleArray1D(weights)
+            self.desired_phases = DoubleArray1D(desired_phases)
         else:
-            self.weights = NetworkArray1D(None)
-            self.desired_phases = NetworkArray1D(None)
+            self.weights = DoubleArray1D(None)
+            self.desired_phases = DoubleArray1D(None)
 
 
 cdef class ContactConnectivityCy(ConnectivityCy):
@@ -94,9 +94,9 @@ cdef class ContactConnectivityCy(ConnectivityCy):
                     len(weights),
                 )
             )
-            self.weights = NetworkArray1D(weights)
+            self.weights = DoubleArray1D(weights)
         else:
-            self.weights = NetworkArray1D(None)
+            self.weights = DoubleArray1D(None)
 
 
 cdef class HydroConnectivityCy(ConnectivityCy):
@@ -118,11 +118,11 @@ cdef class HydroConnectivityCy(ConnectivityCy):
                     len(amplitude),
                 )
             )
-            self.frequency = NetworkArray1D(frequency)
-            self.amplitude = NetworkArray1D(amplitude)
+            self.frequency = DoubleArray1D(frequency)
+            self.amplitude = DoubleArray1D(amplitude)
         else:
-            self.frequency = NetworkArray1D(None)
-            self.amplitude = NetworkArray1D(None)
+            self.frequency = DoubleArray1D(None)
+            self.amplitude = DoubleArray1D(None)
 
 
 cdef class SensorsDataCy:

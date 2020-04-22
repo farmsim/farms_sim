@@ -2,9 +2,9 @@
 
 include 'types.pxd'
 from .array cimport (
-    NetworkArray1D,
-    NetworkArray2D,
-    NetworkArray3D,
+    DoubleArray1D,
+    DoubleArray2D,
+    DoubleArray3D,
     IntegerArray2D,
 )
 
@@ -26,12 +26,12 @@ cdef class NetworkParametersCy:
     cdef public HydroConnectivityCy hydro_connectivity
 
 
-cdef class OscillatorNetworkStateCy(NetworkArray2D):
+cdef class OscillatorNetworkStateCy(DoubleArray2D):
     """Network state"""
     cdef public unsigned int n_oscillators
 
 
-cdef class DriveArrayCy(NetworkArray2D):
+cdef class DriveArrayCy(DoubleArray2D):
     """Drive array"""
 
     cdef inline DTYPE c_speed(self, unsigned int iteration) nogil:
@@ -43,7 +43,7 @@ cdef class DriveArrayCy(NetworkArray2D):
         return self.array[iteration, 1]
 
 
-cdef class DriveDependentArrayCy(NetworkArray2D):
+cdef class DriveDependentArrayCy(DoubleArray2D):
     """Drive dependent array"""
 
     cdef public DTYPE value(self, unsigned int index, DTYPE drive)
@@ -93,7 +93,7 @@ cdef class OscillatorsCy:
     """Oscillator array"""
     cdef public DriveDependentArrayCy intrinsic_frequencies
     cdef public DriveDependentArrayCy nominal_amplitudes
-    cdef public NetworkArray1D rates
+    cdef public DoubleArray1D rates
 
     cdef inline unsigned int c_n_oscillators(self) nogil:
         """Number of oscillators"""
@@ -128,8 +128,8 @@ cdef class ConnectivityCy:
 cdef class OscillatorConnectivityCy(ConnectivityCy):
     """oscillator connectivity array"""
 
-    cdef readonly NetworkArray1D weights
-    cdef readonly NetworkArray1D desired_phases
+    cdef readonly DoubleArray1D weights
+    cdef readonly DoubleArray1D desired_phases
 
     cdef inline DTYPE c_weight(self, unsigned int iteration) nogil:
         """Weight"""
@@ -143,7 +143,7 @@ cdef class OscillatorConnectivityCy(ConnectivityCy):
 cdef class ContactConnectivityCy(ConnectivityCy):
     """Contact connectivity array"""
 
-    cdef readonly NetworkArray1D weights
+    cdef readonly DoubleArray1D weights
 
     cdef inline DTYPE c_weight(self, unsigned int iteration) nogil:
         """Weight"""
@@ -153,8 +153,8 @@ cdef class ContactConnectivityCy(ConnectivityCy):
 cdef class HydroConnectivityCy(ConnectivityCy):
     """Hydrodynamics connectivity array"""
 
-    cdef readonly NetworkArray1D amplitude
-    cdef readonly NetworkArray1D frequency
+    cdef readonly DoubleArray1D amplitude
+    cdef readonly DoubleArray1D frequency
 
     cdef inline DTYPE c_weight_frequency(self, unsigned int iteration) nogil:
         """Weight for hydrodynamics frequency"""
@@ -189,7 +189,7 @@ cdef class SensorsDataCy:
     cdef public HydrodynamicsArrayCy hydrodynamics
 
 
-cdef class ContactsArrayCy(NetworkArray3D):
+cdef class ContactsArrayCy(DoubleArray3D):
     """Sensor array"""
 
     cdef inline DTYPEv1 c_all(self, unsigned iteration, unsigned int index) nogil:
@@ -245,7 +245,7 @@ cdef class ContactsArrayCy(NetworkArray3D):
         return self.array[iteration, index, 8]
 
 
-cdef class ProprioceptionArrayCy(NetworkArray3D):
+cdef class ProprioceptionArrayCy(DoubleArray3D):
     """Proprioception array"""
 
     cdef inline DTYPE position_cy(self, unsigned int iteration, unsigned int joint_i):
@@ -321,7 +321,7 @@ cdef class ProprioceptionArrayCy(NetworkArray3D):
         return self.array[:, :, 11]
 
 
-cdef class GpsArrayCy(NetworkArray3D):
+cdef class GpsArrayCy(DoubleArray3D):
     """Gps array"""
 
     cdef inline DTYPEv1 com_position_cy(self, unsigned int iteration, unsigned int link_i):
@@ -357,7 +357,7 @@ cdef class GpsArrayCy(NetworkArray3D):
         return self.array[iteration, link_i, 17:20]
 
 
-cdef class HydrodynamicsArrayCy(NetworkArray3D):
+cdef class HydrodynamicsArrayCy(DoubleArray3D):
     """Hydrodynamics array"""
 
     cdef inline DTYPE c_force_x(self, unsigned iteration, unsigned int index) nogil:
