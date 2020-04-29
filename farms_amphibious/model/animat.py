@@ -223,14 +223,14 @@ class Amphibious(Animat):
         # Friction
         self.set_links_dynamics(
             self._links.keys(),
-            lateralFriction=0.5,
+            lateralFriction=1,
             spinningFriction=small,
             rollingFriction=small,
         )
         if self.options.morphology.feet is not None:
             self.set_links_dynamics(
                 self.options.morphology.feet,
-                lateralFriction=0.9,
+                lateralFriction=1,
                 spinningFriction=small,
                 rollingFriction=small,
                 # contactStiffness=1e3,

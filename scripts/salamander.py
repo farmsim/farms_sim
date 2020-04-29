@@ -3,6 +3,7 @@
 
 import os
 import time
+import numpy as np
 import matplotlib.pyplot as plt
 
 import farms_pylog as pylog
@@ -45,6 +46,10 @@ def main():
         weight_sens_hydro_amp=-1e-1,
         body_stand_amplitude=0.2,
     )
+    state_init = animat_options.control.network.state_init
+    for phase_i, phase in enumerate(np.linspace(2*np.pi, 0, 11)):
+        state_init[2*phase_i] = float(phase)
+        state_init[2*phase_i+1] = float(phase)+np.pi
 
     (
         simulation_options,

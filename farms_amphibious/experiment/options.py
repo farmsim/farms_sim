@@ -10,22 +10,22 @@ from ..model.options import AmphibiousOptions
 
 def get_animat_options(swimming=False, **kwargs):
     """Get animat options - Should load a config file in the future"""
-    scale = 1
-    animat_options = AmphibiousOptions.from_options(kwargs)
-
-    if swimming:
-        # Swiming
-        animat_options.spawn.position = [-10, 0, 0]
-        animat_options.spawn.orientation = [0, 0, np.pi]
-    else:
-        # Walking
-        animat_options.spawn.position = [0, 0, scale*0.1]
-        animat_options.spawn.orientation = [0, 0, 0]
-        animat_options.physics.viscous = True
-        animat_options.physics.buoyancy = True
-        animat_options.physics.water_surface = True
-
-    return animat_options
+    options = dict(
+        spawn_position=[-10, 0, 0],
+        spawn_orientation=[0, 0, 0],
+        viscous=True,
+        buoyancy=True,
+        water_surface=True,
+        drives_init=[4, 0],
+    ) if swimming else dict(
+        spawn_position=[0, 0, 0.1],
+        spawn_orientation=[0, 0, 0],
+        viscous=True,
+        buoyancy=True,
+        water_surface=True,
+    )
+    options.update(kwargs)
+    return AmphibiousOptions.from_options(options)
 
 
 def get_simulation_options(**kwargs):
@@ -104,7 +104,7 @@ def get_water_arena(water_surface):
     ])
 
 
-def amphibious_options(animat_options, use_water_arena=True):
+def amphibious_options(animat_options, use_water_arena=True, **kwargs):
     """Amphibious simulation"""
 
     # Arena
@@ -116,7 +116,7 @@ def amphibious_options(animat_options, use_water_arena=True):
         set_no_swimming_options(animat_options)
 
     # Simulation
-    simulation_options = get_simulation_options()
+    simulation_options = get_simulation_options(**kwargs)
 
     return (simulation_options, arena)
 
@@ -234,8 +234,8 @@ def get_pleurobot_options(**kwargs):
         # legs_offsets_walking=[0, np.pi/32, 0, np.pi/8],
         # legs_offsets_swimming=[-2*np.pi/5, 0, 0, 0],
         # body_stand_shift=kwargs.pop('body_stand_shift', np.pi/4),
-        legs_amplitude=kwargs.pop(
-            'legs_amplitude',
+        legs_amplitudes=kwargs.pop(
+            'legs_amplitudes',
             [np.pi/8, np.pi/32, np.pi/8, np.pi/8],
         ),
         legs_offsets_walking=kwargs.pop(
