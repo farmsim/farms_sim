@@ -55,7 +55,6 @@ def set_no_swimming_options(animat_options):
     animat_options.physics.water_surface = None
     animat_options.physics.viscous = False
     animat_options.physics.sph = False
-    animat_options.physics.resistive = False
 
 
 def set_swimming_options(animat_options, water_surface):
@@ -337,9 +336,8 @@ def fish_options(animat, version, kinematics_file, sampling_timestep, **kwargs):
         n_legs=0,
         n_dof_legs=0,
         n_joints_body=n_joints,
-        viscous=kwargs.pop('viscous', False),
-        resistive=kwargs.pop('resistive', True),
-        resistive_coefficients=kwargs.pop('resistive_coefficients', [
+        viscous=kwargs.pop('viscous', True),
+        viscous_coefficients=kwargs.pop('viscous_coefficients', [
             np.array([-1e-5, -5e-2, -3e-2]),
             np.array([-1e-7, -1e-7, -1e-7]),
         ]),

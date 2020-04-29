@@ -12,7 +12,6 @@ from farms_bullet.sensors.sensors import (
 )
 from farms_bullet.plugins.swimming import (
     viscous_forces,
-    resistive_forces,
     swimming_motion,
     swimming_debug
 )
@@ -253,24 +252,7 @@ class Amphibious(Animat):
                 )
             ],
             masses=self.masses,
-            **kwargs
-        )
-
-    def resistive_swimming_forces(self, iteration, water_surface, **kwargs):
-        """Animat swimming physics"""
-        resistive_forces(
-            iteration,
-            self.data.sensors.gps,
-            self.data.sensors.hydrodynamics.array,
-            [
-                link_i
-                for link_i in range(self.options.morphology.n_links_body())
-                if (
-                    self.data.sensors.gps.com_position(iteration, link_i)[2]
-                    < water_surface
-                )
-            ],
-            masses=self.masses,
+            surface=water_surface,
             **kwargs
         )
 

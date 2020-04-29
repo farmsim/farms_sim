@@ -185,9 +185,7 @@ class AmphibiousPhysicsOptions(Options):
     def __init__(self, **kwargs):
         super(AmphibiousPhysicsOptions, self).__init__()
         self.viscous = kwargs.pop('viscous')
-        self.resistive = kwargs.pop('resistive')
         self.viscous_coefficients = kwargs.pop('viscous_coefficients')
-        self.resistive_coefficients = kwargs.pop('resistive_coefficients')
         self.sph = kwargs.pop('sph')
         self.buoyancy = kwargs.pop('buoyancy')
         self.water_surface = kwargs.pop('water_surface')
@@ -199,23 +197,18 @@ class AmphibiousPhysicsOptions(Options):
         """From options"""
         options = {}
         options['viscous'] = kwargs.pop('viscous', False)
-        options['resistive'] = kwargs.pop('resistive', False)
         options['viscous_coefficients'] = kwargs.pop(
             'viscous_coefficients',
-            None
-        )
-        options['resistive_coefficients'] = kwargs.pop(
-            'resistive_coefficients',
             None
         )
         options['sph'] = kwargs.pop('sph', False)
         options['buoyancy'] = kwargs.pop(
             'buoyancy',
-            (options['resistive'] or options['viscous']) and not options['sph']
+            options['viscous'] and not options['sph']
         )
         options['water_surface'] = kwargs.pop(
             'water_surface',
-            options['viscous'] or options['resistive'] or options['sph']
+            options['viscous'] or options['sph']
         )
         return cls(**options)
 
