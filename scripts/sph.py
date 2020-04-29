@@ -431,7 +431,7 @@ class RigidFluidCoupling(Application):
         animat_options.morphology.density = self.density_solid
         animat_options.spawn.position = [0, 0, self.tank_size[2]+0.05]
         animat_options.control.drives.forward = kwargs.pop('drive', 4)
-        animat_options.physics.viscous = False
+        animat_options.physics.drag = False
         animat_options.physics.sph = True
         animat_options.control.network.connectivity.weight_sens_hydro_freq = kwargs.pop('hydro_freq', -1)
         animat_options.control.network.connectivity.weight_sens_hydro_amp = kwargs.pop('hydro_amp', -1)

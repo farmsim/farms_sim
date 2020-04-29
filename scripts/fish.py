@@ -32,7 +32,7 @@ def main():
             fish_version,
             kinematics_file,
             sampling_timestep,
-            resistive_coefficients=[
+            drag_coefficients=[
                 [-1e-5, -5e-2, -3e-2],
                 [-1e-7, -1e-7, -1e-7],
             ]

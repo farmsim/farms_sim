@@ -11,7 +11,7 @@ from farms_bullet.sensors.sensors import (
     ContactsSensors
 )
 from farms_bullet.plugins.swimming import (
-    viscous_forces,
+    drag_forces,
     swimming_motion,
     swimming_debug
 )
@@ -237,9 +237,9 @@ class Amphibious(Animat):
                 # contactDamping=1e6
             )
 
-    def viscous_swimming_forces(self, iteration, water_surface, **kwargs):
+    def drag_swimming_forces(self, iteration, water_surface, **kwargs):
         """Animat swimming physics"""
-        viscous_forces(
+        drag_forces(
             iteration,
             self.data.sensors.gps,
             self.data.sensors.hydrodynamics.array,

@@ -16,17 +16,17 @@ from .interface import AmphibiousUserParameters
 def swimming_step(iteration, animat):
     """Swimming step"""
     physics_options = animat.options.physics
-    if physics_options.viscous or physics_options.sph:
+    if physics_options.drag or physics_options.sph:
         water_surface = (
             np.inf
             if physics_options.sph
             else physics_options.water_surface
         )
-        if physics_options.viscous:
-            animat.viscous_swimming_forces(
+        if physics_options.drag:
+            animat.drag_swimming_forces(
                 iteration,
                 water_surface=water_surface,
-                coefficients=physics_options.viscous_coefficients,
+                coefficients=physics_options.drag_coefficients,
                 buoyancy=physics_options.buoyancy,
             )
         animat.apply_swimming_forces(

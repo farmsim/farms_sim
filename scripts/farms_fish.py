@@ -20,9 +20,8 @@ def main():
         show_hydrodynamics=True,
         scale=scale,
         n_joints_body=20,
-        viscous=False,
-        resistive=True,
-        resistive_coefficients=[
+        drag=True,
+        drag_coefficients=[
             1e-1*np.array([-1e-4, -5e-1, -3e-1]),
             1e-1*np.array([-1e-6, -1e-6, -1e-6])
         ],

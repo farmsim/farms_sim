@@ -13,14 +13,14 @@ def get_animat_options(swimming=False, **kwargs):
     options = dict(
         spawn_position=[-10, 0, 0],
         spawn_orientation=[0, 0, 0],
-        viscous=True,
+        drag=True,
         buoyancy=True,
         water_surface=True,
         drives_init=[4, 0],
     ) if swimming else dict(
         spawn_position=[0, 0, 0.1],
         spawn_orientation=[0, 0, 0],
-        viscous=True,
+        drag=True,
         buoyancy=True,
         water_surface=True,
     )
@@ -53,7 +53,7 @@ def get_simulation_options(**kwargs):
 def set_no_swimming_options(animat_options):
     """Set walking options"""
     animat_options.physics.water_surface = None
-    animat_options.physics.viscous = False
+    animat_options.physics.drag = False
     animat_options.physics.sph = False
 
 
@@ -336,8 +336,8 @@ def fish_options(animat, version, kinematics_file, sampling_timestep, **kwargs):
         n_legs=0,
         n_dof_legs=0,
         n_joints_body=n_joints,
-        viscous=kwargs.pop('viscous', True),
-        viscous_coefficients=kwargs.pop('viscous_coefficients', [
+        drag=kwargs.pop('drag', True),
+        drag_coefficients=kwargs.pop('drag_coefficients', [
             np.array([-1e-5, -5e-2, -3e-2]),
             np.array([-1e-7, -1e-7, -1e-7]),
         ]),

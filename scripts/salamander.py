@@ -31,7 +31,7 @@ def main():
         n_legs=4,
         n_dof_legs=4,
         n_joints_body=11,
-        viscous_coefficients=[
+        drag_coefficients=[
             [-1e-1, -1e1, -1e1],
             [-1e-6, -1e-6, -1e-6],
         ],
