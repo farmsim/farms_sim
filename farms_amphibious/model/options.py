@@ -619,7 +619,7 @@ class AmphibiousNetworkOptions(Options):
             for side_i in range(2):
                 for i in range(n_body_joints):  # [0, 1, 7, 8, 9, 10]
                     for side_leg in range(2): # Muscle facing front/back
-                        for lateral in range(2):
+                        for lateral in range(1):
                             walk_phase = (
                                 # i*2*np.pi/(n_body_joints-1)+0.5*np.pi
                                 i*2*np.pi/(n_body_joints-1) + body_stand_shift
