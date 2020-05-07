@@ -54,7 +54,6 @@ def set_no_swimming_options(animat_options):
     """Set walking options"""
     animat_options.physics.water_surface = None
     animat_options.physics.drag = False
-    animat_options.physics.sph = False
 
 
 def set_swimming_options(animat_options, water_surface):
