@@ -281,7 +281,7 @@ def load_sdf(sdf_path, force_concave=False, reset_control=False, verbose=False):
     if verbose:
         pylog.debug('\n'.join(
             [
-                '0 (Base link): {} - index: {} - mass: {} [kg]'.format(
+                '0 (Base link): {} - index: {} - mass: {:.4f} [kg]'.format(
                     name,
                     link_i,
                     link_masses[link_i],
@@ -290,8 +290,8 @@ def load_sdf(sdf_path, force_concave=False, reset_control=False, verbose=False):
                 else (
                     '{: >3} {: <15}'
                     ' - parent: {: <15} ({: >2})'
-                    ' - mass: {: >7} [kg]'
-                    ' - joint: {: <20} - axis: {}'
+                    ' - mass: {:.4f} [kg]'
+                        ' - joint: {: <15} - axis: {}'
                 ).format(
                     '{}:'.format(link_i),
                     name,
@@ -303,7 +303,7 @@ def load_sdf(sdf_path, force_concave=False, reset_control=False, verbose=False):
                 )
                 for link_i, name in enumerate(links_names)
             ] + [
-                '\nTotal mass: {} [kg]'.format(sum(link_masses))
+                '\nTotal mass: {:.4f} [kg]'.format(sum(link_masses))
             ]
         ))
         pylog.debug('Spawning model')
@@ -342,7 +342,7 @@ def load_sdf(sdf_path, force_concave=False, reset_control=False, verbose=False):
         pylog.debug('Spawned model (Identity={})'.format(model))
         pylog.debug(
             '\n'.join([
-                '{: <15} mass: {: >7} [kg] - inertia: {} {} {}'.format(
+                '{: <15} mass: {:.4f} [kg] - inertia: {} {} {}'.format(
                     link_name+':',
                     *np.array(
                         pybullet.getDynamicsInfo(model, link_i-1)
@@ -363,7 +363,6 @@ def load_sdf(sdf_path, force_concave=False, reset_control=False, verbose=False):
         link_name = joint_info[12].decode('UTF-8')
         link_number = int(link_name.replace('link', ''))
         links[links_names[link_number]] = joint_i
-        print(joint_i, joint_name, link_name)
     return model, links, joints
 
 

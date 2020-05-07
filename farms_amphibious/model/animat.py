@@ -91,17 +91,11 @@ class Amphibious(Animat):
 
     def links_identities(self):
         """Links"""
-        return [
-            self._links[link]
-            for link in self.options.morphology.links
-        ]
+        return [self._links[link] for link in self.options.morphology.links]
 
     def joints_identities(self):
         """Joints"""
-        return [
-            self._joints[joint]
-            for joint in self.options.morphology.joints
-        ]
+        return [self._joints[joint] for joint in self.options.morphology.joints]
 
     def spawn(self):
         """Spawn amphibious"""
