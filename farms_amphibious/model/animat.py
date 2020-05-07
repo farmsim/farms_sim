@@ -131,7 +131,7 @@ class Amphibious(Animat):
         if verbose:
             pylog.debug(self.sdf)
         if original:
-            self._identity, self._links, self._joints = load_sdf_original(
+            self._identity, self._links, self._joints = load_sdf_pybullet(
                 sdf_path=self.sdf,
                 morphology_links=self.options.morphology.links,
             )

@@ -367,14 +367,14 @@ def load_sdf(sdf_path, force_concave=False, reset_control=False, verbose=False):
     return model, links, joints
 
 
-def load_sdf_original(sdf_path, morphology_links=None):
+def load_sdf_pybullet(sdf_path, index=0, morphology_links=None):
     """Original way of loading SDF - Deprecated"""
     links, joints = {}, {}
     identity = pybullet.loadSDF(
         sdf_path,
         useMaximalCoordinates=0,
         globalScaling=1,
-    )[0]
+    )[index]
     for joint_i in range(pybullet.getNumJoints(identity)):
         joint_info = pybullet.getJointInfo(identity, joint_i)
         links[joint_info[12].decode('UTF-8')] = joint_i
