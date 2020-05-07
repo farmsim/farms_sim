@@ -17,7 +17,7 @@ from farms_bullet.plugins.swimming import (
 )
 import farms_pylog as pylog
 from ..sensors.sensors import AmphibiousGPS
-from ..utils.sdf import load_sdf, load_sdf_original
+from ..utils.sdf import load_sdf, load_sdf_pybullet
 
 
 def links_ordering(text):
