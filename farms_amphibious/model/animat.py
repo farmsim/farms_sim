@@ -17,6 +17,7 @@ from farms_bullet.plugins.swimming import (
 )
 import farms_pylog as pylog
 from ..sensors.sensors import AmphibiousGPS
+from ..utils.sdf import load_sdf, load_sdf_original
 
 
 def links_ordering(text):
@@ -125,30 +126,23 @@ class Amphibious(Animat):
             for i in range(self.options.morphology.n_links_body())
         ]
 
-    def spawn_sdf(self, verbose=False):
+    def spawn_sdf(self, verbose=False, original=False):
         """Spawn sdf"""
         if verbose:
             pylog.debug(self.sdf)
-        self._identity = pybullet.loadSDF(
-            self.sdf,
-            useMaximalCoordinates=0,
-            globalScaling=1
-        )[0]
+        if original:
+            self._identity, self._links, self._joints = load_sdf_original(
+                sdf_path=self.sdf,
+                morphology_links=self.options.morphology.links,
+            )
+        else:
+            self._identity, self._links, self._joints = load_sdf(
+                sdf_path=self.sdf,
+                force_concave=False,
+                reset_control=False,
+                verbose=True,
+            )
         initial_pose(self._identity, self.options.spawn, self.units)
-        for joint_i in range(pybullet.getNumJoints(self.identity())):
-            joint_info = pybullet.getJointInfo(self.identity(), joint_i)
-            self._links[joint_info[12].decode('UTF-8')] = joint_i
-            self._joints[joint_info[1].decode('UTF-8')] = joint_i
-        if self.options.morphology.links is not None:
-            for link in self.options.morphology.links:
-                if link not in self._links:
-                    self._links[link] = -1
-                    break
-            for link in self.options.morphology.links:
-                assert link in self._links, 'Link {} not in {}'.format(
-                    link,
-                    self._links,
-                )
         if verbose:
             self.print_information()
 
