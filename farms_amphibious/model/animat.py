@@ -135,6 +135,7 @@ class Amphibious(Animat):
                 force_concave=False,
                 reset_control=False,
                 verbose=True,
+                mass_multiplier=self.options.morphology.mass_multiplier,
             )
         initial_pose(self._identity, self.options.spawn, self.units)
         if verbose:

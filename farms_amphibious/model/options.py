@@ -65,6 +65,7 @@ class AmphibiousMorphologyOptions(Options):
         super(AmphibiousMorphologyOptions, self).__init__()
         self.mesh_directory = kwargs.pop('mesh_directory')
         self.density = kwargs.pop('density')
+        self.mass_multiplier = kwargs.pop('mass_multiplier')
         self.n_joints_body = kwargs.pop('n_joints_body')
         self.n_dof_legs = kwargs.pop('n_dof_legs')
         self.n_legs = kwargs.pop('n_legs')
@@ -82,6 +83,7 @@ class AmphibiousMorphologyOptions(Options):
         options = {}
         options['mesh_directory'] = kwargs.pop('mesh_directory', '')
         options['density'] = kwargs.pop('density', 1000.0)
+        options['mass_multiplier'] = kwargs.pop('mass_multiplier', 1)
         options['n_joints_body'] = kwargs.pop('n_joints_body', 11)
         options['n_dof_legs'] = kwargs.pop('n_dof_legs', 4)
         options['n_legs'] = kwargs.pop('n_legs', 4)

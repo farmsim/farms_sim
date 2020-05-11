@@ -150,7 +150,13 @@ def rearange_base_link_dict(dictionary, base_link_index):
     return new_dict
 
 
-def load_sdf(sdf_path, force_concave=False, reset_control=False, verbose=False):
+def load_sdf(
+        sdf_path,
+        force_concave=False,
+        reset_control=False,
+        verbose=False,
+        mass_multiplier=1,
+):
     """Load SDF"""
     sdf = ModelSDF.read(sdf_path)[0]
     folder = os.path.dirname(sdf_path)
@@ -253,6 +259,9 @@ def load_sdf(sdf_path, force_concave=False, reset_control=False, verbose=False):
         link_index[parenting[name]]
         for link_i, name in enumerate(links_names[1:])
     ]
+
+    # Modify masses
+    link_masses = (mass_multiplier*np.array(link_masses)).tolist()
 
     # Local information
     link_local_positions = []
