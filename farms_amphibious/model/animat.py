@@ -30,7 +30,7 @@ def links_ordering(text):
     return [text]
 
 
-def initial_pose(identity, spawn_options, units):
+def initial_pose(identity, joints, spawn_options, units):
     """Initial pose"""
     pybullet.resetBasePositionAndOrientation(
         identity,
@@ -56,13 +56,14 @@ def initial_pose(identity, spawn_options, units):
             spawn_options.joints_velocities = np.zeros_like(
                 spawn_options.joints_positions
             ).tolist()
-        for joint_i, (position, velocity) in enumerate(zip(
+        for (joint, position, velocity) in enumerate(zip(
+                joints,
                 spawn_options.joints_positions,
                 spawn_options.joints_velocities
         )):
             pybullet.resetJointState(
                 bodyUniqueId=identity,
-                jointIndex=joint_i,
+                jointIndex=joint,
                 targetValue=position,
                 targetVelocity=velocity/units.seconds
             )
@@ -138,7 +139,12 @@ class Amphibious(Animat):
                 verbose=True,
                 mass_multiplier=self.options.morphology.mass_multiplier,
             )
-        initial_pose(self._identity, self.options.spawn, self.units)
+        initial_pose(
+            identity=self._identity,
+            joints=self.joints_identities(),
+            spawn_options=self.options.spawn,
+            units=self.units,
+        )
         if verbose:
             self.print_information()
 
