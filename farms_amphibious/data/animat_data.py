@@ -85,12 +85,14 @@ class NetworkParameters(NetworkParametersCy):
             drives,
             oscillators,
             osc_connectivity,
+            drive_connectivity,
             contacts_connectivity,
             hydro_connectivity
     ):
         super(NetworkParameters, self).__init__()
         self.drives = drives
         self.oscillators = oscillators
+        self.drive_connectivity = drive_connectivity
         self.osc_connectivity = osc_connectivity
         self.contacts_connectivity = contacts_connectivity
         self.hydro_connectivity = hydro_connectivity
@@ -108,6 +110,9 @@ class NetworkParameters(NetworkParametersCy):
             osc_connectivity=OscillatorConnectivity.from_dict(
                 dictionary['osc_connectivity']
             ),
+            drive_connectivity=ConnectivityCy(
+                dictionary['drive_connectivity']
+            ),
             contacts_connectivity=ContactConnectivity.from_dict(
                 dictionary['contacts_connectivity']
             ),
@@ -123,6 +128,7 @@ class NetworkParameters(NetworkParametersCy):
             'drives': to_array(self.drives.array),
             'oscillators': self.oscillators.to_dict(),
             'osc_connectivity': self.osc_connectivity.to_dict(),
+            'drive_connectivity': self.drive_connectivity.connections.array,
             'contacts_connectivity': self.contacts_connectivity.to_dict(),
             'hydro_connectivity': self.hydro_connectivity.to_dict(),
         }

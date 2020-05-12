@@ -22,6 +22,7 @@ cdef class NetworkParametersCy:
     cdef public DriveArrayCy drives
     cdef public OscillatorsCy oscillators
     cdef public OscillatorConnectivityCy osc_connectivity
+    cdef public ConnectivityCy drive_connectivity
     cdef public ContactConnectivityCy contacts_connectivity
     cdef public HydroConnectivityCy hydro_connectivity
 

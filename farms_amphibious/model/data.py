@@ -7,6 +7,7 @@ from farms_bullet.data.data import (
     GpsArray,
     HydrodynamicsArray,
 )
+from ..data.animat_data_cy import ConnectivityCy
 from ..data.animat_data import (
     OscillatorNetworkState,
     AnimatData,
@@ -48,6 +49,7 @@ class AmphibiousData(AnimatData):
             osc_connectivity=OscillatorConnectivity.from_connectivity(
                 control.network.osc2osc
             ),
+            drive_connectivity=ConnectivityCy(control.network.drive2osc),
             contacts_connectivity=ContactConnectivity.from_connectivity(
                 control.network.contact2osc
             ),
