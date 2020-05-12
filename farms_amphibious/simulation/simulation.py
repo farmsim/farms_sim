@@ -7,6 +7,7 @@ import numpy as np
 from farms_bullet.simulation.simulation import Simulation
 from farms_bullet.simulation.simulator import real_time_handing
 from farms_bullet.model.model import SimulationModels
+from farms_bullet.model.control import control_models
 from farms_bullet.interface.interface import Interfaces
 import farms_pylog as pylog
 
