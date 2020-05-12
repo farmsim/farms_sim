@@ -235,7 +235,7 @@ def plot_network(n_oscillators, data, **kwargs):
         else:
             options['weights'] = []
             vmin, vmax = 0, 1
-    oscillators, oscillators_texts, oscillator_connectivity = draw_network(
+    oscillators, oscillators_texts, oscillators_connectivity = draw_network(
         source=oscillator_positions,
         destination=oscillator_positions,
         radius=radius,
@@ -348,7 +348,7 @@ def plot_network(n_oscillators, data, **kwargs):
         show_oscillators,
         show_contacts,
         show_hydrodynamics,
-        show_oscillator_connectivity,
+        show_oscillators_connectivity,
         show_contacts_connectivity,
         show_hydrodynamics_connectivity,
     ] = [
@@ -357,13 +357,13 @@ def plot_network(n_oscillators, data, **kwargs):
             'show_oscillators',
             'show_contacts',
             'show_hydrodynamics',
-            'show_oscillator_connectivity',
+            'show_oscillators_connectivity',
             'show_contacts_connectivity',
             'show_hydrodynamics_connectivity',
         ]
     ]
-    if show_oscillator_connectivity:
-        for arrow in oscillator_connectivity:
+    if show_oscillators_connectivity:
+        for arrow in oscillators_connectivity:
             axes.add_artist(arrow)
     if show_contacts_connectivity:
         for arrow in contact_connectivity:
@@ -603,7 +603,7 @@ def plot_networks_maps(morphology, data):
         n_oscillators=2*morphology.n_joints_body,
         data=data,
         title='Contacts complete connectivity',
-        show_oscillator_connectivity=False,
+        show_oscillators_connectivity=False,
         show_hydrodynamics_connectivity=False,
         use_colorbar=True,
         contacts_weights=True,
@@ -612,7 +612,7 @@ def plot_networks_maps(morphology, data):
         n_oscillators=2*morphology.n_joints_body,
         data=data,
         title='Contacts intralimb connectivity',
-        show_oscillator_connectivity=False,
+        show_oscillators_connectivity=False,
         show_hydrodynamics_connectivity=False,
         contact_conn_cond=contact2sameleg,
         use_colorbar=True,
@@ -622,7 +622,7 @@ def plot_networks_maps(morphology, data):
         n_oscillators=2*morphology.n_joints_body,
         data=data,
         title='Contacts interlimb connectivity',
-        show_oscillator_connectivity=False,
+        show_oscillators_connectivity=False,
         show_hydrodynamics_connectivity=False,
         contact_conn_cond=contact2diffleg,
         use_colorbar=True,
@@ -634,14 +634,14 @@ def plot_networks_maps(morphology, data):
         n_oscillators=2*morphology.n_joints_body,
         data=data,
         title='Hydrodynamics complete connectivity',
-        show_oscillator_connectivity=False,
+        show_oscillators_connectivity=False,
         show_contacts_connectivity=False,
     )
     plot_network(
         n_oscillators=2*morphology.n_joints_body,
         data=data,
         title='Hydrodynamics frequency connectivity',
-        show_oscillator_connectivity=False,
+        show_oscillators_connectivity=False,
         show_contacts_connectivity=False,
         use_colorbar=True,
         hydro_frequency_weights=True,
@@ -650,7 +650,7 @@ def plot_networks_maps(morphology, data):
         n_oscillators=2*morphology.n_joints_body,
         data=data,
         title='Hydrodynamics amplitude connectivity',
-        show_oscillator_connectivity=False,
+        show_oscillators_connectivity=False,
         show_contacts_connectivity=False,
         use_colorbar=True,
         hydro_amplitude_weights=True,

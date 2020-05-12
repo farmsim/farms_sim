@@ -55,11 +55,11 @@ cdef class ConnectivityCy:
         self.array[connection_i, 1]
 
 
-cdef class OscillatorConnectivityCy(ConnectivityCy):
+cdef class OscillatorsConnectivityCy(ConnectivityCy):
     """Oscillator connectivity array"""
 
     def __init__(self, connections, weights, desired_phases):
-        super(OscillatorConnectivityCy, self).__init__(connections)
+        super(OscillatorsConnectivityCy, self).__init__(connections)
         if connections is not None and list(connections):
             size = np.shape(connections)[0]
             assert size == len(weights), (
@@ -81,11 +81,11 @@ cdef class OscillatorConnectivityCy(ConnectivityCy):
             self.desired_phases = DoubleArray1D(None)
 
 
-cdef class JointConnectivityCy(ConnectivityCy):
+cdef class JointsConnectivityCy(ConnectivityCy):
     """Joint connectivity array"""
 
     def __init__(self, connections, weights):
-        super(JointConnectivityCy, self).__init__(connections)
+        super(JointsConnectivityCy, self).__init__(connections)
         if connections is not None and list(connections):
             size = np.shape(connections)[0]
             assert size == len(weights), (
@@ -99,11 +99,11 @@ cdef class JointConnectivityCy(ConnectivityCy):
             self.weights = DoubleArray1D(None)
 
 
-cdef class ContactConnectivityCy(ConnectivityCy):
+cdef class ContactsConnectivityCy(ConnectivityCy):
     """Contact connectivity array"""
 
     def __init__(self, connections, weights):
-        super(ContactConnectivityCy, self).__init__(connections)
+        super(ContactsConnectivityCy, self).__init__(connections)
         if connections is not None and list(connections):
             size = np.shape(connections)[0]
             assert size == len(weights), (

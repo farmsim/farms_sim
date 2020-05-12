@@ -49,7 +49,7 @@ cpdef inline void ode_dphase(
     DTYPEv1 dstate,
     DriveArrayCy drives,
     OscillatorsCy oscillators,
-    OscillatorConnectivityCy connectivity,
+    OscillatorsConnectivityCy connectivity,
 ) nogil:
     """Oscillator phase ODE
 
@@ -95,7 +95,7 @@ cpdef inline void ode_contacts(
     DTYPEv1 state,
     DTYPEv1 dstate,
     ContactsArrayCy contacts,
-    ContactConnectivityCy contacts_connectivity,
+    ContactsConnectivityCy contacts_connectivity,
 ) nogil:
     """Sensory feedback - Contacts
 
@@ -127,7 +127,7 @@ cpdef inline void ode_contacts_tegotae(
     DTYPEv1 state,
     DTYPEv1 dstate,
     ContactsArrayCy contacts,
-    ContactConnectivityCy contacts_connectivity,
+    ContactsConnectivityCy contacts_connectivity,
 ) nogil:
     """Sensory feedback - Contacts
 

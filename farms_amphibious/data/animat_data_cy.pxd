@@ -21,10 +21,10 @@ cdef class NetworkParametersCy:
     """Network parameter"""
     cdef public DriveArrayCy drives
     cdef public OscillatorsCy oscillators
-    cdef public OscillatorConnectivityCy osc_connectivity
+    cdef public OscillatorsConnectivityCy osc_connectivity
     cdef public ConnectivityCy drive_connectivity
-    cdef public JointConnectivityCy joint_connectivity
-    cdef public ContactConnectivityCy contacts_connectivity
+    cdef public JointsConnectivityCy joints_connectivity
+    cdef public ContactsConnectivityCy contacts_connectivity
     cdef public HydroConnectivityCy hydro_connectivity
 
 
@@ -127,7 +127,7 @@ cdef class ConnectivityCy:
         return self.connections.array.shape[0]
 
 
-cdef class OscillatorConnectivityCy(ConnectivityCy):
+cdef class OscillatorsConnectivityCy(ConnectivityCy):
     """oscillator connectivity array"""
 
     cdef readonly DoubleArray1D weights
@@ -142,7 +142,7 @@ cdef class OscillatorConnectivityCy(ConnectivityCy):
         return self.desired_phases.array[iteration]
 
 
-cdef class JointConnectivityCy(ConnectivityCy):
+cdef class JointsConnectivityCy(ConnectivityCy):
     """Joint connectivity array"""
 
     cdef readonly DoubleArray1D weights
@@ -152,7 +152,7 @@ cdef class JointConnectivityCy(ConnectivityCy):
         return self.weights.array[iteration]
 
 
-cdef class ContactConnectivityCy(ConnectivityCy):
+cdef class ContactsConnectivityCy(ConnectivityCy):
     """Contact connectivity array"""
 
     cdef readonly DoubleArray1D weights

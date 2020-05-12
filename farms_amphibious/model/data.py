@@ -15,8 +15,8 @@ from ..data.animat_data import (
     DriveArray,
     Oscillators,
     OscillatorConnectivity,
-    JointConnectivity,
-    ContactConnectivity,
+    JointsConnectivity,
+    ContactsConnectivity,
     HydroConnectivity,
     JointsArray,
 )
@@ -51,10 +51,10 @@ class AmphibiousData(AnimatData):
                 control.network.osc2osc
             ),
             drive_connectivity=ConnectivityCy(control.network.drive2osc),
-            joint_connectivity=JointConnectivity.from_connectivity(
+            joints_connectivity=JointsConnectivity.from_connectivity(
                 control.network.joint2osc
             ),
-            contacts_connectivity=ContactConnectivity.from_connectivity(
+            contacts_connectivity=ContactsConnectivity.from_connectivity(
                 control.network.contact2osc
             ),
             hydro_connectivity=HydroConnectivity.from_connectivity(

@@ -13,9 +13,9 @@ from .animat_data_cy import (
     DriveDependentArrayCy,
     OscillatorsCy,
     ConnectivityCy,
-    OscillatorConnectivityCy,
-    JointConnectivityCy,
-    ContactConnectivityCy,
+    OscillatorsConnectivityCy,
+    JointsConnectivityCy,
+    ContactsConnectivityCy,
     HydroConnectivityCy,
     JointsArrayCy,
 )
@@ -87,7 +87,7 @@ class NetworkParameters(NetworkParametersCy):
             oscillators,
             osc_connectivity,
             drive_connectivity,
-            joint_connectivity,
+            joints_connectivity,
             contacts_connectivity,
             hydro_connectivity
     ):
@@ -95,7 +95,7 @@ class NetworkParameters(NetworkParametersCy):
         self.drives = drives
         self.oscillators = oscillators
         self.drive_connectivity = drive_connectivity
-        self.joint_connectivity = joint_connectivity
+        self.joints_connectivity = joints_connectivity
         self.osc_connectivity = osc_connectivity
         self.contacts_connectivity = contacts_connectivity
         self.hydro_connectivity = hydro_connectivity
@@ -116,10 +116,10 @@ class NetworkParameters(NetworkParametersCy):
             drive_connectivity=ConnectivityCy(
                 dictionary['drive_connectivity']
             ),
-            joint_connectivity=JointConnectivity.from_dict(
-                dictionary['joint_connectivity']
+            joints_connectivity=JointsConnectivity.from_dict(
+                dictionary['joints_connectivity']
             ),
-            contacts_connectivity=ContactConnectivity.from_dict(
+            contacts_connectivity=ContactsConnectivity.from_dict(
                 dictionary['contacts_connectivity']
             ),
             hydro_connectivity=HydroConnectivity.from_dict(
@@ -135,7 +135,7 @@ class NetworkParameters(NetworkParametersCy):
             'oscillators': self.oscillators.to_dict(),
             'osc_connectivity': self.osc_connectivity.to_dict(),
             'drive_connectivity': self.drive_connectivity.connections.array,
-            'joint_connectivity': self.joint_connectivity.to_dict(),
+            'joints_connectivity': self.joints_connectivity.to_dict(),
             'contacts_connectivity': self.contacts_connectivity.to_dict(),
             'hydro_connectivity': self.hydro_connectivity.to_dict(),
         }
@@ -276,7 +276,7 @@ class Oscillators(OscillatorsCy):
         return cls(freqs, amplitudes, np.array(network.osc_rates, dtype=NPDTYPE))
 
 
-class OscillatorConnectivity(OscillatorConnectivityCy):
+class OscillatorConnectivity(OscillatorsConnectivityCy):
     """Connectivity array"""
 
     @classmethod
@@ -319,7 +319,7 @@ class OscillatorConnectivity(OscillatorConnectivityCy):
         )
 
 
-class JointConnectivity(JointConnectivityCy):
+class JointsConnectivity(JointsConnectivityCy):
     """Connectivity array"""
 
     @classmethod
@@ -354,7 +354,7 @@ class JointConnectivity(JointConnectivityCy):
         )
 
 
-class ContactConnectivity(ContactConnectivityCy):
+class ContactsConnectivity(ContactsConnectivityCy):
     """Connectivity array"""
 
     @classmethod
