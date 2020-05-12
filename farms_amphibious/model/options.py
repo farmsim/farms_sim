@@ -81,6 +81,9 @@ class AmphibiousMorphologyOptions(Options):
         self.feet = kwargs.pop('feet')
         self.links_swimming = kwargs.pop('links_swimming')
         self.links_no_collisions = kwargs.pop('links_no_collisions')
+        self.links_friction_lateral = kwargs.pop('links_friction_lateral')
+        self.links_friction_spinning = kwargs.pop('links_friction_spinning')
+        self.links_friction_rolling = kwargs.pop('links_friction_rolling')
         if kwargs:
             raise Exception('Unknown kwargs: {}'.format(kwargs))
 
@@ -137,6 +140,18 @@ class AmphibiousMorphologyOptions(Options):
                 for joint_i in range(options['n_dof_legs']-1)
             ] if kwargs.pop('reduced_collisions', False) else []
         ))
+        options['links_friction_lateral'] = kwargs.pop(
+            'links_friction_lateral',
+            [1 for link in options['links']]
+        )
+        options['links_friction_spinning'] = kwargs.pop(
+            'links_friction_spinning',
+            [0 for link in options['links']]
+        )
+        options['links_friction_rolling'] = kwargs.pop(
+            'links_friction_rolling',
+            [0 for link in options['links']]
+        )
         return cls(**options)
 
     def n_joints(self):

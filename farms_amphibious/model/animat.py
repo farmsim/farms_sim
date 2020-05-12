@@ -202,29 +202,34 @@ class Amphibious(Animat):
                 group=0,
                 mask=0
             )
-        # Deactivate damping
-        small = 0
-        self.set_links_dynamics(
-            self._links.keys(),
-            linearDamping=small,
-            angularDamping=small,
-            jointDamping=small
-        )
-        # Friction
-        self.set_links_dynamics(
-            self._links.keys(),
-            lateralFriction=1,
-            spinningFriction=small,
-            rollingFriction=small,
-        )
-        if self.options.morphology.feet is not None:
+        # Default link properties
+        for link in self._links:
+            # Default friction
             self.set_links_dynamics(
-                self.options.morphology.feet,
+                link,
                 lateralFriction=1,
-                spinningFriction=small,
-                rollingFriction=small,
-                # contactStiffness=1e3,
-                # contactDamping=1e6
+                spinningFriction=0,
+                rollingFriction=0,
+            )
+            # Default damping
+            self.set_links_dynamics(
+                link,
+                linearDamping=0,
+                angularDamping=0,
+                jointDamping=0,
+            )
+        # Friction
+        for link, lateral, spinning, rolling in zip(
+                self.options.morphology.links,
+                self.options.morphology.links_friction_lateral,
+                self.options.morphology.links_friction_spinning,
+                self.options.morphology.links_friction_rolling,
+        ):
+            self.set_links_dynamics(
+                link,
+                lateralFriction=lateral,
+                spinningFriction=spinning,
+                rollingFriction=rolling,
             )
 
     def drag_swimming_forces(self, iteration, water_surface, **kwargs):
