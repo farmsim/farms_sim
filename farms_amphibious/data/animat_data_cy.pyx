@@ -37,8 +37,8 @@ cdef class ConnectivityCy:
     def __init__(self, connections):
         super(ConnectivityCy, self).__init__()
         if connections is not None and list(connections):
-            assert np.shape(connections)[1] == 2, (
-                'Connections should be of dim 2, got {}'.format(
+            assert np.shape(connections)[1] == 3, (
+                'Connections should be of dim 3, got {}'.format(
                     np.shape(connections)[1]
                 )
             )
@@ -51,8 +51,12 @@ cdef class ConnectivityCy:
         self.array[connection_i, 0]
 
     cpdef UITYPE output(self, unsigned int connection_i):
-        """Node input"""
+        """Node output"""
         self.array[connection_i, 1]
+
+    cpdef UITYPE connection_type(self, unsigned int connection_i):
+        """Connection type"""
+        self.array[connection_i, 2]
 
 
 cdef class OscillatorsConnectivityCy(ConnectivityCy):

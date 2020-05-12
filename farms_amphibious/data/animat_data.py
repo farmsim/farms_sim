@@ -6,6 +6,7 @@ import deepdish as dd
 from farms_bullet.data.array import DoubleArray1D
 from farms_bullet.data.data import SensorsData
 from .animat_data_cy import (
+    ConnectionType,
     AnimatDataCy,
     NetworkParametersCy,
     OscillatorNetworkStateCy,
@@ -23,6 +24,38 @@ from .animat_data_cy import (
 
 NPDTYPE = np.float64
 NPUITYPE = np.uintc
+
+
+CONNECTIONTYPENAMES = [
+    'OSC2OSC',
+    'DRIVE2OSC',
+    'POS2FREQ',
+    'VEL2FREQ',
+    'TOR2FREQ',
+    'POS2AMP',
+    'VEL2AMP',
+    'TOR2AMP',
+    'REACTION2FREQ',
+    'REACTION2AMP',
+    'FRICTION2FREQ',
+    'FRICTION2AMP',
+    'LATERAL2FREQ',
+    'LATERAL2AMP',
+]
+CONNECTIONTYPE2NAME = dict(zip(ConnectionType, CONNECTIONTYPENAMES))
+NAME2CONNECTIONTYPE = dict(zip(CONNECTIONTYPENAMES, ConnectionType))
+
+
+def connections_from_connectivity(connectivity):
+    """Connections from connectivity"""
+    return [
+        [
+            connection['in'],
+            connection['out'],
+            NAME2CONNECTIONTYPE[connection['type']]
+        ]
+        for connection in connectivity
+    ]
 
 
 def to_array(array, iteration=None):
@@ -300,10 +333,7 @@ class OscillatorConnectivity(OscillatorsConnectivityCy):
     @classmethod
     def from_connectivity(cls, connectivity):
         """From connectivity"""
-        connections = [
-            [connection['in'], connection['out']]
-            for connection in connectivity
-        ]
+        connections = connections_from_connectivity(connectivity)
         weights = [
             connection['weight']
             for connection in connectivity
@@ -340,10 +370,7 @@ class JointsConnectivity(JointsConnectivityCy):
     @classmethod
     def from_connectivity(cls, connectivity):
         """From connectivity"""
-        connections = [
-            [connection['in'], connection['out']]
-            for connection in connectivity
-        ]
+        connections = connections_from_connectivity(connectivity)
         weights = [
             connection['weight']
             for connection in connectivity
@@ -375,10 +402,7 @@ class ContactsConnectivity(ContactsConnectivityCy):
     @classmethod
     def from_connectivity(cls, connectivity):
         """From connectivity"""
-        connections = [
-            [connection['in'], connection['out']]
-            for connection in connectivity
-        ]
+        connections = connections_from_connectivity(connectivity)
         weights = [
             connection['weight']
             for connection in connectivity
@@ -413,10 +437,7 @@ class HydroConnectivity(HydroConnectivityCy):
     @classmethod
     def from_connectivity(cls, connectivity):
         """From connectivity"""
-        connections = [
-            [connection['in'], connection['out']]
-            for connection in connectivity
-        ]
+        connections = connections_from_connectivity(connectivity)
         weights_frequency = [
             connection['weight_frequency']
             for connection in connectivity

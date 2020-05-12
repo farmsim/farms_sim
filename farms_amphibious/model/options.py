@@ -5,6 +5,7 @@ import numpy as np
 
 from farms_data.options import Options
 from farms_amphibious.model.convention import AmphibiousConvention
+from farms_amphibious.data.animat_data_cy import ConnectionType
 
 
 class SpawnLoader(Enum):
@@ -516,6 +517,7 @@ class AmphibiousNetworkOptions(Options):
                 connectivity.append({
                     'in': convention.bodyosc2index(joint_i=i, side=sides[0]),
                     'out': convention.bodyosc2index(joint_i=i, side=sides[1]),
+                    'type': 'OSC2OSC',
                     'weight': weight_body2body,
                     'phase_bias': np.pi,
                 })
@@ -528,6 +530,7 @@ class AmphibiousNetworkOptions(Options):
                     connectivity.append({
                         'in': convention.bodyosc2index(joint_i=osc[0], side=side),
                         'out': convention.bodyosc2index(joint_i=osc[1], side=side),
+                        'type': 'OSC2OSC',
                         'weight': weight_body2body,
                         'phase_bias': phase,
                     })
@@ -553,6 +556,7 @@ class AmphibiousNetworkOptions(Options):
                                 joint_i=joint_i,
                                 side=sides[1]
                             ),
+                            'type': 'OSC2OSC',
                             'weight': weight_intralimb,
                             'phase_bias': np.pi,
                         })
@@ -595,6 +599,7 @@ class AmphibiousNetworkOptions(Options):
                             joint_i=joints[1],
                             side=side,
                         ),
+                        'type': 'OSC2OSC',
                         'weight': weight_intralimb,
                         'phase_bias': phase,
                     })
@@ -619,6 +624,7 @@ class AmphibiousNetworkOptions(Options):
                                 side_i=sides[1],
                                 **_options
                             ),
+                            'type': 'OSC2OSC',
                             'weight': weight_interlimb_opposite,
                             'phase_bias': np.pi,
                         })
@@ -645,6 +651,7 @@ class AmphibiousNetworkOptions(Options):
                                 leg_i=legs[1],
                                 **_options
                             ),
+                            'type': 'OSC2OSC',
                             'weight': weight_interlimb_following,
                             'phase_bias': phase,
                         })
@@ -674,6 +681,7 @@ class AmphibiousNetworkOptions(Options):
                                     joint_i=0,
                                     side=(side_i+side_leg)%2
                                 ),
+                                'type': 'OSC2OSC',
                                 'weight': weight_limb2body,
                                 'phase_bias': (
                                     walk_phase
@@ -715,6 +723,7 @@ class AmphibiousNetworkOptions(Options):
                                         leg_i=sensor_leg_i,
                                         side_i=sensor_side_i
                                     ),
+                                    'type': 'REACTION2FREQ',
                                     'weight': weight,
                                 })
         return connectivity
@@ -733,6 +742,7 @@ class AmphibiousNetworkOptions(Options):
                         side=side_osc
                     ),
                     'out': joint_i+1,
+                    'type': 'LATERAL2FREQ',
                     'weight_frequency': weight_frequency,
                     'weight_amplitude': weight_amplitude,
                 })
