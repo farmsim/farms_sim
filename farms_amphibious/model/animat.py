@@ -205,14 +205,14 @@ class Amphibious(Animat):
         # Default link properties
         for link in self._links:
             # Default friction
-            self.set_links_dynamics(
+            self.set_link_dynamics(
                 link,
                 lateralFriction=1,
                 spinningFriction=0,
                 rollingFriction=0,
             )
             # Default damping
-            self.set_links_dynamics(
+            self.set_link_dynamics(
                 link,
                 linearDamping=0,
                 angularDamping=0,
@@ -225,7 +225,7 @@ class Amphibious(Animat):
                 self.options.morphology.links_friction_spinning,
                 self.options.morphology.links_friction_rolling,
         ):
-            self.set_links_dynamics(
+            self.set_link_dynamics(
                 link,
                 lateralFriction=lateral,
                 spinningFriction=spinning,

@@ -77,13 +77,13 @@ class AmphibiousMorphologyOptions(Options):
         self.n_dof_legs = kwargs.pop('n_dof_legs')
         self.n_legs = kwargs.pop('n_legs')
         self.links = kwargs.pop('links')
-        self.joints = kwargs.pop('joints')
         self.feet = kwargs.pop('feet')
         self.links_swimming = kwargs.pop('links_swimming')
         self.links_no_collisions = kwargs.pop('links_no_collisions')
         self.links_friction_lateral = kwargs.pop('links_friction_lateral')
         self.links_friction_spinning = kwargs.pop('links_friction_spinning')
         self.links_friction_rolling = kwargs.pop('links_friction_rolling')
+        self.joints = kwargs.pop('joints')
         if kwargs:
             raise Exception('Unknown kwargs: {}'.format(kwargs))
 
@@ -106,15 +106,6 @@ class AmphibiousMorphologyOptions(Options):
             for leg_i in range(options['n_legs']//2)
             for side_i in range(2)
             for link_i in range(options['n_dof_legs'])
-        ])
-        options['joints'] = kwargs.pop('joints', [
-            convention.bodyjoint2name(i)
-            for i in range(options['n_joints_body'])
-        ] + [
-            convention.legjoint2name(leg_i, side_i, joint_i)
-            for leg_i in range(options['n_legs']//2)
-            for side_i in range(2)
-            for joint_i in range(options['n_dof_legs'])
         ])
         options['feet'] = kwargs.pop('feet', [
             convention.leglink2name(
@@ -152,6 +143,15 @@ class AmphibiousMorphologyOptions(Options):
             'links_friction_rolling',
             [0 for link in options['links']]
         )
+        options['joints'] = kwargs.pop('joints', [
+            convention.bodyjoint2name(i)
+            for i in range(options['n_joints_body'])
+        ] + [
+            convention.legjoint2name(leg_i, side_i, joint_i)
+            for leg_i in range(options['n_legs']//2)
+            for side_i in range(2)
+            for joint_i in range(options['n_dof_legs'])
+        ])
         return cls(**options)
 
     def n_joints(self):
@@ -734,6 +734,7 @@ class AmphibiousJointsOptions(Options):
         self.gain_amplitude = kwargs.pop('gain_amplitude')
         self.gain_offset = kwargs.pop('gain_offset')
         self.offsets_bias = kwargs.pop('offsets_bias')
+        self.max_torques = kwargs.pop('max_torques')
         if kwargs:
             raise Exception('Unknown kwargs: {}'.format(kwargs))
 
@@ -746,6 +747,7 @@ class AmphibiousJointsOptions(Options):
         options['gain_amplitude'] = kwargs.pop('gain_amplitude', None)
         options['gain_offset'] = kwargs.pop('gain_offset', None)
         options['offsets_bias'] = kwargs.pop('offsets_bias', None)
+        options['max_torques'] = kwargs.pop('max_torques', None)
         return cls(**options)
 
     def defaults_from_morphology(self, morphology, kwargs):
@@ -815,4 +817,8 @@ class AmphibiousJointsOptions(Options):
         if self.offsets_bias is None:
             self.offsets_bias = (
                 {joint: 0 for joint in morphology.joints}
+            )
+        if self.max_torques is None:
+            self.max_torques = (
+                {joint: 100 for joint in morphology.joints}
             )

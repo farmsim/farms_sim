@@ -53,6 +53,10 @@ class AmphibiousController(ModelController):
             animat_options.control.joints.offsets_bias[joint]
             for joint in joints
         ])
+        self.max_torques = np.array([
+            animat_options.control.joints.max_torques[joint]
+            for joint in joints
+        ])
 
     def step(self, iteration, time, timestep):
         """Control step"""
