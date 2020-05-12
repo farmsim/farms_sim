@@ -81,6 +81,24 @@ cdef class OscillatorConnectivityCy(ConnectivityCy):
             self.desired_phases = DoubleArray1D(None)
 
 
+cdef class JointConnectivityCy(ConnectivityCy):
+    """Joint connectivity array"""
+
+    def __init__(self, connections, weights):
+        super(JointConnectivityCy, self).__init__(connections)
+        if connections is not None and list(connections):
+            size = np.shape(connections)[0]
+            assert size == len(weights), (
+                'Size of connections {} != size of size of weights {}'.format(
+                    size,
+                    len(weights),
+                )
+            )
+            self.weights = DoubleArray1D(weights)
+        else:
+            self.weights = DoubleArray1D(None)
+
+
 cdef class ContactConnectivityCy(ConnectivityCy):
     """Contact connectivity array"""
 

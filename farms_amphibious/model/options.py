@@ -326,6 +326,8 @@ class AmphibiousControlOptions(Options):
                     kwargs.pop('body_stand_shift', 0.5*np.pi),
                 )
             )
+        if self.network.joint2osc is None:
+            self.network.joint2osc = []
         if self.network.contact2osc is None:
             self.network.contact2osc = (
                 AmphibiousNetworkOptions.default_contact2osc(

@@ -91,6 +91,7 @@ def main():
         video=video_name if sim.options.record else ''
     )
     if save_data:
+        pylog.debug('Data saved, now loading back to check validity')
         data = AnimatData.from_file(os.path.join(log_path, 'simulation.hdf5'))
         pylog.debug('Data successfully saved and logged back: {}'.format(data))
 

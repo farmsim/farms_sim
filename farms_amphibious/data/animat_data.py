@@ -14,6 +14,7 @@ from .animat_data_cy import (
     OscillatorsCy,
     ConnectivityCy,
     OscillatorConnectivityCy,
+    JointConnectivityCy,
     ContactConnectivityCy,
     HydroConnectivityCy,
     JointsArrayCy,
@@ -86,6 +87,7 @@ class NetworkParameters(NetworkParametersCy):
             oscillators,
             osc_connectivity,
             drive_connectivity,
+            joint_connectivity,
             contacts_connectivity,
             hydro_connectivity
     ):
@@ -93,6 +95,7 @@ class NetworkParameters(NetworkParametersCy):
         self.drives = drives
         self.oscillators = oscillators
         self.drive_connectivity = drive_connectivity
+        self.joint_connectivity = joint_connectivity
         self.osc_connectivity = osc_connectivity
         self.contacts_connectivity = contacts_connectivity
         self.hydro_connectivity = hydro_connectivity
@@ -113,6 +116,9 @@ class NetworkParameters(NetworkParametersCy):
             drive_connectivity=ConnectivityCy(
                 dictionary['drive_connectivity']
             ),
+            joint_connectivity=JointConnectivity.from_dict(
+                dictionary['joint_connectivity']
+            ),
             contacts_connectivity=ContactConnectivity.from_dict(
                 dictionary['contacts_connectivity']
             ),
@@ -129,6 +135,7 @@ class NetworkParameters(NetworkParametersCy):
             'oscillators': self.oscillators.to_dict(),
             'osc_connectivity': self.osc_connectivity.to_dict(),
             'drive_connectivity': self.drive_connectivity.connections.array,
+            'joint_connectivity': self.joint_connectivity.to_dict(),
             'contacts_connectivity': self.contacts_connectivity.to_dict(),
             'hydro_connectivity': self.hydro_connectivity.to_dict(),
         }
@@ -309,6 +316,41 @@ class OscillatorConnectivity(OscillatorConnectivityCy):
             connections=np.array(connections, dtype=NPUITYPE),
             weights=np.array(weights, dtype=NPDTYPE),
             desired_phases=np.array(phase_bias, dtype=NPDTYPE),
+        )
+
+
+class JointConnectivity(JointConnectivityCy):
+    """Connectivity array"""
+
+    @classmethod
+    def from_dict(cls, dictionary):
+        """Load data from dictionary"""
+        return cls(
+            connections=dictionary['connections'],
+            weights=dictionary['weights'],
+        )
+
+    def to_dict(self, _iteration=None):
+        """Convert data to dictionary"""
+        return {
+            'connections': to_array(self.connections.array),
+            'weights': to_array(self.weights.array),
+        }
+
+    @classmethod
+    def from_connectivity(cls, connectivity):
+        """From connectivity"""
+        connections = [
+            [connection['in'], connection['out']]
+            for connection in connectivity
+        ]
+        weights = [
+            connection['weight']
+            for connection in connectivity
+        ]
+        return cls(
+            np.array(connections, dtype=NPUITYPE),
+            np.array(weights, dtype=NPDTYPE),
         )
 
 
