@@ -284,6 +284,12 @@ class AmphibiousControlOptions(Options):
                     morphology.n_joints(),
                 ).tolist()
             )
+        if self.network.oscillators is None:
+            self.network.oscillators = (
+                AmphibiousNetworkOptions.default_oscillators(
+                    morphology.n_joints(),
+                )
+            )
         if self.network.osc_frequencies is None:
             self.network.osc_frequencies = (
                 AmphibiousNetworkOptions.default_osc_frequencies(morphology)
@@ -347,20 +353,19 @@ class AmphibiousNetworkOptions(Options):
 
         # State
         self.state_init = kwargs.pop('state_init', None)
+        self.drives_init = kwargs.pop('drives_init', None)
 
-        # Nodes
-        self.osc_nodes = kwargs.pop('osc_nodes', None)
+        # Oscillators
+        self.oscillators = kwargs.pop('oscillators', None)
         self.osc_frequencies = kwargs.pop('osc_frequencies', None)
         self.osc_rates = kwargs.pop('osc_rates', None)
         self.osc_amplitudes = kwargs.pop('osc_amplitudes', None)
-        self.drive_nodes = kwargs.pop('drive_nodes', None)
-        self.drives_init = kwargs.pop('drives_init', None)
-        self.contacts_nodes = kwargs.pop('contacts_nodes', None)
-        self.hydro_nodes = kwargs.pop('hydro_nodes', None)
+        self.joints_output = kwargs.pop('joints_output', None)
 
         # Connections
         self.osc2osc = kwargs.pop('osc2osc', None)
         self.drive2osc = kwargs.pop('drive2osc', None)
+        self.joint2osc = kwargs.pop('joint2osc', None)
         self.contact2osc = kwargs.pop('contact2osc', None)
         self.hydro2osc = kwargs.pop('hydro2osc', None)
 
@@ -372,19 +377,22 @@ class AmphibiousNetworkOptions(Options):
         """From options"""
         options = {}
         for option in [
-                'osc_nodes',
-                'osc_nodes',
+                # State
+                'state_init',
+                'drives_init',
+                # Oscillators
+                'oscillators',
                 'osc_frequencies',
                 'osc_rates',
                 'osc_amplitudes',
-                'drive_nodes',
-                'drives_init',
-                'contacts_nodes',
-                'hydro_nodes',
+                # Connections
                 'osc2osc',
                 'drive2osc',
+                'joint2osc',
                 'contact2osc',
                 'hydro2osc',
+                # Joints output
+                'joints_output',
         ]:
             options[option] = kwargs.pop(option, None)
         return cls(**options)
@@ -393,6 +401,11 @@ class AmphibiousNetworkOptions(Options):
     def default_state_init(n_joints):
         """Default state"""
         return 1e-3*np.arange(5*n_joints)
+
+    @staticmethod
+    def default_oscillators(n_joints):
+        """Default oscillator names"""
+        return ['O_{}'.format(i) for i in range(n_joints)]
 
     @staticmethod
     def default_osc_frequencies(morphology):
