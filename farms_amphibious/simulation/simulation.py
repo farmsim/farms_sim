@@ -79,7 +79,9 @@ class AmphibiousSimulation(Simulation):
         )
         # Interface
         self.interface = Interfaces(
-            user_params=AmphibiousUserParameters(self.animat().options)
+            user_params=AmphibiousUserParameters(
+                animat_options=self.animat().options,
+                simulation_options=simulation_options)
         )
         if not self.options.headless:
             self.interface.init_camera(
@@ -121,7 +123,7 @@ class AmphibiousSimulation(Simulation):
 
     def pre_step(self, iteration):
         """New step"""
-        play = True
+        play = False
         # if not(iteration % 10000) and iteration > 0:
         #     pybullet.restoreState(self.simulation_state)
         #     state = self.animat().data.state
