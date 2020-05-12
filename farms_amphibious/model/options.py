@@ -1,9 +1,16 @@
 """Animat options"""
 
+from enum import Enum
 import numpy as np
 
 from farms_data.options import Options
 from farms_amphibious.model.convention import AmphibiousConvention
+
+
+class SpawnLoader(Enum):
+    """Spawn loader"""
+    FARMS = 0
+    PYBULLET = 1
 
 
 class AmphibiousOptions(Options):
@@ -154,6 +161,7 @@ class AmphibiousSpawnOptions(Options):
 
     def __init__(self, **kwargs):
         super(AmphibiousSpawnOptions, self).__init__()
+        self.loader = kwargs.pop('loader')
         self.position = kwargs.pop('position')
         self.orientation = kwargs.pop('orientation')
         self.velocity_lin = kwargs.pop('velocity_lin')
@@ -167,6 +175,8 @@ class AmphibiousSpawnOptions(Options):
     def from_options(cls, kwargs):
         """From options"""
         options = {}
+        # Loader
+        options['loader'] = kwargs.pop('spawn_loader', SpawnLoader.PYBULLET)
         # Position in [m]
         options['position'] = kwargs.pop('spawn_position', [0, 0, 0.1])
         # Orientation in [rad] (Euler angles)

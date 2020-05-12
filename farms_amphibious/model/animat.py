@@ -18,6 +18,7 @@ from farms_bullet.plugins.swimming import (
 import farms_pylog as pylog
 from ..sensors.sensors import AmphibiousGPS
 from ..utils.sdf import load_sdf, load_sdf_pybullet
+from .options import SpawnLoader
 
 
 def links_ordering(text):
@@ -100,7 +101,7 @@ class Amphibious(Animat):
     def spawn(self):
         """Spawn amphibious"""
         # Spawn
-        self.spawn_sdf()
+        self.spawn_sdf(original=self.options.spawn.loader==SpawnLoader.PYBULLET)
         # Sensors
         if self.data:
             self.add_sensors()
