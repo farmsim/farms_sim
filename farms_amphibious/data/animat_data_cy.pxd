@@ -8,6 +8,26 @@ from farms_bullet.data.array cimport (
     IntegerArray2D,
 )
 
+cpdef enum ConnectionTypeJoint2Osc:
+    POS2FREQ=0
+    VEL2FREQ=1
+    TOR2FREQ=2
+    POS2AMP=3
+    VEL2AMP=4
+    TOR2AMP=5
+
+
+cpdef enum ConnectionTypeContact2Osc:
+    REACTION2FREQ=0
+    REACTION2AMP=1
+    FRICTION2FREQ=2
+    FRICTION2AMP=3
+
+
+cpdef enum ConnectionTypeHydro2Osc:
+    LATERAL2FREQ=0
+    LATERAL2AMP=1
+
 
 cdef class AnimatDataCy:
     """Network parameter"""
