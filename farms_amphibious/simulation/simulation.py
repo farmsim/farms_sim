@@ -7,7 +7,6 @@ import numpy as np
 from farms_bullet.simulation.simulation import Simulation
 from farms_bullet.simulation.simulator import real_time_handing
 from farms_bullet.model.model import SimulationModels
-from farms_bullet.model.control import control_models
 from farms_bullet.interface.interface import Interfaces
 import farms_pylog as pylog
 
@@ -79,7 +78,9 @@ class AmphibiousSimulation(Simulation):
         )
         # Interface
         self.interface = Interfaces(
-            user_params=AmphibiousUserParameters(self.animat().options)
+            user_params=AmphibiousUserParameters(
+                animat_options=self.animat().options,
+                simulation_options=simulation_options)
         )
         if not self.options.headless:
             self.interface.init_camera(
@@ -130,10 +131,10 @@ class AmphibiousSimulation(Simulation):
         #     )
         if not self.options.headless:
             play = self.interface.user_params.play().value
-            if not iteration % 100:
+            if not iteration % int(0.1/self.options.timestep):
                 self.interface.user_params.update()
             if not play:
-                time.sleep(0.5)
+                time.sleep(0.1)
                 self.interface.user_params.update()
         return play
 
