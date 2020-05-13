@@ -56,11 +56,11 @@ def initial_pose(identity, joints, spawn_options, units):
             spawn_options.joints_velocities = np.zeros_like(
                 spawn_options.joints_positions
             ).tolist()
-        for (joint, position, velocity) in enumerate(zip(
+        for joint, position, velocity in zip(
                 joints,
                 spawn_options.joints_positions,
                 spawn_options.joints_velocities
-        )):
+        ):
             pybullet.resetJointState(
                 bodyUniqueId=identity,
                 jointIndex=joint,
