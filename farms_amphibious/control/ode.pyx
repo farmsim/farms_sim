@@ -9,7 +9,9 @@
 
 from libc.math cimport sin, fabs  # cos,
 # from libc.stdlib cimport malloc, free
-# from libc.stdio cimport printf
+from libc.stdio cimport printf
+
+from ..data.animat_data_cy cimport ConnectionType
 
 
 cdef inline DTYPE phase(
@@ -49,7 +51,7 @@ cpdef inline void ode_dphase(
     DTYPEv1 dstate,
     DriveArrayCy drives,
     OscillatorsCy oscillators,
-    OscillatorConnectivityCy connectivity,
+    OscillatorsConnectivityCy connectivity,
 ) nogil:
     """Oscillator phase ODE
 
@@ -95,7 +97,7 @@ cpdef inline void ode_contacts(
     DTYPEv1 state,
     DTYPEv1 dstate,
     ContactsArrayCy contacts,
-    ContactConnectivityCy contacts_connectivity,
+    ContactsConnectivityCy contacts_connectivity,
 ) nogil:
     """Sensory feedback - Contacts
 
@@ -127,7 +129,7 @@ cpdef inline void ode_contacts_tegotae(
     DTYPEv1 state,
     DTYPEv1 dstate,
     ContactsArrayCy contacts,
-    ContactConnectivityCy contacts_connectivity,
+    ContactsConnectivityCy contacts_connectivity,
 ) nogil:
     """Sensory feedback - Contacts
 
@@ -167,19 +169,31 @@ cpdef inline void ode_hydro(
 
     """
     cdef DTYPE hydro_force
-    cdef unsigned int i, i0, i1
+    cdef unsigned int i, i0, i1, connection_type
     for i in range(hydro_connectivity.c_n_connections()):
         i0 = hydro_connectivity.connections.array[i, 0]
         i1 = hydro_connectivity.connections.array[i, 1]
+        connection_type = hydro_connectivity.connections.array[i, 2]
         hydro_force = fabs(hydrodynamics.c_force_y(iteration, i1))
-        # dfrequency += hydro_weight*hydro_force
-        dstate[i0] += (
-            hydro_connectivity.c_weight_frequency(i)*hydro_force
-        )
-        # damplitude += hydro_weight*hydro_force
-        dstate[n_oscillators+i0] += (
-            hydro_connectivity.c_weight_amplitude(i)*hydro_force
-        )
+        if connection_type == ConnectionType.LATERAL2FREQ:
+            # dfrequency += hydro_weight*hydro_force
+            dstate[i0] += (
+                hydro_connectivity.c_weights(i)*hydro_force
+            )
+        elif connection_type == ConnectionType.LATERAL2AMP:
+            # damplitude += hydro_weight*hydro_force
+            dstate[n_oscillators+i0] += (
+                hydro_connectivity.c_weights(i)*hydro_force
+            )
+        else:
+            printf(
+                'Hydrodynamics connection %i of type %i is incorrect'
+                ', should be %i or %i instead\n',
+                i,
+                connection_type,
+                ConnectionType.LATERAL2FREQ,
+                ConnectionType.LATERAL2AMP,
+            )
 
 
 cpdef inline void ode_joints(

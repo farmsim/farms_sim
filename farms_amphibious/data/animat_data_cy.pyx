@@ -37,8 +37,8 @@ cdef class ConnectivityCy:
     def __init__(self, connections):
         super(ConnectivityCy, self).__init__()
         if connections is not None and list(connections):
-            assert np.shape(connections)[1] == 2, (
-                'Connections should be of dim 2, got {}'.format(
+            assert np.shape(connections)[1] == 3, (
+                'Connections should be of dim 3, got {}'.format(
                     np.shape(connections)[1]
                 )
             )
@@ -51,15 +51,19 @@ cdef class ConnectivityCy:
         self.array[connection_i, 0]
 
     cpdef UITYPE output(self, unsigned int connection_i):
-        """Node input"""
+        """Node output"""
         self.array[connection_i, 1]
 
+    cpdef UITYPE connection_type(self, unsigned int connection_i):
+        """Connection type"""
+        self.array[connection_i, 2]
 
-cdef class OscillatorConnectivityCy(ConnectivityCy):
+
+cdef class OscillatorsConnectivityCy(ConnectivityCy):
     """Oscillator connectivity array"""
 
     def __init__(self, connections, weights, desired_phases):
-        super(OscillatorConnectivityCy, self).__init__(connections)
+        super(OscillatorsConnectivityCy, self).__init__(connections)
         if connections is not None and list(connections):
             size = np.shape(connections)[0]
             assert size == len(weights), (
@@ -81,11 +85,29 @@ cdef class OscillatorConnectivityCy(ConnectivityCy):
             self.desired_phases = DoubleArray1D(None)
 
 
-cdef class ContactConnectivityCy(ConnectivityCy):
+cdef class JointsConnectivityCy(ConnectivityCy):
+    """Joint connectivity array"""
+
+    def __init__(self, connections, weights):
+        super(JointsConnectivityCy, self).__init__(connections)
+        if connections is not None and list(connections):
+            size = np.shape(connections)[0]
+            assert size == len(weights), (
+                'Size of connections {} != size of size of weights {}'.format(
+                    size,
+                    len(weights),
+                )
+            )
+            self.weights = DoubleArray1D(weights)
+        else:
+            self.weights = DoubleArray1D(None)
+
+
+cdef class ContactsConnectivityCy(ConnectivityCy):
     """Contact connectivity array"""
 
     def __init__(self, connections, weights):
-        super(ContactConnectivityCy, self).__init__(connections)
+        super(ContactsConnectivityCy, self).__init__(connections)
         if connections is not None and list(connections):
             size = np.shape(connections)[0]
             assert size == len(weights), (
@@ -102,24 +124,16 @@ cdef class ContactConnectivityCy(ConnectivityCy):
 cdef class HydroConnectivityCy(ConnectivityCy):
     """Connectivity array"""
 
-    def __init__(self, connections, frequency, amplitude):
+    def __init__(self, connections, weights):
         super(HydroConnectivityCy, self).__init__(connections)
         if connections is not None and list(connections):
             size = np.shape(connections)[0]
-            assert size == len(frequency), (
-                'Size of connections {} != size of size of frequency {}'.format(
+            assert size == len(weights), (
+                'Size of connections {} != size of size of weights {}'.format(
                     size,
-                    len(frequency),
+                    len(weights),
                 )
             )
-            assert size == len(amplitude), (
-                'Size of connections {} != size of size of amplitude {}'.format(
-                    size,
-                    len(amplitude),
-                )
-            )
-            self.frequency = DoubleArray1D(frequency)
-            self.amplitude = DoubleArray1D(amplitude)
+            self.weights = DoubleArray1D(weights)
         else:
-            self.frequency = DoubleArray1D(None)
-            self.amplitude = DoubleArray1D(None)
+            self.weights = DoubleArray1D(None)

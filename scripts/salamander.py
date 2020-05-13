@@ -13,6 +13,7 @@ from farms_amphibious.model.options import AmphibiousOptions
 from farms_amphibious.utils.utils import prompt
 from farms_amphibious.utils.network import plot_networks_maps
 from farms_amphibious.experiment.simulation import simulation, profile
+from farms_amphibious.data.animat_data import AnimatData
 from farms_amphibious.experiment.options import (
     amphibious_options,
     get_animat_options,
@@ -80,14 +81,19 @@ def main():
     pylog.info('Simulation post-processing')
     log_path = 'salamander_results'
     video_name = os.path.join(log_path, 'simulation.mp4')
+    save_data = prompt('Save data', False)
     if log_path and not os.path.isdir(log_path):
         os.mkdir(log_path)
     sim.postprocess(
         iteration=sim.iteration,
-        log_path=log_path if prompt('Save data', False) else '',
+        log_path=log_path if save_data else '',
         plot=prompt('Show plots', False),
         video=video_name if sim.options.record else ''
     )
+    if save_data:
+        pylog.debug('Data saved, now loading back to check validity')
+        data = AnimatData.from_file(os.path.join(log_path, 'simulation.hdf5'))
+        pylog.debug('Data successfully saved and logged back: {}'.format(data))
 
     # Plot network
     if prompt('Show connectivity maps', False):

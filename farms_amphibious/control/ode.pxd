@@ -10,8 +10,8 @@ from ..data.animat_data_cy cimport (
     NetworkParametersCy,
     DriveArrayCy,
     OscillatorsCy,
-    OscillatorConnectivityCy,
-    ContactConnectivityCy,
+    OscillatorsConnectivityCy,
+    ContactsConnectivityCy,
     HydroConnectivityCy,
     JointsArrayCy,
 )
@@ -23,7 +23,7 @@ cpdef void ode_dphase(
     DTYPEv1 dstate,
     DriveArrayCy drives,
     OscillatorsCy oscillators,
-    OscillatorConnectivityCy connectivity,
+    OscillatorsConnectivityCy connectivity,
 ) nogil
 
 
@@ -41,7 +41,7 @@ cpdef void ode_contacts(
     DTYPEv1 state,
     DTYPEv1 dstate,
     ContactsArrayCy contacts,
-    ContactConnectivityCy contacts_connectivity,
+    ContactsConnectivityCy contacts_connectivity,
 ) nogil
 
 
@@ -50,7 +50,7 @@ cpdef void ode_contacts_tegotae(
     DTYPEv1 state,
     DTYPEv1 dstate,
     ContactsArrayCy contacts,
-    ContactConnectivityCy contacts_connectivity,
+    ContactsConnectivityCy contacts_connectivity,
 ) nogil
 
 

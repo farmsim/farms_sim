@@ -9,6 +9,23 @@ from farms_bullet.data.array cimport (
 )
 
 
+cpdef enum ConnectionType:
+    OSC2OSC
+    DRIVE2OSC
+    POS2FREQ
+    VEL2FREQ
+    TOR2FREQ
+    POS2AMP
+    VEL2AMP
+    TOR2AMP
+    REACTION2FREQ
+    REACTION2AMP
+    FRICTION2FREQ
+    FRICTION2AMP
+    LATERAL2FREQ
+    LATERAL2AMP
+
+
 cdef class AnimatDataCy:
     """Network parameter"""
     cdef public OscillatorNetworkStateCy state
@@ -21,8 +38,10 @@ cdef class NetworkParametersCy:
     """Network parameter"""
     cdef public DriveArrayCy drives
     cdef public OscillatorsCy oscillators
-    cdef public OscillatorConnectivityCy osc_connectivity
-    cdef public ContactConnectivityCy contacts_connectivity
+    cdef public OscillatorsConnectivityCy osc_connectivity
+    cdef public ConnectivityCy drive_connectivity
+    cdef public JointsConnectivityCy joints_connectivity
+    cdef public ContactsConnectivityCy contacts_connectivity
     cdef public HydroConnectivityCy hydro_connectivity
 
 
@@ -119,50 +138,56 @@ cdef class ConnectivityCy:
 
     cpdef UITYPE input(self, unsigned int connection_i)
     cpdef UITYPE output(self, unsigned int connection_i)
+    cpdef UITYPE connection_type(self, unsigned int connection_i)
 
     cdef inline UITYPE c_n_connections(self) nogil:
         """Number of connections"""
         return self.connections.array.shape[0]
 
 
-cdef class OscillatorConnectivityCy(ConnectivityCy):
+cdef class OscillatorsConnectivityCy(ConnectivityCy):
     """oscillator connectivity array"""
 
     cdef readonly DoubleArray1D weights
     cdef readonly DoubleArray1D desired_phases
 
-    cdef inline DTYPE c_weight(self, unsigned int iteration) nogil:
+    cdef inline DTYPE c_weight(self, unsigned int index) nogil:
         """Weight"""
-        return self.weights.array[iteration]
+        return self.weights.array[index]
 
-    cdef inline DTYPE c_desired_phase(self, unsigned int iteration) nogil:
+    cdef inline DTYPE c_desired_phase(self, unsigned int index) nogil:
         """Desired phase"""
-        return self.desired_phases.array[iteration]
+        return self.desired_phases.array[index]
 
 
-cdef class ContactConnectivityCy(ConnectivityCy):
+cdef class JointsConnectivityCy(ConnectivityCy):
+    """Joint connectivity array"""
+
+    cdef readonly DoubleArray1D weights
+
+    cdef inline DTYPE c_weight(self, unsigned int index) nogil:
+        """Weight"""
+        return self.weights.array[index]
+
+
+cdef class ContactsConnectivityCy(ConnectivityCy):
     """Contact connectivity array"""
 
     cdef readonly DoubleArray1D weights
 
-    cdef inline DTYPE c_weight(self, unsigned int iteration) nogil:
+    cdef inline DTYPE c_weight(self, unsigned int index) nogil:
         """Weight"""
-        return self.weights.array[iteration]
+        return self.weights.array[index]
 
 
 cdef class HydroConnectivityCy(ConnectivityCy):
     """Hydrodynamics connectivity array"""
 
-    cdef readonly DoubleArray1D amplitude
-    cdef readonly DoubleArray1D frequency
+    cdef readonly DoubleArray1D weights
 
-    cdef inline DTYPE c_weight_frequency(self, unsigned int iteration) nogil:
+    cdef inline DTYPE c_weights(self, unsigned int index) nogil:
         """Weight for hydrodynamics frequency"""
-        return self.frequency.array[iteration]
-
-    cdef inline DTYPE c_weight_amplitude(self, unsigned int iteration) nogil:
-        """Weight for hydrodynamics amplitude"""
-        return self.amplitude.array[iteration]
+        return self.weights.array[index]
 
 
 cdef class JointsArrayCy(DriveDependentArrayCy):

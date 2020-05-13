@@ -6,6 +6,7 @@ import deepdish as dd
 from farms_bullet.data.array import DoubleArray1D
 from farms_bullet.data.data import SensorsData
 from .animat_data_cy import (
+    ConnectionType,
     AnimatDataCy,
     NetworkParametersCy,
     OscillatorNetworkStateCy,
@@ -13,8 +14,9 @@ from .animat_data_cy import (
     DriveDependentArrayCy,
     OscillatorsCy,
     ConnectivityCy,
-    OscillatorConnectivityCy,
-    ContactConnectivityCy,
+    OscillatorsConnectivityCy,
+    JointsConnectivityCy,
+    ContactsConnectivityCy,
     HydroConnectivityCy,
     JointsArrayCy,
 )
@@ -22,6 +24,38 @@ from .animat_data_cy import (
 
 NPDTYPE = np.float64
 NPUITYPE = np.uintc
+
+
+CONNECTIONTYPENAMES = [
+    'OSC2OSC',
+    'DRIVE2OSC',
+    'POS2FREQ',
+    'VEL2FREQ',
+    'TOR2FREQ',
+    'POS2AMP',
+    'VEL2AMP',
+    'TOR2AMP',
+    'REACTION2FREQ',
+    'REACTION2AMP',
+    'FRICTION2FREQ',
+    'FRICTION2AMP',
+    'LATERAL2FREQ',
+    'LATERAL2AMP',
+]
+CONNECTIONTYPE2NAME = dict(zip(ConnectionType, CONNECTIONTYPENAMES))
+NAME2CONNECTIONTYPE = dict(zip(CONNECTIONTYPENAMES, ConnectionType))
+
+
+def connections_from_connectivity(connectivity):
+    """Connections from connectivity"""
+    return [
+        [
+            connection['in'],
+            connection['out'],
+            NAME2CONNECTIONTYPE[connection['type']]
+        ]
+        for connection in connectivity
+    ]
 
 
 def to_array(array, iteration=None):
@@ -85,12 +119,16 @@ class NetworkParameters(NetworkParametersCy):
             drives,
             oscillators,
             osc_connectivity,
+            drive_connectivity,
+            joints_connectivity,
             contacts_connectivity,
             hydro_connectivity
     ):
         super(NetworkParameters, self).__init__()
         self.drives = drives
         self.oscillators = oscillators
+        self.drive_connectivity = drive_connectivity
+        self.joints_connectivity = joints_connectivity
         self.osc_connectivity = osc_connectivity
         self.contacts_connectivity = contacts_connectivity
         self.hydro_connectivity = hydro_connectivity
@@ -108,7 +146,13 @@ class NetworkParameters(NetworkParametersCy):
             osc_connectivity=OscillatorConnectivity.from_dict(
                 dictionary['osc_connectivity']
             ),
-            contacts_connectivity=ContactConnectivity.from_dict(
+            drive_connectivity=ConnectivityCy(
+                dictionary['drive_connectivity']
+            ),
+            joints_connectivity=JointsConnectivity.from_dict(
+                dictionary['joints_connectivity']
+            ),
+            contacts_connectivity=ContactsConnectivity.from_dict(
                 dictionary['contacts_connectivity']
             ),
             hydro_connectivity=HydroConnectivity.from_dict(
@@ -123,6 +167,8 @@ class NetworkParameters(NetworkParametersCy):
             'drives': to_array(self.drives.array),
             'oscillators': self.oscillators.to_dict(),
             'osc_connectivity': self.osc_connectivity.to_dict(),
+            'drive_connectivity': self.drive_connectivity.connections.array,
+            'joints_connectivity': self.joints_connectivity.to_dict(),
             'contacts_connectivity': self.contacts_connectivity.to_dict(),
             'hydro_connectivity': self.hydro_connectivity.to_dict(),
         }
@@ -263,7 +309,7 @@ class Oscillators(OscillatorsCy):
         return cls(freqs, amplitudes, np.array(network.osc_rates, dtype=NPDTYPE))
 
 
-class OscillatorConnectivity(OscillatorConnectivityCy):
+class OscillatorConnectivity(OscillatorsConnectivityCy):
     """Connectivity array"""
 
     @classmethod
@@ -287,10 +333,7 @@ class OscillatorConnectivity(OscillatorConnectivityCy):
     @classmethod
     def from_connectivity(cls, connectivity):
         """From connectivity"""
-        connections = [
-            [connection['in'], connection['out']]
-            for connection in connectivity
-        ]
+        connections = connections_from_connectivity(connectivity)
         weights = [
             connection['weight']
             for connection in connectivity
@@ -306,7 +349,7 @@ class OscillatorConnectivity(OscillatorConnectivityCy):
         )
 
 
-class ContactConnectivity(ContactConnectivityCy):
+class JointsConnectivity(JointsConnectivityCy):
     """Connectivity array"""
 
     @classmethod
@@ -327,10 +370,39 @@ class ContactConnectivity(ContactConnectivityCy):
     @classmethod
     def from_connectivity(cls, connectivity):
         """From connectivity"""
-        connections = [
-            [connection['in'], connection['out']]
+        connections = connections_from_connectivity(connectivity)
+        weights = [
+            connection['weight']
             for connection in connectivity
         ]
+        return cls(
+            np.array(connections, dtype=NPUITYPE),
+            np.array(weights, dtype=NPDTYPE),
+        )
+
+
+class ContactsConnectivity(ContactsConnectivityCy):
+    """Connectivity array"""
+
+    @classmethod
+    def from_dict(cls, dictionary):
+        """Load data from dictionary"""
+        return cls(
+            connections=dictionary['connections'],
+            weights=dictionary['weights'],
+        )
+
+    def to_dict(self, _iteration=None):
+        """Convert data to dictionary"""
+        return {
+            'connections': to_array(self.connections.array),
+            'weights': to_array(self.weights.array),
+        }
+
+    @classmethod
+    def from_connectivity(cls, connectivity):
+        """From connectivity"""
+        connections = connections_from_connectivity(connectivity)
         weights = [
             connection['weight']
             for connection in connectivity
@@ -349,8 +421,7 @@ class HydroConnectivity(HydroConnectivityCy):
         """Load data from dictionary"""
         return cls(
             connections=dictionary['connections'],
-            frequency=dictionary['frequency'],
-            amplitude=dictionary['amplitude'],
+            weights=dictionary['weights'],
         )
 
     def to_dict(self, iteration=None):
@@ -358,29 +429,20 @@ class HydroConnectivity(HydroConnectivityCy):
         assert iteration is None or isinstance(iteration, int)
         return {
             'connections': to_array(self.connections.array),
-            'frequency': to_array(self.frequency.array),
-            'amplitude': to_array(self.amplitude.array),
+            'weights': to_array(self.weights.array),
         }
 
     @classmethod
     def from_connectivity(cls, connectivity):
         """From connectivity"""
-        connections = [
-            [connection['in'], connection['out']]
-            for connection in connectivity
-        ]
-        weights_frequency = [
-            connection['weight_frequency']
-            for connection in connectivity
-        ]
-        weights_amplitude = [
-            connection['weight_amplitude']
+        connections = connections_from_connectivity(connectivity)
+        weights = [
+            connection['weight']
             for connection in connectivity
         ]
         return cls(
             connections=np.array(connections, dtype=NPUITYPE),
-            frequency=np.array(weights_frequency, dtype=NPDTYPE),
-            amplitude=np.array(weights_amplitude, dtype=NPDTYPE),
+            weights=np.array(weights, dtype=NPDTYPE),
         )
 
 
