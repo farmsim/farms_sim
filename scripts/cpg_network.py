@@ -127,16 +127,15 @@ def analysis(data, times, morphology):
         pylog.info(
             'Hydrodynamics connectivity information'
             + sep.join([
-                'O_{} <- link_{} (frequency_gain={}, amplitude_gain={})'.format(
+                'O_{} <- link_{} (type={}, weight={})'.format(
                     connection[0],
                     connection[1],
-                    frequency,
-                    amplitude,
+                    connection[2],
+                    weight,
                 )
-                for connection, frequency, amplitude in zip(
+                for connection, weight in zip(
                     data.network.hydro_connectivity.connections.array,
-                    data.network.hydro_connectivity.frequency.array,
-                    data.network.hydro_connectivity.amplitude.array,
+                    data.network.hydro_connectivity.weights.array,
                 )
             ])
         )

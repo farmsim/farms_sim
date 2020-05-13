@@ -9,6 +9,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 import farms_pylog as pylog
 from ..model.convention import AmphibiousConvention
+from ..data.animat_data_cy import ConnectionType
 
 
 def rotate(vector, theta):
@@ -265,7 +266,7 @@ def plot_network(n_oscillators, data, **kwargs):
             data.network.contacts_connectivity.weights.array,
         )
         if contact_conn_cond(connection[0], connection[1])
-    ])
+    ]) if data.network.contacts_connectivity.connections.array else np.empty(0)
     options = {}
     use_weights = use_colorbar and kwargs.pop('contacts_weights', False)
     if use_weights:
@@ -299,30 +300,35 @@ def plot_network(n_oscillators, data, **kwargs):
         lambda osc0, osc1: True
     )
     connections = np.array([
-        [connection[0], connection[1], frequency, amplitude]
-        for connection, frequency, amplitude in zip(
+        [connection[0], connection[1], connection[2], weight]
+        for connection, weight in zip(
             data.network.hydro_connectivity.connections.array,
-            data.network.hydro_connectivity.frequency.array,
-            data.network.hydro_connectivity.amplitude.array,
+            data.network.hydro_connectivity.weights.array,
         )
         if hydro_conn_cond(connection[0], connection[1])
-    ])
+    ]) if data.network.hydro_connectivity.connections.array else np.empty(0)
     options = {}
-    use_weights = use_colorbar and kwargs.pop('hydro_frequency_weights', False)
+    hydro_frequency_weights = kwargs.pop('hydro_frequency_weights', False)
+    hydro_amplitude_weights = kwargs.pop('hydro_amplitude_weights', False)
+    use_weights = (
+        use_colorbar
+        and (hydro_frequency_weights or hydro_amplitude_weights)
+    )
     if use_weights:
         if connections.any():
-            options['weights'] = connections[:, 2]
-            vmin = np.min(connections[:, 2])
-            vmax = np.max(connections[:, 2])
-        else:
-            options['weights'] = []
-            vmin, vmax = 0, 1
-    use_weights = use_colorbar and kwargs.pop('hydro_amplitude_weights', False)
-    if use_weights:
-        if connections.any():
-            options['weights'] = connections[:, 3]
-            vmin = np.min(connections[:, 3])
-            vmax = np.max(connections[:, 3])
+            options['weights'] = [
+                connection[3]
+                for connection in connections
+                if (
+                    hydro_frequency_weights
+                    and connection[2] == ConnectionType.LATERAL2FREQ
+                ) or (
+                    hydro_amplitude_weights
+                    and connection[2] == ConnectionType.LATERAL2AMP
+                )
+            ]
+            vmin = np.min(options['weights'])
+            vmax = np.max(options['weights'])
         else:
             options['weights'] = []
             vmin, vmax = 0, 1
@@ -333,8 +339,16 @@ def plot_network(n_oscillators, data, **kwargs):
         connectivity=[
             connection
             for connection in data.network.hydro_connectivity.connections.array
-            if hydro_conn_cond(connection[0], connection[1])
-        ],
+            # if hydro_conn_cond(connection[0], connection[1])
+            if (not hydro_frequency_weights and not hydro_amplitude_weights)
+            or (
+                hydro_frequency_weights
+                and connection[2] == ConnectionType.LATERAL2FREQ
+            ) or (
+                hydro_amplitude_weights
+                and connection[2] == ConnectionType.LATERAL2AMP
+            )
+        ] if data.network.hydro_connectivity.connections.array else [],
         prefix='H_',
         rad=rads[2],
         color_nodes='C0',

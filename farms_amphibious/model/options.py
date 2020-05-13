@@ -746,16 +746,26 @@ class AmphibiousNetworkOptions(Options):
         convention = AmphibiousConvention(**morphology)
         for joint_i in range(morphology.n_joints_body):
             for side_osc in range(2):
-                connectivity.append({
-                    'in': convention.bodyosc2index(
-                        joint_i=joint_i,
-                        side=side_osc
-                    ),
-                    'out': joint_i+1,
-                    'type': 'LATERAL2FREQ',
-                    'weight_frequency': weight_frequency,
-                    'weight_amplitude': weight_amplitude,
-                })
+                if weight_frequency:
+                    connectivity.append({
+                        'in': convention.bodyosc2index(
+                            joint_i=joint_i,
+                            side=side_osc
+                        ),
+                        'out': joint_i+1,
+                        'type': 'LATERAL2FREQ',
+                        'weight': weight_frequency,
+                    })
+                if weight_amplitude:
+                    connectivity.append({
+                        'in': convention.bodyosc2index(
+                            joint_i=joint_i,
+                            side=side_osc
+                        ),
+                        'out': joint_i+1,
+                        'type': 'LATERAL2AMP',
+                        'weight': weight_amplitude,
+                    })
         return connectivity
 
 

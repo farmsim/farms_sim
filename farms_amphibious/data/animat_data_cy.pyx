@@ -124,24 +124,16 @@ cdef class ContactsConnectivityCy(ConnectivityCy):
 cdef class HydroConnectivityCy(ConnectivityCy):
     """Connectivity array"""
 
-    def __init__(self, connections, frequency, amplitude):
+    def __init__(self, connections, weights):
         super(HydroConnectivityCy, self).__init__(connections)
         if connections is not None and list(connections):
             size = np.shape(connections)[0]
-            assert size == len(frequency), (
-                'Size of connections {} != size of size of frequency {}'.format(
+            assert size == len(weights), (
+                'Size of connections {} != size of size of weights {}'.format(
                     size,
-                    len(frequency),
+                    len(weights),
                 )
             )
-            assert size == len(amplitude), (
-                'Size of connections {} != size of size of amplitude {}'.format(
-                    size,
-                    len(amplitude),
-                )
-            )
-            self.frequency = DoubleArray1D(frequency)
-            self.amplitude = DoubleArray1D(amplitude)
+            self.weights = DoubleArray1D(weights)
         else:
-            self.frequency = DoubleArray1D(None)
-            self.amplitude = DoubleArray1D(None)
+            self.weights = DoubleArray1D(None)

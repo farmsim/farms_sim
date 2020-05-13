@@ -28,8 +28,8 @@ def main():
         # weight_sens_contact_e=2e0,
         weight_sens_contact_i=0,
         weight_sens_contact_e=0,
-        weight_sens_hydro_freq=-1e-1,
-        weight_sens_hydro_amp=-1e-1,
+        weight_sens_hydro_freq=0,
+        weight_sens_hydro_amp=0,
     )
 
     (

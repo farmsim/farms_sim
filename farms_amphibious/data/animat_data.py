@@ -421,8 +421,7 @@ class HydroConnectivity(HydroConnectivityCy):
         """Load data from dictionary"""
         return cls(
             connections=dictionary['connections'],
-            frequency=dictionary['frequency'],
-            amplitude=dictionary['amplitude'],
+            weights=dictionary['weights'],
         )
 
     def to_dict(self, iteration=None):
@@ -430,26 +429,20 @@ class HydroConnectivity(HydroConnectivityCy):
         assert iteration is None or isinstance(iteration, int)
         return {
             'connections': to_array(self.connections.array),
-            'frequency': to_array(self.frequency.array),
-            'amplitude': to_array(self.amplitude.array),
+            'weights': to_array(self.weights.array),
         }
 
     @classmethod
     def from_connectivity(cls, connectivity):
         """From connectivity"""
         connections = connections_from_connectivity(connectivity)
-        weights_frequency = [
-            connection['weight_frequency']
-            for connection in connectivity
-        ]
-        weights_amplitude = [
-            connection['weight_amplitude']
+        weights = [
+            connection['weight']
             for connection in connectivity
         ]
         return cls(
             connections=np.array(connections, dtype=NPUITYPE),
-            frequency=np.array(weights_frequency, dtype=NPDTYPE),
-            amplitude=np.array(weights_amplitude, dtype=NPDTYPE),
+            weights=np.array(weights, dtype=NPDTYPE),
         )
 
 
