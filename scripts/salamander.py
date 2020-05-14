@@ -38,16 +38,18 @@ def main():
         ],
         weight_osc_body=1e0,
         weight_osc_legs_internal=3e1,
-        weight_osc_legs_opposite=1e0,  # 1e1,
+        weight_osc_legs_opposite=0,  # 1e1,
         weight_osc_legs_following=0,  # 1e1,
         weight_osc_legs2body=3e1,
-        weight_sens_contact_i=0,  # -2e0,
-        weight_sens_contact_e=1e0,  # 2e0,
+        weight_sens_contact_intralimb=-1,
+        weight_sens_contact_opposite=0.5,
+        weight_sens_contact_following=0.5,
+        weight_sens_contact_diagonal=0.5,
         weight_sens_hydro_freq=-1e-1,
         weight_sens_hydro_amp=-1e-1,
         body_stand_amplitude=0.2,
-        modular_phases=[3*np.pi/2, 0, 3*np.pi/2, 0],
-        modular_amplitudes=np.full(4, 1),
+        modular_phases=np.array([3*np.pi/2, 0, 3*np.pi/2, 0])-np.pi/4,
+        modular_amplitudes=np.full(4, 0.8),
     )
     # state_init = animat_options.control.network.state_init
     # for phase_i, phase in enumerate(np.linspace(2*np.pi, 0, 11)):

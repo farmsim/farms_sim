@@ -346,16 +346,18 @@ class AmphibiousControlOptions(Options):
             self.network.contact2osc = (
                 AmphibiousNetworkOptions.default_contact2osc(
                     morphology,
-                    kwargs.pop('weight_sens_contact_e', 2e0),
-                    kwargs.pop('weight_sens_contact_i', -2e0),
+                    kwargs.pop('weight_sens_contact_intralimb', 0),
+                    kwargs.pop('weight_sens_contact_opposite', 0),
+                    kwargs.pop('weight_sens_contact_following', 0),
+                    kwargs.pop('weight_sens_contact_diagonal', 0),
                 )
             )
         if self.network.hydro2osc is None:
             self.network.hydro2osc = (
                 AmphibiousNetworkOptions.default_hydro2osc(
                     morphology,
-                    kwargs.pop('weight_sens_hydro_freq', -1),
-                    kwargs.pop('weight_sens_hydro_amp', 1),
+                    kwargs.pop('weight_sens_hydro_freq', 0),
+                    kwargs.pop('weight_sens_hydro_amp', 0),
                 )
             )
         self.joints.defaults_from_morphology(morphology, kwargs)
@@ -793,39 +795,113 @@ class AmphibiousNetworkOptions(Options):
         return connectivity
 
     @staticmethod
-    def default_contact2osc(morphology, weight_e, weight_i):
+    def default_contact2osc(
+            morphology,
+            w_intralimb,
+            w_opposite,
+            w_following,
+            w_diagonal
+    ):
         """Default contact sensors to oscillators connectivity"""
         connectivity = []
         convention = AmphibiousConvention(**morphology)
-        for leg_i in range(morphology.n_legs//2):
-            for side_i in range(2):
+        # Intralimb
+        for sensor_leg_i in range(morphology.n_legs//2):
+            for sensor_side_i in range(2):
                 for joint_i in range(morphology.n_dof_legs):
                     for side_o in range(2):
-                        for sensor_leg_i in range(morphology.n_legs//2):
-                            for sensor_side_i in range(2):
-                                weight = (
-                                    weight_e
-                                    if (
-                                        (leg_i == sensor_leg_i)
-                                        != (side_i == sensor_side_i)
-                                    )
-                                    else weight_i
-                                )
-                                if weight != 0:
-                                    connectivity.append({
-                                        'in': convention.legosc2index(
-                                            leg_i=leg_i,
-                                            side_i=side_i,
-                                            joint_i=joint_i,
-                                            side=side_o
-                                        ),
-                                        'out': convention.contactleglink2index(
-                                            leg_i=sensor_leg_i,
-                                            side_i=sensor_side_i
-                                        ),
-                                        'type': 'REACTION2FREQ',
-                                        'weight': weight,
-                                    })
+                        if w_intralimb:
+                            connectivity.append({
+                                'in': convention.legosc2index(
+                                    leg_i=sensor_leg_i,
+                                    side_i=sensor_side_i,
+                                    joint_i=joint_i,
+                                    side=side_o
+                                ),
+                                'out': convention.contactleglink2index(
+                                    leg_i=sensor_leg_i,
+                                    side_i=sensor_side_i
+                                ),
+                                'type': 'REACTION2FREQ',
+                                'weight': w_intralimb,
+                            })
+                        if w_opposite:
+                            connectivity.append({
+                                'in': convention.legosc2index(
+                                    leg_i=sensor_leg_i,
+                                    side_i=(sensor_side_i+1)%2,
+                                    joint_i=joint_i,
+                                    side=side_o
+                                ),
+                                'out': convention.contactleglink2index(
+                                    leg_i=sensor_leg_i,
+                                    side_i=sensor_side_i
+                                ),
+                                'type': 'REACTION2FREQ',
+                                'weight': w_opposite,
+                            })
+                        if w_following:
+                            if sensor_leg_i > 0:
+                                connectivity.append({
+                                    'in': convention.legosc2index(
+                                        leg_i=sensor_leg_i-1,
+                                        side_i=sensor_side_i,
+                                        joint_i=joint_i,
+                                        side=side_o
+                                    ),
+                                    'out': convention.contactleglink2index(
+                                        leg_i=sensor_leg_i,
+                                        side_i=sensor_side_i
+                                    ),
+                                    'type': 'REACTION2FREQ',
+                                    'weight': w_following,
+                                })
+                            if sensor_leg_i < (morphology.n_legs//2 - 1):
+                                connectivity.append({
+                                    'in': convention.legosc2index(
+                                        leg_i=sensor_leg_i+1,
+                                        side_i=sensor_side_i,
+                                        joint_i=joint_i,
+                                        side=side_o
+                                    ),
+                                    'out': convention.contactleglink2index(
+                                        leg_i=sensor_leg_i,
+                                        side_i=sensor_side_i
+                                    ),
+                                    'type': 'REACTION2FREQ',
+                                    'weight': w_following,
+                                })
+                        if w_diagonal:
+                            if sensor_leg_i > 0:
+                                connectivity.append({
+                                    'in': convention.legosc2index(
+                                        leg_i=sensor_leg_i-1,
+                                        side_i=(sensor_side_i+1)%2,
+                                        joint_i=joint_i,
+                                        side=side_o
+                                    ),
+                                    'out': convention.contactleglink2index(
+                                        leg_i=sensor_leg_i,
+                                        side_i=sensor_side_i
+                                    ),
+                                    'type': 'REACTION2FREQ',
+                                    'weight': w_diagonal,
+                                })
+                            if sensor_leg_i < (morphology.n_legs//2 - 1):
+                                connectivity.append({
+                                    'in': convention.legosc2index(
+                                        leg_i=sensor_leg_i+1,
+                                        side_i=(sensor_side_i+1)%2,
+                                        joint_i=joint_i,
+                                        side=side_o
+                                    ),
+                                    'out': convention.contactleglink2index(
+                                        leg_i=sensor_leg_i,
+                                        side_i=sensor_side_i
+                                    ),
+                                    'type': 'REACTION2FREQ',
+                                    'weight': w_diagonal,
+                                })
         return connectivity
 
     @staticmethod

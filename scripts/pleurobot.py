@@ -3,6 +3,7 @@
 
 import os
 import time
+import numpy as np
 import matplotlib.pyplot as plt
 
 import farms_pylog as pylog
@@ -24,12 +25,15 @@ def main():
         weight_osc_legs_opposite=1e1,
         weight_osc_legs_following=1e1,
         weight_osc_legs2body=3e1,
-        # weight_sens_contact_i=-2e0,
-        # weight_sens_contact_e=2e0,
-        weight_sens_contact_i=0,
-        weight_sens_contact_e=0,
+        weight_sens_contact_intralimb=0,
+        weight_sens_contact_opposite=0,
+        weight_sens_contact_following=0,
+        weight_sens_contact_diagonal=0,
         weight_sens_hydro_freq=0,
         weight_sens_hydro_amp=0,
+        body_stand_amplitude=0.2,
+        modular_phases=np.array([3*np.pi/2, 0, 3*np.pi/2, 0])-np.pi/4,
+        modular_amplitudes=np.full(4, 0.8),
     )
 
     (
