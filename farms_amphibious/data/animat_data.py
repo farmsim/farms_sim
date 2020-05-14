@@ -266,11 +266,16 @@ class DriveDependentArray(DriveDependentArrayCy):
 class Oscillators(OscillatorsCy):
     """Oscillator array"""
 
-    def __init__(self, intrinsic_frequencies, nominal_amplitudes, rates):
+    def __init__(
+            self, intrinsic_frequencies, nominal_amplitudes, rates,
+            modular_phases, modular_amplitudes,
+    ):
         super(Oscillators, self).__init__()
         self.intrinsic_frequencies = DriveDependentArray(intrinsic_frequencies)
         self.nominal_amplitudes = DriveDependentArray(nominal_amplitudes)
         self.rates = DoubleArray1D(rates)
+        self.modular_phases = DoubleArray1D(modular_phases)
+        self.modular_amplitudes = DoubleArray1D(modular_amplitudes)
 
     @classmethod
     def from_dict(cls, dictionary):
@@ -279,6 +284,8 @@ class Oscillators(OscillatorsCy):
             intrinsic_frequencies=dictionary['intrinsic_frequencies'],
             nominal_amplitudes=dictionary['nominal_amplitudes'],
             rates=dictionary['rates'],
+            modular_phases=dictionary['modular_phases'],
+            modular_amplitudes=dictionary['modular_amplitudes'],
         )
 
     def to_dict(self, iteration=None):
@@ -288,6 +295,8 @@ class Oscillators(OscillatorsCy):
             'intrinsic_frequencies': to_array(self.intrinsic_frequencies.array),
             'nominal_amplitudes': to_array(self.nominal_amplitudes.array),
             'rates': to_array(self.rates.array),
+            'modular_phases': to_array(self.modular_phases.array),
+            'modular_amplitudes': to_array(self.modular_amplitudes.array),
         }
 
     @classmethod
@@ -306,7 +315,13 @@ class Oscillators(OscillatorsCy):
             ], dtype=NPDTYPE)
             for option in [network.osc_frequencies, network.osc_amplitudes]
         ]
-        return cls(freqs, amplitudes, np.array(network.osc_rates, dtype=NPDTYPE))
+        return cls(
+            freqs,
+            amplitudes,
+            np.array(network.osc_rates, dtype=NPDTYPE),
+            np.array(network.osc_modular_phases, dtype=NPDTYPE),
+            np.array(network.osc_modular_amplitudes, dtype=NPDTYPE),
+        )
 
 
 class OscillatorConnectivity(OscillatorsConnectivityCy):

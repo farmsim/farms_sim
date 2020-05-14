@@ -38,24 +38,26 @@ def main():
         ],
         weight_osc_body=1e0,
         weight_osc_legs_internal=3e1,
-        weight_osc_legs_opposite=1e1,
-        weight_osc_legs_following=1e1,
+        weight_osc_legs_opposite=1e0,  # 1e1,
+        weight_osc_legs_following=0,  # 1e1,
         weight_osc_legs2body=3e1,
-        weight_sens_contact_i=-2e0,
-        weight_sens_contact_e=2e0,
+        weight_sens_contact_i=0,  # -2e0,
+        weight_sens_contact_e=1e0,  # 2e0,
         weight_sens_hydro_freq=-1e-1,
         weight_sens_hydro_amp=-1e-1,
         body_stand_amplitude=0.2,
+        modular_phases=[3*np.pi/2, 0, 3*np.pi/2, 0],
+        modular_amplitudes=np.full(4, 1),
     )
-    state_init = animat_options.control.network.state_init
-    for phase_i, phase in enumerate(np.linspace(2*np.pi, 0, 11)):
-        state_init[2*phase_i] = float(phase)
-        state_init[2*phase_i+1] = float(phase)+np.pi
+    # state_init = animat_options.control.network.state_init
+    # for phase_i, phase in enumerate(np.linspace(2*np.pi, 0, 11)):
+    #     state_init[2*phase_i] = float(phase)
+    #     state_init[2*phase_i+1] = float(phase)+np.pi
 
     (
         simulation_options,
         arena,
-    ) = amphibious_options(animat_options, use_water_arena=True)
+    ) = amphibious_options(animat_options, use_water_arena=False)
 
     # Save options
     animat_options_filename = 'salamander_animat_options.yaml'

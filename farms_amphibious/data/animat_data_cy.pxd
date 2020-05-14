@@ -113,6 +113,8 @@ cdef class OscillatorsCy:
     cdef public DriveDependentArrayCy intrinsic_frequencies
     cdef public DriveDependentArrayCy nominal_amplitudes
     cdef public DoubleArray1D rates
+    cdef public DoubleArray1D modular_phases
+    cdef public DoubleArray1D modular_amplitudes
 
     cdef inline unsigned int c_n_oscillators(self) nogil:
         """Number of oscillators"""
@@ -129,6 +131,14 @@ cdef class OscillatorsCy:
     cdef inline DTYPE c_rate(self, unsigned int index) nogil:
         """Rate"""
         return self.rates.array[index]
+
+    cdef inline DTYPE c_modular_phases(self, unsigned int index) nogil:
+        """Modular phase"""
+        return self.modular_phases.array[index]
+
+    cdef inline DTYPE c_modular_amplitudes(self, unsigned int index) nogil:
+        """Modular amplitude"""
+        return self.modular_amplitudes.array[index]
 
 
 cdef class ConnectivityCy:
