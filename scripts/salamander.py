@@ -41,7 +41,7 @@ def main():
         weight_osc_legs_opposite=1e0,  # 1e1,
         weight_osc_legs_following=0,  # 1e1,
         weight_osc_legs2body=3e1,
-        weight_sens_contact_intralimb=-1,
+        weight_sens_contact_intralimb=-0.5,
         weight_sens_contact_opposite=1,
         weight_sens_contact_following=0,
         weight_sens_contact_diagonal=0,
@@ -49,7 +49,7 @@ def main():
         weight_sens_hydro_amp=-1e-1,
         body_stand_amplitude=0.2,
         modular_phases=np.array([3*np.pi/2, 0, 3*np.pi/2, 0])-np.pi/4,
-        modular_amplitudes=np.full(4, 0.8),
+        modular_amplitudes=np.full(4, 0.9),
     )
     # state_init = animat_options.control.network.state_init
     # for phase_i, phase in enumerate(np.linspace(2*np.pi, 0, 11)):
@@ -62,7 +62,7 @@ def main():
     (
         simulation_options,
         arena,
-    ) = amphibious_options(animat_options, use_water_arena=False)
+    ) = amphibious_options(animat_options, use_water_arena=True)
 
     # Save options
     animat_options_filename = 'salamander_animat_options.yaml'
