@@ -22,7 +22,6 @@ class AmphibiousOptions(Options):
         self.spawn = AmphibiousSpawnOptions(**kwargs.pop('spawn'))
         self.physics = AmphibiousPhysicsOptions(**kwargs.pop('physics'))
         self.control = AmphibiousControlOptions(**kwargs.pop('control'))
-        self.collect_gps = kwargs.pop('collect_gps')
         self.show_hydrodynamics = kwargs.pop('show_hydrodynamics')
         self.transition = kwargs.pop('transition')
         if kwargs:
@@ -57,7 +56,6 @@ class AmphibiousOptions(Options):
                 options['morphology'],
                 kwargs
             )
-        options['collect_gps'] = kwargs.pop('collect_gps', False)
         options['show_hydrodynamics'] = kwargs.pop('show_hydrodynamics', False)
         options['transition'] = kwargs.pop('transition', False)
         if kwargs:
@@ -247,9 +245,9 @@ class AmphibiousControlOptions(Options):
         super(AmphibiousControlOptions, self).__init__()
         self.kinematics_file = kwargs.pop('kinematics_file')
         if not self.kinematics_file:
+            self.sensors = AmphibiousSensorsOptions(**kwargs.pop('sensors'))
             self.network = AmphibiousNetworkOptions(**kwargs.pop('network'))
             self.joints = AmphibiousJointsOptions(**kwargs.pop('joints'))
-            self.sensors = kwargs.pop('sensors')
         if kwargs:
             raise Exception('Unknown kwargs: {}'.format(kwargs))
 
@@ -258,6 +256,10 @@ class AmphibiousControlOptions(Options):
         """From options"""
         options = {}
         options['kinematics_file'] = kwargs.pop('kinematics_file', '')
+        options['sensors'] = kwargs.pop(
+            'sensors',
+            AmphibiousSensorsOptions.from_options(kwargs)
+        )
         options['network'] = kwargs.pop(
             'network',
             AmphibiousNetworkOptions.from_options(kwargs)
@@ -266,102 +268,50 @@ class AmphibiousControlOptions(Options):
             'joints',
             AmphibiousJointsOptions.from_options(kwargs)
         )
-        options['sensors'] = kwargs.pop(
-            'sensors',
-            None
-        )
         return cls(**options)
 
     def defaults_from_morphology(self, morphology, kwargs):
         """Defaults from morphology"""
-        if self.network.drives_init is None:
-            self.network.drives_init = (
-                [2, 0]
-            )
-        if self.network.state_init is None:
-            self.network.state_init = (
-                AmphibiousNetworkOptions.default_state_init(
-                    morphology,
-                ).tolist()
-            )
-        if self.network.oscillators is None:
-            self.network.oscillators = (
-                AmphibiousNetworkOptions.default_oscillators(
-                    morphology.n_joints(),
-                )
-            )
-        if self.network.osc_frequencies is None:
-            self.network.osc_frequencies = (
-                AmphibiousNetworkOptions.default_osc_frequencies(morphology)
-            )
-        if self.network.osc_amplitudes is None:
-            self.network.osc_amplitudes = (
-                AmphibiousNetworkOptions.default_osc_amplitudes(
-                    morphology,
-                    body_amplitude=kwargs.pop('body_stand_amplitude', 0.3),
-                    legs_amplitudes=kwargs.pop(
-                        'legs_amplitudes',
-                        [np.pi/4, np.pi/32, np.pi/4, np.pi/8]
-                    ),
-                )
-            )
-        if self.network.osc_rates is None:
-            self.network.osc_rates = (
-                AmphibiousNetworkOptions.default_osc_rates(morphology)
-            )
-        if self.network.osc_modular_phases is None:
-            self.network.osc_modular_phases = (
-                AmphibiousNetworkOptions.default_osc_modular_phases(
-                    morphology=morphology,
-                    phases=kwargs.pop('modular_phases', np.zeros(4)),
-                )
-            )
-        if self.network.osc_modular_amplitudes is None:
-            self.network.osc_modular_amplitudes = (
-                AmphibiousNetworkOptions.default_osc_modular_amplitudes(
-                    morphology=morphology,
-                    amplitudes=kwargs.pop('modular_amplitudes', np.zeros(4)),
-                )
-            )
-        if self.network.osc2osc is None:
-            self.network.osc2osc = (
-                AmphibiousNetworkOptions.default_osc2osc(
-                    morphology,
-                    kwargs.pop('weight_osc_body', 1e0),
-                    kwargs.pop(
-                        'body_phase_bias',
-                        2*np.pi/morphology.n_joints_body
-                    ),
-                    kwargs.pop('weight_osc_legs_internal', 3e1),
-                    kwargs.pop('weight_osc_legs_opposite', 1e1),
-                    kwargs.pop('weight_osc_legs_following', 1e1),
-                    kwargs.pop('weight_osc_legs2body', 3e1),
-                    kwargs.pop('leg_phase_follow', np.pi),
-                    kwargs.pop('body_stand_shift', 0.5*np.pi),
-                )
-            )
-        if self.network.joint2osc is None:
-            self.network.joint2osc = []
-        if self.network.contact2osc is None:
-            self.network.contact2osc = (
-                AmphibiousNetworkOptions.default_contact2osc(
-                    morphology,
-                    kwargs.pop('weight_sens_contact_intralimb', 0),
-                    kwargs.pop('weight_sens_contact_opposite', 0),
-                    kwargs.pop('weight_sens_contact_following', 0),
-                    kwargs.pop('weight_sens_contact_diagonal', 0),
-                )
-            )
-        if self.network.hydro2osc is None:
-            self.network.hydro2osc = (
-                AmphibiousNetworkOptions.default_hydro2osc(
-                    morphology,
-                    kwargs.pop('weight_sens_hydro_freq', 0),
-                    kwargs.pop('weight_sens_hydro_amp', 0),
-                )
-            )
+        self.sensors.defaults_from_morphology(morphology, kwargs)
+        self.network.defaults_from_morphology(morphology, kwargs)
         self.joints.defaults_from_morphology(morphology, kwargs)
 
+
+class AmphibiousSensorsOptions(Options):
+    """Amphibious sensors options"""
+
+    def __init__(self, **kwargs):
+        super(AmphibiousSensorsOptions, self).__init__()
+        self.links = kwargs.pop('links')
+        self.joints = kwargs.pop('joints')
+        self.contacts = kwargs.pop('contacts')
+        if kwargs:
+            raise Exception('Unknown kwargs: {}'.format(kwargs))
+
+    @classmethod
+    def from_options(cls, kwargs):
+        """From options"""
+        options = {}
+        options['links'] = kwargs.pop('links', None)
+        options['joints'] = kwargs.pop('joints', None)
+        options['contacts'] = kwargs.pop('contacts', None)
+        return cls(**options)
+
+    def defaults_from_morphology(self, morphology, kwargs):
+        """Sensors """
+        convention = AmphibiousConvention(**morphology)
+        self.links = kwargs.pop(
+            'sensors_links',
+            convention.body_links_names()
+        )
+        self.joints = kwargs.pop(
+            'sensors_joints',
+            convention.joint_names()
+        )
+        self.contacts = kwargs.pop(
+            'sensors_contacts',
+            convention.feet_links_names()
+        )
 
 class AmphibiousNetworkOptions(Options):
     """Amphibious network options"""
@@ -418,6 +368,95 @@ class AmphibiousNetworkOptions(Options):
         ]:
             options[option] = kwargs.pop(option, None)
         return cls(**options)
+
+    def defaults_from_morphology(self, morphology, kwargs):
+        """Defaults from morphology"""
+        if self.drives_init is None:
+            self.drives_init = (
+                [2, 0]
+            )
+        if self.state_init is None:
+            self.state_init = (
+                AmphibiousNetworkOptions.default_state_init(
+                    morphology,
+                ).tolist()
+            )
+        if self.oscillators is None:
+            self.oscillators = (
+                AmphibiousNetworkOptions.default_oscillators(
+                    morphology.n_joints(),
+                )
+            )
+        if self.osc_frequencies is None:
+            self.osc_frequencies = (
+                AmphibiousNetworkOptions.default_osc_frequencies(morphology)
+            )
+        if self.osc_amplitudes is None:
+            self.osc_amplitudes = (
+                AmphibiousNetworkOptions.default_osc_amplitudes(
+                    morphology,
+                    body_amplitude=kwargs.pop('body_stand_amplitude', 0.3),
+                    legs_amplitudes=kwargs.pop(
+                        'legs_amplitudes',
+                        [np.pi/4, np.pi/32, np.pi/4, np.pi/8]
+                    ),
+                )
+            )
+        if self.osc_rates is None:
+            self.osc_rates = (
+                AmphibiousNetworkOptions.default_osc_rates(morphology)
+            )
+        if self.osc_modular_phases is None:
+            self.osc_modular_phases = (
+                AmphibiousNetworkOptions.default_osc_modular_phases(
+                    morphology=morphology,
+                    phases=kwargs.pop('modular_phases', np.zeros(4)),
+                )
+            )
+        if self.osc_modular_amplitudes is None:
+            self.osc_modular_amplitudes = (
+                AmphibiousNetworkOptions.default_osc_modular_amplitudes(
+                    morphology=morphology,
+                    amplitudes=kwargs.pop('modular_amplitudes', np.zeros(4)),
+                )
+            )
+        if self.osc2osc is None:
+            self.osc2osc = (
+                AmphibiousNetworkOptions.default_osc2osc(
+                    morphology,
+                    kwargs.pop('weight_osc_body', 1e0),
+                    kwargs.pop(
+                        'body_phase_bias',
+                        2*np.pi/morphology.n_joints_body
+                    ),
+                    kwargs.pop('weight_osc_legs_internal', 3e1),
+                    kwargs.pop('weight_osc_legs_opposite', 1e1),
+                    kwargs.pop('weight_osc_legs_following', 1e1),
+                    kwargs.pop('weight_osc_legs2body', 3e1),
+                    kwargs.pop('leg_phase_follow', np.pi),
+                    kwargs.pop('body_stand_shift', 0.5*np.pi),
+                )
+            )
+        if self.joint2osc is None:
+            self.joint2osc = []
+        if self.contact2osc is None:
+            self.contact2osc = (
+                AmphibiousNetworkOptions.default_contact2osc(
+                    morphology,
+                    kwargs.pop('weight_sens_contact_intralimb', 0),
+                    kwargs.pop('weight_sens_contact_opposite', 0),
+                    kwargs.pop('weight_sens_contact_following', 0),
+                    kwargs.pop('weight_sens_contact_diagonal', 0),
+                )
+            )
+        if self.hydro2osc is None:
+            self.hydro2osc = (
+                AmphibiousNetworkOptions.default_hydro2osc(
+                    morphology,
+                    kwargs.pop('weight_sens_hydro_freq', 0),
+                    kwargs.pop('weight_sens_hydro_amp', 0),
+                )
+            )
 
     @staticmethod
     def default_state_init(morphology):

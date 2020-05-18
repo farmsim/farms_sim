@@ -17,10 +17,4 @@ class AmphibiousGPS(LinksStatesSensor):
 
     def update(self, iteration):
         """Update sensor"""
-        if self.options.collect_gps:
-            self.collect(iteration, self.links)
-        else:
-            self.collect(
-                iteration,
-                self.links[:self.options.morphology.n_links_body()]
-            )
+        self.collect(iteration, self.links)
