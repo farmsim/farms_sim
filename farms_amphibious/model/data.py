@@ -62,20 +62,20 @@ class AmphibiousData(AnimatData):
         )
         joints = JointsArray.from_options(control.joints)
         sensors = SensorsData(
-            contacts=ContactsArray.from_size(
-                len(control.sensors.contacts),
+            contacts=ContactsArray.from_names(
+                control.sensors.contacts,
                 n_iterations,
             ),
-            proprioception=ProprioceptionArray.from_size(
-                len(control.sensors.joints),
+            proprioception=ProprioceptionArray.from_names(
+                control.sensors.joints,
                 n_iterations,
             ),
-            gps=GpsArray.from_size(
-                len(control.sensors.gps),
+            gps=GpsArray.from_names(
+                control.sensors.gps,
                 n_iterations,
             ),
-            hydrodynamics=HydrodynamicsArray.from_size(
-                len(control.sensors.hydrodynamics),
+            hydrodynamics=HydrodynamicsArray.from_names(
+                control.sensors.hydrodynamics,
                 n_iterations,
             )
         )

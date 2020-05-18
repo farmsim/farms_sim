@@ -23,7 +23,7 @@ def animat_options():
         'n_legs': 4,
         'n_dof_legs': 4,
     })
-    control = AmphibiousControlOptions.from_options({
+    options = {
         'kinematics_file': '',
         'drive_forward': 2,
         'drive_turn': 0,
@@ -37,16 +37,19 @@ def animat_options():
         'body_phase_bias': 2*np.pi/morphology.n_joints_body,
         'leg_phase_follow': np.pi,
         'w_legs2body': 3e1,
-        'w_sens_contact_i': -2e0,
-        'w_sens_contact_e': 2e0,  # +3e-1
-        'w_sens_hyfro_freq': -1,
-        'w_sens_hydro_amp': 1,
+        'weight_sens_contact_intralimb': -0.5,
+        'weight_sens_contact_opposite': 2,
+        'weight_sens_contact_following': 0,
+        'weight_sens_contact_diagonal': 0,
+        'weight_sens_hydro_freq': -1,
+        'weight_sens_hydro_amp': 1,
         'legs_offsets_walking': [0, np.pi/32, 0, np.pi/8],
         'legs_offsets_swimming': [-2*np.pi/5, 0, 0, 0],
         'gain_amplitude': [1 for _ in range(morphology.n_joints())],
         'gain_offset': [1 for _ in range(morphology.n_joints())],
-    })
-    control.defaults_from_morphology(morphology, {})
+    }
+    control = AmphibiousControlOptions.from_options(options)
+    control.defaults_from_morphology(morphology, options)
     return morphology, control
 
 
