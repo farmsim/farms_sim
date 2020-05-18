@@ -222,6 +222,7 @@ class OscillatorNetworkState(OscillatorNetworkStateCy):
         """Plot"""
         self.plot_phases(times)
         self.plot_amplitudes(times)
+        self.plot_neural_activity_normalised(times)
 
     def plot_phases(self, times):
         """Plot phases"""
@@ -239,6 +240,24 @@ class OscillatorNetworkState(OscillatorNetworkStateCy):
             plt.plot(times, data[:len(times)])
         plt.xlabel('Times [s]')
         plt.ylabel('Amplitudes')
+        plt.grid(True)
+
+    def plot_phases(self, times):
+        """Plot phases"""
+        plt.figure('Network state phases')
+        for data in np.transpose(self.phases_all()):
+            plt.plot(times, data[:len(times)])
+        plt.xlabel('Times [s]')
+        plt.ylabel('Phases [rad]')
+        plt.grid(True)
+
+    def plot_neural_activity_normalised(self, times):
+        """Plot amplitudes"""
+        plt.figure('Neural activities (normalised)')
+        for data_i, data in enumerate(np.transpose(self.phases_all())):
+            plt.plot(times, 2*data_i + 0.5*(1 + np.cos(data[:len(times)])))
+        plt.xlabel('Times [s]')
+        plt.ylabel('Neural activity')
         plt.grid(True)
 
 
