@@ -38,19 +38,29 @@ def main():
         ],
         weight_osc_body=1e0,
         weight_osc_legs_internal=3e1,
-        weight_osc_legs_opposite=1e1,
-        weight_osc_legs_following=1e1,
+        weight_osc_legs_opposite=1e0,  # 1e1,
+        weight_osc_legs_following=0,  # 1e1,
         weight_osc_legs2body=3e1,
-        weight_sens_contact_i=-2e0,
-        weight_sens_contact_e=2e0,
+        weight_sens_contact_intralimb=-0.5,
+        weight_sens_contact_opposite=2,
+        weight_sens_contact_following=0,
+        weight_sens_contact_diagonal=0,
         weight_sens_hydro_freq=-1e-1,
         weight_sens_hydro_amp=-1e-1,
         body_stand_amplitude=0.2,
+        modular_phases=np.array([3*np.pi/2, 0, 3*np.pi/2, 0]) - np.pi/4,
+        modular_amplitudes=np.full(4, 1.0),
     )
-    state_init = animat_options.control.network.state_init
-    for phase_i, phase in enumerate(np.linspace(2*np.pi, 0, 11)):
-        state_init[2*phase_i] = float(phase)
-        state_init[2*phase_i+1] = float(phase)+np.pi
+    # state_init = animat_options.control.network.state_init
+    # for phase_i, phase in enumerate(np.linspace(2*np.pi, 0, 11)):
+    #     state_init[2*phase_i] = float(phase)
+    #     state_init[2*phase_i+1] = float(phase)+np.pi
+    # state_init = animat_options.control.network.state_init
+    # for osc_i in range(4*animat_options.morphology.n_joints()):
+    #     state_init[osc_i] = 1e-4*np.random.ranf()
+    animat_options.control.network.state_init = (
+        1e-4*np.random.ranf(5*animat_options.morphology.n_joints())
+    ).tolist()
 
     (
         simulation_options,

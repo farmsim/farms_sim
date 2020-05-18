@@ -5,7 +5,6 @@ import numpy as np
 
 from farms_data.options import Options
 from farms_amphibious.model.convention import AmphibiousConvention
-from farms_amphibious.data.animat_data_cy import ConnectionType
 
 
 class SpawnLoader(Enum):
@@ -282,7 +281,7 @@ class AmphibiousControlOptions(Options):
         if self.network.state_init is None:
             self.network.state_init = (
                 AmphibiousNetworkOptions.default_state_init(
-                    morphology.n_joints(),
+                    morphology,
                 ).tolist()
             )
         if self.network.oscillators is None:
@@ -310,6 +309,20 @@ class AmphibiousControlOptions(Options):
             self.network.osc_rates = (
                 AmphibiousNetworkOptions.default_osc_rates(morphology)
             )
+        if self.network.osc_modular_phases is None:
+            self.network.osc_modular_phases = (
+                AmphibiousNetworkOptions.default_osc_modular_phases(
+                    morphology=morphology,
+                    phases=kwargs.pop('modular_phases', np.zeros(4)),
+                )
+            )
+        if self.network.osc_modular_amplitudes is None:
+            self.network.osc_modular_amplitudes = (
+                AmphibiousNetworkOptions.default_osc_modular_amplitudes(
+                    morphology=morphology,
+                    amplitudes=kwargs.pop('modular_amplitudes', np.zeros(4)),
+                )
+            )
         if self.network.osc2osc is None:
             self.network.osc2osc = (
                 AmphibiousNetworkOptions.default_osc2osc(
@@ -333,16 +346,18 @@ class AmphibiousControlOptions(Options):
             self.network.contact2osc = (
                 AmphibiousNetworkOptions.default_contact2osc(
                     morphology,
-                    kwargs.pop('weight_sens_contact_e', 2e0),
-                    kwargs.pop('weight_sens_contact_i', -2e0),
+                    kwargs.pop('weight_sens_contact_intralimb', 0),
+                    kwargs.pop('weight_sens_contact_opposite', 0),
+                    kwargs.pop('weight_sens_contact_following', 0),
+                    kwargs.pop('weight_sens_contact_diagonal', 0),
                 )
             )
         if self.network.hydro2osc is None:
             self.network.hydro2osc = (
                 AmphibiousNetworkOptions.default_hydro2osc(
                     morphology,
-                    kwargs.pop('weight_sens_hydro_freq', -1),
-                    kwargs.pop('weight_sens_hydro_amp', 1),
+                    kwargs.pop('weight_sens_hydro_freq', 0),
+                    kwargs.pop('weight_sens_hydro_amp', 0),
                 )
             )
         self.joints.defaults_from_morphology(morphology, kwargs)
@@ -361,8 +376,10 @@ class AmphibiousNetworkOptions(Options):
         # Oscillators
         self.oscillators = kwargs.pop('oscillators', None)
         self.osc_frequencies = kwargs.pop('osc_frequencies', None)
-        self.osc_rates = kwargs.pop('osc_rates', None)
         self.osc_amplitudes = kwargs.pop('osc_amplitudes', None)
+        self.osc_rates = kwargs.pop('osc_rates', None)
+        self.osc_modular_phases = kwargs.pop('osc_modular_phases', None)
+        self.osc_modular_amplitudes = kwargs.pop('osc_modular_amplitudes', None)
         self.joints_output = kwargs.pop('joints_output', None)
 
         # Connections
@@ -386,8 +403,10 @@ class AmphibiousNetworkOptions(Options):
                 # Oscillators
                 'oscillators',
                 'osc_frequencies',
-                'osc_rates',
                 'osc_amplitudes',
+                'osc_rates',
+                'osc_modular_phases',
+                'osc_modular_amplitudes',
                 # Connections
                 'osc2osc',
                 'drive2osc',
@@ -401,9 +420,38 @@ class AmphibiousNetworkOptions(Options):
         return cls(**options)
 
     @staticmethod
-    def default_state_init(n_joints):
+    def default_state_init(morphology):
         """Default state"""
-        return 1e-3*np.arange(5*n_joints)
+        convention = AmphibiousConvention(**morphology)
+        state = np.zeros(5*morphology.n_joints())
+        phases_init_body = np.linspace(2*np.pi, 0, morphology.n_joints_body)
+        for joint_i in range(morphology.n_joints_body):
+            for side_osc in range(2):
+                state[convention.bodyosc2index(
+                    joint_i,
+                    side=side_osc,
+                )] = (
+                    phases_init_body[joint_i]
+                    + (0 if side_osc else np.pi)
+                )
+        phases_init_legs = [3*np.pi/2, 0, 3*np.pi/2, 0]
+        for joint_i in range(morphology.n_dof_legs):
+            for leg_i in range(morphology.n_legs//2):
+                for side_i in range(2):
+                    for side in range(2):
+                        state[convention.legosc2index(
+                            leg_i,
+                            side_i,
+                            joint_i,
+                            side=side,
+                        )] = (
+                            (0 if leg_i else np.pi)
+                            + (0 if side_i else np.pi)
+                            + (0 if side else np.pi)
+                            + phases_init_legs[joint_i]
+                        )
+        state += 1e-3*np.arange(5*morphology.n_joints())
+        return state
 
     @staticmethod
     def default_oscillators(n_joints):
@@ -488,6 +536,49 @@ class AmphibiousNetworkOptions(Options):
         return rates.tolist()
 
     @staticmethod
+    def default_osc_modular_phases(morphology, phases):
+        """Default"""
+        convention = AmphibiousConvention(**morphology)
+        n_oscillators = 2*(morphology.n_joints())
+        values = 0*np.ones(n_oscillators)
+        for joint_i in range(morphology.n_dof_legs):
+            phase = phases[joint_i]
+            for leg_i in range(morphology.n_legs//2):
+                for side_i in range(2):
+                    for side in range(2):
+                        values[convention.legosc2index(
+                            leg_i,
+                            side_i,
+                            joint_i,
+                            side=side,
+                        )] = (
+                            phase
+                            # + (0 if leg_i else np.pi)
+                            # + (0 if side_i else np.pi)
+                            + (0 if side else np.pi)
+                        )
+        return values.tolist()
+
+    @staticmethod
+    def default_osc_modular_amplitudes(morphology, amplitudes):
+        """Default"""
+        convention = AmphibiousConvention(**morphology)
+        n_oscillators = 2*(morphology.n_joints())
+        values = 0*np.ones(n_oscillators)
+        for joint_i in range(morphology.n_dof_legs):
+            amplitude = amplitudes[joint_i]
+            for leg_i in range(morphology.n_legs//2):
+                for side_i in range(2):
+                    for side in range(2):
+                        values[convention.legosc2index(
+                            leg_i,
+                            side_i,
+                            joint_i,
+                            side=side,
+                        )] = amplitude
+        return values.tolist()
+
+    @staticmethod
     def default_osc2osc(
             morphology,
             weight_body2body,
@@ -499,7 +590,7 @@ class AmphibiousNetworkOptions(Options):
             phase_limb_follow,
             body_stand_shift,
     ):
-        """Default oscillartors to oscillators connectivity"""
+        """Default oscillators to oscillators connectivity"""
         connectivity = []
         n_body_joints = morphology.n_joints_body
 
@@ -704,39 +795,113 @@ class AmphibiousNetworkOptions(Options):
         return connectivity
 
     @staticmethod
-    def default_contact2osc(morphology, weight_e, weight_i):
+    def default_contact2osc(
+            morphology,
+            w_intralimb,
+            w_opposite,
+            w_following,
+            w_diagonal
+    ):
         """Default contact sensors to oscillators connectivity"""
         connectivity = []
         convention = AmphibiousConvention(**morphology)
-        for leg_i in range(morphology.n_legs//2):
-            for side_i in range(2):
+        # Intralimb
+        for sensor_leg_i in range(morphology.n_legs//2):
+            for sensor_side_i in range(2):
                 for joint_i in range(morphology.n_dof_legs):
                     for side_o in range(2):
-                        for sensor_leg_i in range(morphology.n_legs//2):
-                            for sensor_side_i in range(2):
-                                weight = (
-                                    weight_e
-                                    if (
-                                        (leg_i == sensor_leg_i)
-                                        != (side_i == sensor_side_i)
-                                    )
-                                    else weight_i
-                                )
-                                if weight != 0:
-                                    connectivity.append({
-                                        'in': convention.legosc2index(
-                                            leg_i=leg_i,
-                                            side_i=side_i,
-                                            joint_i=joint_i,
-                                            side=side_o
-                                        ),
-                                        'out': convention.contactleglink2index(
-                                            leg_i=sensor_leg_i,
-                                            side_i=sensor_side_i
-                                        ),
-                                        'type': 'REACTION2FREQ',
-                                        'weight': weight,
-                                    })
+                        if w_intralimb:
+                            connectivity.append({
+                                'in': convention.legosc2index(
+                                    leg_i=sensor_leg_i,
+                                    side_i=sensor_side_i,
+                                    joint_i=joint_i,
+                                    side=side_o
+                                ),
+                                'out': convention.contactleglink2index(
+                                    leg_i=sensor_leg_i,
+                                    side_i=sensor_side_i
+                                ),
+                                'type': 'REACTION2FREQ',
+                                'weight': w_intralimb,
+                            })
+                        if w_opposite:
+                            connectivity.append({
+                                'in': convention.legosc2index(
+                                    leg_i=sensor_leg_i,
+                                    side_i=(sensor_side_i+1)%2,
+                                    joint_i=joint_i,
+                                    side=side_o
+                                ),
+                                'out': convention.contactleglink2index(
+                                    leg_i=sensor_leg_i,
+                                    side_i=sensor_side_i
+                                ),
+                                'type': 'REACTION2FREQ',
+                                'weight': w_opposite,
+                            })
+                        if w_following:
+                            if sensor_leg_i > 0:
+                                connectivity.append({
+                                    'in': convention.legosc2index(
+                                        leg_i=sensor_leg_i-1,
+                                        side_i=sensor_side_i,
+                                        joint_i=joint_i,
+                                        side=side_o
+                                    ),
+                                    'out': convention.contactleglink2index(
+                                        leg_i=sensor_leg_i,
+                                        side_i=sensor_side_i
+                                    ),
+                                    'type': 'REACTION2FREQ',
+                                    'weight': w_following,
+                                })
+                            if sensor_leg_i < (morphology.n_legs//2 - 1):
+                                connectivity.append({
+                                    'in': convention.legosc2index(
+                                        leg_i=sensor_leg_i+1,
+                                        side_i=sensor_side_i,
+                                        joint_i=joint_i,
+                                        side=side_o
+                                    ),
+                                    'out': convention.contactleglink2index(
+                                        leg_i=sensor_leg_i,
+                                        side_i=sensor_side_i
+                                    ),
+                                    'type': 'REACTION2FREQ',
+                                    'weight': w_following,
+                                })
+                        if w_diagonal:
+                            if sensor_leg_i > 0:
+                                connectivity.append({
+                                    'in': convention.legosc2index(
+                                        leg_i=sensor_leg_i-1,
+                                        side_i=(sensor_side_i+1)%2,
+                                        joint_i=joint_i,
+                                        side=side_o
+                                    ),
+                                    'out': convention.contactleglink2index(
+                                        leg_i=sensor_leg_i,
+                                        side_i=sensor_side_i
+                                    ),
+                                    'type': 'REACTION2FREQ',
+                                    'weight': w_diagonal,
+                                })
+                            if sensor_leg_i < (morphology.n_legs//2 - 1):
+                                connectivity.append({
+                                    'in': convention.legosc2index(
+                                        leg_i=sensor_leg_i+1,
+                                        side_i=(sensor_side_i+1)%2,
+                                        joint_i=joint_i,
+                                        side=side_o
+                                    ),
+                                    'out': convention.contactleglink2index(
+                                        leg_i=sensor_leg_i,
+                                        side_i=sensor_side_i
+                                    ),
+                                    'type': 'REACTION2FREQ',
+                                    'weight': w_diagonal,
+                                })
         return connectivity
 
     @staticmethod

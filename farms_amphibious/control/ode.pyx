@@ -7,7 +7,7 @@
 # cimport cython
 # from cython.parallel import prange
 
-from libc.math cimport sin, fabs  # cos,
+from libc.math cimport sin, cos, fabs
 # from libc.stdlib cimport malloc, free
 from libc.stdio cimport printf
 
@@ -55,14 +55,24 @@ cpdef inline void ode_dphase(
 ) nogil:
     """Oscillator phase ODE
 
-    d_theta = omega + sum amplitude_j*weight*sin(phase_j - phase_i - phase_bias)
+    d_theta = (
+        omega*(1 + omega_mod_amp*cos(theta + omega_mod_phase))
+        + sum amplitude_j*weight*sin(phase_j - phase_i - phase_bias)
+    )
 
     """
     cdef unsigned int i, i0, i1, n_oscillators = oscillators.c_n_oscillators()
-    for i in range(n_oscillators):  # , nogil=True):
+    for i in range(n_oscillators):
         # Intrinsic frequency
         dstate[i] = oscillators.c_angular_frequency(i, drives.c_speed(iteration))
+        if oscillators.c_modular_amplitudes(i) > 1e-3:
+            dstate[i] *= (
+                1 + oscillators.c_modular_amplitudes(i)*cos(
+                    phase(state, i) + oscillators.c_modular_phases(i)
+                )
+            )
     for i in range(connectivity.c_n_connections()):
+        # Neural couplings
         i0 = connectivity.connections.array[i, 0]
         i1 = connectivity.connections.array[i, 1]
         dstate[i0] += state[n_oscillators+i1]*connectivity.c_weight(i)*sin(
