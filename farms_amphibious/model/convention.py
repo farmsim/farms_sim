@@ -69,6 +69,13 @@ class AmphibiousConvention:
         assert 0 <= link_i < n_body, 'Body must be < {}, got {}'.format(n_body, link_i)
         return 'link_body_{}'.format(link_i)
 
+    def body_links_names(self):
+        """Body links names"""
+        return [
+            self.bodylink2name(link_i)
+            for link_i in range(self.n_joints_body+1)
+        ]
+
     def leglink2index(self, leg_i, side_i, joint_i):
         """leglink2index"""
         n_legs = self.n_legs
@@ -98,6 +105,14 @@ class AmphibiousConvention:
         assert 0 <= side_i < 2, 'Body side must be < 2, got {}'.format(side_i)
         assert 0 <= joint_i < n_legs_dof, 'Joint must be < {}, got {}'.format(n_legs_dof, joint_i)
         return 'link_leg_{}_{}_{}'.format(leg_i, 'R' if side_i else 'L', joint_i)
+
+    def feet_links_names(self):
+        """Feet links names"""
+        return [
+            self.leglink2name(leg_i, side_i, self.n_dof_legs-1)
+            for leg_i in range(self.n_legs//2)
+            for side_i in range(2)
+        ]
 
     def bodyjoint2index(self, joint_i):
         """bodyjoint2index"""
@@ -149,7 +164,7 @@ class AmphibiousConvention:
             for i in range(self.n_joints_body)
         ] + [
             self.legjoint2name(leg_i, side_i, joint_i)
-            for leg_i in range(self.n_legs)
+            for leg_i in range(self.n_legs//2)
             for side_i in range(2)
             for joint_i in range(self.n_dof_legs)
         ]

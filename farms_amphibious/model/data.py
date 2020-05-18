@@ -30,7 +30,6 @@ class AmphibiousData(AnimatData):
             cls,
             initial_drives,
             initial_state,
-            morphology,
             control,
             n_iterations
     ):
@@ -64,19 +63,19 @@ class AmphibiousData(AnimatData):
         joints = JointsArray.from_options(control.joints)
         sensors = SensorsData(
             contacts=ContactsArray.from_size(
-                morphology.n_legs,
+                len(control.sensors.contacts),
                 n_iterations,
             ),
             proprioception=ProprioceptionArray.from_size(
-                morphology.n_joints(),
+                len(control.sensors.joints),
                 n_iterations,
             ),
             gps=GpsArray.from_size(
-                morphology.n_links(),
+                len(control.sensors.gps),
                 n_iterations,
             ),
             hydrodynamics=HydrodynamicsArray.from_size(
-                morphology.n_links_body(),
+                len(control.sensors.hydrodynamics),
                 n_iterations,
             )
         )

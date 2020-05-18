@@ -16,7 +16,7 @@ from farms_bullet.plugins.swimming import (
     swimming_debug
 )
 import farms_pylog as pylog
-from ..sensors.sensors import AmphibiousGPS
+from farms_bullet.sensors.sensors import LinksStatesSensor
 from ..utils.sdf import load_sdf, load_sdf_pybullet
 from .options import SpawnLoader
 
@@ -102,7 +102,8 @@ class Amphibious(Animat):
     def spawn(self):
         """Spawn amphibious"""
         # Spawn
-        self.spawn_sdf(original=self.options.spawn.loader==SpawnLoader.PYBULLET)
+        use_pybullet_loader = self.options.spawn.loader == SpawnLoader.PYBULLET
+        self.spawn_sdf(original=use_pybullet_loader)
         # Sensors
         if self.data:
             self.add_sensors()
@@ -151,44 +152,46 @@ class Amphibious(Animat):
     def add_sensors(self):
         """Add sensors"""
         # Links
-        if self.options.morphology.links is not None:
+        if self.options.control.sensors.gps:
             self.sensors.add({
-                'links': AmphibiousGPS(
+                'gps': LinksStatesSensor(
                     array=self.data.sensors.gps.array,
                     animat_id=self.identity(),
-                    links=self.links_identities(),
-                    options=self.options,
+                    links=[
+                        self._links[link]
+                        for link in self.options.control.sensors.gps
+                    ],
                     units=self.units
                 )
             })
         # Joints
-        if self.options.morphology.joints is not None:
+        if self.options.control.sensors.joints:
             self.sensors.add({
                 'joints': JointsStatesSensor(
-                    self.data.sensors.proprioception.array,
-                    self._identity,
-                    self.joints_identities(),
-                    self.units,
+                    array=self.data.sensors.proprioception.array,
+                    model_id=self._identity,
+                    joints=[
+                        self._joints[joint]
+                        for joint in self.options.control.sensors.joints
+                    ],
+                    units=self.units,
                     enable_ft=True
                 )
             })
         # Contacts
-        if (
-                self.options.morphology.links is not None
-                and self.options.morphology.feet is not None
-        ):
+        if self.options.control.sensors.contacts:
             self.sensors.add({
                 'contacts': ContactsSensors(
-                    self.data.sensors.contacts.array,
-                    [
+                    array=self.data.sensors.contacts.array,
+                    animat_ids=[
                         self._identity
-                        for _ in self.options.morphology.feet
+                        for _ in self.options.control.sensors.contacts
                     ],
-                    [
+                    animat_links=[
                         self._links[foot]
-                        for foot in self.options.morphology.feet
+                        for foot in self.options.control.sensors.contacts
                     ],
-                    self.units.newtons
+                    newtons=self.units.newtons
                 )
             })
 

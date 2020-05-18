@@ -164,7 +164,10 @@ def get_pleurobot_options(**kwargs):
         'HindLimbRight_Roll',
         'HindLimbRight_Elbow',
     ])
-    feet = kwargs.pop('feet', ['link{}'.format(i+1) for i in [14, 18, 22, 26]])
+    feet = kwargs.pop(
+        'feet',
+        ['link{}'.format(i+1) for i in [14, 18, 22, 26]]
+    )
     links_no_collisions = kwargs.pop('links_no_collisions', [
         link
         for link in links
@@ -260,9 +263,13 @@ def get_pleurobot_options(**kwargs):
         weight_sens_hydro_freq=kwargs.pop('weight_sens_hydro_freq', 0),
         weight_sens_hydro_amp=kwargs.pop('weight_sens_hydro_amp', 0),
         links=links,
-        joints=joints,
-        feet=feet,
+        links_swimming=[],
         links_no_collisions=links_no_collisions,
+        joints=joints,
+        sensors_gps=links,
+        sensors_joints=joints,
+        sensors_contacts=feet,
+        sensors_hydrodynamics=[],
         **kwargs
     )
     return sdf, animat_options
@@ -325,7 +332,7 @@ def fish_options(animat, version, kinematics_file, sampling_timestep, **kwargs):
     # ]
     links = ['link_body_0']+[
         '{}_v_{}_i_0_e_body_{}_t_link'.format(animat, version, i+1)
-        for i in range(n_joints-1)
+        for i in range(n_joints)
     ]
     # joints = ['joint_{}'.format(i) for i in range(n_joints)]
     joints = [
@@ -346,8 +353,11 @@ def fish_options(animat, version, kinematics_file, sampling_timestep, **kwargs):
         links=links,
         links_swimming=links,
         links_no_collisions=links,
-        feet=[],
         joints=joints,
+        sensors_gps=links,
+        sensors_joints=joints,
+        sensors_contacts=[],
+        sensors_hydrodynamics=links,
         **kwargs
     ))
 

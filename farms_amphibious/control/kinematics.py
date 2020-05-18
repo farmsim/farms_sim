@@ -60,6 +60,10 @@ class AmphibiousKinematics(ModelController):
         self.animat_options = animat_options
         self.animat_data = animat_data
         self._timestep = timestep
+        self.max_torques = np.array([
+            animat_options.control.joints.max_torques[joint]
+            for joint in joints
+        ])
 
     def step(self, iteration, time, timestep):
         """Control step"""
