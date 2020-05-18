@@ -164,7 +164,7 @@ class AmphibiousConvention:
             for i in range(self.n_joints_body)
         ] + [
             self.legjoint2name(leg_i, side_i, joint_i)
-            for leg_i in range(self.n_legs)
+            for leg_i in range(self.n_legs//2)
             for side_i in range(2)
             for joint_i in range(self.n_dof_legs)
         ]

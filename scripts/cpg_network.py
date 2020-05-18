@@ -45,7 +45,6 @@ def animat_options():
         'legs_offsets_swimming': [-2*np.pi/5, 0, 0, 0],
         'gain_amplitude': [1 for _ in range(morphology.n_joints())],
         'gain_offset': [1 for _ in range(morphology.n_joints())],
-        'sensors': None,
     })
     control.defaults_from_morphology(morphology, {})
     return morphology, control
@@ -57,7 +56,7 @@ def run_simulation(network, n_iterations, timestep):
         network.step(iteration, iteration*timestep, timestep)
 
 
-def simulation(times, morphology, control):
+def simulation(times, control):
     """Simulation"""
     timestep = times[1] - times[0]
     n_iterations = len(times)
@@ -67,7 +66,6 @@ def simulation(times, morphology, control):
     animat_data = AmphibiousData.from_options(
         control.network.drives_init,
         control.network.state_init,
-        morphology,
         control,
         n_iterations
     )
@@ -168,7 +166,7 @@ def main(filename='cpg_network.h5'):
     """Main"""
     times = np.arange(0, 10, 1e-3)
     morphology, control = animat_options()
-    _, animat_data = simulation(times, morphology, control)
+    _, animat_data = simulation(times, control)
 
     # Save data
     pylog.debug('Saving data to {}'.format(filename))

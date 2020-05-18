@@ -75,7 +75,6 @@ class AmphibiousMorphologyOptions(Options):
         self.n_dof_legs = kwargs.pop('n_dof_legs')
         self.n_legs = kwargs.pop('n_legs')
         self.links = kwargs.pop('links')
-        self.feet = kwargs.pop('feet')
         self.links_swimming = kwargs.pop('links_swimming')
         self.links_no_collisions = kwargs.pop('links_no_collisions')
         self.links_friction_lateral = kwargs.pop('links_friction_lateral')
@@ -104,15 +103,6 @@ class AmphibiousMorphologyOptions(Options):
             for leg_i in range(options['n_legs']//2)
             for side_i in range(2)
             for link_i in range(options['n_dof_legs'])
-        ])
-        options['feet'] = kwargs.pop('feet', [
-            convention.leglink2name(
-                leg_i=leg_i,
-                side_i=side_i,
-                joint_i=options['n_dof_legs']-1
-            )
-            for leg_i in range(options['n_legs']//2)
-            for side_i in range(2)
         ])
         options['links_swimming'] = kwargs.pop('links_swimming', [
             convention.bodylink2name(body_i)
@@ -282,9 +272,10 @@ class AmphibiousSensorsOptions(Options):
 
     def __init__(self, **kwargs):
         super(AmphibiousSensorsOptions, self).__init__()
-        self.links = kwargs.pop('links')
+        self.gps = kwargs.pop('gps')
         self.joints = kwargs.pop('joints')
         self.contacts = kwargs.pop('contacts')
+        self.hydrodynamics = kwargs.pop('hydrodynamics')
         if kwargs:
             raise Exception('Unknown kwargs: {}'.format(kwargs))
 
@@ -292,16 +283,17 @@ class AmphibiousSensorsOptions(Options):
     def from_options(cls, kwargs):
         """From options"""
         options = {}
-        options['links'] = kwargs.pop('links', None)
-        options['joints'] = kwargs.pop('joints', None)
-        options['contacts'] = kwargs.pop('contacts', None)
+        options['gps'] = kwargs.pop('sens_gps', None)
+        options['joints'] = kwargs.pop('sens_joints', None)
+        options['contacts'] = kwargs.pop('sens_contacts', None)
+        options['hydrodynamics'] = kwargs.pop('sens_hydrodynamics', None)
         return cls(**options)
 
     def defaults_from_morphology(self, morphology, kwargs):
         """Sensors """
         convention = AmphibiousConvention(**morphology)
-        self.links = kwargs.pop(
-            'sensors_links',
+        self.gps = kwargs.pop(
+            'sensors_gps',
             convention.body_links_names()
         )
         self.joints = kwargs.pop(
@@ -311,6 +303,10 @@ class AmphibiousSensorsOptions(Options):
         self.contacts = kwargs.pop(
             'sensors_contacts',
             convention.feet_links_names()
+        )
+        self.hydrodynamics = kwargs.pop(
+            'sensors_hydrodynamics',
+            convention.body_links_names()
         )
 
 class AmphibiousNetworkOptions(Options):
