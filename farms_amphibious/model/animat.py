@@ -213,12 +213,12 @@ class Amphibious(Animat):
                 group=0,
                 mask=0
             )
-        # Default link properties
+        # Default dynamics
         for link in self._links:
             # Default friction
             self.set_link_dynamics(
                 link,
-                lateralFriction=1,
+                lateralFriction=0,
                 spinningFriction=0,
                 rollingFriction=0,
             )
@@ -229,18 +229,11 @@ class Amphibious(Animat):
                 angularDamping=0,
                 jointDamping=0,
             )
-        # Friction
-        for link, lateral, spinning, rolling in zip(
-                self.options.morphology.links_names(),
-                self.options.morphology.links_friction_lateral,
-                self.options.morphology.links_friction_spinning,
-                self.options.morphology.links_friction_rolling,
-        ):
+        # Model options dynamics
+        for link in self.options.morphology.links:
             self.set_link_dynamics(
-                link,
-                lateralFriction=lateral,
-                spinningFriction=spinning,
-                rollingFriction=rolling,
+                link['name'],
+                **link['pybullet_dynamics'],
             )
 
     def drag_swimming_forces(self, iteration, water_surface, **kwargs):

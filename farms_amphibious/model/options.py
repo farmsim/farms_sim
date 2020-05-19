@@ -77,9 +77,6 @@ class AmphibiousMorphologyOptions(Options):
         self.links = kwargs.pop('links')
         self.links_swimming = kwargs.pop('links_swimming')
         self.links_no_collisions = kwargs.pop('links_no_collisions')
-        self.links_friction_lateral = kwargs.pop('links_friction_lateral')
-        self.links_friction_spinning = kwargs.pop('links_friction_spinning')
-        self.links_friction_rolling = kwargs.pop('links_friction_rolling')
         self.joints = kwargs.pop('joints')
         if kwargs:
             raise Exception('Unknown kwargs: {}'.format(kwargs))
@@ -95,22 +92,9 @@ class AmphibiousMorphologyOptions(Options):
         options['n_dof_legs'] = kwargs.pop('n_dof_legs', 4)
         options['n_legs'] = kwargs.pop('n_legs', 4)
         convention = AmphibiousConvention(**options)
-        options['links'] = kwargs.pop('links', [
-            AmphibiousLinkOptions(
-                name=name,
-                swimming=None,
-                collisions=None,
-                drag_coefficients=None,
-                pybullet_properties=dict(
-                    linearDamping=0,
-                    angularDamping=0,
-                    jointDamping=0,
-                    lateralFriction=1,
-                    spinningFriction=0,
-                    rollingFriction=0,
-                ),
-            )
-            for name in [
+        links_names = kwargs.pop(
+            'links_names',
+            [
                 convention.bodylink2name(i)
                 for i in range(options['n_joints_body']+1)
             ] + [
@@ -119,7 +103,44 @@ class AmphibiousMorphologyOptions(Options):
                 for side_i in range(2)
                 for link_i in range(options['n_dof_legs'])
             ]
-        ])
+        )
+        links_friction_lateral = kwargs.pop(
+            'links_friction_lateral',
+            [1 for link in links_names]
+        )
+        links_friction_spinning = kwargs.pop(
+            'links_friction_spinning',
+            [0 for link in links_names]
+        )
+        links_friction_rolling = kwargs.pop(
+            'links_friction_rolling',
+            [0 for link in links_names]
+        )
+        options['links'] = kwargs.pop(
+            'links',
+            [
+                AmphibiousLinkOptions(
+                    name=name,
+                    swimming=None,
+                    collisions=None,
+                    drag_coefficients=None,
+                    pybullet_dynamics={
+                        'linearDamping': 0,
+                        'angularDamping': 0,
+                        'jointDamping': 0,
+                        'lateralFriction': lateral,
+                        'spinningFriction': spinning,
+                        'rollingFriction': rolling,
+                    },
+                )
+                for name, lateral, spinning, rolling in zip(
+                    links_names,
+                    links_friction_lateral,
+                    links_friction_spinning,
+                    links_friction_rolling,
+                )
+            ]
+        )
         options['links_swimming'] = kwargs.pop('links_swimming', [
             convention.bodylink2name(body_i)
             for body_i in range(options['n_joints_body']+1)
@@ -135,26 +156,9 @@ class AmphibiousMorphologyOptions(Options):
                 for joint_i in range(options['n_dof_legs']-1)
             ] if kwargs.pop('reduced_collisions', False) else []
         ))
-        options['links_friction_lateral'] = kwargs.pop(
-            'links_friction_lateral',
-            [1 for link in options['links']]
-        )
-        options['links_friction_spinning'] = kwargs.pop(
-            'links_friction_spinning',
-            [0 for link in options['links']]
-        )
-        options['links_friction_rolling'] = kwargs.pop(
-            'links_friction_rolling',
-            [0 for link in options['links']]
-        )
-        options['joints'] = kwargs.pop('joints', [
-            AmphibiousJointOptions(
-                name=name,
-                initial_position=0,
-                initial_velocity=0,
-                pybullet_properties={},
-            )
-            for name in [
+        joints_names = kwargs.pop(
+            'joints_names',
+            [
                 convention.bodyjoint2name(i)
                 for i in range(options['n_joints_body'])
             ] + [
@@ -163,7 +167,21 @@ class AmphibiousMorphologyOptions(Options):
                 for side_i in range(2)
                 for joint_i in range(options['n_dof_legs'])
             ]
-        ])
+        )
+        options['joints'] = kwargs.pop(
+            'joints',
+            [
+                AmphibiousJointOptions(
+                    name=name,
+                    initial_position=0,
+                    initial_velocity=0,
+                    pybullet_dynamics={
+                        'jointDamping': 0,
+                    },
+                )
+                for name in joints_names
+            ]
+        )
         return cls(**options)
 
     def links_names(self):
@@ -192,7 +210,11 @@ class AmphibiousMorphologyOptions(Options):
 
 
 class AmphibiousLinkOptions(Options):
-    """Amphibious link options"""
+    """Amphibious link options
+
+    The Pybullet dynamics represent the input arguments called with
+    pybullet.changeDynamics(...).
+    """
 
     def __init__(self, **kwargs):
         super(AmphibiousLinkOptions, self).__init__()
@@ -200,17 +222,22 @@ class AmphibiousLinkOptions(Options):
         self.swimming = kwargs.pop('swimming')
         self.collisions = kwargs.pop('collisions')
         self.drag_coefficients = kwargs.pop('drag_coefficients')
-        self.pybullet_properties = kwargs.pop('pybullet_properties', {})
+        self.pybullet_dynamics = kwargs.pop('pybullet_dynamics', {})
 
 
 class AmphibiousJointOptions(Options):
-    """Amphibious joint options"""
+    """Amphibious joint options
+
+    The Pybullet dynamics represent the input arguments called with
+    pybullet.changeDynamics(...). The appropriate link is called for it.
+    """
 
     def __init__(self, **kwargs):
         super(AmphibiousJointOptions, self).__init__()
         self.name = kwargs.pop('name')
         self.initial_position = kwargs.pop('initial_position')
         self.initial_velocity = kwargs.pop('initial_velocity')
+        self.pybullet_dynamics = kwargs.pop('pybullet_dynamics', {})
 
 
 class AmphibiousOscillatorOptions(Options):
