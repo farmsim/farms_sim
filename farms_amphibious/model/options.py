@@ -121,13 +121,24 @@ class AmphibiousMorphologyOptions(Options):
             'links_friction_rolling',
             [0 for link in links_names]
         )
+        links_no_collisions = kwargs.pop('links_no_collisions', (
+            [
+                convention.bodylink2name(body_i)
+                for body_i in range(1, options['n_joints_body'])
+            ] + [
+                convention.leglink2name(leg_i, side_i, joint_i)
+                for leg_i in range(options['n_legs']//2)
+                for side_i in range(2)
+                for joint_i in range(options['n_dof_legs']-1)
+            ] if kwargs.pop('reduced_collisions', False) else []
+        ))
         options['links'] = kwargs.pop(
             'links',
             [
                 AmphibiousLinkOptions(
                     name=name,
-                    swimming=None,
-                    collisions=None,
+                    swimming=False,
+                    collisions=name not in links_no_collisions,
                     drag_coefficients=None,
                     pybullet_dynamics={
                         'linearDamping': 0,
@@ -150,17 +161,6 @@ class AmphibiousMorphologyOptions(Options):
             convention.bodylink2name(body_i)
             for body_i in range(options['n_joints_body']+1)
         ])
-        options['links_no_collisions'] = kwargs.pop('links_no_collisions', (
-            [
-                convention.bodylink2name(body_i)
-                for body_i in range(1, options['n_joints_body'])
-            ] + [
-                convention.leglink2name(leg_i, side_i, joint_i)
-                for leg_i in range(options['n_legs']//2)
-                for side_i in range(2)
-                for joint_i in range(options['n_dof_legs']-1)
-            ] if kwargs.pop('reduced_collisions', False) else []
-        ))
         joints_names = kwargs.pop(
             'joints_names',
             [

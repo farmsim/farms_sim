@@ -207,12 +207,15 @@ class Amphibious(Animat):
         if verbose:
             pylog.debug('Body mass: {} [kg]'.format(np.sum(self.masses)))
         # Deactivate collisions
-        if self.options.morphology.links_no_collisions is not None:
-            self.set_collisions(
-                self.options.morphology.links_no_collisions,
-                group=0,
-                mask=0
-            )
+        self.set_collisions(
+            [
+                link.name
+                for link in self.options.morphology.links
+                if not link.collisions
+            ],
+            group=0,
+            mask=0
+        )
         # Default dynamics
         for link in self._links:
             # Default friction
@@ -232,8 +235,8 @@ class Amphibious(Animat):
         # Model options dynamics
         for link in self.options.morphology.links:
             self.set_link_dynamics(
-                link['name'],
-                **link['pybullet_dynamics'],
+                link.name,
+                **link.pybullet_dynamics,
             )
 
     def drag_swimming_forces(self, iteration, water_surface, **kwargs):
