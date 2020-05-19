@@ -238,6 +238,11 @@ class Amphibious(Animat):
                 link.name,
                 **link.pybullet_dynamics,
             )
+        for joint in self.options.morphology.joints:
+            self.set_joint_dynamics(
+                joint.name,
+                **joint.pybullet_dynamics,
+            )
 
     def drag_swimming_forces(self, iteration, water_surface, **kwargs):
         """Animat swimming physics"""
