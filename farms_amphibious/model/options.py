@@ -69,8 +69,6 @@ class AmphibiousMorphologyOptions(Options):
     def __init__(self, **kwargs):
         super(AmphibiousMorphologyOptions, self).__init__()
         self.mesh_directory = kwargs.pop('mesh_directory')
-        self.density = kwargs.pop('density')
-        self.mass_multiplier = kwargs.pop('mass_multiplier')
         self.n_joints_body = kwargs.pop('n_joints_body')
         self.n_dof_legs = kwargs.pop('n_dof_legs')
         self.n_legs = kwargs.pop('n_legs')
@@ -90,8 +88,6 @@ class AmphibiousMorphologyOptions(Options):
         """From options"""
         options = {}
         options['mesh_directory'] = kwargs.pop('mesh_directory', '')
-        options['density'] = kwargs.pop('density', 1000.0)
-        options['mass_multiplier'] = kwargs.pop('mass_multiplier', 1)
         options['n_joints_body'] = kwargs.pop('n_joints_body', 11)
         options['n_dof_legs'] = kwargs.pop('n_dof_legs', 4)
         options['n_legs'] = kwargs.pop('n_legs', 4)
@@ -135,11 +131,15 @@ class AmphibiousMorphologyOptions(Options):
             convention.bodylink2name(body_i)
             for body_i in range(options['n_joints_body']+1)
         ])
+        links_density = kwargs.pop('density', 1000.0)
+        links_mass_multiplier = kwargs.pop('mass_multiplier', 1)
         options['links'] = kwargs.pop(
             'links',
             [
                 AmphibiousLinkOptions(
                     name=name,
+                    density=links_density,
+                    mass_multiplier=links_mass_multiplier,
                     swimming=name in links_swimming,
                     collisions=name not in links_no_collisions,
                     drag_coefficients=None,
@@ -223,6 +223,8 @@ class AmphibiousLinkOptions(Options):
     def __init__(self, **kwargs):
         super(AmphibiousLinkOptions, self).__init__()
         self.name = kwargs.pop('name')
+        self.density = kwargs.pop('density')
+        self.mass_multiplier = kwargs.pop('mass_multiplier')
         self.swimming = kwargs.pop('swimming')
         self.collisions = kwargs.pop('collisions')
         self.drag_coefficients = kwargs.pop('drag_coefficients')

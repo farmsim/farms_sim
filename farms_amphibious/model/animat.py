@@ -138,7 +138,7 @@ class Amphibious(Animat):
                 force_concave=False,
                 reset_control=False,
                 verbose=True,
-                mass_multiplier=self.options.morphology.mass_multiplier,
+                links_options=self.options.morphology.links,
             )
         initial_pose(
             identity=self._identity,

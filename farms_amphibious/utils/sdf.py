@@ -155,7 +155,7 @@ def load_sdf(
         force_concave=False,
         reset_control=False,
         verbose=False,
-        mass_multiplier=1,
+        links_options=None,
 ):
     """Load SDF"""
     sdf = ModelSDF.read(sdf_path)[0]
@@ -260,8 +260,16 @@ def load_sdf(
         for link_i, name in enumerate(links_names[1:])
     ]
 
-    # Modify masses
-    link_masses = (mass_multiplier*np.array(link_masses)).tolist()
+    if links_options:
+        # Modify masses
+        mass_multiplier_map = {
+            link.name: link.mass_multiplier
+            for link in links_options
+        }
+        link_masses = [
+            mass_multiplier_map[link_name]*link_mass
+            for link_name, link_mass in zip(links_names, link_masses)
+        ]
 
     # Local information
     link_local_positions = []
