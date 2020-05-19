@@ -74,10 +74,15 @@ class AmphibiousMorphologyOptions(Options):
         self.n_joints_body = kwargs.pop('n_joints_body')
         self.n_dof_legs = kwargs.pop('n_dof_legs')
         self.n_legs = kwargs.pop('n_legs')
-        self.links = kwargs.pop('links')
+        self.links = [
+            AmphibiousLinkOptions(**link)
+            for link in kwargs.pop('links')
+        ]
         self.links_swimming = kwargs.pop('links_swimming')
-        self.links_no_collisions = kwargs.pop('links_no_collisions')
-        self.joints = kwargs.pop('joints')
+        self.joints = [
+            AmphibiousJointOptions(**joint)
+            for joint in kwargs.pop('joints')
+        ]
         if kwargs:
             raise Exception('Unknown kwargs: {}'.format(kwargs))
 
