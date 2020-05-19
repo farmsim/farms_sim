@@ -93,11 +93,11 @@ class Amphibious(Animat):
 
     def links_identities(self):
         """Links"""
-        return [self._links[link] for link in self.options.morphology.links]
+        return [self._links[link] for link in self.options.morphology.links_names()]
 
     def joints_identities(self):
         """Joints"""
-        return [self._joints[joint] for joint in self.options.morphology.joints]
+        return [self._joints[joint] for joint in self.options.morphology.joints_names()]
 
     def spawn(self):
         """Spawn amphibious"""
@@ -130,7 +130,7 @@ class Amphibious(Animat):
         if original:
             self._identity, self._links, self._joints = load_sdf_pybullet(
                 sdf_path=self.sdf,
-                morphology_links=self.options.morphology.links,
+                morphology_links=self.options.morphology.links_names(),
             )
         else:
             self._identity, self._links, self._joints = load_sdf(
@@ -164,6 +164,7 @@ class Amphibious(Animat):
                     units=self.units
                 )
             })
+
         # Joints
         if self.options.control.sensors.joints:
             self.sensors.add({
@@ -178,6 +179,7 @@ class Amphibious(Animat):
                     enable_ft=True
                 )
             })
+
         # Contacts
         if self.options.control.sensors.contacts:
             self.sensors.add({
@@ -229,7 +231,7 @@ class Amphibious(Animat):
             )
         # Friction
         for link, lateral, spinning, rolling in zip(
-                self.options.morphology.links,
+                self.options.morphology.links_names(),
                 self.options.morphology.links_friction_lateral,
                 self.options.morphology.links_friction_spinning,
                 self.options.morphology.links_friction_rolling,
@@ -264,7 +266,7 @@ class Amphibious(Animat):
             self, iteration, water_surface, link_frame=True, debug=False
     ):
         """Animat swimming physics"""
-        links = self.options.morphology.links
+        links = self.options.morphology.links_names()
         links_swimming = self.options.morphology.links_swimming
         swimming_motion(
             iteration,
@@ -296,7 +298,7 @@ class Amphibious(Animat):
     def draw_hydrodynamics(self, iteration, water_surface, margin=0.01):
         """Draw hydrodynamics forces"""
         gps = self.data.sensors.gps
-        links = self.options.morphology.links
+        links = self.options.morphology.links_names()
         for i, (line, name) in enumerate(zip(
                 self.hydrodynamics,
                 self.options.morphology.links_swimming

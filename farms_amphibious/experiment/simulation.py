@@ -38,7 +38,7 @@ def simulation_setup(animat_sdf, arena, **kwargs):
     if kwargs.pop('use_controller', False):
         if animat_options.control.kinematics_file:
             animat_controller = AmphibiousKinematics(
-                joints=animat_options.morphology.joints,
+                joints=animat_options.morphology.joints_names(),
                 animat_options=animat_options,
                 animat_data=animat_data,
                 timestep=simulation_options.timestep,
@@ -47,7 +47,7 @@ def simulation_setup(animat_sdf, arena, **kwargs):
             )
         else:
             animat_controller = AmphibiousController(
-                joints=animat_options.morphology.joints,
+                joints=animat_options.morphology.joints_names(),
                 animat_options=animat_options,
                 animat_data=animat_data,
                 timestep=simulation_options.timestep

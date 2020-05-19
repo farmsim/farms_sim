@@ -5,7 +5,11 @@ import farms_pylog as pylog
 from farms_models.utils import get_sdf_path
 from farms_bullet.simulation.options import SimulationOptions
 from farms_bullet.model.model import SimulationModels, DescriptionFormatModel
-from ..model.options import AmphibiousOptions
+from ..model.options import (
+    AmphibiousOptions,
+    AmphibiousLinkOptions,
+    AmphibiousJointOptions
+)
 
 
 def get_animat_options(swimming=False, **kwargs):
@@ -128,11 +132,11 @@ def get_pleurobot_options(**kwargs):
     pylog.info('Model SDF: {}'.format(sdf))
 
     # Morphology information
-    links = kwargs.pop('links', ['base_link', 'Head'] + [
+    links_names = kwargs.pop('links_names', ['base_link', 'Head'] + [
         'link{}'.format(i+1)
         for i in range(27)
     ] + ['link_tailBone', 'link_tail'])
-    joints = kwargs.pop('joints', [
+    joints_names = kwargs.pop('joints_names', [
         # 'base_link_fixedjoint',
         'jHead',
         'j2',
@@ -170,7 +174,7 @@ def get_pleurobot_options(**kwargs):
     )
     links_no_collisions = kwargs.pop('links_no_collisions', [
         link
-        for link in links
+        for link in links_names
         if link not in feet+['Head', 'link_tail']
     ])
 
@@ -192,7 +196,7 @@ def get_pleurobot_options(**kwargs):
                 gain_amplitude[13+2*leg_i*4+side_i*4+1] = mirror
                 gain_amplitude[13+2*leg_i*4+side_i*4+2] = -mirror
                 gain_amplitude[13+2*leg_i*4+side_i*4+3] = mirror
-        gain_amplitude = dict(zip(joints, gain_amplitude))
+        gain_amplitude = dict(zip(joints_names, gain_amplitude))
 
     # Offsets gains
     if gain_offset is None:
@@ -207,7 +211,7 @@ def get_pleurobot_options(**kwargs):
                 gain_offset[13+2*leg_i*4+side_i*4+1] = mirror
                 gain_offset[13+2*leg_i*4+side_i*4+2] = mirror_full
                 gain_offset[13+2*leg_i*4+side_i*4+3] = mirror_full
-        gain_offset = dict(zip(joints, gain_offset))
+        gain_offset = dict(zip(joints_names, gain_offset))
 
     # Joints joints_offsets
     if joints_offsets is None:
@@ -220,7 +224,7 @@ def get_pleurobot_options(**kwargs):
                 joints_offsets[13+2*leg_i*4+side_i*4+1] = mirror*np.pi/16 if leg_i else mirror*np.pi/8
                 joints_offsets[13+2*leg_i*4+side_i*4+2] = 0 if leg_i else -mirror*np.pi/3
                 joints_offsets[13+2*leg_i*4+side_i*4+3] = -mirror*np.pi/4 if leg_i else mirror*np.pi/16
-        joints_offsets = dict(zip(joints, joints_offsets))
+        joints_offsets = dict(zip(joints_names, joints_offsets))
 
     # Animat options
     animat_options = get_animat_options(
@@ -262,12 +266,36 @@ def get_pleurobot_options(**kwargs):
         weight_sens_contact_diagonal=kwargs.pop('weight_sens_contact_diagonal', 0),
         weight_sens_hydro_freq=kwargs.pop('weight_sens_hydro_freq', 0),
         weight_sens_hydro_amp=kwargs.pop('weight_sens_hydro_amp', 0),
-        links=links,
+        links=[
+            AmphibiousLinkOptions(
+                name=name,
+                swimming=None,
+                collisions=None,
+                drag_coefficients=None,
+                pybullet_properties=dict(
+                    linearDamping=0,
+                    angularDamping=0,
+                    jointDamping=0,
+                    lateralFriction=1,
+                    spinningFriction=0,
+                    rollingFriction=0,
+                ),
+            )
+            for name in links_names
+        ],
         links_swimming=[],
         links_no_collisions=links_no_collisions,
-        joints=joints,
-        sensors_gps=links,
-        sensors_joints=joints,
+        joints=[
+            AmphibiousJointOptions(
+                name=name,
+                initial_position=0,
+                initial_velocity=0,
+                pybullet_properties={},
+            )
+            for name in joints_names
+        ],
+        sensors_gps=links_names,
+        sensors_joints=joints_names,
         sensors_contacts=feet,
         sensors_hydrodynamics=[],
         **kwargs
@@ -326,16 +354,16 @@ def fish_options(animat, version, kinematics_file, sampling_timestep, **kwargs):
 
     # Animat options
     n_joints = kinematics.shape[1]-3
-    # links = ['link_body_0']+[
+    # links_names = ['link_body_0']+[
     #     'body_{}_t_link'.format(i+1)
     #     for i in range(n_joints-1)
     # ]
-    links = ['link_body_0']+[
+    links_names = ['link_body_0']+[
         '{}_v_{}_i_0_e_body_{}_t_link'.format(animat, version, i+1)
         for i in range(n_joints)
     ]
-    # joints = ['joint_{}'.format(i) for i in range(n_joints)]
-    joints = [
+    # joints_names = ['joint_{}'.format(i) for i in range(n_joints)]
+    joints_names = [
         '{}_v_{}_i_0_e_body_{}_t_link'.format(animat, version, i+1)
         for i in range(n_joints)
     ]
@@ -350,14 +378,38 @@ def fish_options(animat, version, kinematics_file, sampling_timestep, **kwargs):
             np.array([-1e-7, -1e-7, -1e-7]),
         ]),
         water_surface=kwargs.pop('water_surface', np.inf),
-        links=links,
-        links_swimming=links,
-        links_no_collisions=links,
-        joints=joints,
-        sensors_gps=links,
-        sensors_joints=joints,
+        links=[
+            AmphibiousLinkOptions(
+                name=name,
+                swimming=None,
+                collisions=None,
+                drag_coefficients=None,
+                pybullet_properties=dict(
+                    linearDamping=0,
+                    angularDamping=0,
+                    jointDamping=0,
+                    lateralFriction=1,
+                    spinningFriction=0,
+                    rollingFriction=0,
+                ),
+            )
+            for name in links_names
+        ],
+        links_swimming=links_names,
+        links_no_collisions=links_names,
+        joints=[
+            AmphibiousJointOptions(
+                name=name,
+                initial_position=0,
+                initial_velocity=0,
+                pybullet_properties={},
+            )
+            for name in joints_names
+        ],
+        sensors_gps=links_names,
+        sensors_joints=joints_names,
         sensors_contacts=[],
-        sensors_hydrodynamics=links,
+        sensors_hydrodynamics=links_names,
         **kwargs
     ))
 

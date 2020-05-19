@@ -96,13 +96,29 @@ class AmphibiousMorphologyOptions(Options):
         options['n_legs'] = kwargs.pop('n_legs', 4)
         convention = AmphibiousConvention(**options)
         options['links'] = kwargs.pop('links', [
-            convention.bodylink2name(i)
-            for i in range(options['n_joints_body']+1)
-        ] + [
-            convention.leglink2name(leg_i, side_i, link_i)
-            for leg_i in range(options['n_legs']//2)
-            for side_i in range(2)
-            for link_i in range(options['n_dof_legs'])
+            AmphibiousLinkOptions(
+                name=name,
+                swimming=None,
+                collisions=None,
+                drag_coefficients=None,
+                pybullet_properties=dict(
+                    linearDamping=0,
+                    angularDamping=0,
+                    jointDamping=0,
+                    lateralFriction=1,
+                    spinningFriction=0,
+                    rollingFriction=0,
+                ),
+            )
+            for name in [
+                convention.bodylink2name(i)
+                for i in range(options['n_joints_body']+1)
+            ] + [
+                convention.leglink2name(leg_i, side_i, link_i)
+                for leg_i in range(options['n_legs']//2)
+                for side_i in range(2)
+                for link_i in range(options['n_dof_legs'])
+            ]
         ])
         options['links_swimming'] = kwargs.pop('links_swimming', [
             convention.bodylink2name(body_i)
@@ -132,15 +148,31 @@ class AmphibiousMorphologyOptions(Options):
             [0 for link in options['links']]
         )
         options['joints'] = kwargs.pop('joints', [
-            convention.bodyjoint2name(i)
-            for i in range(options['n_joints_body'])
-        ] + [
-            convention.legjoint2name(leg_i, side_i, joint_i)
-            for leg_i in range(options['n_legs']//2)
-            for side_i in range(2)
-            for joint_i in range(options['n_dof_legs'])
+            AmphibiousJointOptions(
+                name=name,
+                initial_position=0,
+                initial_velocity=0,
+                pybullet_properties={},
+            )
+            for name in [
+                convention.bodyjoint2name(i)
+                for i in range(options['n_joints_body'])
+            ] + [
+                convention.legjoint2name(leg_i, side_i, joint_i)
+                for leg_i in range(options['n_legs']//2)
+                for side_i in range(2)
+                for joint_i in range(options['n_dof_legs'])
+            ]
         ])
         return cls(**options)
+
+    def links_names(self):
+        """Links names"""
+        return [link['name'] for link in self.links]
+
+    def joints_names(self):
+        """Joints names"""
+        return [joint['name'] for joint in self.joints]
 
     def n_joints(self):
         """Number of joints"""
@@ -157,6 +189,43 @@ class AmphibiousMorphologyOptions(Options):
     def n_links(self):
         """Number of links"""
         return self.n_links_body() + self.n_joints_legs()
+
+
+class AmphibiousLinkOptions(Options):
+    """Amphibious link options"""
+
+    def __init__(self, **kwargs):
+        super(AmphibiousLinkOptions, self).__init__()
+        self.name = kwargs.pop('name')
+        self.swimming = kwargs.pop('swimming')
+        self.collisions = kwargs.pop('collisions')
+        self.drag_coefficients = kwargs.pop('drag_coefficients')
+        self.pybullet_properties = kwargs.pop('pybullet_properties', {})
+
+
+class AmphibiousJointOptions(Options):
+    """Amphibious joint options"""
+
+    def __init__(self, **kwargs):
+        super(AmphibiousJointOptions, self).__init__()
+        self.name = kwargs.pop('name')
+        self.initial_position = kwargs.pop('initial_position')
+        self.initial_velocity = kwargs.pop('initial_velocity')
+
+
+class AmphibiousOscillatorOptions(Options):
+    """Amphibious oscillator options"""
+
+    def __init__(self, **kwargs):
+        super(AmphibiousOscillatorOptions, self).__init__()
+        self.name = kwargs.pop('name')
+        self.initial_phase = kwargs.pop('initial_phase')
+        self.initial_amplitude = kwargs.pop('initial_amplitude')
+        self.frequency = kwargs.pop('frequency')
+        self.nominal_amplitude = kwargs.pop('amplitude')
+        self.rate = kwargs.pop('rate')
+        self.modular_phase = kwargs.pop('modular_phase')
+        self.modular_amplitude = kwargs.pop('modular_amplitude')
 
 
 class AmphibiousSpawnOptions(Options):
@@ -248,15 +317,15 @@ class AmphibiousControlOptions(Options):
         options['kinematics_file'] = kwargs.pop('kinematics_file', '')
         options['sensors'] = kwargs.pop(
             'sensors',
-            AmphibiousSensorsOptions.from_options(kwargs)
+            AmphibiousSensorsOptions.from_options(kwargs).to_dict()
         )
         options['network'] = kwargs.pop(
             'network',
-            AmphibiousNetworkOptions.from_options(kwargs)
+            AmphibiousNetworkOptions.from_options(kwargs).to_dict()
         )
         options['joints'] = kwargs.pop(
             'joints',
-            AmphibiousJointsOptions.from_options(kwargs)
+            AmphibiousJointsOptions.from_options(kwargs).to_dict()
         )
         return cls(**options)
 
@@ -1053,17 +1122,17 @@ class AmphibiousJointsOptions(Options):
             self.rates = [5]*morphology.n_joints()
         if self.gain_amplitude is None:
             self.gain_amplitude = (
-                {joint: 1 for joint in morphology.joints}
+                {joint: 1 for joint in morphology.joints_names()}
             )
         if self.gain_offset is None:
             self.gain_offset = (
-                {joint: 1 for joint in morphology.joints}
+                {joint: 1 for joint in morphology.joints_names()}
             )
         if self.offsets_bias is None:
             self.offsets_bias = (
-                {joint: 0 for joint in morphology.joints}
+                {joint: 0 for joint in morphology.joints_names()}
             )
         if self.max_torques is None:
             self.max_torques = (
-                {joint: 100 for joint in morphology.joints}
+                {joint: 100 for joint in morphology.joints_names()}
             )
