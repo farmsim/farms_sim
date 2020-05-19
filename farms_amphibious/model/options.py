@@ -78,7 +78,6 @@ class AmphibiousMorphologyOptions(Options):
             AmphibiousLinkOptions(**link)
             for link in kwargs.pop('links')
         ]
-        self.links_swimming = kwargs.pop('links_swimming')
         self.joints = [
             AmphibiousJointOptions(**joint)
             for joint in kwargs.pop('joints')
@@ -132,12 +131,16 @@ class AmphibiousMorphologyOptions(Options):
                 for joint_i in range(options['n_dof_legs']-1)
             ] if kwargs.pop('reduced_collisions', False) else []
         ))
+        links_swimming = kwargs.pop('links_swimming', [
+            convention.bodylink2name(body_i)
+            for body_i in range(options['n_joints_body']+1)
+        ])
         options['links'] = kwargs.pop(
             'links',
             [
                 AmphibiousLinkOptions(
                     name=name,
-                    swimming=False,
+                    swimming=name in links_swimming,
                     collisions=name not in links_no_collisions,
                     drag_coefficients=None,
                     pybullet_dynamics={
@@ -157,10 +160,6 @@ class AmphibiousMorphologyOptions(Options):
                 )
             ]
         )
-        options['links_swimming'] = kwargs.pop('links_swimming', [
-            convention.bodylink2name(body_i)
-            for body_i in range(options['n_joints_body']+1)
-        ])
         joints_names = kwargs.pop(
             'joints_names',
             [

@@ -263,7 +263,11 @@ class Amphibious(Animat):
     ):
         """Animat swimming physics"""
         links = self.options.morphology.links_names()
-        links_swimming = self.options.morphology.links_swimming
+        links_swimming = [
+            link.name
+            for link in self.options.morphology.links
+            if link.swimming
+        ]
         swimming_motion(
             iteration,
             self.data.sensors.hydrodynamics.array,
@@ -297,7 +301,11 @@ class Amphibious(Animat):
         links = self.options.morphology.links_names()
         for i, (line, name) in enumerate(zip(
                 self.hydrodynamics,
-                self.options.morphology.links_swimming
+                [
+                    link.name
+                    for link in self.options.morphology.links
+                    if link.swimming
+                ],
         )):
             if (
                     gps.com_position(iteration, links.index(name))[2]
