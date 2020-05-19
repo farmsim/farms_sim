@@ -5,11 +5,7 @@ import farms_pylog as pylog
 from farms_models.utils import get_sdf_path
 from farms_bullet.simulation.options import SimulationOptions
 from farms_bullet.model.model import SimulationModels, DescriptionFormatModel
-from ..model.options import (
-    AmphibiousOptions,
-    AmphibiousLinkOptions,
-    AmphibiousJointOptions
-)
+from ..model.options import AmphibiousOptions
 
 
 def get_animat_options(swimming=False, **kwargs):
@@ -266,34 +262,10 @@ def get_pleurobot_options(**kwargs):
         weight_sens_contact_diagonal=kwargs.pop('weight_sens_contact_diagonal', 0),
         weight_sens_hydro_freq=kwargs.pop('weight_sens_hydro_freq', 0),
         weight_sens_hydro_amp=kwargs.pop('weight_sens_hydro_amp', 0),
-        links=[
-            AmphibiousLinkOptions(
-                name=name,
-                swimming=None,
-                collisions=None,
-                drag_coefficients=None,
-                pybullet_properties=dict(
-                    linearDamping=0,
-                    angularDamping=0,
-                    jointDamping=0,
-                    lateralFriction=1,
-                    spinningFriction=0,
-                    rollingFriction=0,
-                ),
-            )
-            for name in links_names
-        ],
+        links_names=links_names,
         links_swimming=[],
         links_no_collisions=links_no_collisions,
-        joints=[
-            AmphibiousJointOptions(
-                name=name,
-                initial_position=0,
-                initial_velocity=0,
-                pybullet_properties={},
-            )
-            for name in joints_names
-        ],
+        joints_names=joints_names,
         sensors_gps=links_names,
         sensors_joints=joints_names,
         sensors_contacts=feet,
@@ -378,34 +350,10 @@ def fish_options(animat, version, kinematics_file, sampling_timestep, **kwargs):
             np.array([-1e-7, -1e-7, -1e-7]),
         ]),
         water_surface=kwargs.pop('water_surface', np.inf),
-        links=[
-            AmphibiousLinkOptions(
-                name=name,
-                swimming=None,
-                collisions=None,
-                drag_coefficients=None,
-                pybullet_properties=dict(
-                    linearDamping=0,
-                    angularDamping=0,
-                    jointDamping=0,
-                    lateralFriction=1,
-                    spinningFriction=0,
-                    rollingFriction=0,
-                ),
-            )
-            for name in links_names
-        ],
+        links_names=links_names,
         links_swimming=links_names,
         links_no_collisions=links_names,
-        joints=[
-            AmphibiousJointOptions(
-                name=name,
-                initial_position=0,
-                initial_velocity=0,
-                pybullet_properties={},
-            )
-            for name in joints_names
-        ],
+        joints_names=joints_names,
         sensors_gps=links_names,
         sensors_joints=joints_names,
         sensors_contacts=[],
