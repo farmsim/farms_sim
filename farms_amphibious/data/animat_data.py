@@ -337,7 +337,7 @@ class Oscillators(OscillatorsCy):
         return cls(
             freqs,
             amplitudes,
-            np.array(network.osc_rates, dtype=NPDTYPE),
+            np.array(network.osc_rates(), dtype=NPDTYPE),
             np.array(network.osc_modular_phases, dtype=NPDTYPE),
             np.array(network.osc_modular_amplitudes, dtype=NPDTYPE),
         )
