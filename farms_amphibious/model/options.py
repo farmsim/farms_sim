@@ -422,8 +422,6 @@ class AmphibiousNetworkOptions(Options):
             AmphibiousOscillatorOptions(**oscillator)
             for oscillator in kwargs.pop('oscillators')
         ]
-        self.osc_frequencies = kwargs.pop('osc_frequencies', None)
-        self.osc_amplitudes = kwargs.pop('osc_amplitudes', None)
 
         # Connections
         self.osc2osc = kwargs.pop('osc2osc', None)
@@ -439,13 +437,11 @@ class AmphibiousNetworkOptions(Options):
     def from_options(cls, kwargs):
         """From options"""
         options = {}
+        options['oscillators'] = kwargs.pop('oscillators', [])
         for option in [
                 # State
                 'state_init',
                 'drives_init',
-                # Oscillators
-                'osc_frequencies',
-                'osc_amplitudes',
                 # Connections
                 'osc2osc',
                 'drive2osc',
@@ -454,7 +450,6 @@ class AmphibiousNetworkOptions(Options):
                 'hydro2osc',
         ]:
             options[option] = kwargs.pop(option, None)
-        options['oscillators'] = kwargs.pop('oscillators', [])
         return cls(**options)
 
     def defaults_from_morphology(self, morphology, kwargs):
@@ -468,21 +463,6 @@ class AmphibiousNetworkOptions(Options):
                 self.default_state_init(
                     morphology,
                 ).tolist()
-            )
-        if self.osc_frequencies is None:
-            self.osc_frequencies = (
-                AmphibiousNetworkOptions.default_osc_frequencies(morphology)
-            )
-        if self.osc_amplitudes is None:
-            self.osc_amplitudes = (
-                AmphibiousNetworkOptions.default_osc_amplitudes(
-                    morphology,
-                    body_amplitude=kwargs.pop('body_stand_amplitude', 0.3),
-                    legs_amplitudes=kwargs.pop(
-                        'legs_amplitudes',
-                        [np.pi/4, np.pi/32, np.pi/4, np.pi/8]
-                    ),
-                )
             )
 
         # Oscillators
@@ -603,6 +583,32 @@ class AmphibiousNetworkOptions(Options):
                     kwargs.pop('weight_sens_hydro_amp', 0),
                 )
             )
+
+    def osc_frequencies(self):
+        """Oscillator frequencies"""
+        return [
+            {
+                'gain': osc.frequency_gain,
+                'bias': osc.frequency_bias,
+                'low': osc.frequency_low,
+                'high': osc.frequency_high,
+                'saturation': osc.frequency_saturation,
+            }
+            for osc in self.oscillators
+        ]
+
+    def osc_amplitudes(self):
+        """Oscillator amplitudes"""
+        return [
+            {
+                'gain': osc.amplitude_gain,
+                'bias': osc.amplitude_bias,
+                'low': osc.amplitude_low,
+                'high': osc.amplitude_high,
+                'saturation': osc.amplitude_saturation,
+            }
+            for osc in self.oscillators
+        ]
 
     def osc_rates(self):
         """Oscillator rates"""

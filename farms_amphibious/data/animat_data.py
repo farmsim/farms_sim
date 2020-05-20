@@ -332,7 +332,7 @@ class Oscillators(OscillatorsCy):
                 ]
                 for freq in option
             ], dtype=NPDTYPE)
-            for option in [network.osc_frequencies, network.osc_amplitudes]
+            for option in [network.osc_frequencies(), network.osc_amplitudes()]
         ]
         return cls(
             freqs,
