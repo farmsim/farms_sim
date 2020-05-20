@@ -131,18 +131,21 @@ class AmphibiousMorphologyOptions(Options):
             convention.bodylink2name(body_i)
             for body_i in range(options['n_joints_body']+1)
         ])
-        links_density = kwargs.pop('density', 1000.0)
+        links_height = kwargs.pop('height', 0.03)
+        links_density = kwargs.pop('density', 500.0)
         links_mass_multiplier = kwargs.pop('mass_multiplier', 1)
+        drag_coefficients = kwargs.pop('drag_coefficients', None)
         options['links'] = kwargs.pop(
             'links',
             [
                 AmphibiousLinkOptions(
                     name=name,
+                    collisions=name not in links_no_collisions,
                     density=links_density,
                     mass_multiplier=links_mass_multiplier,
+                    height=links_height,
                     swimming=name in links_swimming,
-                    collisions=name not in links_no_collisions,
-                    drag_coefficients=None,
+                    drag_coefficients=drag_coefficients,
                     pybullet_dynamics={
                         'linearDamping': 0,
                         'angularDamping': 0,
@@ -223,10 +226,11 @@ class AmphibiousLinkOptions(Options):
     def __init__(self, **kwargs):
         super(AmphibiousLinkOptions, self).__init__()
         self.name = kwargs.pop('name')
+        self.collisions = kwargs.pop('collisions')
         self.density = kwargs.pop('density')
         self.mass_multiplier = kwargs.pop('mass_multiplier')
+        self.height = kwargs.pop('height')
         self.swimming = kwargs.pop('swimming')
-        self.collisions = kwargs.pop('collisions')
         self.drag_coefficients = kwargs.pop('drag_coefficients')
         self.pybullet_dynamics = kwargs.pop('pybullet_dynamics', {})
 
@@ -254,11 +258,39 @@ class AmphibiousOscillatorOptions(Options):
         self.name = kwargs.pop('name')
         self.initial_phase = kwargs.pop('initial_phase')
         self.initial_amplitude = kwargs.pop('initial_amplitude')
-        self.frequency = kwargs.pop('frequency')
+        self.angular_frequency = kwargs.pop('angular_frequency')
         self.nominal_amplitude = kwargs.pop('amplitude')
         self.rate = kwargs.pop('rate')
+        self.input_drive = kwargs.pop('input_drive')
+        self.input_gain = kwargs.pop('input_gain')
+        self.input_bias = kwargs.pop('input_bias')
+        self.input_low = kwargs.pop('input_low')
+        self.input_hight = kwargs.pop('input_high')
         self.modular_phase = kwargs.pop('modular_phase')
         self.modular_amplitude = kwargs.pop('modular_amplitude')
+
+
+class AmphibiousDriveOptions(Options):
+    """Amphibious drive options"""
+
+    def __init__(self, **kwargs):
+        super(AmphibiousDriveOptions, self).__init__()
+        self.name = kwargs.pop('name')
+        self.initial_value = kwargs.pop('initial_value')
+
+
+class AmphibiousMuscleSetOptions(Options):
+    """Amphibious muscle options"""
+
+    def __init__(self, **kwargs):
+        super(AmphibiousMuscleSetOptions, self).__init__()
+        self.joint = kwargs.pop('joint')
+        self.osc1 = kwargs.pop('osc1')
+        self.osc2 = kwargs.pop('osc2')
+        self.alpha = kwargs.pop('alpha')
+        self.beta = kwargs.pop('beta')
+        self.gamma = kwargs.pop('gamma')
+        self.delta = kwargs.pop('delta')
 
 
 class AmphibiousSpawnOptions(Options):
@@ -302,7 +334,6 @@ class AmphibiousPhysicsOptions(Options):
     def __init__(self, **kwargs):
         super(AmphibiousPhysicsOptions, self).__init__()
         self.drag = kwargs.pop('drag')
-        self.drag_coefficients = kwargs.pop('drag_coefficients')
         self.sph = kwargs.pop('sph')
         self.buoyancy = kwargs.pop('buoyancy')
         self.water_surface = kwargs.pop('water_surface')
@@ -314,10 +345,6 @@ class AmphibiousPhysicsOptions(Options):
         """From options"""
         options = {}
         options['drag'] = kwargs.pop('drag', False)
-        options['drag_coefficients'] = kwargs.pop(
-            'drag_coefficients',
-            None
-        )
         options['sph'] = kwargs.pop('sph', False)
         options['buoyancy'] = kwargs.pop(
             'buoyancy',

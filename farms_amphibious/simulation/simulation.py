@@ -22,21 +22,29 @@ def swimming_step(iteration, animat):
             if physics_options.sph
             else physics_options.water_surface
         )
+        links_swimming = [
+            link
+            for link in animat.options.morphology.links
+            if link.swimming
+        ]
         if physics_options.drag:
-            animat.drag_swimming_forces(
+            links_swimming = animat.drag_swimming_forces(
                 iteration,
-                water_surface=water_surface,
-                coefficients=physics_options.drag_coefficients,
-                buoyancy=physics_options.buoyancy,
+                links=links_swimming,
+                surface=water_surface,
+                gravity=-9.81,
+                use_buoyancy=physics_options.buoyancy,
             )
         animat.apply_swimming_forces(
             iteration,
-            water_surface=water_surface,
+            links=links_swimming,
+            link_frame=True,
+            debug=False
         )
         if animat.options.show_hydrodynamics:
             animat.draw_hydrodynamics(
                 iteration,
-                water_surface=water_surface,
+                links=links_swimming,
             )
 
 

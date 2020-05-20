@@ -10,14 +10,14 @@ from farms_bullet.sensors.sensors import (
     JointsStatesSensor,
     ContactsSensors
 )
-from farms_bullet.plugins.swimming import (
+import farms_pylog as pylog
+from farms_bullet.sensors.sensors import LinksStatesSensor
+from ..utils.sdf import load_sdf, load_sdf_pybullet
+from ..swimming.swimming import (
     drag_forces,
     swimming_motion,
     swimming_debug
 )
-import farms_pylog as pylog
-from farms_bullet.sensors.sensors import LinksStatesSensor
-from ..utils.sdf import load_sdf, load_sdf_pybullet
 from .options import SpawnLoader
 
 
@@ -84,8 +84,8 @@ class Amphibious(Animat):
             else None
         )
         # Hydrodynamic forces
-        self.masses = np.zeros(options.morphology.n_links())
-        self.hydrodynamics = None
+        self.masses = {}
+        self.hydrodynamics_plot = None
         # Sensors
         self.sensors = Sensors()
         # Physics
@@ -110,16 +110,19 @@ class Amphibious(Animat):
         # Body properties
         self.set_body_properties()
         # Debug
-        self.hydrodynamics = [
-            pybullet.addUserDebugLine(
-                lineFromXYZ=[0, 0, 0],
-                lineToXYZ=[0, 0, 0],
-                lineColorRGB=[0, 0, 0],
-                lineWidth=3*self.units.meters,
-                lifeTime=0,
-                parentObjectUniqueId=self.identity(),
-                parentLinkIndex=i
-            )
+        self.hydrodynamics_plot = [
+            [
+                False,
+                pybullet.addUserDebugLine(
+                    lineFromXYZ=[0, 0, 0],
+                    lineToXYZ=[0, 0, 0],
+                    lineColorRGB=[0, 0, 0],
+                    lineWidth=3*self.units.meters,
+                    lifeTime=0,
+                    parentObjectUniqueId=self.identity(),
+                    parentLinkIndex=i
+                )
+            ]
             for i in range(self.options.morphology.n_links_body())
         ]
 
@@ -200,12 +203,13 @@ class Amphibious(Animat):
     def set_body_properties(self, verbose=False):
         """Set body properties"""
         # Masses
-        n_links = pybullet.getNumJoints(self.identity())+1
-        self.masses = np.zeros(n_links)
-        for i in range(n_links):
-            self.masses[i] = pybullet.getDynamicsInfo(self.identity(), i-1)[0]
+        for link in self.options.morphology.links:
+            self.masses[link.name] = pybullet.getDynamicsInfo(
+                self.identity(),
+                self._links[link.name],
+            )[0]
         if verbose:
-            pylog.debug('Body mass: {} [kg]'.format(np.sum(self.masses)))
+            pylog.debug('Body mass: {} [kg]'.format(np.sum(self.masses.values())))
         # Deactivate collisions
         self.set_collisions(
             [
@@ -244,85 +248,65 @@ class Amphibious(Animat):
                 **joint.pybullet_dynamics,
             )
 
-    def drag_swimming_forces(self, iteration, water_surface, **kwargs):
+    def drag_swimming_forces(self, iteration, links, **kwargs):
         """Animat swimming physics"""
-        drag_forces(
-            iteration,
-            self.data.sensors.gps,
-            self.data.sensors.hydrodynamics.array,
-            [
-                link_i
-                for link_i in range(self.options.morphology.n_links_body())
-                if (
-                    self.data.sensors.gps.com_position(iteration, link_i)[2]
-                    < water_surface
-                )
-            ],
+        return drag_forces(
+            iteration=iteration,
+            data_gps=self.data.sensors.gps,
+            data_hydrodynamics=self.data.sensors.hydrodynamics.array,
+            links=links,
+            sensor_options=self.options.control.sensors,
             masses=self.masses,
-            surface=water_surface,
             **kwargs
         )
 
-    def apply_swimming_forces(
-            self, iteration, water_surface, link_frame=True, debug=False
-    ):
+    def apply_swimming_forces(self, iteration, links, link_frame, debug=False):
         """Animat swimming physics"""
-        links = self.options.morphology.links_names()
-        links_swimming = [
-            link.name
-            for link in self.options.morphology.links
-            if link.swimming
-        ]
         swimming_motion(
-            iteration,
-            self.data.sensors.hydrodynamics.array,
-            self.identity(),
-            [
-                [links.index(name), self._links[name]]
-                for name in links_swimming
-                if (
-                    self.data.sensors.gps.com_position(
-                        iteration,
-                        links.index(name)
-                    )[2] < water_surface
-                )
-            ],
+            iteration=iteration,
+            data_hydrodynamics=self.data.sensors.hydrodynamics.array,
+            model=self.identity(),
+            links=links,
+            links_map=self._links,
+            sensor_options=self.options.control.sensors,
             link_frame=link_frame,
             units=self.units
         )
         if debug:
             swimming_debug(
-                iteration,
-                self.data.sensors.gps,
-                [
-                    [links.index(name), self._links[name]]
-                    for name in links_swimming
-                ]
+                iteration=iteration,
+                data_gps=self.data.sensors.gps,
+                links=links,
+                sensor_options=self.options.control.sensors,
             )
 
-    def draw_hydrodynamics(self, iteration, water_surface, margin=0.01):
+    def draw_hydrodynamics(self, iteration, links):
         """Draw hydrodynamics forces"""
-        gps = self.data.sensors.gps
-        links = self.options.morphology.links_names()
-        for i, (line, name) in enumerate(zip(
-                self.hydrodynamics,
-                [
-                    link.name
-                    for link in self.options.morphology.links
-                    if link.swimming
-                ],
-        )):
-            if (
-                    gps.com_position(iteration, links.index(name))[2]
-                    < water_surface + margin
-            ):
-                force = self.data.sensors.hydrodynamics.array[iteration, i, :3]
-                self.hydrodynamics[i] = pybullet.addUserDebugLine(
-                    lineFromXYZ=[0, 0, 0],
-                    lineToXYZ=np.array(force),
-                    lineColorRGB=[0, 0, 1],
-                    lineWidth=7*self.units.meters,
-                    parentObjectUniqueId=self.identity(),
-                    parentLinkIndex=i-1,
-                    replaceItemUniqueId=line
+        active_links = [[hydro[0], False] for hydro in self.hydrodynamics_plot]
+        for link in links:
+            sensor_i = self.options.control.sensors.hydrodynamics.index(link.name)
+            force = self.data.sensors.hydrodynamics.array[iteration, sensor_i, :3]
+            self.hydrodynamics_plot[sensor_i] = True, pybullet.addUserDebugLine(
+                lineFromXYZ=[0, 0, 0],
+                lineToXYZ=0.1*np.array(force),
+                lineColorRGB=[0, 0, 1],
+                lineWidth=7*self.units.meters,
+                parentObjectUniqueId=self.identity(),
+                parentLinkIndex=self._links[link.name],
+                replaceItemUniqueId=self.hydrodynamics_plot[sensor_i][1],
+            )
+            active_links[sensor_i][1] = True
+        for hydro_i, (old_active, new_active) in enumerate(active_links):
+            if old_active and not new_active:
+                self.hydrodynamics_plot[hydro_i] = (
+                    False,
+                    pybullet.addUserDebugLine(
+                        lineFromXYZ=[0, 0, 0],
+                        lineToXYZ=[0, 0, 0],
+                        lineColorRGB=[0, 0, 1],
+                        lineWidth=0,
+                        parentObjectUniqueId=self.identity(),
+                        parentLinkIndex=0,
+                        replaceItemUniqueId=self.hydrodynamics_plot[hydro_i][1],
+                    )
                 )
