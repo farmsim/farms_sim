@@ -414,7 +414,6 @@ class AmphibiousNetworkOptions(Options):
         super(AmphibiousNetworkOptions, self).__init__()
 
         # State
-        self.state_init = kwargs.pop('state_init', None)
         self.drives_init = kwargs.pop('drives_init', None)
 
         # Oscillators
@@ -440,7 +439,6 @@ class AmphibiousNetworkOptions(Options):
         options['oscillators'] = kwargs.pop('oscillators', [])
         for option in [
                 # State
-                'state_init',
                 'drives_init',
                 # Connections
                 'osc2osc',
@@ -457,12 +455,6 @@ class AmphibiousNetworkOptions(Options):
         if self.drives_init is None:
             self.drives_init = (
                 [2, 0]
-            )
-        if self.state_init is None:
-            self.state_init = (
-                self.default_state_init(
-                    morphology,
-                ).tolist()
             )
 
         # Oscillators
@@ -490,32 +482,50 @@ class AmphibiousNetworkOptions(Options):
                 )
                 for osc_i in range(n_oscillators)
             ]
-        state_init = self.default_state_init(morphology)
-        osc_frequencies = self.default_osc_frequencies(morphology)
-        osc_amplitudes = self.default_osc_amplitudes(
-            morphology,
-            body_amplitude=kwargs.pop('body_stand_amplitude', 0.3),
-            legs_amplitudes=kwargs.pop(
-                'legs_amplitudes',
-                [np.pi/4, np.pi/32, np.pi/4, np.pi/8]
-            ),
+        state_init = kwargs.pop(
+            'state_init',
+            self.default_state_init(morphology).tolist(),
         )
-        osc_rates = self.default_osc_rates(morphology)
-        osc_modular_phases = self.default_osc_modular_phases(
-            morphology=morphology,
-            phases=kwargs.pop('modular_phases', np.zeros(4)),
+        osc_frequencies = kwargs.pop(
+            'osc_frequencies',
+            self.default_osc_frequencies(morphology),
         )
-        osc_modular_amplitudes = self.default_osc_modular_amplitudes(
-            morphology=morphology,
-            amplitudes=kwargs.pop('modular_amplitudes', np.zeros(4)),
+        osc_amplitudes = kwargs.pop(
+            'osc_amplitudes',
+            self.default_osc_amplitudes(
+                morphology,
+                body_amplitude=kwargs.pop('body_stand_amplitude', 0.3),
+                legs_amplitudes=kwargs.pop(
+                    'legs_amplitudes',
+                    [np.pi/4, np.pi/32, np.pi/4, np.pi/8]
+                ),
+            )
+        )
+        osc_rates = kwargs.pop(
+            'osc_rates',
+            self.default_osc_rates(morphology),
+        )
+        osc_modular_phases = kwargs.pop(
+            'osc_modular_phases',
+            self.default_osc_modular_phases(
+                morphology=morphology,
+                phases=kwargs.pop('modular_phases', np.zeros(4)),
+            )
+        )
+        osc_modular_amplitudes = kwargs.pop(
+            'osc_modular_amplitudes',
+            self.default_osc_modular_amplitudes(
+                morphology=morphology,
+                amplitudes=kwargs.pop('modular_amplitudes', np.zeros(4)),
+            )
         )
         for osc_i, osc in enumerate(self.oscillators):
             if osc.name is None:
                 osc.name = 'Oscillator_{}'.format(osc_i)
             if osc.initial_phase is None:
-                osc.initial_phase = float(state_init[osc_i])
+                osc.initial_phase = state_init[osc_i]
             if osc.initial_amplitude is None:
-                osc.initial_amplitude = float(state_init[osc_i+n_oscillators])
+                osc.initial_amplitude = state_init[osc_i+n_oscillators]
             if osc.input_drive is None:
                 osc.input_drive = 0
             if osc.frequency_gain is None:
@@ -583,6 +593,14 @@ class AmphibiousNetworkOptions(Options):
                     kwargs.pop('weight_sens_hydro_amp', 0),
                 )
             )
+
+    def state_init(self):
+        """Initial states"""
+        return [
+            osc.initial_phase for osc in self.oscillators
+        ] + [
+            osc.initial_amplitude for osc in self.oscillators
+        ] + [0 for osc in self.oscillators[::2]]
 
     def osc_frequencies(self):
         """Oscillator frequencies"""

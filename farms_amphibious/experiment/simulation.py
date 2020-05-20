@@ -29,7 +29,7 @@ def simulation_setup(animat_sdf, arena, **kwargs):
     # Animat data
     animat_data = AmphibiousData.from_options(
         animat_options.control.network.drives_init,
-        animat_options.control.network.state_init,
+        animat_options.control.network.state_init(),
         animat_options.control,
         simulation_options.n_iterations
     )

@@ -58,9 +58,11 @@ def main():
     # state_init = animat_options.control.network.state_init
     # for osc_i in range(4*animat_options.morphology.n_joints()):
     #     state_init[osc_i] = 1e-4*np.random.ranf()
-    animat_options.control.network.state_init = (
-        1e-4*np.random.ranf(5*animat_options.morphology.n_joints())
-    ).tolist()
+    n_joints = animat_options.morphology.n_joints()
+    state_init = (1e-4*np.random.ranf(5*n_joints)).tolist()
+    for osc_i, osc in enumerate(animat_options.control.network.oscillators):
+        osc.initial_phase = state_init[osc_i]
+        osc.initial_amplitude = state_init[osc_i+n_joints]
 
     (
         simulation_options,
