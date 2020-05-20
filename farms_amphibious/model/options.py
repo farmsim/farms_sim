@@ -267,49 +267,6 @@ class AmphibiousJointOptions(Options):
         self.pybullet_dynamics = kwargs.pop('pybullet_dynamics', {})
 
 
-class AmphibiousOscillatorOptions(Options):
-    """Amphibious oscillator options"""
-
-    def __init__(self, **kwargs):
-        super(AmphibiousOscillatorOptions, self).__init__()
-        self.name = kwargs.pop('name')
-        self.initial_phase = kwargs.pop('initial_phase')
-        self.initial_amplitude = kwargs.pop('initial_amplitude')
-        self.angular_frequency = kwargs.pop('angular_frequency')
-        self.nominal_amplitude = kwargs.pop('amplitude')
-        self.rate = kwargs.pop('rate')
-        self.input_drive = kwargs.pop('input_drive')
-        self.input_gain = kwargs.pop('input_gain')
-        self.input_bias = kwargs.pop('input_bias')
-        self.input_low = kwargs.pop('input_low')
-        self.input_hight = kwargs.pop('input_high')
-        self.modular_phase = kwargs.pop('modular_phase')
-        self.modular_amplitude = kwargs.pop('modular_amplitude')
-
-
-class AmphibiousDriveOptions(Options):
-    """Amphibious drive options"""
-
-    def __init__(self, **kwargs):
-        super(AmphibiousDriveOptions, self).__init__()
-        self.name = kwargs.pop('name')
-        self.initial_value = kwargs.pop('initial_value')
-
-
-class AmphibiousMuscleSetOptions(Options):
-    """Amphibious muscle options"""
-
-    def __init__(self, **kwargs):
-        super(AmphibiousMuscleSetOptions, self).__init__()
-        self.joint = kwargs.pop('joint')
-        self.osc1 = kwargs.pop('osc1')
-        self.osc2 = kwargs.pop('osc2')
-        self.alpha = kwargs.pop('alpha')
-        self.beta = kwargs.pop('beta')
-        self.gamma = kwargs.pop('gamma')
-        self.delta = kwargs.pop('delta')
-
-
 class AmphibiousSpawnOptions(Options):
     """Amphibious spawn options"""
 
@@ -519,11 +476,23 @@ class AmphibiousNetworkOptions(Options):
                 ).tolist()
             )
         if self.oscillators is None:
-            self.oscillators = (
-                AmphibiousNetworkOptions.default_oscillators(
-                    morphology.n_joints(),
+            self.oscillators = [
+                AmphibiousOscillatorOptions(
+                    name='O_{}'.format(osc_i),
+                    initial_phase=0,
+                    initial_amplitude=0,
+                    input_drive=0,
+                    input_gain=0,
+                    input_bias=0,
+                    input_low=0,
+                    input_high=0,
+                    nominal_amplitude=0,
+                    rate=0,
+                    modular_phase=0,
+                    modular_amplitude=0,
                 )
-            )
+                for osc_i in range(2*morphology.n_joints())
+            ]
         if self.osc_frequencies is None:
             self.osc_frequencies = (
                 AmphibiousNetworkOptions.default_osc_frequencies(morphology)
@@ -628,11 +597,6 @@ class AmphibiousNetworkOptions(Options):
                         )
         state += 1e-3*np.arange(5*morphology.n_joints())
         return state
-
-    @staticmethod
-    def default_oscillators(n_joints):
-        """Default oscillator names"""
-        return ['O_{}'.format(i) for i in range(n_joints)]
 
     @staticmethod
     def default_osc_frequencies(morphology):
@@ -1108,6 +1072,48 @@ class AmphibiousNetworkOptions(Options):
                         'weight': weight_amplitude,
                     })
         return connectivity
+
+
+class AmphibiousOscillatorOptions(Options):
+    """Amphibious oscillator options"""
+
+    def __init__(self, **kwargs):
+        super(AmphibiousOscillatorOptions, self).__init__()
+        self.name = kwargs.pop('name')
+        self.initial_phase = kwargs.pop('initial_phase')
+        self.initial_amplitude = kwargs.pop('initial_amplitude')
+        self.input_drive = kwargs.pop('input_drive')
+        self.input_gain = kwargs.pop('input_gain')
+        self.input_bias = kwargs.pop('input_bias')
+        self.input_low = kwargs.pop('input_low')
+        self.input_high = kwargs.pop('input_high')
+        self.nominal_amplitude = kwargs.pop('nominal_amplitude')
+        self.rate = kwargs.pop('rate')
+        self.modular_phase = kwargs.pop('modular_phase')
+        self.modular_amplitude = kwargs.pop('modular_amplitude')
+
+
+class AmphibiousDriveOptions(Options):
+    """Amphibious drive options"""
+
+    def __init__(self, **kwargs):
+        super(AmphibiousDriveOptions, self).__init__()
+        self.name = kwargs.pop('name')
+        self.initial_value = kwargs.pop('initial_value')
+
+
+class AmphibiousMuscleSetOptions(Options):
+    """Amphibious muscle options"""
+
+    def __init__(self, **kwargs):
+        super(AmphibiousMuscleSetOptions, self).__init__()
+        self.joint = kwargs.pop('joint')
+        self.osc1 = kwargs.pop('osc1')
+        self.osc2 = kwargs.pop('osc2')
+        self.alpha = kwargs.pop('alpha')
+        self.beta = kwargs.pop('beta')
+        self.gamma = kwargs.pop('gamma')
+        self.delta = kwargs.pop('delta')
 
 
 class AmphibiousJointsOptions(Options):
