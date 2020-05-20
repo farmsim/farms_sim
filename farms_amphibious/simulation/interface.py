@@ -10,12 +10,12 @@ class AmphibiousUserParameters(UserParameters):
         super(AmphibiousUserParameters, self).__init__(simulation_options)
         self['drive_speed'] = DebugParameter(
             'Drive speed',
-            animat_options.control.network.drives_init[0],
+            animat_options.control.network.drives[0].initial_value,
             0.9, 5.1
         )
         self['drive_turn'] = DebugParameter(
             'Drive turn',
-            animat_options.control.network.drives_init[1],
+            animat_options.control.network.drives[1].initial_value,
             -0.2, 0.2
         )
 

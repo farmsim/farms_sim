@@ -413,8 +413,11 @@ class AmphibiousNetworkOptions(Options):
     def __init__(self, **kwargs):
         super(AmphibiousNetworkOptions, self).__init__()
 
-        # State
-        self.drives_init = kwargs.pop('drives_init', None)
+        # Drives
+        self.drives = [
+            AmphibiousDriveOptions(**drive)
+            for drive in kwargs.pop('drives')
+        ]
 
         # Oscillators
         self.oscillators = [
@@ -436,11 +439,10 @@ class AmphibiousNetworkOptions(Options):
     def from_options(cls, kwargs):
         """From options"""
         options = {}
+        options['drives'] = kwargs.pop('drives', [])
         options['oscillators'] = kwargs.pop('oscillators', [])
+        # Connectivity
         for option in [
-                # State
-                'drives_init',
-                # Connections
                 'osc2osc',
                 'drive2osc',
                 'joint2osc',
@@ -452,10 +454,22 @@ class AmphibiousNetworkOptions(Options):
 
     def defaults_from_morphology(self, morphology, kwargs):
         """Defaults from morphology"""
-        if self.drives_init is None:
-            self.drives_init = (
-                [2, 0]
-            )
+
+        # Drives
+        if not self.drives:
+            self.drives = [
+                AmphibiousDriveOptions(
+                    name=None,
+                    initial_value=None,
+                )
+                for drive_i in range(2)
+            ]
+        drives_init = kwargs.pop('drives_init', [2, 0])
+        for drive_i, drive in enumerate(self.drives):
+            if drive.name is None:
+                drive.name = 'Drive_{}'.format(drive_i)
+            if drive.initial_value is None:
+                drive.initial_value = drives_init[drive_i]
 
         # Oscillators
         n_oscillators = 2*morphology.n_joints()
@@ -593,6 +607,10 @@ class AmphibiousNetworkOptions(Options):
                     kwargs.pop('weight_sens_hydro_amp', 0),
                 )
             )
+
+    def drives_init(self):
+        """Initial drives"""
+        return [drive.initial_value for drive in self.drives]
 
     def state_init(self):
         """Initial states"""

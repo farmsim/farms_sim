@@ -65,9 +65,10 @@ def simulation(times, control):
     n_iterations = len(times)
 
     # Animat data
-    control.network.drives_init = [2, 0]
+    control.network.drives[0].initial_value = 2
+    control.network.drives[1].initial_value = 0
     animat_data = AmphibiousData.from_options(
-        control.network.drives_init,
+        control.network.drives_init(),
         control.network.state_init(),
         control,
         n_iterations
