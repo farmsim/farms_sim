@@ -183,6 +183,10 @@ class AmphibiousMorphologyOptions(Options):
             'joints_velocities',
             [0 for name in joints_names]
         )
+        joints_damping = kwargs.pop(
+            'joints_damping',
+            [0 for name in joints_names]
+        )
         options['joints'] = kwargs.pop(
             'joints',
             [
@@ -191,13 +195,14 @@ class AmphibiousMorphologyOptions(Options):
                     initial_position=position,
                     initial_velocity=velocity,
                     pybullet_dynamics={
-                        'jointDamping': 0,
+                        'jointDamping': damping,
                     },
                 )
-                for name, position, velocity in zip(
+                for name, position, velocity, damping in zip(
                     joints_names,
                     joints_positions,
                     joints_velocities,
+                    joints_damping,
                 )
             ]
         )
