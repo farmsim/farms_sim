@@ -175,18 +175,30 @@ class AmphibiousMorphologyOptions(Options):
                 for joint_i in range(options['n_dof_legs'])
             ]
         )
+        joints_positions = kwargs.pop(
+            'joints_positions',
+            [0 for name in joints_names]
+        )
+        joints_velocities = kwargs.pop(
+            'joints_velocities',
+            [0 for name in joints_names]
+        )
         options['joints'] = kwargs.pop(
             'joints',
             [
                 AmphibiousJointOptions(
                     name=name,
-                    initial_position=0,
-                    initial_velocity=0,
+                    initial_position=position,
+                    initial_velocity=velocity,
                     pybullet_dynamics={
                         'jointDamping': 0,
                     },
                 )
-                for name in joints_names
+                for name, position, velocity in zip(
+                    joints_names,
+                    joints_positions,
+                    joints_velocities,
+                )
             ]
         )
         return cls(**options)
@@ -303,8 +315,6 @@ class AmphibiousSpawnOptions(Options):
         self.orientation = kwargs.pop('orientation')
         self.velocity_lin = kwargs.pop('velocity_lin')
         self.velocity_ang = kwargs.pop('velocity_ang')
-        self.joints_positions = kwargs.pop('joints_positions')
-        self.joints_velocities = kwargs.pop('joints_velocities')
         if kwargs:
             raise Exception('Unknown kwargs: {}'.format(kwargs))
 
@@ -322,9 +332,6 @@ class AmphibiousSpawnOptions(Options):
         options['velocity_lin'] = kwargs.pop('spawn_velocity_lin', [0, 0, 0])
         # Angular velocity in [rad/s] (Euler angles)
         options['velocity_ang'] = kwargs.pop('spawn_velocity_ang', [0, 0, 0])
-        # Joints positions
-        options['joints_positions'] = kwargs.pop('joints_positions', None)
-        options['joints_velocities'] = kwargs.pop('joints_velocities', None)
         return cls(**options)
 
 

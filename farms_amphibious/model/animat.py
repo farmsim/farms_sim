@@ -30,7 +30,7 @@ def links_ordering(text):
     return [text]
 
 
-def initial_pose(identity, joints, spawn_options, units):
+def initial_pose(identity, joints, joints_options, spawn_options, units):
     """Initial pose"""
     pybullet.resetBasePositionAndOrientation(
         identity,
@@ -44,29 +44,13 @@ def initial_pose(identity, joints, spawn_options, units):
         linearVelocity=np.array(spawn_options.velocity_lin)*units.velocity,
         angularVelocity=np.array(spawn_options.velocity_ang)/units.seconds
     )
-    if (
-            spawn_options.joints_positions is not None
-            or spawn_options.joints_velocities is not None
-    ):
-        if spawn_options.joints_positions is None:
-            spawn_options.joints_positions = np.zeros_like(
-                spawn_options.joints_velocities
-            ).tolist()
-        if spawn_options.joints_velocities is None:
-            spawn_options.joints_velocities = np.zeros_like(
-                spawn_options.joints_positions
-            ).tolist()
-        for joint, position, velocity in zip(
-                joints,
-                spawn_options.joints_positions,
-                spawn_options.joints_velocities
-        ):
-            pybullet.resetJointState(
-                bodyUniqueId=identity,
-                jointIndex=joint,
-                targetValue=position,
-                targetVelocity=velocity/units.seconds
-            )
+    for joint, info in zip(joints, joints_options):
+        pybullet.resetJointState(
+            bodyUniqueId=identity,
+            jointIndex=joint,
+            targetValue=info.initial_position,
+            targetVelocity=info.initial_velocity/units.seconds,
+        )
 
 
 class Amphibious(Animat):
@@ -146,6 +130,7 @@ class Amphibious(Animat):
         initial_pose(
             identity=self._identity,
             joints=self.joints_identities(),
+            joints_options=self.options.morphology.joints,
             spawn_options=self.options.spawn,
             units=self.units,
         )
