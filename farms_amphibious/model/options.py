@@ -471,28 +471,10 @@ class AmphibiousNetworkOptions(Options):
             )
         if self.state_init is None:
             self.state_init = (
-                AmphibiousNetworkOptions.default_state_init(
+                self.default_state_init(
                     morphology,
                 ).tolist()
             )
-        if self.oscillators is None:
-            self.oscillators = [
-                AmphibiousOscillatorOptions(
-                    name='O_{}'.format(osc_i),
-                    initial_phase=0,
-                    initial_amplitude=0,
-                    input_drive=0,
-                    input_gain=0,
-                    input_bias=0,
-                    input_low=0,
-                    input_high=0,
-                    nominal_amplitude=0,
-                    rate=0,
-                    modular_phase=0,
-                    modular_amplitude=0,
-                )
-                for osc_i in range(2*morphology.n_joints())
-            ]
         if self.osc_frequencies is None:
             self.osc_frequencies = (
                 AmphibiousNetworkOptions.default_osc_frequencies(morphology)
@@ -526,6 +508,87 @@ class AmphibiousNetworkOptions(Options):
                     amplitudes=kwargs.pop('modular_amplitudes', np.zeros(4)),
                 )
             )
+
+        # Oscillators
+        n_oscillators = 2*morphology.n_joints()
+        if self.oscillators is None:
+            self.oscillators = [
+                AmphibiousOscillatorOptions(
+                    name=None,
+                    initial_phase=None,
+                    initial_amplitude=None,
+                    input_drive=None,
+                    frequency_gain=None,
+                    frequency_bias=None,
+                    frequency_low=None,
+                    frequency_high=None,
+                    frequency_saturation=None,
+                    amplitude_gain=None,
+                    amplitude_bias=None,
+                    amplitude_low=None,
+                    amplitude_high=None,
+                    amplitude_saturation=None,
+                    rate=None,
+                    modular_phase=None,
+                    modular_amplitude=None,
+                )
+                for osc_i in range(n_oscillators)
+            ]
+        state_init = self.default_state_init(morphology)
+        osc_frequencies = self.default_osc_frequencies(morphology)
+        osc_amplitudes = self.default_osc_amplitudes(
+            morphology,
+            body_amplitude=kwargs.pop('body_stand_amplitude', 0.3),
+            legs_amplitudes=kwargs.pop(
+                'legs_amplitudes',
+                [np.pi/4, np.pi/32, np.pi/4, np.pi/8]
+            ),
+        )
+        osc_rates = self.default_osc_rates(morphology)
+        osc_modular_phases = self.default_osc_modular_phases(
+            morphology=morphology,
+            phases=kwargs.pop('modular_phases', np.zeros(4)),
+        )
+        osc_modular_amplitudes = self.default_osc_modular_amplitudes(
+            morphology=morphology,
+            amplitudes=kwargs.pop('modular_amplitudes', np.zeros(4)),
+        )
+        for osc_i, osc in enumerate(self.oscillators):
+            if osc.name is None:
+                osc.name = 'O_{}'.format(osc_i)
+            if osc.initial_phase is None:
+                osc.initial_phase = float(state_init[osc_i])
+            if osc.initial_amplitude is None:
+                osc.initial_amplitude = float(state_init[osc_i+n_oscillators])
+            if osc.input_drive is None:
+                osc.input_drive = 0
+            if osc.frequency_gain is None:
+                osc.frequency_gain = osc_frequencies[osc_i]['gain']
+            if osc.frequency_bias is None:
+                osc.frequency_bias = osc_frequencies[osc_i]['bias']
+            if osc.frequency_low is None:
+                osc.frequency_low = osc_frequencies[osc_i]['low']
+            if osc.frequency_high is None:
+                osc.frequency_high = osc_frequencies[osc_i]['high']
+            if osc.frequency_saturation is None:
+                osc.frequency_saturation = osc_frequencies[osc_i]['saturation']
+            if osc.amplitude_gain is None:
+                osc.amplitude_gain = osc_amplitudes[osc_i]['gain']
+            if osc.amplitude_bias is None:
+                osc.amplitude_bias = osc_amplitudes[osc_i]['bias']
+            if osc.amplitude_low is None:
+                osc.amplitude_low = osc_amplitudes[osc_i]['low']
+            if osc.amplitude_high is None:
+                osc.amplitude_high = osc_amplitudes[osc_i]['high']
+            if osc.amplitude_saturation is None:
+                osc.amplitude_saturation = osc_amplitudes[osc_i]['saturation']
+            if osc.rate is None:
+                osc.rate = osc_rates[osc_i]
+            if osc.modular_phase is None:
+                osc.modular_phase = osc_modular_phases[osc_i]
+            if osc.modular_amplitude is None:
+                osc.modular_amplitude = osc_modular_amplitudes[osc_i]
+        # Connectivity
         if self.osc2osc is None:
             self.osc2osc = (
                 AmphibiousNetworkOptions.default_osc2osc(
@@ -1083,11 +1146,16 @@ class AmphibiousOscillatorOptions(Options):
         self.initial_phase = kwargs.pop('initial_phase')
         self.initial_amplitude = kwargs.pop('initial_amplitude')
         self.input_drive = kwargs.pop('input_drive')
-        self.input_gain = kwargs.pop('input_gain')
-        self.input_bias = kwargs.pop('input_bias')
-        self.input_low = kwargs.pop('input_low')
-        self.input_high = kwargs.pop('input_high')
-        self.nominal_amplitude = kwargs.pop('nominal_amplitude')
+        self.frequency_gain = kwargs.pop('frequency_gain')
+        self.frequency_bias = kwargs.pop('frequency_bias')
+        self.frequency_low = kwargs.pop('frequency_low')
+        self.frequency_high = kwargs.pop('frequency_high')
+        self.frequency_saturation = kwargs.pop('frequency_saturation')
+        self.amplitude_gain = kwargs.pop('amplitude_gain')
+        self.amplitude_bias = kwargs.pop('amplitude_bias')
+        self.amplitude_low = kwargs.pop('amplitude_low')
+        self.amplitude_high = kwargs.pop('amplitude_high')
+        self.amplitude_saturation = kwargs.pop('amplitude_saturation')
         self.rate = kwargs.pop('rate')
         self.modular_phase = kwargs.pop('modular_phase')
         self.modular_amplitude = kwargs.pop('modular_amplitude')
