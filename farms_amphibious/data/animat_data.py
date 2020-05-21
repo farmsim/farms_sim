@@ -484,7 +484,7 @@ class JointsArray(JointsArrayCy):
     """Oscillator array"""
 
     @classmethod
-    def from_options(cls, joints):
+    def from_options(cls, control):
         """Default"""
         return cls(np.array([
             [
@@ -495,5 +495,8 @@ class JointsArray(JointsArrayCy):
                 offset['saturation'],
                 rate,
             ]
-            for offset, rate in zip(joints.offsets, joints.rates)
+            for offset, rate in zip(
+                control.joints_offsets(),
+                control.joints_rates(),
+            )
         ], dtype=NPDTYPE))

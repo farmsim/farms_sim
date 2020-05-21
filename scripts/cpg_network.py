@@ -45,8 +45,6 @@ def animat_options():
         'weight_sens_hydro_amp': 1,
         'legs_offsets_walking': [0, np.pi/32, 0, np.pi/8],
         'legs_offsets_swimming': [-2*np.pi/5, 0, 0, 0],
-        'gain_amplitude': [1 for _ in range(morphology.n_joints())],
-        'gain_offset': [1 for _ in range(morphology.n_joints())],
     }
     control = AmphibiousControlOptions.from_options(options)
     control.defaults_from_morphology(morphology, options)

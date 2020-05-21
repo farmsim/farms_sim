@@ -60,7 +60,7 @@ class AmphibiousData(AnimatData):
                 control.network.hydro2osc,
             ),
         )
-        joints = JointsArray.from_options(control.joints)
+        joints = JointsArray.from_options(control)
         sensors = SensorsData(
             contacts=ContactsArray.from_names(
                 control.sensors.contacts,
