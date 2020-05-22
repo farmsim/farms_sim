@@ -21,7 +21,7 @@ def main():
     """Main"""
 
     sdf, animat_options = get_pleurobot_options(
-        spawn_loader=SpawnLoader.FARMS,  # SpawnLoader.PYBULLET
+        spawn_loader=SpawnLoader.PYBULLET,  # SpawnLoader.FARMS
         weight_osc_body=1e1,
         weight_osc_legs_internal=3e1,
         weight_osc_legs_opposite=1e1,

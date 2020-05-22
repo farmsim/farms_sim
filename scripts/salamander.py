@@ -27,7 +27,7 @@ def main():
     sdf = get_sdf_path(name='salamander', version='v1')
     pylog.info('Model SDF: {}'.format(sdf))
     animat_options = get_animat_options(
-        spawn_loader=SpawnLoader.FARMS,  # SpawnLoader.PYBULLET
+        spawn_loader=SpawnLoader.PYBULLET,  # SpawnLoader.FARMS
         show_hydrodynamics=True,
         swimming=False,
         n_legs=4,
