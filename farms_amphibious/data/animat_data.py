@@ -332,14 +332,14 @@ class Oscillators(OscillatorsCy):
                 ]
                 for freq in option
             ], dtype=NPDTYPE)
-            for option in [network.osc_frequencies, network.osc_amplitudes]
+            for option in [network.osc_frequencies(), network.osc_amplitudes()]
         ]
         return cls(
             freqs,
             amplitudes,
-            np.array(network.osc_rates, dtype=NPDTYPE),
-            np.array(network.osc_modular_phases, dtype=NPDTYPE),
-            np.array(network.osc_modular_amplitudes, dtype=NPDTYPE),
+            np.array(network.osc_rates(), dtype=NPDTYPE),
+            np.array(network.osc_modular_phases(), dtype=NPDTYPE),
+            np.array(network.osc_modular_amplitudes(), dtype=NPDTYPE),
         )
 
 
@@ -484,7 +484,7 @@ class JointsArray(JointsArrayCy):
     """Oscillator array"""
 
     @classmethod
-    def from_options(cls, joints):
+    def from_options(cls, control):
         """Default"""
         return cls(np.array([
             [
@@ -495,5 +495,8 @@ class JointsArray(JointsArrayCy):
                 offset['saturation'],
                 rate,
             ]
-            for offset, rate in zip(joints.offsets, joints.rates)
+            for offset, rate in zip(
+                control.joints_offsets(),
+                control.joints_rates(),
+            )
         ], dtype=NPDTYPE))

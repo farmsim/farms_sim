@@ -60,8 +60,12 @@ class AmphibiousKinematics(ModelController):
         self.animat_options = animat_options
         self.animat_data = animat_data
         self._timestep = timestep
+        max_torques = {
+            joint.joint: joint.max_torque
+            for joint in animat_options.control.joints
+        }
         self.max_torques = np.array([
-            animat_options.control.joints.max_torques[joint]
+            max_torques[joint]
             for joint in joints
         ])
 

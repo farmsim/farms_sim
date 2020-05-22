@@ -41,20 +41,36 @@ class AmphibiousController(ModelController):
             ]
             for side in range(2)
         ]
+        gain_amplitudes = {
+            joint.joint: joint.gain_amplitude
+            for joint in animat_options.control.joints
+        }
         self.gain_amplitude = np.array([
-            animat_options.control.joints.gain_amplitude[joint]
+            gain_amplitudes[joint]
             for joint in joints
         ])
+        gain_offsets = {
+            joint.joint: joint.gain_offset
+            for joint in animat_options.control.joints
+        }
         self.gain_offset = np.array([
-            animat_options.control.joints.gain_offset[joint]
+            gain_offsets[joint]
             for joint in joints
         ])
+        offsets_bias = {
+            joint.joint: joint.bias
+            for joint in animat_options.control.joints
+        }
         self.joints_bias = np.array([
-            animat_options.control.joints.offsets_bias[joint]
+            offsets_bias[joint]
             for joint in joints
         ])
+        max_torques = {
+            joint.joint: joint.max_torque
+            for joint in animat_options.control.joints
+        }
         self.max_torques = np.array([
-            animat_options.control.joints.max_torques[joint]
+            max_torques[joint]
             for joint in joints
         ])
 
