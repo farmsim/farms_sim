@@ -519,13 +519,13 @@ class AmphibiousControlOptions(Options):
             if muscle.osc2 is None:
                 muscle.osc2 = 2*muscle_i+1  # self.network.oscillators[].name
             if muscle.alpha is None:
-                muscle.alpha = 1
+                muscle.alpha = 1e0
             if muscle.beta is None:
-                muscle.beta = 1
+                muscle.beta = -1e0
             if muscle.gamma is None:
-                muscle.gamma = 1
+                muscle.gamma = 1e0
             if muscle.delta is None:
-                muscle.delta = 1
+                muscle.delta = -1e-3
 
     def joints_offsets(self):
         """Joints offsets"""
@@ -1430,9 +1430,9 @@ class AmphibiousMuscleSetOptions(Options):
         self.joint = kwargs.pop('joint')
         self.osc1 = kwargs.pop('osc1')
         self.osc2 = kwargs.pop('osc2')
-        self.alpha = kwargs.pop('alpha')
-        self.beta = kwargs.pop('beta')
-        self.gamma = kwargs.pop('gamma')
-        self.delta = kwargs.pop('delta')
+        self.alpha = kwargs.pop('alpha')  # Gain
+        self.beta = kwargs.pop('beta')  # Stiffness gain
+        self.gamma = kwargs.pop('gamma')  # Tonic gain
+        self.delta = kwargs.pop('delta')  # Damping coefficient
         if kwargs:
             raise Exception('Unknown kwargs: {}'.format(kwargs))
