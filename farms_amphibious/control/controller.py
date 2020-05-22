@@ -1,7 +1,7 @@
 """Network controller"""
 
 import numpy as np
-from farms_bullet.model.control import ModelController
+from farms_bullet.model.control import ModelController, ControlType
 from ..model.convention import AmphibiousConvention
 from .network import NetworkODE
 
@@ -13,8 +13,14 @@ class AmphibiousController(ModelController):
         convention = AmphibiousConvention(**animat_options.morphology)
         super(AmphibiousController, self).__init__(
             joints=joints,
-            use_position=True,
-            use_torque=False,
+            control_types={
+                joint.joint: joint.control_type
+                for joint in animat_options.control.joints
+            },
+            max_torques={
+                joint.joint: joint.max_torque
+                for joint in animat_options.control.joints
+            }
         )
         self.network = NetworkODE(animat_data)
         self.animat_data = animat_data
@@ -65,14 +71,6 @@ class AmphibiousController(ModelController):
             offsets_bias[joint]
             for joint in joints
         ])
-        max_torques = {
-            joint.joint: joint.max_torque
-            for joint in animat_options.control.joints
-        }
-        self.max_torques = np.array([
-            max_torques[joint]
-            for joint in joints
-        ])
 
     def step(self, iteration, time, timestep):
         """Control step"""
@@ -81,7 +79,7 @@ class AmphibiousController(ModelController):
     def positions(self, iteration):
         """Postions"""
         outputs = self.network.outputs(iteration)
-        return (
+        positions = (
             self.gain_amplitude*0.5*(
                 outputs[self.groups[0]]
                 - outputs[self.groups[1]]
@@ -89,6 +87,7 @@ class AmphibiousController(ModelController):
             + self.gain_offset*self.network.offsets(iteration)
             + self.joints_bias
         )
+        return dict(zip(self.joints[ControlType.POSITION], positions))
 
     def torques(self, iteration):
         """Torques"""
@@ -116,4 +115,4 @@ class AmphibiousController(ModelController):
         proprioception.array[iteration, :, 9] = motor_torques
         proprioception.array[iteration, :, 10] = spring_torques
         proprioception.array[iteration, :, 11] = damping_torques
-        return torques
+        return dict(zip(self.joints[ControlType.TORQUE], torques))

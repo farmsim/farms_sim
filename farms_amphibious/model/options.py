@@ -1,13 +1,13 @@
 """Animat options"""
 
-from enum import Enum
+from enum import IntEnum
 import numpy as np
-
 from farms_data.options import Options
+from farms_bullet.model.control import ControlType
 from farms_amphibious.model.convention import AmphibiousConvention
 
 
-class SpawnLoader(Enum):
+class SpawnLoader(IntEnum):
     """Spawn loader"""
     FARMS = 0
     PYBULLET = 1
@@ -429,7 +429,7 @@ class AmphibiousControlOptions(Options):
             self.joints = [
                 AmphibiousJointControlOptions(
                     joint=None,
-                    control=None,
+                    control_type=None,
                     offset_gain=None,
                     offset_bias=None,
                     offset_low=None,
@@ -447,9 +447,9 @@ class AmphibiousControlOptions(Options):
             'joints_control_names',
             morphology.joints_names(),
         )
-        joints_controls = kwargs.pop(
-            'joints_control_names',
-            [0 for joint_i in range(n_joints)],
+        joints_control_types = kwargs.pop(
+            'joints_control_types',
+            {joint.name: ControlType.POSITION for joint in morphology.joints},
         )
         joints_rates = kwargs.pop(
             'joints_rates',
@@ -474,8 +474,8 @@ class AmphibiousControlOptions(Options):
         for joint_i, joint in enumerate(self.joints):
             if joint.joint is None:
                 joint.joint = joints_names[joint_i]
-            if joint.control is None:
-                joint.control = joints_controls[joint_i]
+            if joint.control_type is None:
+                joint.control_type = joints_control_types[joint.joint]
             if joint.offset_gain is None:
                 joint.offset_gain = offsets[joint_i]['gain']
             if joint.offset_bias is None:
@@ -567,7 +567,7 @@ class AmphibiousJointControlOptions(Options):
     def __init__(self, **kwargs):
         super(AmphibiousJointControlOptions, self).__init__()
         self.joint = kwargs.pop('joint')
-        self.control = kwargs.pop('control')
+        self.control_type = kwargs.pop('control_type')
         self.offset_gain = kwargs.pop('offset_gain')
         self.offset_bias = kwargs.pop('offset_bias')
         self.offset_low = kwargs.pop('offset_low')
