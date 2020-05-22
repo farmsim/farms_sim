@@ -469,7 +469,7 @@ class AmphibiousControlOptions(Options):
         )
         max_torques = kwargs.pop(
             'max_torques',
-            {joint.name: 100 for joint in morphology.joints},
+            {joint.name: 1e2 for joint in morphology.joints},
         )
         for joint_i, joint in enumerate(self.joints):
             if joint.joint is None:
@@ -515,9 +515,9 @@ class AmphibiousControlOptions(Options):
             if muscle.joint is None:
                 muscle.joint = morphology.joints[muscle_i].name
             if muscle.osc1 is None:
-                muscle.osc1 = self.network.oscillators[2*muscle_i].name
+                muscle.osc1 = 2*muscle_i  # self.network.oscillators[].name
             if muscle.osc2 is None:
-                muscle.osc2 = self.network.oscillators[2*muscle_i+1].name
+                muscle.osc2 = 2*muscle_i+1  # self.network.oscillators[].name
             if muscle.alpha is None:
                 muscle.alpha = 1
             if muscle.beta is None:

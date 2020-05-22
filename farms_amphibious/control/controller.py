@@ -9,7 +9,7 @@ from .network import NetworkODE
 class AmphibiousController(ModelController):
     """Amphibious network"""
 
-    def __init__(self, joints, animat_options, animat_data, timestep):
+    def __init__(self, joints, animat_options, animat_data):
         convention = AmphibiousConvention(**animat_options.morphology)
         super(AmphibiousController, self).__init__(
             joints=joints,
@@ -24,9 +24,9 @@ class AmphibiousController(ModelController):
         )
         self.network = NetworkODE(animat_data)
         self.animat_data = animat_data
-        self._timestep = timestep
         n_body = animat_options.morphology.n_joints_body
         n_legs_dofs = animat_options.morphology.n_dof_legs
+        self.muscles = animat_options.control.muscles
         self.groups = [
             [
                 convention.bodyosc2index(
@@ -89,7 +89,7 @@ class AmphibiousController(ModelController):
         )
         return dict(zip(self.joints[ControlType.POSITION], positions))
 
-    def torques(self, iteration):
+    def pid_controller(self, iteration):
         """Torques"""
         proprioception = self.animat_data.sensors.proprioception
         positions = np.array(proprioception.positions(iteration))
@@ -122,5 +122,46 @@ class AmphibiousController(ModelController):
         proprioception.array[iteration, :, 8] = torques
         proprioception.array[iteration, :, 9] = motor_torques
         proprioception.array[iteration, :, 10] = spring_torques
+        proprioception.array[iteration, :, 11] = damping_torques
+        return dict(zip(self.joints[ControlType.TORQUE], torques))
+
+    def torques(self, iteration):
+        """Torques"""
+        # Sensors
+        proprioception = self.animat_data.sensors.proprioception
+        positions = np.array(proprioception.positions(iteration))
+        velocities = np.array(proprioception.velocities(iteration))
+
+        # Neural activity
+        muscles_joints_indices = [
+            self.joints[ControlType.TORQUE].index(muscle.joint)
+            for muscle in self.muscles
+        ]
+        neural_activity = self.network.outputs(iteration)
+        active_torques = np.array([
+            muscle.alpha*(
+                neural_activity[muscle.osc1]
+                - neural_activity[muscle.osc2]
+            )
+            for muscle in self.muscles
+        ])
+        stiffness_torques = np.array([
+            muscle.beta*(
+                neural_activity[muscle.osc1]
+                + neural_activity[muscle.osc2]
+                + muscle.gamma
+            )*positions[joint_index]
+            for muscle, joint_index in zip(self.muscles, muscles_joints_indices)
+        ])
+        damping_torques = np.array([
+            muscle.delta*velocities[joint_index]
+            for muscle, joint_index in zip(self.muscles, muscles_joints_indices)
+        ])
+
+        # Final torques
+        torques = active_torques + stiffness_torques + damping_torques
+        proprioception.array[iteration, :, 8] = torques
+        proprioception.array[iteration, :, 9] = active_torques
+        proprioception.array[iteration, :, 10] = stiffness_torques
         proprioception.array[iteration, :, 11] = damping_torques
         return dict(zip(self.joints[ControlType.TORQUE], torques))
