@@ -94,22 +94,30 @@ class AmphibiousController(ModelController):
         proprioception = self.animat_data.sensors.proprioception
         positions = np.array(proprioception.positions(iteration))
         velocities = np.array(proprioception.velocities(iteration))
-        cmd_positions = self.positions(iteration)
+        outputs = self.network.outputs(iteration)
+        cmd_positions = (
+            self.gain_amplitude*0.5*(
+                outputs[self.groups[0]]
+                - outputs[self.groups[1]]
+            )
+            + self.gain_offset*self.network.offsets(iteration)
+            + self.joints_bias
+        )
         # cmd_velocities = self.get_velocity_output(iteration)
         positions_rest = np.array(self.network.offsets()[iteration])
         # max_torque = 1  # Nm
         spring = 2e0  # Nm/rad
         damping = 5e-3  # max_torque/10  # 1e-1 # Nm*s/rad
         cmd_kp = 5*spring  # Nm/rad
-        cmd_kd = 0.5*damping  # Nm*s/rad
+        # cmd_kd = 0.5*damping  # Nm*s/rad
         motor_torques = cmd_kp*(cmd_positions-positions)
         spring_torques = spring*(positions_rest-positions)
         damping_torques = - damping*velocities
-        if iteration > 0:
-            motor_torques += cmd_kd*(
-                (cmd_positions- self.positions(iteration-1))/self._timestep
-                - velocities
-            )
+        # if iteration > 0:
+        #     motor_torques += cmd_kd*(
+        #         (cmd_positions - self.positions(iteration-1))/self._timestep
+        #         - velocities
+        #     )
         torques = motor_torques + spring_torques + damping_torques
         proprioception.array[iteration, :, 8] = torques
         proprioception.array[iteration, :, 9] = motor_torques
