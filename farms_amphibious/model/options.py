@@ -429,6 +429,7 @@ class AmphibiousControlOptions(Options):
             self.joints = [
                 AmphibiousJointControlOptions(
                     joint=None,
+                    control=None,
                     offset_gain=None,
                     offset_bias=None,
                     offset_low=None,
@@ -442,29 +443,39 @@ class AmphibiousControlOptions(Options):
                 )
                 for joint in range(n_joints)
             ]
+        joints_names = kwargs.pop(
+            'joints_control_names',
+            morphology.joints_names(),
+        )
+        joints_controls = kwargs.pop(
+            'joints_control_names',
+            [0 for joint_i in range(n_joints)],
+        )
         joints_rates = kwargs.pop(
             'joints_rates',
-            {joint.name: 5 for joint in morphology.joints}
+            {joint.name: 5 for joint in morphology.joints},
         )
         gain_amplitude = kwargs.pop(
             'gain_amplitude',
-            {joint.name: 1 for joint in morphology.joints}
+            {joint.name: 1 for joint in morphology.joints},
         )
         gain_offset = kwargs.pop(
             'gain_offset',
-            {joint.name: 1 for joint in morphology.joints}
+            {joint.name: 1 for joint in morphology.joints},
         )
         offsets_bias = kwargs.pop(
             'offsets_bias',
-            {joint.name: 0 for joint in morphology.joints}
+            {joint.name: 0 for joint in morphology.joints},
         )
         max_torques = kwargs.pop(
             'max_torques',
-            {joint.name: 100 for joint in morphology.joints}
+            {joint.name: 100 for joint in morphology.joints},
         )
         for joint_i, joint in enumerate(self.joints):
             if joint.joint is None:
-                joint.joint = morphology.joints[joint_i].name
+                joint.joint = joints_names[joint_i]
+            if joint.control is None:
+                joint.control = joints_controls[joint_i]
             if joint.offset_gain is None:
                 joint.offset_gain = offsets[joint_i]['gain']
             if joint.offset_bias is None:
@@ -556,6 +567,7 @@ class AmphibiousJointControlOptions(Options):
     def __init__(self, **kwargs):
         super(AmphibiousJointControlOptions, self).__init__()
         self.joint = kwargs.pop('joint')
+        self.control = kwargs.pop('control')
         self.offset_gain = kwargs.pop('offset_gain')
         self.offset_bias = kwargs.pop('offset_bias')
         self.offset_low = kwargs.pop('offset_low')
