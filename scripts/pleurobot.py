@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 
 import farms_pylog as pylog
 from farms_amphibious.utils.utils import prompt
+from farms_amphibious.model.options import SpawnLoader
 from farms_amphibious.utils.network import plot_networks_maps
 from farms_amphibious.experiment.simulation import simulation, profile
 from farms_amphibious.experiment.options import (
@@ -20,6 +21,7 @@ def main():
     """Main"""
 
     sdf, animat_options = get_pleurobot_options(
+        spawn_loader=SpawnLoader.PYBULLET,  # SpawnLoader.FARMS
         weight_osc_body=1e1,
         weight_osc_legs_internal=3e1,
         weight_osc_legs_opposite=1e1,
