@@ -149,7 +149,6 @@ class AmphibiousMorphologyOptions(Options):
                     pybullet_dynamics={
                         'linearDamping': 0,
                         'angularDamping': 0,
-                        'jointDamping': 0,
                         'lateralFriction': lateral,
                         'spinningFriction': spinning,
                         'rollingFriction': rolling,
@@ -447,9 +446,13 @@ class AmphibiousControlOptions(Options):
             'joints_control_names',
             morphology.joints_names(),
         )
+        default_control_type = kwargs.pop(
+            'default_control_type',
+            ControlType.POSITION
+        )
         joints_control_types = kwargs.pop(
             'joints_control_types',
-            {joint.name: ControlType.POSITION for joint in morphology.joints},
+            {joint.name: default_control_type for joint in morphology.joints},
         )
         joints_rates = kwargs.pop(
             'joints_rates',

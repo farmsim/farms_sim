@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 
 import farms_pylog as pylog
 from farms_models.utils import get_sdf_path
+from farms_bullet.model.control import ControlType
 from farms_bullet.simulation.options import SimulationOptions
 from farms_amphibious.model.options import AmphibiousOptions, SpawnLoader
 from farms_amphibious.utils.utils import prompt
@@ -28,6 +29,7 @@ def main():
     pylog.info('Model SDF: {}'.format(sdf))
     animat_options = get_animat_options(
         spawn_loader=SpawnLoader.PYBULLET,  # SpawnLoader.FARMS
+        default_control_type=ControlType.POSITION,
         show_hydrodynamics=True,
         swimming=False,
         n_legs=4,
@@ -52,6 +54,15 @@ def main():
         modular_phases=np.array([3*np.pi/2, 0, 3*np.pi/2, 0]) - np.pi/4,
         modular_amplitudes=np.full(4, 1.0),
     )
+
+    # Muscles
+    for muscle in animat_options.control.muscles:
+        muscle.alpha = 5e0
+        muscle.beta = -3e0
+        muscle.gamma = 3e0
+        muscle.delta = -2e-3
+
+    # State
     # state_init = animat_options.control.network.state_init
     # for phase_i, phase in enumerate(np.linspace(2*np.pi, 0, 11)):
     #     state_init[2*phase_i] = float(phase)
