@@ -50,7 +50,6 @@ def simulation_setup(animat_sdf, arena, **kwargs):
                 joints=animat_options.morphology.joints_names(),
                 animat_options=animat_options,
                 animat_data=animat_data,
-                timestep=simulation_options.timestep
             )
     else:
         animat_controller = None
