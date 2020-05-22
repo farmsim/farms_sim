@@ -519,9 +519,9 @@ class AmphibiousControlOptions(Options):
             if muscle.osc2 is None:
                 muscle.osc2 = 2*muscle_i+1  # self.network.oscillators[].name
             if muscle.alpha is None:
-                muscle.alpha = 1e0
+                muscle.alpha = 1e1
             if muscle.beta is None:
-                muscle.beta = -1e0
+                muscle.beta = -1e1
             if muscle.gamma is None:
                 muscle.gamma = 1e0
             if muscle.delta is None:

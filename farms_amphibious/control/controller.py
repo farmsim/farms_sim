@@ -125,8 +125,8 @@ class AmphibiousController(ModelController):
         proprioception.array[iteration, :, 11] = damping_torques
         return dict(zip(self.joints[ControlType.TORQUE], torques))
 
-    def torques(self, iteration):
-        """Torques"""
+    def ekeberg_muscle(self, iteration):
+        """Ekeberg muscle"""
         # Sensors
         proprioception = self.animat_data.sensors.proprioception
         positions = np.array(proprioception.positions(iteration))
@@ -138,19 +138,27 @@ class AmphibiousController(ModelController):
             for muscle in self.muscles
         ]
         neural_activity = self.network.outputs(iteration)
+
+        # Joints offsets
+        joints_offsets = (
+            self.gain_offset*self.network.offsets(iteration)
+            + self.joints_bias
+        )
+
+        # Torques
         active_torques = np.array([
-            muscle.alpha*(
+            self.gain_amplitude[joint_index]*muscle.alpha*(
                 neural_activity[muscle.osc1]
                 - neural_activity[muscle.osc2]
             )
-            for muscle in self.muscles
+            for muscle, joint_index in zip(self.muscles, muscles_joints_indices)
         ])
         stiffness_torques = np.array([
-            muscle.beta*(
+            self.gain_amplitude[joint_index]*muscle.beta*(
                 neural_activity[muscle.osc1]
                 + neural_activity[muscle.osc2]
                 + muscle.gamma
-            )*positions[joint_index]
+            )*(positions[joint_index] - joints_offsets[joint_index])
             for muscle, joint_index in zip(self.muscles, muscles_joints_indices)
         ])
         damping_torques = np.array([
@@ -165,3 +173,7 @@ class AmphibiousController(ModelController):
         proprioception.array[iteration, :, 10] = stiffness_torques
         proprioception.array[iteration, :, 11] = damping_torques
         return dict(zip(self.joints[ControlType.TORQUE], torques))
+
+    def torques(self, iteration):
+        """Torques"""
+        return self.ekeberg_muscle(iteration)
