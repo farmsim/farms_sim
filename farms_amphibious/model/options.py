@@ -339,10 +339,13 @@ class AmphibiousControlOptions(Options):
         if not self.kinematics_file:
             self.sensors = AmphibiousSensorsOptions(**kwargs.pop('sensors'))
             self.network = AmphibiousNetworkOptions(**kwargs.pop('network'))
-            # self.joints = AmphibiousJointsOptions(**kwargs.pop('joints'))
             self.joints = [
                 AmphibiousJointControlOptions(**joint)
                 for joint in kwargs.pop('joints')
+            ]
+            self.muscles = [
+                AmphibiousMuscleSetOptions(**muscle)
+                for muscle in kwargs.pop('muscles')
             ]
         if kwargs:
             raise Exception('Unknown kwargs: {}'.format(kwargs))
@@ -361,6 +364,7 @@ class AmphibiousControlOptions(Options):
             AmphibiousNetworkOptions.from_options(kwargs).to_dict()
         )
         options['joints'] = kwargs.pop('joints', [])
+        options['muscles'] = kwargs.pop('muscles', [])
         return cls(**options)
 
     def defaults_from_morphology(self, morphology, kwargs):
@@ -368,7 +372,7 @@ class AmphibiousControlOptions(Options):
         self.sensors.defaults_from_morphology(morphology, kwargs)
         self.network.defaults_from_morphology(morphology, kwargs)
 
-        # self.joints.defaults_from_morphology(morphology, kwargs)
+        # Joints
         n_joints = morphology.n_joints()
         convention = AmphibiousConvention(**morphology)
         offsets = [None]*n_joints
@@ -481,6 +485,36 @@ class AmphibiousControlOptions(Options):
                 joint.bias = offsets_bias[joint.joint]
             if joint.max_torque is None:
                 joint.max_torque = max_torques[joint.joint]
+
+        # Muscles
+        if not self.muscles:
+            self.muscles = [
+                AmphibiousMuscleSetOptions(
+                    joint=None,
+                    osc1=None,
+                    osc2=None,
+                    alpha=None,
+                    beta=None,
+                    gamma=None,
+                    delta=None,
+                )
+                for muscle in range(n_joints)
+            ]
+        for muscle_i, muscle in enumerate(self.muscles):
+            if muscle.joint is None:
+                muscle.joint = morphology.joints[muscle_i].name
+            if muscle.osc1 is None:
+                muscle.osc1 = self.network.oscillators[2*muscle_i].name
+            if muscle.osc2 is None:
+                muscle.osc2 = self.network.oscillators[2*muscle_i+1].name
+            if muscle.alpha is None:
+                muscle.alpha = 1
+            if muscle.beta is None:
+                muscle.beta = 1
+            if muscle.gamma is None:
+                muscle.gamma = 1
+            if muscle.delta is None:
+                muscle.delta = 1
 
     def joints_offsets(self):
         """Joints offsets"""
@@ -1390,103 +1424,3 @@ class AmphibiousMuscleSetOptions(Options):
         self.delta = kwargs.pop('delta')
         if kwargs:
             raise Exception('Unknown kwargs: {}'.format(kwargs))
-
-
-# class AmphibiousJointsOptions(Options):
-#     """Amphibious joints options"""
-
-#     def __init__(self, **kwargs):
-#         super(AmphibiousJointsOptions, self).__init__()
-#         self.offsets = kwargs.pop('offsets')
-#         self.rates = kwargs.pop('rates')
-#         self.gain_amplitude = kwargs.pop('gain_amplitude')
-#         self.gain_offset = kwargs.pop('gain_offset')
-#         self.offsets_bias = kwargs.pop('offsets_bias')
-#         self.max_torques = kwargs.pop('max_torques')
-#         if kwargs:
-#             raise Exception('Unknown kwargs: {}'.format(kwargs))
-
-#     @classmethod
-#     def from_options(cls, kwargs):
-#         """From options"""
-#         options = {}
-#         options['offsets'] = kwargs.pop('offsets', None)
-#         options['rates'] = kwargs.pop('rates', None)
-#         options['gain_amplitude'] = kwargs.pop('gain_amplitude', None)
-#         options['gain_offset'] = kwargs.pop('gain_offset', None)
-#         options['offsets_bias'] = kwargs.pop('offsets_bias', None)
-#         options['max_torques'] = kwargs.pop('max_torques', None)
-#         return cls(**options)
-
-#     def defaults_from_morphology(self, morphology, kwargs):
-#         """Joints """
-#         convention = AmphibiousConvention(**morphology)
-#         if self.offsets is None:
-#             self.offsets = [None]*morphology.n_joints()
-#             # Turning body
-#             for joint_i in range(morphology.n_joints_body):
-#                 for side_i in range(2):
-#                     self.offsets[convention.bodyjoint2index(joint_i=joint_i)] = {
-#                         'gain': 1,
-#                         'bias': 0,
-#                         'low': 1,
-#                         'high': 5,
-#                         'saturation': 0,
-#                     }
-#             # Turning legs
-#             legs_offsets_walking = kwargs.pop(
-#                 'legs_offsets_walking',
-#                 [0, np.pi/32, 0, np.pi/8]
-#             )
-#             legs_offsets_swimming = kwargs.pop(
-#                 'legs_offsets_swimming',
-#                 [-2*np.pi/5, 0, 0, 0]
-#             )
-#             leg_turn_gain = kwargs.pop(
-#                 'leg_turn_gain',
-#                 [-1, 1]
-#             )
-#             leg_side_turn_gain = kwargs.pop(
-#                 'leg_side_turn_gain',
-#                 [-1, 1]
-#             )
-#             leg_joint_turn_gain = kwargs.pop(
-#                 'leg_joint_turn_gain',
-#                 [1, 0, 0, 0]
-#             )
-#             for leg_i in range(morphology.n_legs//2):
-#                 for side_i in range(2):
-#                     for joint_i in range(morphology.n_dof_legs):
-#                         self.offsets[convention.legjoint2index(
-#                             leg_i=leg_i,
-#                             side_i=side_i,
-#                             joint_i=joint_i,
-#                         )] = {
-#                             'gain': (
-#                                 leg_turn_gain[leg_i]
-#                                 *leg_side_turn_gain[side_i]
-#                                 *leg_joint_turn_gain[joint_i]
-#                             ),
-#                             'bias': legs_offsets_walking[joint_i],
-#                             'low': 1,
-#                             'high': 3,
-#                             'saturation': legs_offsets_swimming[joint_i],
-#                         }
-#         if self.rates is None:
-#             self.rates = [5]*morphology.n_joints()
-#         if self.gain_amplitude is None:
-#             self.gain_amplitude = (
-#                 {joint: 1 for joint in morphology.joints_names()}
-#             )
-#         if self.gain_offset is None:
-#             self.gain_offset = (
-#                 {joint: 1 for joint in morphology.joints_names()}
-#             )
-#         if self.offsets_bias is None:
-#             self.offsets_bias = (
-#                 {joint: 0 for joint in morphology.joints_names()}
-#             )
-#         if self.max_torques is None:
-#             self.max_torques = (
-#                 {joint: 100 for joint in morphology.joints_names()}
-#             )
