@@ -144,7 +144,7 @@ class Amphibious(Animat):
             self.sensors.add({
                 'gps': LinksStatesSensor(
                     array=self.data.sensors.gps.array,
-                    animat_id=self.identity(),
+                    model_id=self.identity(),
                     links=[
                         self.links_map[link]
                         for link in self.options.control.sensors.gps
@@ -173,11 +173,11 @@ class Amphibious(Animat):
             self.sensors.add({
                 'contacts': ContactsSensors(
                     array=self.data.sensors.contacts.array,
-                    animat_ids=[
+                    model_ids=[
                         self._identity
                         for _ in self.options.control.sensors.contacts
                     ],
-                    animat_links=[
+                    model_links=[
                         self.links_map[foot]
                         for foot in self.options.control.sensors.contacts
                     ],
