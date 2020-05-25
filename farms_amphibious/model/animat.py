@@ -77,11 +77,11 @@ class Amphibious(Animat):
 
     def links_identities(self):
         """Links"""
-        return [self._links[link] for link in self.options.morphology.links_names()]
+        return [self.links_map[link] for link in self.options.morphology.links_names()]
 
     def joints_identities(self):
         """Joints"""
-        return [self._joints[joint] for joint in self.options.morphology.joints_names()]
+        return [self.joints_map[joint] for joint in self.options.morphology.joints_names()]
 
     def spawn(self):
         """Spawn amphibious"""
@@ -115,12 +115,12 @@ class Amphibious(Animat):
         if verbose:
             pylog.debug(self.sdf)
         if original:
-            self._identity, self._links, self._joints = load_sdf_pybullet(
+            self._identity, self.links_map, self.joints_map = load_sdf_pybullet(
                 sdf_path=self.sdf,
                 morphology_links=self.options.morphology.links_names(),
             )
         else:
-            self._identity, self._links, self._joints = load_sdf(
+            self._identity, self.links_map, self.joints_map = load_sdf(
                 sdf_path=self.sdf,
                 force_concave=False,
                 reset_control=False,
@@ -146,7 +146,7 @@ class Amphibious(Animat):
                     array=self.data.sensors.gps.array,
                     animat_id=self.identity(),
                     links=[
-                        self._links[link]
+                        self.links_map[link]
                         for link in self.options.control.sensors.gps
                     ],
                     units=self.units
@@ -160,7 +160,7 @@ class Amphibious(Animat):
                     array=self.data.sensors.proprioception.array,
                     model_id=self._identity,
                     joints=[
-                        self._joints[joint]
+                        self.joints_map[joint]
                         for joint in self.options.control.sensors.joints
                     ],
                     units=self.units,
@@ -178,7 +178,7 @@ class Amphibious(Animat):
                         for _ in self.options.control.sensors.contacts
                     ],
                     animat_links=[
-                        self._links[foot]
+                        self.links_map[foot]
                         for foot in self.options.control.sensors.contacts
                     ],
                     newtons=self.units.newtons
@@ -191,7 +191,7 @@ class Amphibious(Animat):
         for link in self.options.morphology.links:
             self.masses[link.name] = pybullet.getDynamicsInfo(
                 self.identity(),
-                self._links[link.name],
+                self.links_map[link.name],
             )[0]
         if verbose:
             pylog.debug('Body mass: {} [kg]'.format(np.sum(self.masses.values())))
@@ -206,7 +206,7 @@ class Amphibious(Animat):
             mask=0
         )
         # Default dynamics
-        for link in self._links:
+        for link in self.links_map:
             # Default friction
             self.set_link_dynamics(
                 link,
@@ -252,7 +252,7 @@ class Amphibious(Animat):
             data_hydrodynamics=self.data.sensors.hydrodynamics.array,
             model=self.identity(),
             links=links,
-            links_map=self._links,
+            links_map=self.links_map,
             sensor_options=self.options.control.sensors,
             link_frame=link_frame,
             units=self.units
@@ -277,7 +277,7 @@ class Amphibious(Animat):
                 lineColorRGB=[0, 0, 1],
                 lineWidth=7*self.units.meters,
                 parentObjectUniqueId=self.identity(),
-                parentLinkIndex=self._links[link.name],
+                parentLinkIndex=self.links_map[link.name],
                 replaceItemUniqueId=self.hydrodynamics_plot[sensor_i][1],
             )
             active_links[sensor_i][1] = True
