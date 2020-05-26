@@ -2,7 +2,6 @@
 
 import numpy as np
 from farms_bullet.model.control import ModelController, ControlType
-from ..model.convention import AmphibiousConvention
 from .network import NetworkODE
 
 
@@ -10,7 +9,6 @@ class AmphibiousController(ModelController):
     """Amphibious network"""
 
     def __init__(self, joints, animat_options, animat_data):
-        convention = AmphibiousConvention(**animat_options.morphology)
         super(AmphibiousController, self).__init__(
             joints=joints,
             control_types={
@@ -24,8 +22,6 @@ class AmphibiousController(ModelController):
         )
         self.network = NetworkODE(animat_data)
         self.animat_data = animat_data
-        n_body = animat_options.morphology.n_joints_body
-        n_legs_dofs = animat_options.morphology.n_dof_legs
         self.muscles = animat_options.control.muscles
         self.osc_map = {}
         for muscle in self.muscles:
@@ -35,24 +31,12 @@ class AmphibiousController(ModelController):
             self.osc_map[muscle.osc2] = (
                 self.animat_data.network.oscillators.names.index(muscle.osc2)
             )
+        joint_muscle_map = {
+            muscle.joint: [self.osc_map[muscle.osc1], self.osc_map[muscle.osc2]]
+            for muscle in self.muscles
+        }
         self.groups = [
-            [
-                convention.bodyosc2index(
-                    joint_i=i,
-                    side=side
-                )
-                for i in range(n_body)
-            ] + [
-                convention.legosc2index(
-                    leg_i=leg_i,
-                    side_i=side_i,
-                    joint_i=joint_i,
-                    side=side
-                )
-                for leg_i in range(animat_options.morphology.n_legs//2)
-                for side_i in range(2)
-                for joint_i in range(n_legs_dofs)
-            ]
+            [joint_muscle_map[joint][side] for joint in joints]
             for side in range(2)
         ]
         gain_amplitudes = {
