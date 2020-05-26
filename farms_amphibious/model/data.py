@@ -43,14 +43,17 @@ class AmphibiousData(AnimatData):
             control.sensors.contacts,
             n_iterations,
         )
-        oscillators_map = {
-            name: osc_i
-            for osc_i, name in enumerate(oscillators.names)
-        }
-        contacts_map = {
-            name: sens_i
-            for sens_i, name in enumerate(contacts.names)
-        }
+        hydrodynamics = HydrodynamicsArray.from_names(
+            control.sensors.hydrodynamics,
+            n_iterations,
+        )
+        oscillators_map, contacts_map, hydrodynamics_map = [
+            {
+                name: element_i
+                for element_i, name in enumerate(element.names)
+            }
+            for element in (oscillators, contacts, hydrodynamics)
+        ]
         network = NetworkParameters(
             drives=DriveArray.from_initial_drive(
                 control.network.drives_init(),
@@ -77,6 +80,7 @@ class AmphibiousData(AnimatData):
             hydro_connectivity=HydroConnectivity.from_connectivity(
                 control.network.hydro2osc,
                 map1=oscillators_map,
+                map2=hydrodynamics_map,
             ),
         )
         joints = JointsArray.from_options(control)
@@ -90,9 +94,6 @@ class AmphibiousData(AnimatData):
                 control.sensors.gps,
                 n_iterations,
             ),
-            hydrodynamics=HydrodynamicsArray.from_names(
-                control.sensors.hydrodynamics,
-                n_iterations,
-            )
+            hydrodynamics=hydrodynamics,
         )
         return cls(state, network, joints, sensors)

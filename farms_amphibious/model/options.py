@@ -1376,7 +1376,7 @@ class AmphibiousNetworkOptions(Options):
                             joint_i=joint_i,
                             side=side_osc
                         ),
-                        'out': joint_i+1,
+                        'out': convention.bodylink2name(joint_i+1),
                         'type': 'LATERAL2FREQ',
                         'weight': weight_frequency,
                     })
@@ -1386,7 +1386,7 @@ class AmphibiousNetworkOptions(Options):
                             joint_i=joint_i,
                             side=side_osc
                         ),
-                        'out': joint_i+1,
+                        'out': convention.bodylink2name(joint_i+1),
                         'type': 'LATERAL2AMP',
                         'weight': weight_amplitude,
                     })
