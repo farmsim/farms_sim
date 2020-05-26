@@ -8,10 +8,11 @@ import matplotlib.pyplot as plt
 
 import farms_pylog as pylog
 from farms_bullet.model.control import ControlType
+from farms_bullet.simulation.options import SimulationOptions
 from farms_amphibious.utils.utils import prompt
-from farms_amphibious.model.options import SpawnLoader
 from farms_amphibious.utils.network import plot_networks_maps
 from farms_amphibious.experiment.simulation import simulation, profile
+from farms_amphibious.model.options import AmphibiousOptions, SpawnLoader
 from farms_amphibious.experiment.options import (
     get_pleurobot_options,
     amphibious_options,
@@ -51,6 +52,16 @@ def main():
         simulation_options,
         arena,
     ) = amphibious_options(animat_options, use_water_arena=False)
+
+    # Save options
+    animat_options_filename = 'pleurobot_animat_options.yaml'
+    animat_options.save(animat_options_filename)
+    simulation_options_filename = 'pleurobot_simulation_options.yaml'
+    simulation_options.save(simulation_options_filename)
+
+    # Load options
+    animat_options = AmphibiousOptions.load(animat_options_filename)
+    simulation_options = SimulationOptions.load(simulation_options_filename)
 
     # Simulation
     sim = profile(
