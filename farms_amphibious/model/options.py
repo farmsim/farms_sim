@@ -518,9 +518,9 @@ class AmphibiousControlOptions(Options):
             if muscle.joint is None:
                 muscle.joint = morphology.joints[muscle_i].name
             if muscle.osc1 is None:
-                muscle.osc1 = 2*muscle_i  # self.network.oscillators[].name
+                muscle.osc1 = self.network.oscillators[2*muscle_i].name
             if muscle.osc2 is None:
-                muscle.osc2 = 2*muscle_i+1  # self.network.oscillators[].name
+                muscle.osc2 = self.network.oscillators[2*muscle_i+1].name
             if muscle.alpha is None:
                 muscle.alpha = 1e1
             if muscle.beta is None:
@@ -839,6 +839,10 @@ class AmphibiousNetworkOptions(Options):
         ] + [
             osc.initial_amplitude for osc in self.oscillators
         ] + [0 for osc in self.oscillators[::2]]
+
+    def osc_names(self):
+        """Oscillator names"""
+        return [osc.name for osc in self.oscillators]
 
     def osc_frequencies(self):
         """Oscillator frequencies"""

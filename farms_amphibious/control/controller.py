@@ -27,6 +27,14 @@ class AmphibiousController(ModelController):
         n_body = animat_options.morphology.n_joints_body
         n_legs_dofs = animat_options.morphology.n_dof_legs
         self.muscles = animat_options.control.muscles
+        self.osc_map = {}
+        for muscle in self.muscles:
+            self.osc_map[muscle.osc1] = (
+                self.animat_data.network.oscillators.names.index(muscle.osc1)
+            )
+            self.osc_map[muscle.osc2] = (
+                self.animat_data.network.oscillators.names.index(muscle.osc2)
+            )
         self.groups = [
             [
                 convention.bodyosc2index(
@@ -148,15 +156,15 @@ class AmphibiousController(ModelController):
         # Torques
         active_torques = np.array([
             self.gain_amplitude[joint_index]*muscle.alpha*(
-                neural_activity[muscle.osc1]
-                - neural_activity[muscle.osc2]
+                neural_activity[self.osc_map[muscle.osc1]]
+                - neural_activity[self.osc_map[muscle.osc2]]
             )
             for muscle, joint_index in zip(self.muscles, muscles_joints_indices)
         ])
         stiffness_torques = np.array([
             self.gain_amplitude[joint_index]*muscle.beta*(
-                neural_activity[muscle.osc1]
-                + neural_activity[muscle.osc2]
+                neural_activity[self.osc_map[muscle.osc1]]
+                + neural_activity[self.osc_map[muscle.osc2]]
                 + muscle.gamma
             )*(positions[joint_index] - joints_offsets[joint_index])
             for muscle, joint_index in zip(self.muscles, muscles_joints_indices)

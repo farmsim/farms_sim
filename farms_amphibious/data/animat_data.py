@@ -286,10 +286,11 @@ class Oscillators(OscillatorsCy):
     """Oscillator array"""
 
     def __init__(
-            self, intrinsic_frequencies, nominal_amplitudes, rates,
+            self, names, intrinsic_frequencies, nominal_amplitudes, rates,
             modular_phases, modular_amplitudes,
     ):
         super(Oscillators, self).__init__()
+        self.names = names
         self.intrinsic_frequencies = DriveDependentArray(intrinsic_frequencies)
         self.nominal_amplitudes = DriveDependentArray(nominal_amplitudes)
         self.rates = DoubleArray1D(rates)
@@ -300,6 +301,7 @@ class Oscillators(OscillatorsCy):
     def from_dict(cls, dictionary):
         """Load data from dictionary"""
         return cls(
+            names=dictionary['names'],
             intrinsic_frequencies=dictionary['intrinsic_frequencies'],
             nominal_amplitudes=dictionary['nominal_amplitudes'],
             rates=dictionary['rates'],
@@ -311,6 +313,7 @@ class Oscillators(OscillatorsCy):
         """Convert data to dictionary"""
         assert iteration is None or isinstance(iteration, int)
         return {
+            'names': self.names,
             'intrinsic_frequencies': to_array(self.intrinsic_frequencies.array),
             'nominal_amplitudes': to_array(self.nominal_amplitudes.array),
             'rates': to_array(self.rates.array),
@@ -335,6 +338,7 @@ class Oscillators(OscillatorsCy):
             for option in [network.osc_frequencies(), network.osc_amplitudes()]
         ]
         return cls(
+            network.osc_names(),
             freqs,
             amplitudes,
             np.array(network.osc_rates(), dtype=NPDTYPE),
