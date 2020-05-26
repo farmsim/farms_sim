@@ -128,10 +128,19 @@ def get_pleurobot_options(**kwargs):
     pylog.info('Model SDF: {}'.format(sdf))
 
     # Morphology information
-    links_names = kwargs.pop('links_names', ['base_link', 'Head'] + [
-        'link{}'.format(i+1)
-        for i in range(27)
-    ] + ['link_tailBone', 'link_tail'])
+    links_names = kwargs.pop(
+        'links_names',
+        ['Head'] + [  # 'base_link',
+            'link{}'.format(i+1)
+            for i in range(6)
+        ] + ['link_tailBone'] + [
+            'link{}'.format(i+1)
+            for i in range(6, 11)
+        ] + ['link_tail'] + [
+            'link{}'.format(i+1)
+            for i in range(11, 27)
+        ]
+    )
     joints_names = kwargs.pop('joints_names', [
         # 'base_link_fixedjoint',
         'jHead',
