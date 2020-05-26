@@ -93,18 +93,7 @@ class AmphibiousMorphologyOptions(Options):
         options['n_dof_legs'] = kwargs.pop('n_dof_legs', 4)
         options['n_legs'] = kwargs.pop('n_legs', 4)
         convention = AmphibiousConvention(**options)
-        links_names = kwargs.pop(
-            'links_names',
-            [
-                convention.bodylink2name(i)
-                for i in range(options['n_joints_body']+1)
-            ] + [
-                convention.leglink2name(leg_i, side_i, link_i)
-                for leg_i in range(options['n_legs']//2)
-                for side_i in range(2)
-                for link_i in range(options['n_dof_legs'])
-            ]
-        )
+        links_names = kwargs.pop('links_names', convention.links_names)
         links_friction_lateral = kwargs.pop(
             'links_friction_lateral',
             [1 for link in links_names]
@@ -163,18 +152,7 @@ class AmphibiousMorphologyOptions(Options):
                 )
             ]
         )
-        joints_names = kwargs.pop(
-            'joints_names',
-            [
-                convention.bodyjoint2name(i)
-                for i in range(options['n_joints_body'])
-            ] + [
-                convention.legjoint2name(leg_i, side_i, joint_i)
-                for leg_i in range(options['n_legs']//2)
-                for side_i in range(2)
-                for joint_i in range(options['n_dof_legs'])
-            ]
-        )
+        joints_names = kwargs.pop('joints_names', convention.joints_names)
         joints_positions = kwargs.pop(
             'joints_positions',
             [0 for name in joints_names]
@@ -210,11 +188,11 @@ class AmphibiousMorphologyOptions(Options):
 
     def links_names(self):
         """Links names"""
-        return [link['name'] for link in self.links]
+        return [link.name for link in self.links]
 
     def joints_names(self):
         """Joints names"""
-        return [joint['name'] for joint in self.joints]
+        return [joint.name for joint in self.joints]
 
     def n_joints(self):
         """Number of joints"""
@@ -444,7 +422,7 @@ class AmphibiousControlOptions(Options):
             ]
         joints_names = kwargs.pop(
             'joints_control_names',
-            convention.joints_names(),
+            convention.joints_names,
         )
         default_control_type = kwargs.pop(
             'default_control_type',
@@ -615,7 +593,7 @@ class AmphibiousSensorsOptions(Options):
         )
         self.joints = kwargs.pop(
             'sensors_joints',
-            convention.joints_names()
+            convention.joints_names
         )
         self.contacts = kwargs.pop(
             'sensors_contacts',
