@@ -46,12 +46,12 @@ CONNECTIONTYPE2NAME = dict(zip(ConnectionType, CONNECTIONTYPENAMES))
 NAME2CONNECTIONTYPE = dict(zip(CONNECTIONTYPENAMES, ConnectionType))
 
 
-def connections_from_connectivity(connectivity):
+def connections_from_connectivity(connectivity, map1=None, map2=None):
     """Connections from connectivity"""
     return [
         [
-            connection['in'],
-            connection['out'],
+            map1[connection['in']] if map1 else connection['in'],
+            map2[connection['out']] if map2 else connection['out'],
             NAME2CONNECTIONTYPE[connection['type']]
         ]
         for connection in connectivity
@@ -369,9 +369,13 @@ class OscillatorConnectivity(OscillatorsConnectivityCy):
         }
 
     @classmethod
-    def from_connectivity(cls, connectivity):
+    def from_connectivity(cls, connectivity, osc_map):
         """From connectivity"""
-        connections = connections_from_connectivity(connectivity)
+        connections = connections_from_connectivity(
+            connectivity,
+            map1=osc_map,
+            map2=osc_map,
+        )
         weights = [
             connection['weight']
             for connection in connectivity
@@ -406,9 +410,12 @@ class JointsConnectivity(JointsConnectivityCy):
         }
 
     @classmethod
-    def from_connectivity(cls, connectivity):
+    def from_connectivity(cls, connectivity, osc_map):
         """From connectivity"""
-        connections = connections_from_connectivity(connectivity)
+        connections = connections_from_connectivity(
+            connectivity,
+            map1=osc_map,
+        )
         weights = [
             connection['weight']
             for connection in connectivity
@@ -438,9 +445,12 @@ class ContactsConnectivity(ContactsConnectivityCy):
         }
 
     @classmethod
-    def from_connectivity(cls, connectivity):
+    def from_connectivity(cls, connectivity, osc_map):
         """From connectivity"""
-        connections = connections_from_connectivity(connectivity)
+        connections = connections_from_connectivity(
+            connectivity,
+            map1=osc_map,
+        )
         weights = [
             connection['weight']
             for connection in connectivity
@@ -471,9 +481,12 @@ class HydroConnectivity(HydroConnectivityCy):
         }
 
     @classmethod
-    def from_connectivity(cls, connectivity):
+    def from_connectivity(cls, connectivity, osc_map):
         """From connectivity"""
-        connections = connections_from_connectivity(connectivity)
+        connections = connections_from_connectivity(
+            connectivity,
+            map1=osc_map,
+        )
         weights = [
             connection['weight']
             for connection in connectivity

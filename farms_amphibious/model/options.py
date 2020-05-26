@@ -4,7 +4,7 @@ from enum import IntEnum
 import numpy as np
 from farms_data.options import Options
 from farms_bullet.model.control import ControlType
-from farms_amphibious.model.convention import AmphibiousConvention
+from .convention import AmphibiousConvention
 
 
 class SpawnLoader(IntEnum):
@@ -1059,11 +1059,11 @@ class AmphibiousNetworkOptions(Options):
             for i in range(n_body_joints):
                 for sides in [[1, 0], [0, 1]]:
                     connectivity.append({
-                        'in': convention.bodyosc2index(
+                        'in': convention.bodyosc2name(
                             joint_i=i,
                             side=sides[0]
                         ),
-                        'out': convention.bodyosc2index(
+                        'out': convention.bodyosc2name(
                             joint_i=i,
                             side=sides[1]
                         ),
@@ -1078,11 +1078,11 @@ class AmphibiousNetworkOptions(Options):
                             [[i, i+1], -phase_body2body]
                     ]:
                         connectivity.append({
-                            'in': convention.bodyosc2index(
+                            'in': convention.bodyosc2name(
                                 joint_i=osc[0],
                                 side=side
                             ),
-                            'out': convention.bodyosc2index(
+                            'out': convention.bodyosc2name(
                                 joint_i=osc[1],
                                 side=side
                             ),
@@ -1103,12 +1103,12 @@ class AmphibiousNetworkOptions(Options):
                     for joint_i in range(morphology.n_dof_legs):
                         for sides in [[1, 0], [0, 1]]:
                             connectivity.append({
-                                'in': convention.legosc2index(
+                                'in': convention.legosc2name(
                                     **_options,
                                     joint_i=joint_i,
                                     side=sides[0]
                                 ),
-                                'out': convention.legosc2index(
+                                'out': convention.legosc2name(
                                     **_options,
                                     joint_i=joint_i,
                                     side=sides[1]
@@ -1146,12 +1146,12 @@ class AmphibiousNetworkOptions(Options):
                         ])
                     for joints, side, phase in internal_connectivity:
                         connectivity.append({
-                            'in': convention.legosc2index(
+                            'in': convention.legosc2name(
                                 **_options,
                                 joint_i=joints[0],
                                 side=side,
                             ),
-                            'out': convention.legosc2index(
+                            'out': convention.legosc2name(
                                 **_options,
                                 joint_i=joints[1],
                                 side=side,
@@ -1172,12 +1172,12 @@ class AmphibiousNetworkOptions(Options):
                         }
                         for sides in [[1, 0], [0, 1]]:
                             connectivity.append({
-                                'in': convention.legosc2index(
+                                'in': convention.legosc2name(
                                     leg_i=leg_i,
                                     side_i=sides[0],
                                     **_options
                                 ),
-                                'out': convention.legosc2index(
+                                'out': convention.legosc2name(
                                     leg_i=leg_i,
                                     side_i=sides[1],
                                     **_options
@@ -1202,11 +1202,11 @@ class AmphibiousNetworkOptions(Options):
                                 [[leg_pre+1, leg_pre], -phase_limb_follow],
                         ]:
                             connectivity.append({
-                                'in': convention.legosc2index(
+                                'in': convention.legosc2name(
                                     leg_i=legs[0],
                                     **_options
                                 ),
-                                'out': convention.legosc2index(
+                                'out': convention.legosc2name(
                                     leg_i=legs[1],
                                     **_options
                                 ),
@@ -1231,11 +1231,11 @@ class AmphibiousNetworkOptions(Options):
                                 )
                                 # Forelimbs
                                 connectivity.append({
-                                    'in': convention.bodyosc2index(
+                                    'in': convention.bodyosc2name(
                                         joint_i=i,
                                         side=(side_i+lateral)%2
                                     ),
-                                    'out': convention.legosc2index(
+                                    'out': convention.legosc2name(
                                         leg_i=leg_i,
                                         side_i=side_i,
                                         joint_i=0,
@@ -1271,7 +1271,7 @@ class AmphibiousNetworkOptions(Options):
                     for side_o in range(2):
                         if w_intralimb:
                             connectivity.append({
-                                'in': convention.legosc2index(
+                                'in': convention.legosc2name(
                                     leg_i=sensor_leg_i,
                                     side_i=sensor_side_i,
                                     joint_i=joint_i,
@@ -1286,7 +1286,7 @@ class AmphibiousNetworkOptions(Options):
                             })
                         if w_opposite:
                             connectivity.append({
-                                'in': convention.legosc2index(
+                                'in': convention.legosc2name(
                                     leg_i=sensor_leg_i,
                                     side_i=(sensor_side_i+1)%2,
                                     joint_i=joint_i,
@@ -1302,7 +1302,7 @@ class AmphibiousNetworkOptions(Options):
                         if w_following:
                             if sensor_leg_i > 0:
                                 connectivity.append({
-                                    'in': convention.legosc2index(
+                                    'in': convention.legosc2name(
                                         leg_i=sensor_leg_i-1,
                                         side_i=sensor_side_i,
                                         joint_i=joint_i,
@@ -1317,7 +1317,7 @@ class AmphibiousNetworkOptions(Options):
                                 })
                             if sensor_leg_i < (morphology.n_legs//2 - 1):
                                 connectivity.append({
-                                    'in': convention.legosc2index(
+                                    'in': convention.legosc2name(
                                         leg_i=sensor_leg_i+1,
                                         side_i=sensor_side_i,
                                         joint_i=joint_i,
@@ -1333,7 +1333,7 @@ class AmphibiousNetworkOptions(Options):
                         if w_diagonal:
                             if sensor_leg_i > 0:
                                 connectivity.append({
-                                    'in': convention.legosc2index(
+                                    'in': convention.legosc2name(
                                         leg_i=sensor_leg_i-1,
                                         side_i=(sensor_side_i+1)%2,
                                         joint_i=joint_i,
@@ -1348,7 +1348,7 @@ class AmphibiousNetworkOptions(Options):
                                 })
                             if sensor_leg_i < (morphology.n_legs//2 - 1):
                                 connectivity.append({
-                                    'in': convention.legosc2index(
+                                    'in': convention.legosc2name(
                                         leg_i=sensor_leg_i+1,
                                         side_i=(sensor_side_i+1)%2,
                                         joint_i=joint_i,
@@ -1372,7 +1372,7 @@ class AmphibiousNetworkOptions(Options):
             for side_osc in range(2):
                 if weight_frequency:
                     connectivity.append({
-                        'in': convention.bodyosc2index(
+                        'in': convention.bodyosc2name(
                             joint_i=joint_i,
                             side=side_osc
                         ),
@@ -1382,7 +1382,7 @@ class AmphibiousNetworkOptions(Options):
                     })
                 if weight_amplitude:
                     connectivity.append({
-                        'in': convention.bodyosc2index(
+                        'in': convention.bodyosc2name(
                             joint_i=joint_i,
                             side=side_osc
                         ),

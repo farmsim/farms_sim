@@ -20,6 +20,7 @@ from ..data.animat_data import (
     HydroConnectivity,
     JointsArray,
 )
+from .convention import AmphibiousConvention
 
 
 class AmphibiousData(AnimatData):
@@ -28,36 +29,42 @@ class AmphibiousData(AnimatData):
     @classmethod
     def from_options(
             cls,
-            initial_drives,
-            initial_state,
             control,
             n_iterations
     ):
         """Default amphibious newtwork parameters"""
         state = OscillatorNetworkState.from_initial_state(
-            initial_state,
+            control.network.state_init(),
             n_iterations,
         )
+        oscillators = Oscillators.from_options(
+            control.network,
+        )
+        osc_map = {name: osc_i for osc_i, name in enumerate(oscillators.names)}
         network = NetworkParameters(
             drives=DriveArray.from_initial_drive(
-                initial_drives,
+                control.network.drives_init(),
                 n_iterations,
             ),
-            oscillators=Oscillators.from_options(
-                control.network,
-            ),
+            oscillators=oscillators,
             osc_connectivity=OscillatorConnectivity.from_connectivity(
-                control.network.osc2osc
+                control.network.osc2osc,
+                osc_map,
             ),
-            drive_connectivity=ConnectivityCy(control.network.drive2osc),
+            drive_connectivity=ConnectivityCy(
+                control.network.drive2osc,
+            ),
             joints_connectivity=JointsConnectivity.from_connectivity(
-                control.network.joint2osc
+                control.network.joint2osc,
+                osc_map,
             ),
             contacts_connectivity=ContactsConnectivity.from_connectivity(
-                control.network.contact2osc
+                control.network.contact2osc,
+                osc_map,
             ),
             hydro_connectivity=HydroConnectivity.from_connectivity(
                 control.network.hydro2osc,
+                osc_map,
             ),
         )
         joints = JointsArray.from_options(control)
