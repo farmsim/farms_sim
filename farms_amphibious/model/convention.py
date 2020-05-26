@@ -9,6 +9,10 @@ class AmphibiousConvention:
         self.n_dof_legs = kwargs.pop('n_dof_legs')
         self.n_legs = kwargs.pop('n_legs')
 
+    def n_joints(self):
+        """Number of joints"""
+        return self.n_joints_body + self.n_legs*self.n_dof_legs
+
     def bodyosc2index(self, joint_i, side=0):
         """body2index"""
         n_body_joints = self.n_joints_body
@@ -197,8 +201,8 @@ class AmphibiousConvention:
         """Contact leg link 2 name"""
         return self.leglink2name(leg_i, side_i, self.n_dof_legs-1)
 
-    def joint_names(self):
-        """Joint names"""
+    def joints_names(self):
+        """Joints names"""
         return [
             self.bodyjoint2name(i)
             for i in range(self.n_joints_body)
