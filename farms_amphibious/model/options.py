@@ -608,7 +608,7 @@ class AmphibiousSensorsOptions(Options):
         return cls(**options)
 
     def defaults_from_morphology(self, morphology, kwargs):
-        """Sensors """
+        """Defaults from morphology"""
         convention = AmphibiousConvention(**morphology)
         self.gps = kwargs.pop(
             'sensors_gps',
@@ -1277,7 +1277,7 @@ class AmphibiousNetworkOptions(Options):
                                     joint_i=joint_i,
                                     side=side_o
                                 ),
-                                'out': convention.contactleglink2index(
+                                'out': convention.contactleglink2name(
                                     leg_i=sensor_leg_i,
                                     side_i=sensor_side_i
                                 ),
@@ -1292,7 +1292,7 @@ class AmphibiousNetworkOptions(Options):
                                     joint_i=joint_i,
                                     side=side_o
                                 ),
-                                'out': convention.contactleglink2index(
+                                'out': convention.contactleglink2name(
                                     leg_i=sensor_leg_i,
                                     side_i=sensor_side_i
                                 ),
@@ -1308,7 +1308,7 @@ class AmphibiousNetworkOptions(Options):
                                         joint_i=joint_i,
                                         side=side_o
                                     ),
-                                    'out': convention.contactleglink2index(
+                                    'out': convention.contactleglink2name(
                                         leg_i=sensor_leg_i,
                                         side_i=sensor_side_i
                                     ),
@@ -1323,7 +1323,7 @@ class AmphibiousNetworkOptions(Options):
                                         joint_i=joint_i,
                                         side=side_o
                                     ),
-                                    'out': convention.contactleglink2index(
+                                    'out': convention.contactleglink2name(
                                         leg_i=sensor_leg_i,
                                         side_i=sensor_side_i
                                     ),
@@ -1339,7 +1339,7 @@ class AmphibiousNetworkOptions(Options):
                                         joint_i=joint_i,
                                         side=side_o
                                     ),
-                                    'out': convention.contactleglink2index(
+                                    'out': convention.contactleglink2name(
                                         leg_i=sensor_leg_i,
                                         side_i=sensor_side_i
                                     ),
@@ -1354,7 +1354,7 @@ class AmphibiousNetworkOptions(Options):
                                         joint_i=joint_i,
                                         side=side_o
                                     ),
-                                    'out': convention.contactleglink2index(
+                                    'out': convention.contactleglink2name(
                                         leg_i=sensor_leg_i,
                                         side_i=sensor_side_i
                                     ),

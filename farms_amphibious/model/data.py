@@ -20,7 +20,6 @@ from ..data.animat_data import (
     HydroConnectivity,
     JointsArray,
 )
-from .convention import AmphibiousConvention
 
 
 class AmphibiousData(AnimatData):
@@ -44,7 +43,7 @@ class AmphibiousData(AnimatData):
             control.sensors.contacts,
             n_iterations,
         )
-        osc_map = {
+        oscillators_map = {
             name: osc_i
             for osc_i, name in enumerate(oscillators.names)
         }
@@ -60,23 +59,24 @@ class AmphibiousData(AnimatData):
             oscillators=oscillators,
             osc_connectivity=OscillatorConnectivity.from_connectivity(
                 control.network.osc2osc,
-                map1=osc_map,
-                map2=osc_map,
+                map1=oscillators_map,
+                map2=oscillators_map,
             ),
             drive_connectivity=ConnectivityCy(
                 control.network.drive2osc,
             ),
             joints_connectivity=JointsConnectivity.from_connectivity(
                 control.network.joint2osc,
-                map1=osc_map,
+                map1=oscillators_map,
             ),
             contacts_connectivity=ContactsConnectivity.from_connectivity(
                 control.network.contact2osc,
-                map1=osc_map,
+                map1=oscillators_map,
+                map2=contacts_map,
             ),
             hydro_connectivity=HydroConnectivity.from_connectivity(
                 control.network.hydro2osc,
-                map1=osc_map,
+                map1=oscillators_map,
             ),
         )
         joints = JointsArray.from_options(control)

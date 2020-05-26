@@ -193,6 +193,10 @@ class AmphibiousConvention:
         assert 0 <= side_i < 2, 'Body side must be < 2, got {}'.format(side_i)
         return 2*leg_i + side_i
 
+    def contactleglink2name(self, leg_i, side_i):
+        """Contact leg link 2 name"""
+        return self.leglink2name(leg_i, side_i, self.n_dof_legs-1)
+
     def joint_names(self):
         """Joint names"""
         return [
