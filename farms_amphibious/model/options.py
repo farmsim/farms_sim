@@ -674,6 +674,7 @@ class AmphibiousNetworkOptions(Options):
 
     def defaults_from_morphology(self, morphology, kwargs):
         """Defaults from morphology"""
+        convention = AmphibiousConvention(**morphology)
 
         # Drives
         if not self.drives:
@@ -755,7 +756,7 @@ class AmphibiousNetworkOptions(Options):
         )
         for osc_i, osc in enumerate(self.oscillators):
             if osc.name is None:
-                osc.name = 'Oscillator_{}'.format(osc_i)
+                osc.name = convention.oscindex2name(osc_i)
             if osc.initial_phase is None:
                 osc.initial_phase = state_init[osc_i]
             if osc.initial_amplitude is None:
@@ -792,7 +793,7 @@ class AmphibiousNetworkOptions(Options):
         # Connectivity
         if self.osc2osc is None:
             self.osc2osc = (
-                AmphibiousNetworkOptions.default_osc2osc(
+                self.default_osc2osc(
                     morphology,
                     kwargs.pop('weight_osc_body', 1e0),
                     kwargs.pop(
@@ -811,7 +812,7 @@ class AmphibiousNetworkOptions(Options):
             self.joint2osc = []
         if self.contact2osc is None:
             self.contact2osc = (
-                AmphibiousNetworkOptions.default_contact2osc(
+                self.default_contact2osc(
                     morphology,
                     kwargs.pop('weight_sens_contact_intralimb', 0),
                     kwargs.pop('weight_sens_contact_opposite', 0),
@@ -821,7 +822,7 @@ class AmphibiousNetworkOptions(Options):
             )
         if self.hydro2osc is None:
             self.hydro2osc = (
-                AmphibiousNetworkOptions.default_hydro2osc(
+                self.default_hydro2osc(
                     morphology,
                     kwargs.pop('weight_sens_hydro_freq', 0),
                     kwargs.pop('weight_sens_hydro_amp', 0),
