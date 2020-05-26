@@ -369,13 +369,9 @@ class OscillatorConnectivity(OscillatorsConnectivityCy):
         }
 
     @classmethod
-    def from_connectivity(cls, connectivity, osc_map):
+    def from_connectivity(cls, connectivity, **kwargs):
         """From connectivity"""
-        connections = connections_from_connectivity(
-            connectivity,
-            map1=osc_map,
-            map2=osc_map,
-        )
+        connections = connections_from_connectivity(connectivity, **kwargs)
         weights = [
             connection['weight']
             for connection in connectivity
@@ -410,12 +406,9 @@ class JointsConnectivity(JointsConnectivityCy):
         }
 
     @classmethod
-    def from_connectivity(cls, connectivity, osc_map):
+    def from_connectivity(cls, connectivity, **kwargs):
         """From connectivity"""
-        connections = connections_from_connectivity(
-            connectivity,
-            map1=osc_map,
-        )
+        connections = connections_from_connectivity(connectivity, **kwargs)
         weights = [
             connection['weight']
             for connection in connectivity
@@ -445,12 +438,9 @@ class ContactsConnectivity(ContactsConnectivityCy):
         }
 
     @classmethod
-    def from_connectivity(cls, connectivity, osc_map):
+    def from_connectivity(cls, connectivity, **kwargs):
         """From connectivity"""
-        connections = connections_from_connectivity(
-            connectivity,
-            map1=osc_map,
-        )
+        connections = connections_from_connectivity(connectivity, **kwargs)
         weights = [
             connection['weight']
             for connection in connectivity
@@ -481,12 +471,9 @@ class HydroConnectivity(HydroConnectivityCy):
         }
 
     @classmethod
-    def from_connectivity(cls, connectivity, osc_map):
+    def from_connectivity(cls, connectivity, **kwargs):
         """From connectivity"""
-        connections = connections_from_connectivity(
-            connectivity,
-            map1=osc_map,
-        )
+        connections = connections_from_connectivity(connectivity, **kwargs)
         weights = [
             connection['weight']
             for connection in connectivity

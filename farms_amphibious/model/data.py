@@ -40,7 +40,18 @@ class AmphibiousData(AnimatData):
         oscillators = Oscillators.from_options(
             control.network,
         )
-        osc_map = {name: osc_i for osc_i, name in enumerate(oscillators.names)}
+        contacts = ContactsArray.from_names(
+            control.sensors.contacts,
+            n_iterations,
+        )
+        osc_map = {
+            name: osc_i
+            for osc_i, name in enumerate(oscillators.names)
+        }
+        contacts_map = {
+            name: sens_i
+            for sens_i, name in enumerate(contacts.names)
+        }
         network = NetworkParameters(
             drives=DriveArray.from_initial_drive(
                 control.network.drives_init(),
@@ -49,30 +60,28 @@ class AmphibiousData(AnimatData):
             oscillators=oscillators,
             osc_connectivity=OscillatorConnectivity.from_connectivity(
                 control.network.osc2osc,
-                osc_map,
+                map1=osc_map,
+                map2=osc_map,
             ),
             drive_connectivity=ConnectivityCy(
                 control.network.drive2osc,
             ),
             joints_connectivity=JointsConnectivity.from_connectivity(
                 control.network.joint2osc,
-                osc_map,
+                map1=osc_map,
             ),
             contacts_connectivity=ContactsConnectivity.from_connectivity(
                 control.network.contact2osc,
-                osc_map,
+                map1=osc_map,
             ),
             hydro_connectivity=HydroConnectivity.from_connectivity(
                 control.network.hydro2osc,
-                osc_map,
+                map1=osc_map,
             ),
         )
         joints = JointsArray.from_options(control)
         sensors = SensorsData(
-            contacts=ContactsArray.from_names(
-                control.sensors.contacts,
-                n_iterations,
-            ),
+            contacts=contacts,
             proprioception=ProprioceptionArray.from_names(
                 control.sensors.joints,
                 n_iterations,
