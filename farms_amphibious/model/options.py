@@ -770,6 +770,8 @@ class AmphibiousNetworkOptions(Options):
         if self.osc2osc is None:
             pi2 = 0.5*np.pi
             body_stand_shift = kwargs.pop('body_stand_shift', pi2)
+            n_leg_pairs = convention.n_legs//2
+            n_leg_pairs_osc = convention.n_joints_body//n_leg_pairs
             self.osc2osc = (
                 self.default_osc2osc(
                     convention,
@@ -785,12 +787,26 @@ class AmphibiousNetworkOptions(Options):
                     kwargs.pop('intralimb_phases', [0, pi2, 0, pi2]),
                     kwargs.pop('leg_phase_follow', np.pi),
                     kwargs.pop('body_walk_phases', [
-                        (
-                            body_i*2*np.pi/convention.n_joints_body
-                            + body_stand_shift
-                        )
+                        body_i*2*np.pi/convention.n_joints_body
+                        + body_stand_shift
                         for body_i in range(convention.n_joints_body)
                     ]),
+                    kwargs.pop('legbodyjoints', range(convention.n_dof_legs-1)),
+                    kwargs.pop(
+                        'legbodyconnections',
+                        [
+                            range(convention.n_joints_body)
+                            for leg_i in range(n_leg_pairs)
+                        ] if kwargs.pop('full_leg_body', True) else [
+                            range(
+                                leg_i*n_leg_pairs_osc,
+                                (leg_i+1)*n_leg_pairs_osc
+                                if leg_i < n_leg_pairs-1
+                                else convention.n_joints_body
+                            )
+                            for leg_i in range(n_leg_pairs)
+                        ],
+                    )
                 )
             )
         if self.joint2osc is None:
@@ -1028,6 +1044,8 @@ class AmphibiousNetworkOptions(Options):
             intralimb_phases,
             phase_limb_follow,
             body_walk_phases,
+            legbodyjoints,
+            legbodyconnections,
     ):
         """Default oscillators to oscillators connectivity"""
         connectivity = []
@@ -1185,37 +1203,31 @@ class AmphibiousNetworkOptions(Options):
         if weight_limb2body != 0:
             for leg_i in range(convention.n_legs//2):
                 for side_i in range(2):
-                    for body_i in range(n_body_joints):
-                        for side_leg in range(2):
+                    for joint_i in legbodyjoints:
+                        for side_leg_osc in range(2):
                             for lateral in range(1):
-                                # walk_phase = (
-                                #     # i*2*np.pi/(n_body_joints-1)+0.5*np.pi
-                                #     # 0
-                                #     # if np.cos(i*2*np.pi/(n_body_joints-1)) < 0
-                                #     # else np.pi
-                                # )
-                                # Forelimbs
-                                connectivity.append({
-                                    'in': convention.bodyosc2name(
-                                        joint_i=body_i,
-                                        side=(side_i+lateral)%2
-                                    ),
-                                    'out': convention.legosc2name(
-                                        leg_i=leg_i,
-                                        side_i=side_i,
-                                        joint_i=0,
-                                        side=(side_i+side_leg)%2
-                                    ),
-                                    'type': 'OSC2OSC',
-                                    'weight': weight_limb2body,
-                                    'phase_bias': (
-                                        body_walk_phases[body_i]
-                                        + np.pi*(side_i+1)
-                                        + lateral*np.pi
-                                        + side_leg*np.pi
-                                        + leg_i*np.pi
-                                    ),
-                                })
+                                for body_i in legbodyconnections[leg_i]:
+                                    connectivity.append({
+                                        'in': convention.bodyosc2name(
+                                            joint_i=body_i,
+                                            side=(side_i+lateral)%2
+                                        ),
+                                        'out': convention.legosc2name(
+                                            leg_i=leg_i,
+                                            side_i=side_i,
+                                            joint_i=joint_i,
+                                            side=side_leg_osc
+                                        ),
+                                        'type': 'OSC2OSC',
+                                        'weight': weight_limb2body,
+                                        'phase_bias': (
+                                            body_walk_phases[body_i] + np.pi*(
+                                                1 + lateral
+                                                + leg_i + side_leg_osc
+                                                + intralimb_phases[joint_i]
+                                            )
+                                        ),
+                                    })
         return connectivity
 
     @staticmethod
