@@ -128,10 +128,19 @@ def get_pleurobot_options(**kwargs):
     pylog.info('Model SDF: {}'.format(sdf))
 
     # Morphology information
-    links_names = kwargs.pop('links_names', ['base_link', 'Head'] + [
-        'link{}'.format(i+1)
-        for i in range(27)
-    ] + ['link_tailBone', 'link_tail'])
+    links_names = kwargs.pop(
+        'links_names',
+        ['Head'] + [  # 'base_link',
+            'link{}'.format(i+1)
+            for i in range(6)
+        ] + ['link_tailBone'] + [
+            'link{}'.format(i+1)
+            for i in range(6, 11)
+        ] + ['link_tail'] + [
+            'link{}'.format(i+1)
+            for i in range(11, 27)
+        ]
+    )
     joints_names = kwargs.pop('joints_names', [
         # 'base_link_fixedjoint',
         'jHead',
@@ -187,7 +196,6 @@ def get_pleurobot_options(**kwargs):
         for leg_i in range(2):
             for side_i in range(2):
                 mirror = (-1 if side_i else 1)
-                mirror_full = (1 if leg_i else -1)*(1 if side_i else -1)
                 gain_amplitude[13+2*leg_i*4+side_i*4+0] = mirror
                 gain_amplitude[13+2*leg_i*4+side_i*4+1] = mirror
                 gain_amplitude[13+2*leg_i*4+side_i*4+2] = -mirror
@@ -199,14 +207,14 @@ def get_pleurobot_options(**kwargs):
         gain_offset = [1]*(13+4*4)
         gain_offset[6] = 0
         gain_offset[12] = 0
-        for leg_i in range(2):
-            for side_i in range(2):
-                mirror = (1 if side_i else -1)
-                mirror_full = (1 if leg_i else -1)*(1 if side_i else -1)
-                gain_offset[13+2*leg_i*4+side_i*4+0] = mirror
-                gain_offset[13+2*leg_i*4+side_i*4+1] = mirror
-                gain_offset[13+2*leg_i*4+side_i*4+2] = mirror_full
-                gain_offset[13+2*leg_i*4+side_i*4+3] = mirror_full
+        # for leg_i in range(2):
+        #     for side_i in range(2):
+        #         mirror = (-1 if side_i else 1)
+        #         mirror_full = (1 if leg_i else -1)*(1 if side_i else -1)
+        #         gain_offset[13+2*leg_i*4+side_i*4+0] = mirror
+        #         gain_offset[13+2*leg_i*4+side_i*4+1] = mirror
+        #         gain_offset[13+2*leg_i*4+side_i*4+2] = mirror_full
+        #         gain_offset[13+2*leg_i*4+side_i*4+3] = mirror_full
         gain_offset = dict(zip(joints_names, gain_offset))
 
     # Joints joints_offsets

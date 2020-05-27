@@ -8,6 +8,7 @@ from farms_amphibious.model.options import (
     AmphibiousControlOptions,
 )
 from farms_amphibious.model.data import AmphibiousData
+from farms_amphibious.model.convention import AmphibiousConvention
 from farms_amphibious.control.network import NetworkODE
 from farms_amphibious.experiment.simulation import profile
 from farms_amphibious.utils.network import plot_networks_maps
@@ -47,7 +48,8 @@ def animat_options():
         'legs_offsets_swimming': [-2*np.pi/5, 0, 0, 0],
     }
     control = AmphibiousControlOptions.from_options(options)
-    control.defaults_from_morphology(morphology, options)
+    convention = AmphibiousConvention(**morphology)
+    control.defaults_from_convention(convention, options)
     return morphology, control
 
 
@@ -66,8 +68,6 @@ def simulation(times, control):
     control.network.drives[0].initial_value = 2
     control.network.drives[1].initial_value = 0
     animat_data = AmphibiousData.from_options(
-        control.network.drives_init(),
-        control.network.state_init(),
         control,
         n_iterations
     )

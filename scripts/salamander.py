@@ -53,6 +53,7 @@ def main():
         body_stand_amplitude=0.2,
         modular_phases=np.array([3*np.pi/2, 0, 3*np.pi/2, 0]) - np.pi/4,
         modular_amplitudes=np.full(4, 1.0),
+        default_lateral_friction=2,
     )
 
     # Muscles

@@ -4,7 +4,7 @@ from enum import IntEnum
 import numpy as np
 from farms_data.options import Options
 from farms_bullet.model.control import ControlType
-from farms_amphibious.model.convention import AmphibiousConvention
+from .convention import AmphibiousConvention
 
 
 class SpawnLoader(IntEnum):
@@ -40,6 +40,7 @@ class AmphibiousOptions(Options):
             'morphology',
             AmphibiousMorphologyOptions.from_options(kwargs)
         )
+        convention = AmphibiousConvention(**options['morphology'])
         options['spawn'] = kwargs.pop(
             'spawn',
             AmphibiousSpawnOptions.from_options(kwargs)
@@ -52,8 +53,8 @@ class AmphibiousOptions(Options):
             options['control'] = kwargs.pop('control')
         else:
             options['control'] = AmphibiousControlOptions.from_options(kwargs)
-            options['control'].defaults_from_morphology(
-                options['morphology'],
+            options['control'].defaults_from_convention(
+                convention,
                 kwargs
             )
         options['show_hydrodynamics'] = kwargs.pop('show_hydrodynamics', False)
@@ -92,21 +93,11 @@ class AmphibiousMorphologyOptions(Options):
         options['n_dof_legs'] = kwargs.pop('n_dof_legs', 4)
         options['n_legs'] = kwargs.pop('n_legs', 4)
         convention = AmphibiousConvention(**options)
-        links_names = kwargs.pop(
-            'links_names',
-            [
-                convention.bodylink2name(i)
-                for i in range(options['n_joints_body']+1)
-            ] + [
-                convention.leglink2name(leg_i, side_i, link_i)
-                for leg_i in range(options['n_legs']//2)
-                for side_i in range(2)
-                for link_i in range(options['n_dof_legs'])
-            ]
-        )
+        links_names = kwargs.pop('links_names', convention.links_names)
+        default_lateral_friction = kwargs.pop('default_lateral_friction', 1)
         links_friction_lateral = kwargs.pop(
             'links_friction_lateral',
-            [1 for link in links_names]
+            [default_lateral_friction for link in links_names]
         )
         links_friction_spinning = kwargs.pop(
             'links_friction_spinning',
@@ -162,18 +153,7 @@ class AmphibiousMorphologyOptions(Options):
                 )
             ]
         )
-        joints_names = kwargs.pop(
-            'joints_names',
-            [
-                convention.bodyjoint2name(i)
-                for i in range(options['n_joints_body'])
-            ] + [
-                convention.legjoint2name(leg_i, side_i, joint_i)
-                for leg_i in range(options['n_legs']//2)
-                for side_i in range(2)
-                for joint_i in range(options['n_dof_legs'])
-            ]
-        )
+        joints_names = kwargs.pop('joints_names', convention.joints_names)
         joints_positions = kwargs.pop(
             'joints_positions',
             [0 for name in joints_names]
@@ -209,11 +189,11 @@ class AmphibiousMorphologyOptions(Options):
 
     def links_names(self):
         """Links names"""
-        return [link['name'] for link in self.links]
+        return [link.name for link in self.links]
 
     def joints_names(self):
         """Joints names"""
-        return [joint['name'] for joint in self.joints]
+        return [joint.name for joint in self.joints]
 
     def n_joints(self):
         """Number of joints"""
@@ -366,17 +346,16 @@ class AmphibiousControlOptions(Options):
         options['muscles'] = kwargs.pop('muscles', [])
         return cls(**options)
 
-    def defaults_from_morphology(self, morphology, kwargs):
-        """Defaults from morphology"""
-        self.sensors.defaults_from_morphology(morphology, kwargs)
-        self.network.defaults_from_morphology(morphology, kwargs)
+    def defaults_from_convention(self, convention, kwargs):
+        """Defaults from convention"""
+        self.sensors.defaults_from_convention(convention, kwargs)
+        self.network.defaults_from_convention(convention, kwargs)
 
         # Joints
-        n_joints = morphology.n_joints()
-        convention = AmphibiousConvention(**morphology)
+        n_joints = convention.n_joints()
         offsets = [None]*n_joints
         # Turning body
-        for joint_i in range(morphology.n_joints_body):
+        for joint_i in range(convention.n_joints_body):
             for side_i in range(2):
                 offsets[convention.bodyjoint2index(joint_i=joint_i)] = {
                     'gain': 1,
@@ -406,9 +385,9 @@ class AmphibiousControlOptions(Options):
             'leg_joint_turn_gain',
             [1, 0, 0, 0]
         )
-        for leg_i in range(morphology.n_legs//2):
+        for leg_i in range(convention.n_legs//2):
             for side_i in range(2):
-                for joint_i in range(morphology.n_dof_legs):
+                for joint_i in range(convention.n_dof_legs):
                     offsets[convention.legjoint2index(
                         leg_i=leg_i,
                         side_i=side_i,
@@ -444,7 +423,7 @@ class AmphibiousControlOptions(Options):
             ]
         joints_names = kwargs.pop(
             'joints_control_names',
-            morphology.joints_names(),
+            convention.joints_names,
         )
         default_control_type = kwargs.pop(
             'default_control_type',
@@ -452,27 +431,27 @@ class AmphibiousControlOptions(Options):
         )
         joints_control_types = kwargs.pop(
             'joints_control_types',
-            {joint.name: default_control_type for joint in morphology.joints},
+            {joint_name: default_control_type for joint_name in joints_names},
         )
         joints_rates = kwargs.pop(
             'joints_rates',
-            {joint.name: 5 for joint in morphology.joints},
+            {joint_name: 5 for joint_name in joints_names},
         )
         gain_amplitude = kwargs.pop(
             'gain_amplitude',
-            {joint.name: 1 for joint in morphology.joints},
+            {joint_name: 1 for joint_name in joints_names},
         )
         gain_offset = kwargs.pop(
             'gain_offset',
-            {joint.name: 1 for joint in morphology.joints},
+            {joint_name: 1 for joint_name in joints_names},
         )
         offsets_bias = kwargs.pop(
             'offsets_bias',
-            {joint.name: 0 for joint in morphology.joints},
+            {joint_name: 0 for joint_name in joints_names},
         )
         max_torques = kwargs.pop(
             'max_torques',
-            {joint.name: 1e2 for joint in morphology.joints},
+            {joint_name: 1e2 for joint_name in joints_names},
         )
         for joint_i, joint in enumerate(self.joints):
             if joint.joint is None:
@@ -516,11 +495,11 @@ class AmphibiousControlOptions(Options):
             ]
         for muscle_i, muscle in enumerate(self.muscles):
             if muscle.joint is None:
-                muscle.joint = morphology.joints[muscle_i].name
+                muscle.joint = joints_names[muscle_i]
             if muscle.osc1 is None:
-                muscle.osc1 = 2*muscle_i  # self.network.oscillators[].name
+                muscle.osc1 = self.network.oscillators[2*muscle_i].name
             if muscle.osc2 is None:
-                muscle.osc2 = 2*muscle_i+1  # self.network.oscillators[].name
+                muscle.osc2 = self.network.oscillators[2*muscle_i+1].name
             if muscle.alpha is None:
                 muscle.alpha = 1e1
             if muscle.beta is None:
@@ -607,16 +586,15 @@ class AmphibiousSensorsOptions(Options):
         options['hydrodynamics'] = kwargs.pop('sens_hydrodynamics', None)
         return cls(**options)
 
-    def defaults_from_morphology(self, morphology, kwargs):
-        """Sensors """
-        convention = AmphibiousConvention(**morphology)
+    def defaults_from_convention(self, convention, kwargs):
+        """Defaults from convention"""
         self.gps = kwargs.pop(
             'sensors_gps',
             convention.body_links_names()
         )
         self.joints = kwargs.pop(
             'sensors_joints',
-            convention.joint_names()
+            convention.joints_names
         )
         self.contacts = kwargs.pop(
             'sensors_contacts',
@@ -672,9 +650,8 @@ class AmphibiousNetworkOptions(Options):
             options[option] = kwargs.pop(option, None)
         return cls(**options)
 
-    def defaults_from_morphology(self, morphology, kwargs):
-        """Defaults from morphology"""
-
+    def defaults_from_convention(self, convention, kwargs):
+        """Defaults from convention"""
         # Drives
         if not self.drives:
             self.drives = [
@@ -692,7 +669,7 @@ class AmphibiousNetworkOptions(Options):
                 drive.initial_value = drives_init[drive_i]
 
         # Oscillators
-        n_oscillators = 2*morphology.n_joints()
+        n_oscillators = 2*convention.n_joints()
         if not self.oscillators:
             self.oscillators = [
                 AmphibiousOscillatorOptions(
@@ -718,16 +695,16 @@ class AmphibiousNetworkOptions(Options):
             ]
         state_init = kwargs.pop(
             'state_init',
-            self.default_state_init(morphology).tolist(),
+            self.default_state_init(convention).tolist(),
         )
         osc_frequencies = kwargs.pop(
             'osc_frequencies',
-            self.default_osc_frequencies(morphology),
+            self.default_osc_frequencies(convention),
         )
         osc_amplitudes = kwargs.pop(
             'osc_amplitudes',
             self.default_osc_amplitudes(
-                morphology,
+                convention,
                 body_amplitude=kwargs.pop('body_stand_amplitude', 0.3),
                 legs_amplitudes=kwargs.pop(
                     'legs_amplitudes',
@@ -737,25 +714,25 @@ class AmphibiousNetworkOptions(Options):
         )
         osc_rates = kwargs.pop(
             'osc_rates',
-            self.default_osc_rates(morphology),
+            self.default_osc_rates(convention),
         )
         osc_modular_phases = kwargs.pop(
             'osc_modular_phases',
             self.default_osc_modular_phases(
-                morphology=morphology,
+                convention=convention,
                 phases=kwargs.pop('modular_phases', np.zeros(4)),
             )
         )
         osc_modular_amplitudes = kwargs.pop(
             'osc_modular_amplitudes',
             self.default_osc_modular_amplitudes(
-                morphology=morphology,
+                convention=convention,
                 amplitudes=kwargs.pop('modular_amplitudes', np.zeros(4)),
             )
         )
         for osc_i, osc in enumerate(self.oscillators):
             if osc.name is None:
-                osc.name = 'Oscillator_{}'.format(osc_i)
+                osc.name = convention.oscindex2name(osc_i)
             if osc.initial_phase is None:
                 osc.initial_phase = state_init[osc_i]
             if osc.initial_amplitude is None:
@@ -792,12 +769,12 @@ class AmphibiousNetworkOptions(Options):
         # Connectivity
         if self.osc2osc is None:
             self.osc2osc = (
-                AmphibiousNetworkOptions.default_osc2osc(
-                    morphology,
+                self.default_osc2osc(
+                    convention,
                     kwargs.pop('weight_osc_body', 1e0),
                     kwargs.pop(
                         'body_phase_bias',
-                        2*np.pi/morphology.n_joints_body
+                        2*np.pi/convention.n_joints_body
                     ),
                     kwargs.pop('weight_osc_legs_internal', 3e1),
                     kwargs.pop('weight_osc_legs_opposite', 1e1),
@@ -811,8 +788,8 @@ class AmphibiousNetworkOptions(Options):
             self.joint2osc = []
         if self.contact2osc is None:
             self.contact2osc = (
-                AmphibiousNetworkOptions.default_contact2osc(
-                    morphology,
+                self.default_contact2osc(
+                    convention,
                     kwargs.pop('weight_sens_contact_intralimb', 0),
                     kwargs.pop('weight_sens_contact_opposite', 0),
                     kwargs.pop('weight_sens_contact_following', 0),
@@ -821,8 +798,8 @@ class AmphibiousNetworkOptions(Options):
             )
         if self.hydro2osc is None:
             self.hydro2osc = (
-                AmphibiousNetworkOptions.default_hydro2osc(
-                    morphology,
+                self.default_hydro2osc(
+                    convention,
                     kwargs.pop('weight_sens_hydro_freq', 0),
                     kwargs.pop('weight_sens_hydro_amp', 0),
                 )
@@ -839,6 +816,10 @@ class AmphibiousNetworkOptions(Options):
         ] + [
             osc.initial_amplitude for osc in self.oscillators
         ] + [0 for osc in self.oscillators[::2]]
+
+    def osc_names(self):
+        """Oscillator names"""
+        return [osc.name for osc in self.oscillators]
 
     def osc_frequencies(self):
         """Oscillator frequencies"""
@@ -879,12 +860,11 @@ class AmphibiousNetworkOptions(Options):
         return [osc.modular_amplitude for osc in self.oscillators]
 
     @staticmethod
-    def default_state_init(morphology):
+    def default_state_init(convention):
         """Default state"""
-        convention = AmphibiousConvention(**morphology)
-        state = np.zeros(5*morphology.n_joints())
-        phases_init_body = np.linspace(2*np.pi, 0, morphology.n_joints_body)
-        for joint_i in range(morphology.n_joints_body):
+        state = np.zeros(5*convention.n_joints())
+        phases_init_body = np.linspace(2*np.pi, 0, convention.n_joints_body)
+        for joint_i in range(convention.n_joints_body):
             for side_osc in range(2):
                 state[convention.bodyosc2index(
                     joint_i,
@@ -894,8 +874,8 @@ class AmphibiousNetworkOptions(Options):
                     + (0 if side_osc else np.pi)
                 )
         phases_init_legs = [3*np.pi/2, 0, 3*np.pi/2, 0]
-        for joint_i in range(morphology.n_dof_legs):
-            for leg_i in range(morphology.n_legs//2):
+        for joint_i in range(convention.n_dof_legs):
+            for leg_i in range(convention.n_legs//2):
                 for side_i in range(2):
                     for side in range(2):
                         state[convention.legosc2index(
@@ -909,17 +889,15 @@ class AmphibiousNetworkOptions(Options):
                             + (0 if side else np.pi)
                             + phases_init_legs[joint_i]
                         )
-        state += 1e-3*np.arange(5*morphology.n_joints())
+        state += 1e-3*np.arange(5*convention.n_joints())
         return state
 
     @staticmethod
-    def default_osc_frequencies(morphology):
+    def default_osc_frequencies(convention):
         """Walking parameters"""
-        n_oscillators = 2*(morphology.n_joints())
-        convention = AmphibiousConvention(**morphology)
-        n_oscillators = 2*(morphology.n_joints())
+        n_oscillators = 2*(convention.n_joints())
         frequencies = [None]*n_oscillators
-        for joint_i in range(morphology.n_joints_body):
+        for joint_i in range(convention.n_joints_body):
             for side in range(2):
                 frequencies[convention.bodyosc2index(joint_i, side=side)] = {
                     'gain': 2*np.pi*0.2,
@@ -928,8 +906,8 @@ class AmphibiousNetworkOptions(Options):
                     'high': 5,
                     'saturation': 0,
                 }
-        for joint_i in range(morphology.n_dof_legs):
-            for leg_i in range(morphology.n_legs//2):
+        for joint_i in range(convention.n_dof_legs):
+            for leg_i in range(convention.n_legs//2):
                 for side_i in range(2):
                     for side in range(2):
                         frequencies[convention.legosc2index(
@@ -947,13 +925,12 @@ class AmphibiousNetworkOptions(Options):
         return frequencies
 
     @staticmethod
-    def default_osc_amplitudes(morphology, body_amplitude, legs_amplitudes):
+    def default_osc_amplitudes(convention, body_amplitude, legs_amplitudes):
         """Walking parameters"""
-        convention = AmphibiousConvention(**morphology)
-        n_oscillators = 2*(morphology.n_joints())
+        n_oscillators = 2*(convention.n_joints())
         amplitudes = [None]*n_oscillators
         # Body ampltidudes
-        for joint_i in range(morphology.n_joints_body):
+        for joint_i in range(convention.n_joints_body):
             for side in range(2):
                 amplitudes[convention.bodyosc2index(joint_i, side=side)] = {
                     'gain': 0.25*body_amplitude,
@@ -963,9 +940,9 @@ class AmphibiousNetworkOptions(Options):
                     'saturation': 0,
                 }
         # Legs ampltidudes
-        for joint_i in range(morphology.n_dof_legs):
+        for joint_i in range(convention.n_dof_legs):
             amplitude = legs_amplitudes[joint_i]
-            for leg_i in range(morphology.n_legs//2):
+            for leg_i in range(convention.n_legs//2):
                 for side_i in range(2):
                     for side in range(2):
                         amplitudes[convention.legosc2index(
@@ -983,21 +960,20 @@ class AmphibiousNetworkOptions(Options):
         return amplitudes
 
     @staticmethod
-    def default_osc_rates(morphology):
+    def default_osc_rates(convention):
         """Walking parameters"""
-        n_oscillators = 2*(morphology.n_joints())
+        n_oscillators = 2*(convention.n_joints())
         rates = 10*np.ones(n_oscillators)
         return rates.tolist()
 
     @staticmethod
-    def default_osc_modular_phases(morphology, phases):
+    def default_osc_modular_phases(convention, phases):
         """Default"""
-        convention = AmphibiousConvention(**morphology)
-        n_oscillators = 2*(morphology.n_joints())
+        n_oscillators = 2*(convention.n_joints())
         values = 0*np.ones(n_oscillators)
-        for joint_i in range(morphology.n_dof_legs):
+        for joint_i in range(convention.n_dof_legs):
             phase = phases[joint_i]
-            for leg_i in range(morphology.n_legs//2):
+            for leg_i in range(convention.n_legs//2):
                 for side_i in range(2):
                     for side in range(2):
                         values[convention.legosc2index(
@@ -1014,14 +990,13 @@ class AmphibiousNetworkOptions(Options):
         return values.tolist()
 
     @staticmethod
-    def default_osc_modular_amplitudes(morphology, amplitudes):
+    def default_osc_modular_amplitudes(convention, amplitudes):
         """Default"""
-        convention = AmphibiousConvention(**morphology)
-        n_oscillators = 2*(morphology.n_joints())
+        n_oscillators = 2*(convention.n_joints())
         values = 0*np.ones(n_oscillators)
-        for joint_i in range(morphology.n_dof_legs):
+        for joint_i in range(convention.n_dof_legs):
             amplitude = amplitudes[joint_i]
-            for leg_i in range(morphology.n_legs//2):
+            for leg_i in range(convention.n_legs//2):
                 for side_i in range(2):
                     for side in range(2):
                         values[convention.legosc2index(
@@ -1034,7 +1009,7 @@ class AmphibiousNetworkOptions(Options):
 
     @staticmethod
     def default_osc2osc(
-            morphology,
+            convention,
             weight_body2body,
             phase_body2body,
             weight_intralimb,
@@ -1046,19 +1021,18 @@ class AmphibiousNetworkOptions(Options):
     ):
         """Default oscillators to oscillators connectivity"""
         connectivity = []
-        n_body_joints = morphology.n_joints_body
+        n_body_joints = convention.n_joints_body
 
         # Body
-        convention = AmphibiousConvention(**morphology)
         if weight_body2body != 0:
             for i in range(n_body_joints):
                 for sides in [[1, 0], [0, 1]]:
                     connectivity.append({
-                        'in': convention.bodyosc2index(
+                        'in': convention.bodyosc2name(
                             joint_i=i,
                             side=sides[0]
                         ),
-                        'out': convention.bodyosc2index(
+                        'out': convention.bodyosc2name(
                             joint_i=i,
                             side=sides[1]
                         ),
@@ -1073,11 +1047,11 @@ class AmphibiousNetworkOptions(Options):
                             [[i, i+1], -phase_body2body]
                     ]:
                         connectivity.append({
-                            'in': convention.bodyosc2index(
+                            'in': convention.bodyosc2name(
                                 joint_i=osc[0],
                                 side=side
                             ),
-                            'out': convention.bodyosc2index(
+                            'out': convention.bodyosc2name(
                                 joint_i=osc[1],
                                 side=side
                             ),
@@ -1088,22 +1062,22 @@ class AmphibiousNetworkOptions(Options):
 
         # Legs (internal)
         if weight_intralimb != 0:
-            for leg_i in range(morphology.n_legs//2):
+            for leg_i in range(convention.n_legs//2):
                 for side_i in range(2):
                     _options = {
                         'leg_i': leg_i,
                         'side_i': side_i
                     }
                     # X - X
-                    for joint_i in range(morphology.n_dof_legs):
+                    for joint_i in range(convention.n_dof_legs):
                         for sides in [[1, 0], [0, 1]]:
                             connectivity.append({
-                                'in': convention.legosc2index(
+                                'in': convention.legosc2name(
                                     **_options,
                                     joint_i=joint_i,
                                     side=sides[0]
                                 ),
-                                'out': convention.legosc2index(
+                                'out': convention.legosc2name(
                                     **_options,
                                     joint_i=joint_i,
                                     side=sides[1]
@@ -1115,7 +1089,7 @@ class AmphibiousNetworkOptions(Options):
 
                     # Following
                     internal_connectivity = []
-                    if morphology.n_dof_legs > 1:
+                    if convention.n_dof_legs > 1:
                         # 0 - 1
                         internal_connectivity.extend([
                             [[1, 0], 0, 0.5*np.pi],
@@ -1123,7 +1097,7 @@ class AmphibiousNetworkOptions(Options):
                             [[1, 0], 1, 0.5*np.pi],
                             [[0, 1], 1, -0.5*np.pi],
                         ])
-                    if morphology.n_dof_legs > 2:
+                    if convention.n_dof_legs > 2:
                         # 0 - 2
                         internal_connectivity.extend([
                             [[2, 0], 0, 0],
@@ -1131,7 +1105,7 @@ class AmphibiousNetworkOptions(Options):
                             [[2, 0], 1, 0],
                             [[0, 2], 1, 0],
                         ])
-                    if morphology.n_dof_legs > 3:
+                    if convention.n_dof_legs > 3:
                         # 1 - 3
                         internal_connectivity.extend([
                             [[3, 1], 0, 0],
@@ -1141,12 +1115,12 @@ class AmphibiousNetworkOptions(Options):
                         ])
                     for joints, side, phase in internal_connectivity:
                         connectivity.append({
-                            'in': convention.legosc2index(
+                            'in': convention.legosc2name(
                                 **_options,
                                 joint_i=joints[0],
                                 side=side,
                             ),
-                            'out': convention.legosc2index(
+                            'out': convention.legosc2name(
                                 **_options,
                                 joint_i=joints[1],
                                 side=side,
@@ -1158,8 +1132,8 @@ class AmphibiousNetworkOptions(Options):
 
         # Opposite leg interaction
         if weight_interlimb_opposite != 0:
-            for leg_i in range(morphology.n_legs//2):
-                for joint_i in range(morphology.n_dof_legs):
+            for leg_i in range(convention.n_legs//2):
+                for joint_i in range(convention.n_dof_legs):
                     for side in range(2):
                         _options = {
                             'joint_i': joint_i,
@@ -1167,12 +1141,12 @@ class AmphibiousNetworkOptions(Options):
                         }
                         for sides in [[1, 0], [0, 1]]:
                             connectivity.append({
-                                'in': convention.legosc2index(
+                                'in': convention.legosc2name(
                                     leg_i=leg_i,
                                     side_i=sides[0],
                                     **_options
                                 ),
-                                'out': convention.legosc2index(
+                                'out': convention.legosc2name(
                                     leg_i=leg_i,
                                     side_i=sides[1],
                                     **_options
@@ -1184,7 +1158,7 @@ class AmphibiousNetworkOptions(Options):
 
         # Following leg interaction
         if weight_interlimb_following != 0:
-            for leg_pre in range(morphology.n_legs//2-1):
+            for leg_pre in range(convention.n_legs//2-1):
                 for side_i in range(2):
                     for side in range(2):
                         _options = {
@@ -1197,11 +1171,11 @@ class AmphibiousNetworkOptions(Options):
                                 [[leg_pre+1, leg_pre], -phase_limb_follow],
                         ]:
                             connectivity.append({
-                                'in': convention.legosc2index(
+                                'in': convention.legosc2name(
                                     leg_i=legs[0],
                                     **_options
                                 ),
-                                'out': convention.legosc2index(
+                                'out': convention.legosc2name(
                                     leg_i=legs[1],
                                     **_options
                                 ),
@@ -1212,7 +1186,7 @@ class AmphibiousNetworkOptions(Options):
 
         # Body-legs interaction
         if weight_limb2body != 0:
-            for leg_i in range(morphology.n_legs//2):
+            for leg_i in range(convention.n_legs//2):
                 for side_i in range(2):
                     for i in range(n_body_joints):  # [0, 1, 7, 8, 9, 10]
                         for side_leg in range(2): # Muscle facing front/back
@@ -1226,11 +1200,11 @@ class AmphibiousNetworkOptions(Options):
                                 )
                                 # Forelimbs
                                 connectivity.append({
-                                    'in': convention.bodyosc2index(
+                                    'in': convention.bodyosc2name(
                                         joint_i=i,
                                         side=(side_i+lateral)%2
                                     ),
-                                    'out': convention.legosc2index(
+                                    'out': convention.legosc2name(
                                         leg_i=leg_i,
                                         side_i=side_i,
                                         joint_i=0,
@@ -1250,7 +1224,7 @@ class AmphibiousNetworkOptions(Options):
 
     @staticmethod
     def default_contact2osc(
-            morphology,
+            convention,
             w_intralimb,
             w_opposite,
             w_following,
@@ -1258,21 +1232,20 @@ class AmphibiousNetworkOptions(Options):
     ):
         """Default contact sensors to oscillators connectivity"""
         connectivity = []
-        convention = AmphibiousConvention(**morphology)
         # Intralimb
-        for sensor_leg_i in range(morphology.n_legs//2):
+        for sensor_leg_i in range(convention.n_legs//2):
             for sensor_side_i in range(2):
-                for joint_i in range(morphology.n_dof_legs):
+                for joint_i in range(convention.n_dof_legs):
                     for side_o in range(2):
                         if w_intralimb:
                             connectivity.append({
-                                'in': convention.legosc2index(
+                                'in': convention.legosc2name(
                                     leg_i=sensor_leg_i,
                                     side_i=sensor_side_i,
                                     joint_i=joint_i,
                                     side=side_o
                                 ),
-                                'out': convention.contactleglink2index(
+                                'out': convention.contactleglink2name(
                                     leg_i=sensor_leg_i,
                                     side_i=sensor_side_i
                                 ),
@@ -1281,13 +1254,13 @@ class AmphibiousNetworkOptions(Options):
                             })
                         if w_opposite:
                             connectivity.append({
-                                'in': convention.legosc2index(
+                                'in': convention.legosc2name(
                                     leg_i=sensor_leg_i,
                                     side_i=(sensor_side_i+1)%2,
                                     joint_i=joint_i,
                                     side=side_o
                                 ),
-                                'out': convention.contactleglink2index(
+                                'out': convention.contactleglink2name(
                                     leg_i=sensor_leg_i,
                                     side_i=sensor_side_i
                                 ),
@@ -1297,28 +1270,28 @@ class AmphibiousNetworkOptions(Options):
                         if w_following:
                             if sensor_leg_i > 0:
                                 connectivity.append({
-                                    'in': convention.legosc2index(
+                                    'in': convention.legosc2name(
                                         leg_i=sensor_leg_i-1,
                                         side_i=sensor_side_i,
                                         joint_i=joint_i,
                                         side=side_o
                                     ),
-                                    'out': convention.contactleglink2index(
+                                    'out': convention.contactleglink2name(
                                         leg_i=sensor_leg_i,
                                         side_i=sensor_side_i
                                     ),
                                     'type': 'REACTION2FREQ',
                                     'weight': w_following,
                                 })
-                            if sensor_leg_i < (morphology.n_legs//2 - 1):
+                            if sensor_leg_i < (convention.n_legs//2 - 1):
                                 connectivity.append({
-                                    'in': convention.legosc2index(
+                                    'in': convention.legosc2name(
                                         leg_i=sensor_leg_i+1,
                                         side_i=sensor_side_i,
                                         joint_i=joint_i,
                                         side=side_o
                                     ),
-                                    'out': convention.contactleglink2index(
+                                    'out': convention.contactleglink2name(
                                         leg_i=sensor_leg_i,
                                         side_i=sensor_side_i
                                     ),
@@ -1328,28 +1301,28 @@ class AmphibiousNetworkOptions(Options):
                         if w_diagonal:
                             if sensor_leg_i > 0:
                                 connectivity.append({
-                                    'in': convention.legosc2index(
+                                    'in': convention.legosc2name(
                                         leg_i=sensor_leg_i-1,
                                         side_i=(sensor_side_i+1)%2,
                                         joint_i=joint_i,
                                         side=side_o
                                     ),
-                                    'out': convention.contactleglink2index(
+                                    'out': convention.contactleglink2name(
                                         leg_i=sensor_leg_i,
                                         side_i=sensor_side_i
                                     ),
                                     'type': 'REACTION2FREQ',
                                     'weight': w_diagonal,
                                 })
-                            if sensor_leg_i < (morphology.n_legs//2 - 1):
+                            if sensor_leg_i < (convention.n_legs//2 - 1):
                                 connectivity.append({
-                                    'in': convention.legosc2index(
+                                    'in': convention.legosc2name(
                                         leg_i=sensor_leg_i+1,
                                         side_i=(sensor_side_i+1)%2,
                                         joint_i=joint_i,
                                         side=side_o
                                     ),
-                                    'out': convention.contactleglink2index(
+                                    'out': convention.contactleglink2name(
                                         leg_i=sensor_leg_i,
                                         side_i=sensor_side_i
                                     ),
@@ -1359,29 +1332,28 @@ class AmphibiousNetworkOptions(Options):
         return connectivity
 
     @staticmethod
-    def default_hydro2osc(morphology, weight_frequency, weight_amplitude):
+    def default_hydro2osc(convention, weight_frequency, weight_amplitude):
         """Default hydrodynamics sensors to oscillators connectivity"""
         connectivity = []
-        convention = AmphibiousConvention(**morphology)
-        for joint_i in range(morphology.n_joints_body):
+        for joint_i in range(convention.n_joints_body):
             for side_osc in range(2):
                 if weight_frequency:
                     connectivity.append({
-                        'in': convention.bodyosc2index(
+                        'in': convention.bodyosc2name(
                             joint_i=joint_i,
                             side=side_osc
                         ),
-                        'out': joint_i+1,
+                        'out': convention.bodylink2name(joint_i+1),
                         'type': 'LATERAL2FREQ',
                         'weight': weight_frequency,
                     })
                 if weight_amplitude:
                     connectivity.append({
-                        'in': convention.bodyosc2index(
+                        'in': convention.bodyosc2name(
                             joint_i=joint_i,
                             side=side_osc
                         ),
-                        'out': joint_i+1,
+                        'out': convention.bodylink2name(joint_i+1),
                         'type': 'LATERAL2AMP',
                         'weight': weight_amplitude,
                     })

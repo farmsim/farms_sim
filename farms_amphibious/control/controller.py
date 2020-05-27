@@ -2,7 +2,6 @@
 
 import numpy as np
 from farms_bullet.model.control import ModelController, ControlType
-from ..model.convention import AmphibiousConvention
 from .network import NetworkODE
 
 
@@ -10,7 +9,6 @@ class AmphibiousController(ModelController):
     """Amphibious network"""
 
     def __init__(self, joints, animat_options, animat_data):
-        convention = AmphibiousConvention(**animat_options.morphology)
         super(AmphibiousController, self).__init__(
             joints=joints,
             control_types={
@@ -24,28 +22,49 @@ class AmphibiousController(ModelController):
         )
         self.network = NetworkODE(animat_data)
         self.animat_data = animat_data
-        n_body = animat_options.morphology.n_joints_body
-        n_legs_dofs = animat_options.morphology.n_dof_legs
-        self.muscles = animat_options.control.muscles
-        self.groups = [
+        control_types = [
+            ControlType.POSITION,
+            ControlType.VELOCITY,
+            ControlType.TORQUE,
+        ]
+        joint_muscle_map = {
+            muscle.joint: muscle
+            for muscle in animat_options.control.muscles
+        }
+        muscles = [
+            [joint_muscle_map[joint] for joint in self.joints[control_type]]
+            for control_type in control_types
+        ]
+        self.alphas = [
+            np.array([muscle.alpha for muscle in muscles[control_type]])
+            for control_type in control_types
+        ]
+        self.betas = [
+            np.array([muscle.beta for muscle in muscles[control_type]])
+            for control_type in control_types
+        ]
+        self.gammas = [
+            np.array([muscle.gamma for muscle in muscles[control_type]])
+            for control_type in control_types
+        ]
+        self.deltas = [
+            np.array([muscle.delta for muscle in muscles[control_type]])
+            for control_type in control_types
+        ]
+        osc_map = {}
+        for muscle in animat_options.control.muscles:
+            osc_map[muscle.osc1] = (
+                self.animat_data.network.oscillators.names.index(muscle.osc1)
+            )
+            osc_map[muscle.osc2] = (
+                self.animat_data.network.oscillators.names.index(muscle.osc2)
+            )
+        self.muscle_groups = [
             [
-                convention.bodyosc2index(
-                    joint_i=i,
-                    side=side
-                )
-                for i in range(n_body)
-            ] + [
-                convention.legosc2index(
-                    leg_i=leg_i,
-                    side_i=side_i,
-                    joint_i=joint_i,
-                    side=side
-                )
-                for leg_i in range(animat_options.morphology.n_legs//2)
-                for side_i in range(2)
-                for joint_i in range(n_legs_dofs)
+                [osc_map[muscle.osc1] for muscle in muscles[control_type]],
+                [osc_map[muscle.osc2] for muscle in muscles[control_type]],
             ]
-            for side in range(2)
+            for control_type in control_types
         ]
         gain_amplitudes = {
             joint.joint: joint.gain_amplitude
@@ -80,12 +99,13 @@ class AmphibiousController(ModelController):
         """Postions"""
         outputs = self.network.outputs(iteration)
         positions = (
-            self.gain_amplitude*0.5*(
-                outputs[self.groups[0]]
-                - outputs[self.groups[1]]
-            )
-            + self.gain_offset*self.network.offsets(iteration)
-            + self.joints_bias
+            self.gain_amplitude*(
+                0.5*(
+                    outputs[self.muscle_groups[ControlType.POSITION][0]]
+                    - outputs[self.muscle_groups[ControlType.POSITION][1]]
+                )
+                + self.network.offsets(iteration)
+            ) + self.joints_bias
         )
         return dict(zip(self.joints[ControlType.POSITION], positions))
 
@@ -97,8 +117,8 @@ class AmphibiousController(ModelController):
         outputs = self.network.outputs(iteration)
         cmd_positions = (
             self.gain_amplitude*0.5*(
-                outputs[self.groups[0]]
-                - outputs[self.groups[1]]
+                outputs[self.muscle_groups[0]]
+                - outputs[self.muscle_groups[1]]
             )
             + self.gain_offset*self.network.offsets(iteration)
             + self.joints_bias
@@ -133,38 +153,30 @@ class AmphibiousController(ModelController):
         velocities = np.array(proprioception.velocities(iteration))
 
         # Neural activity
-        muscles_joints_indices = [
-            self.joints[ControlType.TORQUE].index(muscle.joint)
-            for muscle in self.muscles
-        ]
         neural_activity = self.network.outputs(iteration)
 
         # Joints offsets
         joints_offsets = (
-            self.gain_offset*self.network.offsets(iteration)
+            self.gain_amplitude*self.network.offsets(iteration)
             + self.joints_bias
         )
 
         # Torques
-        active_torques = np.array([
-            self.gain_amplitude[joint_index]*muscle.alpha*(
-                neural_activity[muscle.osc1]
-                - neural_activity[muscle.osc2]
-            )
-            for muscle, joint_index in zip(self.muscles, muscles_joints_indices)
-        ])
-        stiffness_torques = np.array([
-            self.gain_amplitude[joint_index]*muscle.beta*(
-                neural_activity[muscle.osc1]
-                + neural_activity[muscle.osc2]
-                + muscle.gamma
-            )*(positions[joint_index] - joints_offsets[joint_index])
-            for muscle, joint_index in zip(self.muscles, muscles_joints_indices)
-        ])
-        damping_torques = np.array([
-            muscle.delta*velocities[joint_index]
-            for muscle, joint_index in zip(self.muscles, muscles_joints_indices)
-        ])
+        neural_diff = (
+            neural_activity[self.muscle_groups[ControlType.TORQUE][0]]
+            - neural_activity[self.muscle_groups[ControlType.TORQUE][1]]
+        )
+        neural_sum = (
+            neural_activity[self.muscle_groups[ControlType.TORQUE][0]]
+            + neural_activity[self.muscle_groups[ControlType.TORQUE][1]]
+        )
+        active_torques = (
+            self.gain_amplitude*self.alphas[ControlType.TORQUE]*neural_diff
+        )
+        stiffness_torques = self.betas[ControlType.TORQUE]*(
+            neural_sum + self.gammas[ControlType.TORQUE]
+        )*(positions - joints_offsets)
+        damping_torques = self.deltas[ControlType.TORQUE]*velocities
 
         # Final torques
         torques = active_torques + stiffness_torques + damping_torques
