@@ -768,6 +768,7 @@ class AmphibiousNetworkOptions(Options):
 
         # Connectivity
         if self.osc2osc is None:
+            pi2 = 0.5*np.pi
             self.osc2osc = (
                 self.default_osc2osc(
                     convention,
@@ -780,8 +781,9 @@ class AmphibiousNetworkOptions(Options):
                     kwargs.pop('weight_osc_legs_opposite', 1e1),
                     kwargs.pop('weight_osc_legs_following', 1e1),
                     kwargs.pop('weight_osc_legs2body', 3e1),
+                    kwargs.pop('intralimb_phases', [0, pi2, 0, pi2]),
                     kwargs.pop('leg_phase_follow', np.pi),
-                    kwargs.pop('body_stand_shift', 0.5*np.pi),
+                    kwargs.pop('body_stand_shift', pi2),
                 )
             )
         if self.joint2osc is None:
@@ -1016,6 +1018,7 @@ class AmphibiousNetworkOptions(Options):
             weight_interlimb_opposite,
             weight_interlimb_following,
             weight_limb2body,
+            intralimb_phases,
             phase_limb_follow,
             body_stand_shift,
     ):
@@ -1089,30 +1092,17 @@ class AmphibiousNetworkOptions(Options):
 
                     # Following
                     internal_connectivity = []
-                    if convention.n_dof_legs > 1:
-                        # 0 - 1
-                        internal_connectivity.extend([
-                            [[1, 0], 0, 0.5*np.pi],
-                            [[0, 1], 0, -0.5*np.pi],
-                            [[1, 0], 1, 0.5*np.pi],
-                            [[0, 1], 1, -0.5*np.pi],
-                        ])
-                    if convention.n_dof_legs > 2:
-                        # 0 - 2
-                        internal_connectivity.extend([
-                            [[2, 0], 0, 0],
-                            [[0, 2], 0, 0],
-                            [[2, 0], 1, 0],
-                            [[0, 2], 1, 0],
-                        ])
-                    if convention.n_dof_legs > 3:
-                        # 1 - 3
-                        internal_connectivity.extend([
-                            [[3, 1], 0, 0],
-                            [[1, 3], 0, 0],
-                            [[3, 1], 1, 0],
-                            [[1, 3], 1, 0],
-                        ])
+                    for joint_i_0 in range(convention.n_dof_legs):
+                        for joint_i_1 in range(convention.n_dof_legs):
+                            if joint_i_0 != joint_i_1:
+                                phase = (
+                                    intralimb_phases[joint_i_1]
+                                    - intralimb_phases[joint_i_0]
+                                )
+                                internal_connectivity.extend([
+                                    [[joint_i_1, joint_i_0], 0, phase],
+                                    [[joint_i_1, joint_i_0], 1, phase],
+                                ])
                     for joints, side, phase in internal_connectivity:
                         connectivity.append({
                             'in': convention.legosc2name(
