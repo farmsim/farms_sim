@@ -39,7 +39,7 @@ def main():
             [-1e-1, -1e1, -1e1],
             [-1e-6, -1e-6, -1e-6],
         ],
-        weight_osc_body=1e0,
+        weight_osc_body=1e1,
         weight_osc_legs_internal=3e1,
         weight_osc_legs_opposite=1e0,  # 1e1,
         weight_osc_legs_following=0,  # 1e1,

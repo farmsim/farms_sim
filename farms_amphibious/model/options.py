@@ -771,7 +771,10 @@ class AmphibiousNetworkOptions(Options):
             pi2 = 0.5*np.pi
             body_stand_shift = kwargs.pop('body_stand_shift', pi2)
             n_leg_pairs = convention.n_legs//2
-            n_leg_pairs_osc = convention.n_joints_body//n_leg_pairs
+            legs_splits = np.array_split(
+                np.arange(convention.n_joints_body),
+                n_leg_pairs
+            )
             self.osc2osc = (
                 self.default_osc2osc(
                     convention,
@@ -786,26 +789,28 @@ class AmphibiousNetworkOptions(Options):
                     kwargs.pop('weight_osc_legs2body', 3e1),
                     kwargs.pop('intralimb_phases', [0, pi2, 0, pi2]),
                     kwargs.pop('leg_phase_follow', np.pi),
-                    kwargs.pop('body_walk_phases', [
-                        body_i*2*np.pi/convention.n_joints_body
-                        + body_stand_shift
-                        for body_i in range(convention.n_joints_body)
-                    ]),
+                    kwargs.pop(
+                        'body_walk_phases',
+                        [
+                            body_i*2*np.pi/convention.n_joints_body
+                            + body_stand_shift
+                            for body_i in range(convention.n_joints_body)
+                        ] if kwargs.pop('fluid_walk', True) else
+                        np.concatenate(
+                            [
+                                np.full(len(split), np.pi*(split_i+1))
+                                for split_i, split in enumerate(legs_splits)
+                            ]
+                        ).tolist(),
+                    ),
                     kwargs.pop('legbodyjoints', range(convention.n_dof_legs-1)),
                     kwargs.pop(
                         'legbodyconnections',
                         [
                             range(convention.n_joints_body)
                             for leg_i in range(n_leg_pairs)
-                        ] if kwargs.pop('full_leg_body', True) else [
-                            range(
-                                leg_i*n_leg_pairs_osc,
-                                (leg_i+1)*n_leg_pairs_osc
-                                if leg_i < n_leg_pairs-1
-                                else convention.n_joints_body
-                            )
-                            for leg_i in range(n_leg_pairs)
-                        ],
+                        ] if kwargs.pop('full_leg_body', True) else
+                        legs_splits,
                     )
                 )
             )
