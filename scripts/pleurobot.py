@@ -27,11 +27,11 @@ def main():
         default_control_type=ControlType.POSITION,
         weight_osc_body=1e0,
         weight_osc_legs_internal=3e1,
-        weight_osc_legs_opposite=1e0,  # 1e1,
+        weight_osc_legs_opposite=1e-1,  # 1e1,
         weight_osc_legs_following=0,  # 1e1,
         weight_osc_legs2body=3e1,
-        weight_sens_contact_intralimb=-0.5,
-        weight_sens_contact_opposite=1,
+        weight_sens_contact_intralimb=-2e-1,
+        weight_sens_contact_opposite=5e-1,
         weight_sens_contact_following=0,
         weight_sens_contact_diagonal=0,
         weight_sens_hydro_freq=0,
@@ -39,7 +39,16 @@ def main():
         body_stand_amplitude=0.2,
         modular_phases=np.array([3*np.pi/2, 0, 3*np.pi/2, 0]) - np.pi/4,
         modular_amplitudes=np.full(4, 0.9),
+        legs_amplitudes=[np.pi/8, np.pi/16, np.pi/8, np.pi/8],
+        default_lateral_friction=2,
     )
+
+    # # State
+    # n_joints = animat_options.morphology.n_joints()
+    # state_init = (1e-3*np.arange(5*n_joints)).tolist()
+    # for osc_i, osc in enumerate(animat_options.control.network.oscillators):
+    #     osc.initial_phase = state_init[osc_i]
+    #     osc.initial_amplitude = state_init[osc_i+n_joints]
 
     # Muscles
     for muscle in animat_options.control.muscles:

@@ -99,12 +99,13 @@ class AmphibiousController(ModelController):
         """Postions"""
         outputs = self.network.outputs(iteration)
         positions = (
-            self.gain_amplitude*0.5*(
-                outputs[self.muscle_groups[ControlType.POSITION][0]]
-                - outputs[self.muscle_groups[ControlType.POSITION][1]]
-            )
-            + self.gain_offset*self.network.offsets(iteration)
-            + self.joints_bias
+            self.gain_amplitude*(
+                0.5*(
+                    outputs[self.muscle_groups[ControlType.POSITION][0]]
+                    - outputs[self.muscle_groups[ControlType.POSITION][1]]
+                )
+                + self.network.offsets(iteration)
+            ) + self.joints_bias
         )
         return dict(zip(self.joints[ControlType.POSITION], positions))
 
@@ -156,7 +157,7 @@ class AmphibiousController(ModelController):
 
         # Joints offsets
         joints_offsets = (
-            self.gain_offset*self.network.offsets(iteration)
+            self.gain_amplitude*self.network.offsets(iteration)
             + self.joints_bias
         )
 
