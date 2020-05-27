@@ -173,7 +173,7 @@ class AmphibiousController(ModelController):
         active_torques = (
             self.gain_amplitude*self.alphas[ControlType.TORQUE]*neural_diff
         )
-        stiffness_torques = self.gain_amplitude*self.betas[ControlType.TORQUE]*(
+        stiffness_torques = self.betas[ControlType.TORQUE]*(
             neural_sum + self.gammas[ControlType.TORQUE]
         )*(positions - joints_offsets)
         damping_torques = self.deltas[ControlType.TORQUE]*velocities

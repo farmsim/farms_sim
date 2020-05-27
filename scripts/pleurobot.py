@@ -27,7 +27,7 @@ def main():
         default_control_type=ControlType.POSITION,
         weight_osc_body=1e0,
         weight_osc_legs_internal=3e1,
-        weight_osc_legs_opposite=1e-1,  # 1e1,
+        weight_osc_legs_opposite=1e0,  # 1e1,
         weight_osc_legs_following=0,  # 1e1,
         weight_osc_legs2body=3e1,
         weight_sens_contact_intralimb=-2e-1,
@@ -52,10 +52,10 @@ def main():
 
     # Muscles
     for muscle in animat_options.control.muscles:
-        muscle.alpha = 5e0
-        muscle.beta = -3e0
-        muscle.gamma = 3e0
-        muscle.delta = -2e-3
+        muscle.alpha = 5e1
+        muscle.beta = -1e1
+        muscle.gamma = 1e1
+        muscle.delta = -3e-1
 
     (
         simulation_options,

@@ -196,7 +196,6 @@ def get_pleurobot_options(**kwargs):
         for leg_i in range(2):
             for side_i in range(2):
                 mirror = (-1 if side_i else 1)
-                # mirror_full = (1 if leg_i else -1)*(1 if side_i else -1)
                 gain_amplitude[13+2*leg_i*4+side_i*4+0] = mirror
                 gain_amplitude[13+2*leg_i*4+side_i*4+1] = mirror
                 gain_amplitude[13+2*leg_i*4+side_i*4+2] = -mirror
