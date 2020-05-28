@@ -150,6 +150,10 @@ def get_salamander_options(**kwargs):
         'modular_phases': np.array([3*np.pi/2, 0, 3*np.pi/2, 0]) - np.pi/4,
         'modular_amplitudes': np.full(4, 1.0),
         'default_lateral_friction': 2,
+        'muscle_alpha': 5e0,
+        'muscle_beta': -3e0,
+        'muscle_gamma': 3e0,
+        'muscle_delta': -2e-3,
     }
     kwargs_options.update(kwargs)
     return get_animat_options(**kwargs_options)
