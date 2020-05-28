@@ -121,7 +121,7 @@ def amphibious_options(animat_options, use_water_arena=True, **kwargs):
     return (simulation_options, arena)
 
 
-def get_salamander_options(**kwargs):
+def get_salamander_kwargs_options(**kwargs):
     """Salamander options"""
     kwargs_options = {
         'spawn_loader': SpawnLoader.PYBULLET,  # SpawnLoader.FARMS
@@ -156,15 +156,17 @@ def get_salamander_options(**kwargs):
         'muscle_delta': -2e-3,
     }
     kwargs_options.update(kwargs)
+    return kwargs_options
+
+
+def get_salamander_options(**kwargs):
+    """Salamander options"""
+    kwargs_options = get_salamander_kwargs_options(**kwargs)
     return get_animat_options(**kwargs_options)
 
 
-def get_pleurobot_options(**kwargs):
+def get_pleurobot_kwargs_options(**kwargs):
     """Pleurobot default options"""
-
-    # Animat
-    sdf = get_sdf_path(name='pleurobot', version='0')
-    pylog.info('Model SDF: {}'.format(sdf))
 
     # Morphology information
     links_names = kwargs.pop(
@@ -224,7 +226,6 @@ def get_pleurobot_options(**kwargs):
 
     # Joint options
     gain_amplitude = kwargs.pop('gain_amplitude', None)
-    gain_offset = kwargs.pop('gain_offset', None)
     joints_offsets = kwargs.pop('joints_offsets', None)
 
     # Amplitudes gains
@@ -247,11 +248,16 @@ def get_pleurobot_options(**kwargs):
         for leg_i in range(2):
             for side_i in range(2):
                 mirror = (1 if side_i else -1)
-                mirror_full = (1 if leg_i else -1)*(1 if side_i else -1)
                 joints_offsets[13+2*leg_i*4+side_i*4+0] = 0
-                joints_offsets[13+2*leg_i*4+side_i*4+1] = mirror*np.pi/16 if leg_i else mirror*np.pi/8
-                joints_offsets[13+2*leg_i*4+side_i*4+2] = 0 if leg_i else -mirror*np.pi/3
-                joints_offsets[13+2*leg_i*4+side_i*4+3] = -mirror*np.pi/4 if leg_i else mirror*np.pi/16
+                joints_offsets[13+2*leg_i*4+side_i*4+1] = (
+                    mirror*np.pi/16 if leg_i else mirror*np.pi/8
+                )
+                joints_offsets[13+2*leg_i*4+side_i*4+2] = (
+                    0 if leg_i else -mirror*np.pi/3
+                )
+                joints_offsets[13+2*leg_i*4+side_i*4+3] = (
+                    -mirror*np.pi/4 if leg_i else mirror*np.pi/16
+                )
         joints_offsets = dict(zip(joints_names, joints_offsets))
 
     # Animat options
@@ -296,6 +302,17 @@ def get_pleurobot_options(**kwargs):
         muscle_delta=-3e-1,
     )
     kwargs_options.update(kwargs)
+    return kwargs_options
+
+
+def get_pleurobot_options(**kwargs):
+    """Pleurobot default options"""
+
+    # Animat
+    sdf = get_sdf_path(name='pleurobot', version='0')
+    pylog.info('Model SDF: {}'.format(sdf))
+
+    kwargs_options = get_pleurobot_kwargs_options(**kwargs)
     animat_options = get_animat_options(**kwargs_options)
     return sdf, animat_options
 
@@ -341,13 +358,6 @@ def fish_options(animat, version, kinematics_file, sampling_timestep, **kwargs):
     simulation_options.video_yaw = 0
     simulation_options.video_pitch = -30
     simulation_options.video_distance = 1
-    # simulation_options.video_name = (
-    #     'transition_videos/swim2walk_y{}_p{}_d{}'.format(
-    #         simulation_options.video_yaw,
-    #         simulation_options.video_pitch,
-    #         simulation_options.video_distance,
-    #     )
-    # )
 
     # Animat options
     n_joints = kinematics.shape[1]-3
