@@ -31,13 +31,6 @@ def main():
     #     osc.initial_phase = state_init[osc_i]
     #     osc.initial_amplitude = state_init[osc_i+n_joints]
 
-    # Muscles
-    for muscle in animat_options.control.muscles:
-        muscle.alpha = 5e1
-        muscle.beta = -1e1
-        muscle.gamma = 1e1
-        muscle.delta = -3e-1
-
     (
         simulation_options,
         arena,
