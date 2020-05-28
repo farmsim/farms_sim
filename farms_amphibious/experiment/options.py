@@ -5,7 +5,8 @@ import farms_pylog as pylog
 from farms_models.utils import get_sdf_path
 from farms_bullet.simulation.options import SimulationOptions
 from farms_bullet.model.model import SimulationModels, DescriptionFormatModel
-from ..model.options import AmphibiousOptions
+from farms_bullet.model.control import ControlType
+from ..model.options import AmphibiousOptions, SpawnLoader
 
 
 def get_animat_options(swimming=False, **kwargs):
@@ -120,6 +121,40 @@ def amphibious_options(animat_options, use_water_arena=True, **kwargs):
     return (simulation_options, arena)
 
 
+def get_salamander_options(**kwargs):
+    """Salamander options"""
+    kwargs_options = {
+        'spawn_loader': SpawnLoader.PYBULLET,  # SpawnLoader.FARMS
+        'default_control_type': ControlType.POSITION,
+        'show_hydrodynamics': True,
+        'swimming': False,
+        'n_legs': 4,
+        'n_dof_legs': 4,
+        'n_joints_body': 11,
+        'drag_coefficients': [
+            [-1e-1, -1e1, -1e1],
+            [-1e-6, -1e-6, -1e-6],
+        ],
+        'weight_osc_body': 1e1,
+        'weight_osc_legs_internal': 3e1,
+        'weight_osc_legs_opposite': 1e0,  # 1e1,
+        'weight_osc_legs_following': 0,  # 1e1,
+        'weight_osc_legs2body': 3e1,
+        'weight_sens_contact_intralimb': -0.5,
+        'weight_sens_contact_opposite': 2,
+        'weight_sens_contact_following': 0,
+        'weight_sens_contact_diagonal': 0,
+        'weight_sens_hydro_freq': -1e-1,
+        'weight_sens_hydro_amp': -1e-1,
+        'body_stand_amplitude': 0.2,
+        'modular_phases': np.array([3*np.pi/2, 0, 3*np.pi/2, 0]) - np.pi/4,
+        'modular_amplitudes': np.full(4, 1.0),
+        'default_lateral_friction': 2,
+    }
+    kwargs_options.update(kwargs)
+    return get_animat_options(**kwargs_options)
+
+
 def get_pleurobot_options(**kwargs):
     """Pleurobot default options"""
 
@@ -232,6 +267,8 @@ def get_pleurobot_options(**kwargs):
 
     # Animat options
     animat_options = get_animat_options(
+        spawn_loader=SpawnLoader.PYBULLET,  # SpawnLoader.FARMS
+        default_control_type=ControlType.POSITION,
         swimming=False,
         n_legs=4,
         n_dof_legs=4,
@@ -246,7 +283,7 @@ def get_pleurobot_options(**kwargs):
         # body_stand_shift=kwargs.pop('body_stand_shift', np.pi/4),
         legs_amplitudes=kwargs.pop(
             'legs_amplitudes',
-            [np.pi/8, np.pi/32, np.pi/8, np.pi/8],
+            [np.pi/8, np.pi/16, np.pi/8, np.pi/8],
         ),
         legs_offsets_walking=kwargs.pop(
             'legs_offsets_walking',
@@ -261,15 +298,17 @@ def get_pleurobot_options(**kwargs):
         offsets_bias=joints_offsets,
         weight_osc_body=kwargs.pop('weight_osc_body', 1e0),
         weight_osc_legs_internal=kwargs.pop('weight_osc_legs_internal', 3e1),
-        weight_osc_legs_opposite=kwargs.pop('weight_osc_legs_opposite', 3e0),
-        weight_osc_legs_following=kwargs.pop('weight_osc_legs_following', 3e0),
-        weight_osc_legs2body=kwargs.pop('weight_osc_legs2body', 1e1),
-        weight_sens_contact_intralimb=kwargs.pop('weight_sens_contact_intralimb', 0),
-        weight_sens_contact_opposite=kwargs.pop('weight_sens_contact_opposite', 0),
+        weight_osc_legs_opposite=kwargs.pop('weight_osc_legs_opposite', 1e0),
+        weight_osc_legs_following=kwargs.pop('weight_osc_legs_following', 5e-1),
+        weight_osc_legs2body=kwargs.pop('weight_osc_legs2body', 3e1),
+        weight_sens_contact_intralimb=kwargs.pop('weight_sens_contact_intralimb', -2e-1),
+        weight_sens_contact_opposite=kwargs.pop('weight_sens_contact_opposite', 5e-1),
         weight_sens_contact_following=kwargs.pop('weight_sens_contact_following', 0),
         weight_sens_contact_diagonal=kwargs.pop('weight_sens_contact_diagonal', 0),
         weight_sens_hydro_freq=kwargs.pop('weight_sens_hydro_freq', 0),
         weight_sens_hydro_amp=kwargs.pop('weight_sens_hydro_amp', 0),
+        modular_phases=np.array([3*np.pi/2, 0, 3*np.pi/2, 0]) - np.pi/4,
+        modular_amplitudes=np.full(4, 0.9),
         links_names=links_names,
         links_swimming=[],
         links_no_collisions=links_no_collisions,
@@ -278,6 +317,7 @@ def get_pleurobot_options(**kwargs):
         sensors_joints=joints_names,
         sensors_contacts=feet,
         sensors_hydrodynamics=[],
+        default_lateral_friction=2,
         **kwargs
     )
     return sdf, animat_options
