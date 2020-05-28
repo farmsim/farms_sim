@@ -493,6 +493,10 @@ class AmphibiousControlOptions(Options):
                 )
                 for muscle in range(n_joints)
             ]
+        default_alpha = kwargs.pop('muscle_alpha', 1e0)
+        default_beta = kwargs.pop('muscle_beta', -1e0)
+        default_gamma = kwargs.pop('muscle_gamma', 1e0)
+        default_delta = kwargs.pop('muscle_delta', -1e-4)
         for muscle_i, muscle in enumerate(self.muscles):
             if muscle.joint is None:
                 muscle.joint = joints_names[muscle_i]
@@ -501,13 +505,13 @@ class AmphibiousControlOptions(Options):
             if muscle.osc2 is None:
                 muscle.osc2 = self.network.oscillators[2*muscle_i+1].name
             if muscle.alpha is None:
-                muscle.alpha = 1e1
+                muscle.alpha = default_alpha
             if muscle.beta is None:
-                muscle.beta = -1e1
+                muscle.beta = default_beta
             if muscle.gamma is None:
-                muscle.gamma = 1e0
+                muscle.gamma = default_gamma
             if muscle.delta is None:
-                muscle.delta = -1e-3
+                muscle.delta = default_delta
 
     def joints_offsets(self):
         """Joints offsets"""
