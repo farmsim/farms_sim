@@ -5,7 +5,8 @@ import farms_pylog as pylog
 from farms_models.utils import get_sdf_path
 from farms_bullet.simulation.options import SimulationOptions
 from farms_bullet.model.model import SimulationModels, DescriptionFormatModel
-from ..model.options import AmphibiousOptions
+from farms_bullet.model.control import ControlType
+from ..model.options import AmphibiousOptions, SpawnLoader
 
 
 def get_animat_options(swimming=False, **kwargs):
@@ -118,6 +119,40 @@ def amphibious_options(animat_options, use_water_arena=True, **kwargs):
     simulation_options = get_simulation_options(**kwargs)
 
     return (simulation_options, arena)
+
+
+def get_salamander_options(**kwargs):
+    """Salamander options"""
+    kwargs_options = {
+        'spawn_loader': SpawnLoader.PYBULLET,  # SpawnLoader.FARMS
+        'default_control_type': ControlType.POSITION,
+        'show_hydrodynamics': True,
+        'swimming': False,
+        'n_legs': 4,
+        'n_dof_legs': 4,
+        'n_joints_body': 11,
+        'drag_coefficients': [
+            [-1e-1, -1e1, -1e1],
+            [-1e-6, -1e-6, -1e-6],
+        ],
+        'weight_osc_body': 1e1,
+        'weight_osc_legs_internal': 3e1,
+        'weight_osc_legs_opposite': 1e0,  # 1e1,
+        'weight_osc_legs_following': 0,  # 1e1,
+        'weight_osc_legs2body': 3e1,
+        'weight_sens_contact_intralimb': -0.5,
+        'weight_sens_contact_opposite': 2,
+        'weight_sens_contact_following': 0,
+        'weight_sens_contact_diagonal': 0,
+        'weight_sens_hydro_freq': -1e-1,
+        'weight_sens_hydro_amp': -1e-1,
+        'body_stand_amplitude': 0.2,
+        'modular_phases': np.array([3*np.pi/2, 0, 3*np.pi/2, 0]) - np.pi/4,
+        'modular_amplitudes': np.full(4, 1.0),
+        'default_lateral_friction': 2,
+    }
+    kwargs_options.update(kwargs)
+    return get_animat_options(**kwargs_options)
 
 
 def get_pleurobot_options(**kwargs):

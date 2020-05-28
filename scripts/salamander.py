@@ -8,16 +8,15 @@ import matplotlib.pyplot as plt
 
 import farms_pylog as pylog
 from farms_models.utils import get_sdf_path
-from farms_bullet.model.control import ControlType
 from farms_bullet.simulation.options import SimulationOptions
-from farms_amphibious.model.options import AmphibiousOptions, SpawnLoader
+from farms_amphibious.model.options import AmphibiousOptions
 from farms_amphibious.utils.utils import prompt
 from farms_amphibious.utils.network import plot_networks_maps
 from farms_amphibious.experiment.simulation import simulation, profile
 from farms_amphibious.data.animat_data import AnimatData
 from farms_amphibious.experiment.options import (
     amphibious_options,
-    get_animat_options,
+    get_salamander_options,
 )
 
 
@@ -27,34 +26,7 @@ def main():
     # Animat
     sdf = get_sdf_path(name='salamander', version='v1')
     pylog.info('Model SDF: {}'.format(sdf))
-    animat_options = get_animat_options(
-        spawn_loader=SpawnLoader.PYBULLET,  # SpawnLoader.FARMS
-        default_control_type=ControlType.POSITION,
-        show_hydrodynamics=True,
-        swimming=False,
-        n_legs=4,
-        n_dof_legs=4,
-        n_joints_body=11,
-        drag_coefficients=[
-            [-1e-1, -1e1, -1e1],
-            [-1e-6, -1e-6, -1e-6],
-        ],
-        weight_osc_body=1e1,
-        weight_osc_legs_internal=3e1,
-        weight_osc_legs_opposite=1e0,  # 1e1,
-        weight_osc_legs_following=0,  # 1e1,
-        weight_osc_legs2body=3e1,
-        weight_sens_contact_intralimb=-0.5,
-        weight_sens_contact_opposite=2,
-        weight_sens_contact_following=0,
-        weight_sens_contact_diagonal=0,
-        weight_sens_hydro_freq=-1e-1,
-        weight_sens_hydro_amp=-1e-1,
-        body_stand_amplitude=0.2,
-        modular_phases=np.array([3*np.pi/2, 0, 3*np.pi/2, 0]) - np.pi/4,
-        modular_amplitudes=np.full(4, 1.0),
-        default_lateral_friction=2,
-    )
+    animat_options = get_salamander_options()
 
     # Muscles
     for muscle in animat_options.control.muscles:
