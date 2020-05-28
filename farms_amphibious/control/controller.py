@@ -74,14 +74,6 @@ class AmphibiousController(ModelController):
             gain_amplitudes[joint]
             for joint in joints
         ])
-        gain_offsets = {
-            joint.joint: joint.gain_offset
-            for joint in animat_options.control.joints
-        }
-        self.gain_offset = np.array([
-            gain_offsets[joint]
-            for joint in joints
-        ])
         offsets_bias = {
             joint.joint: joint.bias
             for joint in animat_options.control.joints

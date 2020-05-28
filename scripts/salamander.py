@@ -28,13 +28,6 @@ def main():
     pylog.info('Model SDF: {}'.format(sdf))
     animat_options = get_salamander_options()
 
-    # Muscles
-    for muscle in animat_options.control.muscles:
-        muscle.alpha = 5e0
-        muscle.beta = -3e0
-        muscle.gamma = 3e0
-        muscle.delta = -2e-3
-
     # State
     # state_init = animat_options.control.network.state_init
     # for phase_i, phase in enumerate(np.linspace(2*np.pi, 0, 11)):

@@ -415,7 +415,6 @@ class AmphibiousControlOptions(Options):
                     offset_saturation=None,
                     rate=None,
                     gain_amplitude=None,
-                    gain_offset=None,
                     bias=None,
                     max_torque=None,
                 )
@@ -439,10 +438,6 @@ class AmphibiousControlOptions(Options):
         )
         gain_amplitude = kwargs.pop(
             'gain_amplitude',
-            {joint_name: 1 for joint_name in joints_names},
-        )
-        gain_offset = kwargs.pop(
-            'gain_offset',
             {joint_name: 1 for joint_name in joints_names},
         )
         offsets_bias = kwargs.pop(
@@ -472,8 +467,6 @@ class AmphibiousControlOptions(Options):
                 joint.rate = joints_rates[joint.joint]
             if joint.gain_amplitude is None:
                 joint.gain_amplitude = gain_amplitude[joint.joint]
-            if joint.gain_offset is None:
-                joint.gain_offset = gain_offset[joint.joint]
             if joint.bias is None:
                 joint.bias = offsets_bias[joint.joint]
             if joint.max_torque is None:
@@ -493,6 +486,10 @@ class AmphibiousControlOptions(Options):
                 )
                 for muscle in range(n_joints)
             ]
+        default_alpha = kwargs.pop('muscle_alpha', 1e0)
+        default_beta = kwargs.pop('muscle_beta', -1e0)
+        default_gamma = kwargs.pop('muscle_gamma', 1e0)
+        default_delta = kwargs.pop('muscle_delta', -1e-4)
         for muscle_i, muscle in enumerate(self.muscles):
             if muscle.joint is None:
                 muscle.joint = joints_names[muscle_i]
@@ -501,13 +498,13 @@ class AmphibiousControlOptions(Options):
             if muscle.osc2 is None:
                 muscle.osc2 = self.network.oscillators[2*muscle_i+1].name
             if muscle.alpha is None:
-                muscle.alpha = 1e1
+                muscle.alpha = default_alpha
             if muscle.beta is None:
-                muscle.beta = -1e1
+                muscle.beta = default_beta
             if muscle.gamma is None:
-                muscle.gamma = 1e0
+                muscle.gamma = default_gamma
             if muscle.delta is None:
-                muscle.delta = -1e-3
+                muscle.delta = default_delta
 
     def joints_offsets(self):
         """Joints offsets"""
@@ -529,10 +526,6 @@ class AmphibiousControlOptions(Options):
     def joints_gain_amplitudes(self):
         """Joints gain amplitudes"""
         return [joint.gain_amplitude for joint in self.joints]
-
-    def joints_gain_offsets(self):
-        """Joints gain offsets"""
-        return [joint.gain_offset for joint in self.joints]
 
     def joints_offset_bias(self):
         """Joints offset bias"""
@@ -557,7 +550,6 @@ class AmphibiousJointControlOptions(Options):
         self.offset_saturation = kwargs.pop('offset_saturation')
         self.rate = kwargs.pop('rate')
         self.gain_amplitude = kwargs.pop('gain_amplitude')
-        self.gain_offset = kwargs.pop('gain_offset')
         self.bias = kwargs.pop('bias')
         self.max_torque = kwargs.pop('max_torque')
         if kwargs:
