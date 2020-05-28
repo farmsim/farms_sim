@@ -125,7 +125,7 @@ def get_salamander_options(**kwargs):
     """Salamander options"""
     kwargs_options = {
         'spawn_loader': SpawnLoader.PYBULLET,  # SpawnLoader.FARMS
-        'default_control_type': ControlType.TORQUE,
+        'default_control_type': ControlType.POSITION,
         'show_hydrodynamics': True,
         'swimming': False,
         'n_legs': 4,
@@ -241,21 +241,6 @@ def get_pleurobot_options(**kwargs):
                 gain_amplitude[13+2*leg_i*4+side_i*4+3] = mirror
         gain_amplitude = dict(zip(joints_names, gain_amplitude))
 
-    # Offsets gains
-    if gain_offset is None:
-        gain_offset = [1]*(13+4*4)
-        gain_offset[6] = 0
-        gain_offset[12] = 0
-        # for leg_i in range(2):
-        #     for side_i in range(2):
-        #         mirror = (-1 if side_i else 1)
-        #         mirror_full = (1 if leg_i else -1)*(1 if side_i else -1)
-        #         gain_offset[13+2*leg_i*4+side_i*4+0] = mirror
-        #         gain_offset[13+2*leg_i*4+side_i*4+1] = mirror
-        #         gain_offset[13+2*leg_i*4+side_i*4+2] = mirror_full
-        #         gain_offset[13+2*leg_i*4+side_i*4+3] = mirror_full
-        gain_offset = dict(zip(joints_names, gain_offset))
-
     # Joints joints_offsets
     if joints_offsets is None:
         joints_offsets = [0]*(13+4*4)
@@ -272,46 +257,30 @@ def get_pleurobot_options(**kwargs):
     # Animat options
     kwargs_options = dict(
         spawn_loader=SpawnLoader.PYBULLET,  # SpawnLoader.FARMS
-        default_control_type=kwargs.pop(
-            'default_control_type',
-            ControlType.TORQUE
-        ),
+        default_control_type=ControlType.POSITION,
         swimming=False,
         n_legs=4,
         n_dof_legs=4,
         n_joints_body=13,
-        body_stand_amplitude=kwargs.pop('body_stand_amplitude', 0.2),
-        legs_amplitudes=kwargs.pop(
-            'legs_amplitudes',
-            [np.pi/8, np.pi/16, np.pi/8, np.pi/8],
-        ),
-        legs_offsets_walking=kwargs.pop(
-            'legs_offsets_walking',
-            [0, -np.pi/32, -np.pi/16, 0],
-        ),
-        legs_offsets_swimming=kwargs.pop(
-            'legs_offsets_swimming',
-            [2*np.pi/5, 0, 0, np.pi/2],
-        ),
+        body_stand_amplitude=0.2,
+        legs_amplitudes=[np.pi/8, np.pi/16, np.pi/8, np.pi/8],
+        legs_offsets_walking=[0, -np.pi/32, -np.pi/16, 0],
+        legs_offsets_swimming=[2*np.pi/5, 0, 0, np.pi/2],
         gain_amplitude=gain_amplitude,
-        gain_offset=gain_offset,
         offsets_bias=joints_offsets,
-        weight_osc_body=kwargs.pop('weight_osc_body', 1e0),
-        weight_osc_legs_internal=kwargs.pop('weight_osc_legs_internal', 3e1),
-        weight_osc_legs_opposite=kwargs.pop('weight_osc_legs_opposite', 1e0),
-        weight_osc_legs_following=kwargs.pop('weight_osc_legs_following', 5e-1),
-        weight_osc_legs2body=kwargs.pop('weight_osc_legs2body', 3e1),
-        weight_sens_contact_intralimb=kwargs.pop('weight_sens_contact_intralimb', -2e-1),
-        weight_sens_contact_opposite=kwargs.pop('weight_sens_contact_opposite', 5e-1),
-        weight_sens_contact_following=kwargs.pop('weight_sens_contact_following', 0),
-        weight_sens_contact_diagonal=kwargs.pop('weight_sens_contact_diagonal', 0),
-        weight_sens_hydro_freq=kwargs.pop('weight_sens_hydro_freq', 0),
-        weight_sens_hydro_amp=kwargs.pop('weight_sens_hydro_amp', 0),
-        modular_phases=kwargs.pop(
-            'modular_phases',
-            np.array([3*np.pi/2, 0, 3*np.pi/2, 0]) - np.pi/4
-        ),
-        modular_amplitudes=kwargs.pop('modular_amplitudes', np.full(4, 0.9)),
+        weight_osc_body=1e0,
+        weight_osc_legs_internal=3e1,
+        weight_osc_legs_opposite=1e0,
+        weight_osc_legs_following=5e-1,
+        weight_osc_legs2body=3e1,
+        weight_sens_contact_intralimb=-2e-1,
+        weight_sens_contact_opposite=5e-1,
+        weight_sens_contact_following=0,
+        weight_sens_contact_diagonal=0,
+        weight_sens_hydro_freq=0,
+        weight_sens_hydro_amp=0,
+        modular_phases=np.array([3*np.pi/2, 0, 3*np.pi/2, 0]) - np.pi/4,
+        modular_amplitudes=np.full(4, 0.9),
         links_names=links_names,
         links_swimming=[],
         links_no_collisions=links_no_collisions,
@@ -320,7 +289,7 @@ def get_pleurobot_options(**kwargs):
         sensors_joints=joints_names,
         sensors_contacts=feet,
         sensors_hydrodynamics=[],
-        default_lateral_friction=kwargs.pop('default_lateral_friction', 2),
+        default_lateral_friction=2,
         muscle_alpha=5e1,
         muscle_beta=-1e1,
         muscle_gamma=1e1,
