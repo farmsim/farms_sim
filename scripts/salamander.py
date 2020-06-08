@@ -7,7 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import farms_pylog as pylog
-from farms_models.utils import get_sdf_path
+from farms_models.utils import get_sdf_path, get_simulation_data_path
 from farms_bullet.simulation.options import SimulationOptions
 from farms_amphibious.model.options import AmphibiousOptions
 from farms_amphibious.utils.utils import prompt
@@ -69,7 +69,11 @@ def main():
 
     # Post-processing
     pylog.info('Simulation post-processing')
-    log_path = 'salamander_results'
+    log_path = get_simulation_data_path(
+        name='salamander',
+        version='v1',
+        simulation_name='default',
+    )
     video_name = os.path.join(log_path, 'simulation.mp4')
     save_data = prompt('Save data', False)
     if log_path and not os.path.isdir(log_path):
