@@ -70,8 +70,13 @@ def to_array(array, iteration=None):
 class AnimatData(AnimatDataCy):
     """Animat data"""
 
-    def __init__(self, state=None, network=None, joints=None, sensors=None):
+    def __init__(
+            self, timestep,
+            state=None, network=None,
+            joints=None, sensors=None,
+    ):
         super(AnimatData, self).__init__()
+        self.timestep = timestep
         self.state = state
         self.network = network
         self.joints = joints
@@ -81,6 +86,7 @@ class AnimatData(AnimatDataCy):
     def from_dict(cls, dictionary, n_oscillators=0):
         """Load data from dictionary"""
         return cls(
+            timestep=dictionary['timestep'],
             state=OscillatorNetworkState(dictionary['state'], n_oscillators),
             network=NetworkParameters.from_dict(dictionary['network']),
             joints=JointsArray(dictionary['joints']),
@@ -95,6 +101,7 @@ class AnimatData(AnimatDataCy):
     def to_dict(self, iteration=None):
         """Convert data to dictionary"""
         return {
+            'timestep': self.timestep,
             'state': to_array(self.state.array),
             'network': self.network.to_dict(iteration),
             'joints': to_array(self.joints.array),

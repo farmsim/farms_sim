@@ -29,7 +29,8 @@ class AmphibiousData(AnimatData):
     def from_options(
             cls,
             control,
-            n_iterations
+            n_iterations,
+            timestep,
     ):
         """Default amphibious newtwork parameters"""
         state = OscillatorNetworkState.from_initial_state(
@@ -96,4 +97,4 @@ class AmphibiousData(AnimatData):
             ),
             hydrodynamics=hydrodynamics,
         )
-        return cls(state, network, joints, sensors)
+        return cls(timestep, state, network, joints, sensors)
