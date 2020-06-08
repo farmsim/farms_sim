@@ -36,16 +36,16 @@ def main():
     # state_init = animat_options.control.network.state_init
     # for osc_i in range(4*animat_options.morphology.n_joints()):
     #     state_init[osc_i] = 1e-4*np.random.ranf()
-    n_joints = animat_options.morphology.n_joints()
-    state_init = (1e-4*np.random.ranf(5*n_joints)).tolist()
-    for osc_i, osc in enumerate(animat_options.control.network.oscillators):
-        osc.initial_phase = state_init[osc_i]
-        osc.initial_amplitude = state_init[osc_i+n_joints]
+    # n_joints = animat_options.morphology.n_joints()
+    # state_init = (1e-4*np.random.ranf(5*n_joints)).tolist()
+    # for osc_i, osc in enumerate(animat_options.control.network.oscillators):
+    #     osc.initial_phase = state_init[osc_i]
+    #     osc.initial_amplitude = state_init[osc_i+n_joints]
 
-    (
-        simulation_options,
-        arena,
-    ) = amphibious_options(animat_options, use_water_arena=True)
+    simulation_options, arena = amphibious_options(
+        animat_options,
+        use_water_arena=True,
+    )
 
     # Save options
     animat_options_filename = 'salamander_animat_options.yaml'
@@ -74,10 +74,11 @@ def main():
     save_data = prompt('Save data', False)
     if log_path and not os.path.isdir(log_path):
         os.mkdir(log_path)
+    show_plots = prompt('Show plots', False)
     sim.postprocess(
         iteration=sim.iteration,
         log_path=log_path if save_data else '',
-        plot=prompt('Show plots', False),
+        plot=show_plots,
         video=video_name if sim.options.record else ''
     )
     if save_data:
@@ -86,11 +87,26 @@ def main():
         pylog.debug('Data successfully saved and logged back: {}'.format(data))
 
     # Plot network
-    if prompt('Show connectivity maps', False):
+    show_connectivity = prompt('Show connectivity maps', False)
+    if show_connectivity:
         plot_networks_maps(animat_options.morphology, sim.animat().data)
 
     # Plot
-    plt.show()
+    if (show_plots or show_connectivity) and prompt('Save plots', False):
+        extension = 'pdf'
+        for fig in [plt.figure(num) for num in plt.get_fignums()]:
+            filename = '{}.{}'.format(
+                os.path.join(log_path, fig.canvas.get_window_title()),
+                extension,
+            )
+            filename = filename.replace(' ', '_')
+            pylog.debug('Saving to {}'.format(filename))
+            fig.savefig(filename, format=extension)
+    if show_plots or (
+            show_connectivity
+            and prompt('Show connectivity plots', False)
+    ):
+        plt.show()
 
 
 if __name__ == '__main__':
