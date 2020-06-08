@@ -2,7 +2,7 @@
 
 import numpy as np
 from scipy.interpolate import interp1d
-from farms_bullet.model.control import ModelController
+from farms_bullet.model.control import ModelController, ControlType
 
 
 def kinematics_interpolation(
@@ -42,12 +42,12 @@ class AmphibiousKinematics(ModelController):
             animat_data,
             timestep,
             n_iterations,
-            sampling
+            sampling,
     ):
         super(AmphibiousKinematics, self).__init__(
             joints=joints,
-            use_position=True,
-            use_torque=False,
+            control_types={joint: ControlType.POSITION for joint in joints},
+            max_torques={joint: 1e3 for joint in joints},
         )
         kinematics = np.loadtxt(animat_options.control.kinematics_file)
         kinematics[:, 3:] = ((kinematics[:, 3:] + np.pi) % (2*np.pi)) - np.pi
@@ -60,14 +60,6 @@ class AmphibiousKinematics(ModelController):
         self.animat_options = animat_options
         self.animat_data = animat_data
         self._timestep = timestep
-        max_torques = {
-            joint.joint: joint.max_torque
-            for joint in animat_options.control.joints
-        }
-        self.max_torques = np.array([
-            max_torques[joint]
-            for joint in joints
-        ])
 
     def step(self, iteration, time, timestep):
         """Control step"""
@@ -98,7 +90,7 @@ class AmphibiousKinematics(ModelController):
 
     def get_position_output(self):
         """Position output"""
-        return self.get_outputs()
+        return dict(zip(self.joints[ControlType.POSITION], self.get_outputs()))
 
     def get_position_output_all(self):
         """Position output"""

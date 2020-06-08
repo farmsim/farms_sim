@@ -766,7 +766,7 @@ class AmphibiousNetworkOptions(Options):
             legs_splits = np.array_split(
                 np.arange(convention.n_joints_body),
                 n_leg_pairs
-            )
+            ) if convention.n_legs else None
             self.osc2osc = (
                 self.default_osc2osc(
                     convention,
