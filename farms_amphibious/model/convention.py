@@ -146,7 +146,7 @@ class AmphibiousConvention:
 
     def leglink2index(self, leg_i, side_i, joint_i):
         """leglink2index"""
-        n_legs = self.n_legs
+        n_legs = self.n_legs//2
         n_body_links = self.n_joints_body+1
         n_legs_dof = self.n_dof_legs
         assert 0 <= leg_i < n_legs, 'Leg must be < {}, got {}'.format(n_legs//2, leg_i)
