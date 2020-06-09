@@ -122,7 +122,6 @@ def drag_forces(
 
 def swimming_motion(
         iteration,
-        data_gps,
         data_hydrodynamics,
         model,
         links,

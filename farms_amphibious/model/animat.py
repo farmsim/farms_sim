@@ -249,7 +249,6 @@ class Amphibious(Animat):
         """Animat swimming physics"""
         swimming_motion(
             iteration=iteration,
-            data_gps=self.data.sensors.gps,
             data_hydrodynamics=self.data.sensors.hydrodynamics,
             model=self.identity(),
             links=links,
