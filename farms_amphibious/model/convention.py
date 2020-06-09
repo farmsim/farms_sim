@@ -14,7 +14,7 @@ class AmphibiousConvention:
             if 'links' in kwargs
             else [
                 'link_body_{}'.format(link_i)
-                for link_i in range(self.n_joints_body+1)
+                for link_i in range(self.n_joints_body + 1)
             ] + [
                 'link_leg_{}_{}_{}'.format(leg_i, 'R' if side_i else 'L', joint_i)
                 for leg_i in range(self.n_legs//2)
@@ -133,7 +133,7 @@ class AmphibiousConvention:
 
     def bodylink2name(self, link_i):
         """bodylink2name"""
-        n_body = self.n_joints_body+1
+        n_body = self.n_joints_body + 1
         assert 0 <= link_i < n_body, 'Body must be < {}, got {}'.format(n_body, link_i)
         return self.links_names[link_i]
 
@@ -141,13 +141,13 @@ class AmphibiousConvention:
         """Body links names"""
         return [
             self.bodylink2name(link_i)
-            for link_i in range(self.n_joints_body+1)
+            for link_i in range(self.n_joints_body + 1)
         ]
 
     def leglink2index(self, leg_i, side_i, joint_i):
         """leglink2index"""
         n_legs = self.n_legs//2
-        n_body_links = self.n_joints_body+1
+        n_body_links = self.n_joints_body + 1
         n_legs_dof = self.n_dof_legs
         assert 0 <= leg_i < n_legs, 'Leg must be < {}, got {}'.format(n_legs//2, leg_i)
         assert 0 <= side_i < 2, 'Body side must be < 2, got {}'.format(side_i)
