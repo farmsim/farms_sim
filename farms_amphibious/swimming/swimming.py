@@ -33,7 +33,7 @@ def drag_forces(
 
         # Compute velocity in URDF local frame
         link_orientation_urdf = np.array(
-            pybullet.getMatrixFromQuaternion(ori_com)
+            pybullet.getMatrixFromQuaternion(ori_urdf)
         ).reshape([3, 3])
         link_orientation_inv = np.array(
             pybullet.getMatrixFromQuaternion(ori_com)

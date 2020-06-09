@@ -133,7 +133,7 @@ def get_salamander_kwargs_options(**kwargs):
         'n_joints_body': 11,
         'drag_coefficients': [
             [
-                [-1e-1, -1e1, -1e1] if i < 11 else [-1e-1, -1e-1, -1e-1],
+                [-1e-1, -1e1, -1e1] if i < 12 else [-1e-1, -1e-1, -1e-1],
                 [-1e-6, -1e-6, -1e-6],
             ]
             for i in range(12+4*4)
