@@ -181,7 +181,8 @@ class Amphibious(Animat):
                         self.links_map[foot]
                         for foot in self.options.control.sensors.contacts
                     ],
-                    newtons=self.units.newtons
+                    meters=self.units.meters,
+                    newtons=self.units.newtons,
                 )
             })
 
