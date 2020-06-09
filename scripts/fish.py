@@ -38,8 +38,11 @@ def main():
             sampling_timestep,
             timestep=sampling_timestep,
             drag_coefficients=[
-                [-1e-5, -5e-2, -3e-2],
-                [-1e-7, -1e-7, -1e-7],
+                [
+                    [-1e-5, -5e-2, -3e-2],
+                    [-1e-7, -1e-7, -1e-7],
+                ]
+                for i in range(20)
             ]
         )
 
