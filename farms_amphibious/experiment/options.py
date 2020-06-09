@@ -365,9 +365,9 @@ def fish_options(animat, version, kinematics_file, sampling_timestep, **kwargs):
     #     'body_{}_t_link'.format(i+1)
     #     for i in range(n_joints-1)
     # ]
-    links_names = ['link_body_0']+[
-        '{}_v_{}_i_0_e_body_{}_t_link'.format(animat, version, i+1)
-        for i in range(n_joints)
+    links_names = [
+        '{}_v_{}_i_0_e_body_{}_t_link'.format(animat, version, i  )
+        for i in range(n_joints+1)
     ]
     # joints_names = ['joint_{}'.format(i) for i in range(n_joints)]
     joints_names = [
