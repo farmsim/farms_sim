@@ -107,7 +107,7 @@ class Amphibious(Animat):
                     parentLinkIndex=i
                 )
             ]
-            for i in range(self.options.morphology.n_links_body())
+            for i in range(self.data.sensors.hydrodynamics.array.shape[1])
         ]
 
     def spawn_sdf(self, verbose=False, original=False):
@@ -238,31 +238,29 @@ class Amphibious(Animat):
         return drag_forces(
             iteration=iteration,
             data_gps=self.data.sensors.gps,
-            data_hydrodynamics=self.data.sensors.hydrodynamics.array,
+            data_hydrodynamics=self.data.sensors.hydrodynamics,
             links=links,
-            sensor_options=self.options.control.sensors,
             masses=self.masses,
-            **kwargs
+            **kwargs,
         )
 
     def apply_swimming_forces(self, iteration, links, link_frame, debug=False):
         """Animat swimming physics"""
         swimming_motion(
             iteration=iteration,
-            data_hydrodynamics=self.data.sensors.hydrodynamics.array,
+            data_gps=self.data.sensors.gps,
+            data_hydrodynamics=self.data.sensors.hydrodynamics,
             model=self.identity(),
             links=links,
             links_map=self.links_map,
-            sensor_options=self.options.control.sensors,
             link_frame=link_frame,
-            units=self.units
+            units=self.units,
         )
         if debug:
             swimming_debug(
                 iteration=iteration,
                 data_gps=self.data.sensors.gps,
                 links=links,
-                sensor_options=self.options.control.sensors,
             )
 
     def draw_hydrodynamics(self, iteration, links):
