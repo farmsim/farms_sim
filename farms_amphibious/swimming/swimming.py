@@ -11,7 +11,6 @@ def drag_forces(
         data_gps,
         data_hydrodynamics,
         links,
-        sensor_options,
         masses,
         gravity,
         use_buoyancy,
@@ -20,20 +19,20 @@ def drag_forces(
     """Drag swimming"""
     links_swimming = []
     for link in links:
-        sensor_i = sensor_options.gps.index(link.name)
+        sensor_i = data_gps.names.index(link.name)
         position = data_gps.com_position(iteration, sensor_i)
         if position[2] > surface:
             continue
-        ori = data_gps.urdf_orientation(iteration, sensor_i)
-        if not any(ori):
+        ori_com = data_gps.com_orientation(iteration, sensor_i)
+        if not any(ori_com):
             continue
         links_swimming.append(link)
         lin_velocity = data_gps.com_lin_velocity(iteration, sensor_i)
         ang_velocity = data_gps.com_ang_velocity(iteration, sensor_i)
 
-        # Compute velocity in local frame
+        # Compute velocity in URDF local frame
         link_orientation_inv = np.array(
-            pybullet.getMatrixFromQuaternion(ori)
+            pybullet.getMatrixFromQuaternion(ori_com)
         ).reshape([3, 3]).T
         link_velocity = np.dot(link_orientation_inv, lin_velocity)
         link_angular_velocity = np.dot(link_orientation_inv, ang_velocity)
@@ -49,14 +48,14 @@ def drag_forces(
         ) if use_buoyancy else np.zeros(3)
 
         # Drag forces
-        sensor_i = sensor_options.hydrodynamics.index(link.name)
+        sensor_i = data_hydrodynamics.names.index(link.name)
         coefficients = np.array(link.drag_coefficients)
-        data_hydrodynamics[iteration, sensor_i, :3] = (
+        data_hydrodynamics.array[iteration, sensor_i, :3] = (
             np.sign(link_velocity)
             *coefficients[0]*link_velocity**2
             + buoyancy
         )
-        data_hydrodynamics[iteration, sensor_i, 3:6] = (
+        data_hydrodynamics.array[iteration, sensor_i, 3:6] = (
             np.sign(link_angular_velocity)
             *coefficients[1]
             *link_angular_velocity**2
@@ -66,22 +65,23 @@ def drag_forces(
 
 def swimming_motion(
         iteration,
+        data_gps,
         data_hydrodynamics,
         model,
         links,
         links_map,
-        sensor_options,
         link_frame,
         units,
 ):
     """Swimming motion"""
     for link in links:
-        sensor_i = sensor_options.gps.index(link.name)
+        # pybullet.LINK_FRAME applies force in inertial frame, not URDF frame
+        sensor_i = data_hydrodynamics.names.index(link.name)
         pybullet.applyExternalForce(
             model,
             links_map[link.name],
             forceObj=(
-                np.array(data_hydrodynamics[iteration, sensor_i, :3])
+                np.array(data_hydrodynamics.array[iteration, sensor_i, :3])
                 *units.newtons
             ),
             posObj=[0, 0, 0],  # pybullet.getDynamicsInfo(model, link)[3]
@@ -91,17 +91,17 @@ def swimming_motion(
             model,
             links_map[link.name],
             torqueObj=(
-                np.array(data_hydrodynamics[iteration, sensor_i, 3:6])
+                np.array(data_hydrodynamics.array[iteration, sensor_i, 3:6])
                 *units.torques
             ),
             flags=pybullet.LINK_FRAME if link_frame else pybullet.WORLD_FRAME
         )
 
 
-def swimming_debug(iteration, data_gps, links, sensor_options):
+def swimming_debug(iteration, data_gps, links):
     """Swimming debug"""
     for link in links:
-        sensor_i = sensor_options.gps.index(link.name)
+        sensor_i = data_gps.index(link.name)
         joint = np.array(data_gps.urdf_position(iteration, sensor_i))
         joint_ori = np.array(data_gps.urdf_orientation(iteration, sensor_i))
         # com_ori = np.array(data_gps.com_orientation(iteration, sensor_i))

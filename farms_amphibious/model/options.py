@@ -97,15 +97,15 @@ class AmphibiousMorphologyOptions(Options):
         default_lateral_friction = kwargs.pop('default_lateral_friction', 1)
         links_friction_lateral = kwargs.pop(
             'links_friction_lateral',
-            [default_lateral_friction for link in links_names]
+            [default_lateral_friction for link in links_names],
         )
         links_friction_spinning = kwargs.pop(
             'links_friction_spinning',
-            [0 for link in links_names]
+            [0 for link in links_names],
         )
         links_friction_rolling = kwargs.pop(
             'links_friction_rolling',
-            [0 for link in links_names]
+            [0 for link in links_names],
         )
         links_no_collisions = kwargs.pop('links_no_collisions', (
             [
@@ -118,14 +118,14 @@ class AmphibiousMorphologyOptions(Options):
                 for joint_i in range(options['n_dof_legs']-1)
             ] if kwargs.pop('reduced_collisions', False) else []
         ))
-        links_swimming = kwargs.pop('links_swimming', [
-            convention.bodylink2name(body_i)
-            for body_i in range(options['n_joints_body']+1)
-        ])
+        links_swimming = kwargs.pop('links_swimming', links_names)
         links_height = kwargs.pop('height', 0.03)
         links_density = kwargs.pop('density', 500.0)
         links_mass_multiplier = kwargs.pop('mass_multiplier', 1)
-        drag_coefficients = kwargs.pop('drag_coefficients', None)
+        drag_coefficients = kwargs.pop(
+            'drag_coefficients',
+            [None for name in links_names],
+        )
         options['links'] = kwargs.pop(
             'links',
             [
@@ -136,7 +136,7 @@ class AmphibiousMorphologyOptions(Options):
                     mass_multiplier=links_mass_multiplier,
                     height=links_height,
                     swimming=name in links_swimming,
-                    drag_coefficients=drag_coefficients,
+                    drag_coefficients=drag,
                     pybullet_dynamics={
                         'linearDamping': 0,
                         'angularDamping': 0,
@@ -145,11 +145,12 @@ class AmphibiousMorphologyOptions(Options):
                         'rollingFriction': rolling,
                     },
                 )
-                for name, lateral, spinning, rolling in zip(
+                for name, lateral, spinning, rolling, drag in zip(
                     links_names,
                     links_friction_lateral,
                     links_friction_spinning,
                     links_friction_rolling,
+                    drag_coefficients,
                 )
             ]
         )
@@ -582,7 +583,7 @@ class AmphibiousSensorsOptions(Options):
         """Defaults from convention"""
         self.gps = kwargs.pop(
             'sensors_gps',
-            convention.body_links_names()
+            convention.links_names
         )
         self.joints = kwargs.pop(
             'sensors_joints',
@@ -594,7 +595,7 @@ class AmphibiousSensorsOptions(Options):
         )
         self.hydrodynamics = kwargs.pop(
             'sensors_hydrodynamics',
-            convention.body_links_names()
+            convention.links_names
         )
 
 class AmphibiousNetworkOptions(Options):

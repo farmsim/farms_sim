@@ -4,7 +4,11 @@
 import os
 import time
 import matplotlib.pyplot as plt
-from farms_models.utils import get_sdf_path, model_kinematics_files
+from farms_models.utils import (
+    get_sdf_path,
+    model_kinematics_files,
+    get_simulation_data_path,
+)
 from farms_amphibious.experiment.options import fish_options
 from farms_amphibious.experiment.simulation import simulation, profile
 import farms_pylog as pylog
@@ -32,6 +36,7 @@ def main():
             fish_version,
             kinematics_file,
             sampling_timestep,
+            timestep=sampling_timestep,
             drag_coefficients=[
                 [-1e-5, -5e-2, -3e-2],
                 [-1e-7, -1e-7, -1e-7],
@@ -51,7 +56,11 @@ def main():
 
         # Post-processing
         pylog.info('Simulation post-processing')
-        log_path = 'fish_results'
+        log_path = get_simulation_data_path(
+            name=fish_name,
+            version=fish_version,
+            simulation_name=os.path.basename(kinematics_file),
+        )
         video_name = ''
         if not os.path.isdir(log_path):
             os.mkdir(log_path)
