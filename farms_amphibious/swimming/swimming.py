@@ -17,33 +17,42 @@ def link_swimming_info(data_gps, iteration, sensor_i):
     lin_velocity = data_gps.com_lin_velocity(iteration, sensor_i)
     ang_velocity = data_gps.com_ang_velocity(iteration, sensor_i)
 
-    # Compute velocity in URDF local frame
-    link_orientation_urdf = np.array(
-        pybullet.getMatrixFromQuaternion(ori_urdf)
-    ).reshape([3, 3])
-    link_orientation_inv = np.array(
-        pybullet.getMatrixFromQuaternion(ori_com)
-    ).reshape([3, 3]).T
-    link_velocity = np.dot(link_orientation_inv, lin_velocity)
-    link_angular_velocity = np.dot(link_orientation_inv, ang_velocity)
+    # Compute velocity in CoM frame
+    global2com = pybullet.invertTransform([0, 0, 0], ori_com)
+    link_velocity = np.array(pybullet.multiplyTransforms(
+        *global2com,
+        lin_velocity,
+        [0, 0, 0, 1],
+    )[0])
+    link_angular_velocity = np.array(pybullet.multiplyTransforms(
+        *global2com,
+        ang_velocity,
+        [0, 0, 0, 1],
+    )[0])
+    urdf2com = pybullet.multiplyTransforms(
+        *global2com,
+        [0, 0, 0],
+        ori_urdf,
+    )
     return (
         link_velocity,
         link_angular_velocity,
-        link_orientation_inv,
-        link_orientation_inv @ link_orientation_urdf,
+        global2com,
+        urdf2com,
     )
 
 
-def compute_buoyancy(link, position, ori, mass, surface, gravity):
+def compute_buoyancy(link, position, global2com, mass, surface, gravity):
     """Compute buoyancy"""
-    return np.dot(
-        ori,
+    return np.array(pybullet.multiplyTransforms(
+        *global2com,
         [
             0, 0, -1000*mass*gravity/link.density*min(
                 max(surface-position[2], 0)/link.height, 1
             )
-        ]
-    )
+        ],
+        [0, 0, 0, 1],
+    )[0])
 
 
 def drag_forces(
@@ -65,7 +74,12 @@ def drag_forces(
             continue
         links_swimming.append(link)
 
-        link_velocity, link_angular_velocity, link_orientation_inv, rotation = link_swimming_info(
+        (
+            link_velocity,
+            link_angular_velocity,
+            global2com,
+            urdf2com,
+        ) = link_swimming_info(
             data_gps=data_gps,
             iteration=iteration,
             sensor_i=sensor_i,
@@ -75,7 +89,7 @@ def drag_forces(
         buoyancy = compute_buoyancy(
             link,
             position,
-            link_orientation_inv,
+            global2com,
             masses[link.name],
             surface,
             gravity,
@@ -84,17 +98,25 @@ def drag_forces(
         # Drag forces
         sensor_i = data_hydrodynamics.names.index(link.name)
         coefficients = np.array(link.drag_coefficients)
-        data_hydrodynamics.array[iteration, sensor_i, :3] = (
+        data_hydrodynamics.set_force(iteration, sensor_i, (
             np.sign(link_velocity)
-            *(rotation @ coefficients[0])
+            *np.array(pybullet.multiplyTransforms(
+                *urdf2com,
+                coefficients[0],
+                [0, 0, 0, 1],
+            )[0])
             *link_velocity**2
             + buoyancy
-        )
-        data_hydrodynamics.array[iteration, sensor_i, 3:6] = (
+        ))
+        data_hydrodynamics.set_torque(iteration, sensor_i, (
             np.sign(link_angular_velocity)
-            *(rotation @ coefficients[1])
+            *np.array(pybullet.multiplyTransforms(
+                *urdf2com,
+                coefficients[1],
+                [0, 0, 0, 1],
+            )[0])
             *link_angular_velocity**2
-        )
+        ))
     return links_swimming
 
 
