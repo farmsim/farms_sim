@@ -6,6 +6,46 @@ import pybullet
 import farms_pylog as pylog
 
 
+def link_swimming_info(data_gps, iteration, sensor_i):
+    """Link swimming information"""
+
+    # Orientations
+    ori_urdf = data_gps.urdf_orientation(iteration, sensor_i)
+    ori_com = data_gps.com_orientation(iteration, sensor_i)
+
+    # Velocities in global frame
+    lin_velocity = data_gps.com_lin_velocity(iteration, sensor_i)
+    ang_velocity = data_gps.com_ang_velocity(iteration, sensor_i)
+
+    # Compute velocity in URDF local frame
+    link_orientation_urdf = np.array(
+        pybullet.getMatrixFromQuaternion(ori_urdf)
+    ).reshape([3, 3])
+    link_orientation_inv = np.array(
+        pybullet.getMatrixFromQuaternion(ori_com)
+    ).reshape([3, 3]).T
+    link_velocity = np.dot(link_orientation_inv, lin_velocity)
+    link_angular_velocity = np.dot(link_orientation_inv, ang_velocity)
+    return (
+        link_velocity,
+        link_angular_velocity,
+        link_orientation_inv,
+        link_orientation_inv @ link_orientation_urdf,
+    )
+
+
+def compute_buoyancy(link, position, ori, mass, surface, gravity):
+    """Compute buoyancy"""
+    return np.dot(
+        ori,
+        [
+            0, 0, -1000*mass*gravity/link.density*min(
+                max(surface-position[2], 0)/link.height, 1
+            )
+        ]
+    )
+
+
 def drag_forces(
         iteration,
         data_gps,
@@ -23,32 +63,22 @@ def drag_forces(
         position = data_gps.com_position(iteration, sensor_i)
         if position[2] > surface:
             continue
-        ori_urdf = data_gps.urdf_orientation(iteration, sensor_i)
-        ori_com = data_gps.com_orientation(iteration, sensor_i)
-        if not any(ori_com):
-            continue
         links_swimming.append(link)
-        lin_velocity = data_gps.com_lin_velocity(iteration, sensor_i)
-        ang_velocity = data_gps.com_ang_velocity(iteration, sensor_i)
 
-        # Compute velocity in URDF local frame
-        link_orientation_urdf = np.array(
-            pybullet.getMatrixFromQuaternion(ori_urdf)
-        ).reshape([3, 3])
-        link_orientation_inv = np.array(
-            pybullet.getMatrixFromQuaternion(ori_com)
-        ).reshape([3, 3]).T
-        link_velocity = np.dot(link_orientation_inv, lin_velocity)
-        link_angular_velocity = np.dot(link_orientation_inv, ang_velocity)
+        link_velocity, link_angular_velocity, link_orientation_inv, rotation = link_swimming_info(
+            data_gps=data_gps,
+            iteration=iteration,
+            sensor_i=sensor_i,
+        )
 
         # Buoyancy forces
-        buoyancy = np.dot(
+        buoyancy = compute_buoyancy(
+            link,
+            position,
             link_orientation_inv,
-            [
-                0, 0, -1000*masses[link.name]*gravity/link.density*min(
-                    max(surface-position[2], 0)/link.height, 1
-                )
-            ]
+            masses[link.name],
+            surface,
+            gravity,
         ) if use_buoyancy else np.zeros(3)
 
         # Drag forces
@@ -56,13 +86,13 @@ def drag_forces(
         coefficients = np.array(link.drag_coefficients)
         data_hydrodynamics.array[iteration, sensor_i, :3] = (
             np.sign(link_velocity)
-            *(link_orientation_inv @ link_orientation_urdf @ coefficients[0])
+            *(rotation @ coefficients[0])
             *link_velocity**2
             + buoyancy
         )
         data_hydrodynamics.array[iteration, sensor_i, 3:6] = (
             np.sign(link_angular_velocity)
-            *(link_orientation_inv @ link_orientation_urdf @ coefficients[1])
+            *(rotation @ coefficients[1])
             *link_angular_velocity**2
         )
     return links_swimming
