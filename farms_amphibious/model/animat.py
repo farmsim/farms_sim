@@ -31,18 +31,14 @@ def links_ordering(text):
 
 
 def initial_pose(identity, joints, joints_options, spawn_options, units):
-    """Initial pose - CAUTION: Can only be used after spawning"""
-    pos, _ = pybullet.getBasePositionAndOrientation(
-        bodyUniqueId=identity
-    )
+    """Initial pose"""
     spawn_orientation = pybullet.getQuaternionFromEuler(
         spawn_options.orientation
     )
     pos_offset = np.array(pybullet.multiplyTransforms(
         [0, 0, 0],
         spawn_orientation,
-        pos,
-        [0, 0, 0, 1]
+        *pybullet.getDynamicsInfo(identity, -1)[3:5],
     )[0])
     pybullet.resetBasePositionAndOrientation(
         identity,
