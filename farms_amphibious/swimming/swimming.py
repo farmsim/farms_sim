@@ -46,11 +46,9 @@ def compute_buoyancy(link, position, global2com, mass, surface, gravity):
     """Compute buoyancy"""
     return np.array(pybullet.multiplyTransforms(
         *global2com,
-        [
-            0, 0, -1000*mass*gravity/link.density*min(
-                max(surface-position[2], 0)/link.height, 1
-            )
-        ],
+        [0, 0, -1000*mass*gravity/link.density*min(
+            max(surface-position[2], 0)/link.height, 1
+        )],
         [0, 0, 0, 1],
     )[0])
 

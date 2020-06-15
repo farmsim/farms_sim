@@ -138,6 +138,7 @@ def get_salamander_kwargs_options(**kwargs):
             ]
             for i in range(12+4*4)
         ],
+        'drives_init': [2, 0],
         'weight_osc_body': 1e1,
         'weight_osc_legs_internal': 3e1,
         'weight_osc_legs_opposite': 1e0,  # 1e1,
@@ -150,6 +151,9 @@ def get_salamander_kwargs_options(**kwargs):
         'weight_sens_hydro_freq': -1e-1,
         'weight_sens_hydro_amp': -1e-1,
         'body_stand_amplitude': 0.2,
+        'body_stand_shift': np.pi/2,
+        'legs_amplitudes': [np.pi/4, np.pi/32, np.pi/4, np.pi/8],
+        'legs_offsets_walking': [0, np.pi/32, 0, np.pi/8],
         'modular_phases': np.array([3*np.pi/2, 0, 3*np.pi/2, 0]) - np.pi/4,
         'modular_amplitudes': np.full(4, 1.0),
         'default_lateral_friction': 2,
@@ -320,7 +324,27 @@ def get_pleurobot_options(**kwargs):
     return sdf, animat_options
 
 
-def fish_options(animat, version, kinematics_file, sampling_timestep, **kwargs):
+def get_fish_kwargs_options(**kwargs):
+    """Fish options"""
+    kwargs_options = {
+        'timestep': 1.2e-2,
+        'sampling_timestep': 1.2e-2,
+        'spawn_loader': SpawnLoader.PYBULLET,  # SpawnLoader.FARMS
+        'default_control_type': ControlType.POSITION,
+        'show_hydrodynamics': True,
+        'drag_coefficients': [
+            [
+                [-1e-5, -5e-2, -3e-2],
+                [-1e-7, -1e-7, -1e-7],
+            ]
+            for i in range(20)
+        ],
+    }
+    kwargs_options.update(kwargs)
+    return kwargs_options
+
+
+def get_fish_options(animat, version, kinematics_file, sampling_timestep, **kwargs):
     """Fish options"""
     pylog.info(kinematics_file)
     kinematics = np.loadtxt(kinematics_file)
@@ -369,7 +393,7 @@ def fish_options(animat, version, kinematics_file, sampling_timestep, **kwargs):
     #     for i in range(n_joints-1)
     # ]
     links_names = [
-        '{}_v_{}_i_0_e_body_{}_t_link'.format(animat, version, i  )
+        '{}_v_{}_i_0_e_body_{}_t_link'.format(animat, version, i)
         for i in range(n_joints+1)
     ]
     # joints_names = ['joint_{}'.format(i) for i in range(n_joints)]
@@ -377,7 +401,7 @@ def fish_options(animat, version, kinematics_file, sampling_timestep, **kwargs):
         '{}_v_{}_i_0_e_body_{}_t_link'.format(animat, version, i+1)
         for i in range(n_joints)
     ]
-    animat_options = AmphibiousOptions.from_options(dict(
+    options = dict(
         show_hydrodynamics=True,
         n_legs=0,
         n_dof_legs=0,
@@ -396,8 +420,9 @@ def fish_options(animat, version, kinematics_file, sampling_timestep, **kwargs):
         sensors_joints=joints_names,
         sensors_contacts=[],
         sensors_hydrodynamics=links_names,
-        **kwargs
-    ))
+    )
+    options.update(kwargs)
+    animat_options = AmphibiousOptions.from_options(options)
 
     # Arena
     arena = get_flat_arena()
