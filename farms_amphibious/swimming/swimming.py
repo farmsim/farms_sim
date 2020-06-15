@@ -11,14 +11,15 @@ def link_swimming_info(data_gps, iteration, sensor_i):
 
     # Orientations
     ori_urdf = data_gps.urdf_orientation(iteration, sensor_i)
+    urdf2global = [0, 0, 0], ori_urdf
     ori_com = data_gps.com_orientation(iteration, sensor_i)
+    global2com = pybullet.invertTransform([0, 0, 0], ori_com)
 
     # Velocities in global frame
     lin_velocity = data_gps.com_lin_velocity(iteration, sensor_i)
     ang_velocity = data_gps.com_ang_velocity(iteration, sensor_i)
 
     # Compute velocity in CoM frame
-    global2com = pybullet.invertTransform([0, 0, 0], ori_com)
     link_velocity = np.array(pybullet.multiplyTransforms(
         *global2com,
         lin_velocity,
@@ -31,8 +32,7 @@ def link_swimming_info(data_gps, iteration, sensor_i):
     )[0])
     urdf2com = pybullet.multiplyTransforms(
         *global2com,
-        [0, 0, 0],
-        ori_urdf,
+        *urdf2global,
     )
     return (
         link_velocity,
@@ -50,7 +50,7 @@ def compute_buoyancy(link, position, global2com, mass, surface, gravity):
             max(surface-position[2], 0)/link.height, 1
         )],
         [0, 0, 0, 1],
-    )[0])
+    )[0]) if mass > 0 else np.zeros(3)
 
 
 def drag_forces(
@@ -96,25 +96,33 @@ def drag_forces(
         # Drag forces
         sensor_i = data_hydrodynamics.names.index(link.name)
         coefficients = np.array(link.drag_coefficients)
-        data_hydrodynamics.set_force(iteration, sensor_i, (
-            np.sign(link_velocity)
-            *np.array(pybullet.multiplyTransforms(
-                *urdf2com,
-                coefficients[0],
-                [0, 0, 0, 1],
-            )[0])
-            *link_velocity**2
-            + buoyancy
-        ))
-        data_hydrodynamics.set_torque(iteration, sensor_i, (
-            np.sign(link_angular_velocity)
-            *np.array(pybullet.multiplyTransforms(
-                *urdf2com,
-                coefficients[1],
-                [0, 0, 0, 1],
-            )[0])
-            *link_angular_velocity**2
-        ))
+        data_hydrodynamics.set_force(
+            iteration,
+            sensor_i,
+            (
+                np.sign(link_velocity)
+                *np.array(pybullet.multiplyTransforms(
+                    coefficients[0],
+                    [0, 0, 0, 1],
+                    *urdf2com,
+                )[0])
+                *link_velocity**2
+                + buoyancy
+            )
+        )
+        data_hydrodynamics.set_torque(
+            iteration,
+            sensor_i,
+            (
+                np.sign(link_angular_velocity)
+                *np.array(pybullet.multiplyTransforms(
+                    coefficients[1],
+                    [0, 0, 0, 1],
+                    *urdf2com,
+                )[0])
+                *link_angular_velocity**2
+            )
+        )
     return links_swimming
 
 
