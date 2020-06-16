@@ -130,7 +130,11 @@ class AmphibiousController(ModelController):
         #         (cmd_positions - self.positions(iteration-1))/self._timestep
         #         - velocities
         #     )
-        torques = motor_torques + spring_torques + damping_torques
+        torques = np.clip(
+            motor_torques + spring_torques + damping_torques,
+            -self.max_torques[ControlType.TORQUE],
+            self.max_torques[ControlType.TORQUE],
+        )
         proprioception.array[iteration, :, 8] = torques
         proprioception.array[iteration, :, 9] = motor_torques
         proprioception.array[iteration, :, 10] = spring_torques
