@@ -175,7 +175,11 @@ class AmphibiousController(ModelController):
         damping_torques = self.deltas[ControlType.TORQUE]*velocities
 
         # Final torques
-        torques = active_torques + stiffness_torques + damping_torques
+        torques = np.clip(
+            active_torques + stiffness_torques + damping_torques,
+            -self.max_torques[ControlType.TORQUE],
+            self.max_torques[ControlType.TORQUE],
+        )
         proprioception.array[iteration, :, 8] = torques
         proprioception.array[iteration, :, 9] = active_torques
         proprioception.array[iteration, :, 10] = stiffness_torques
