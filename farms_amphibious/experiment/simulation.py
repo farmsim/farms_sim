@@ -4,11 +4,11 @@
 import pstats
 import cProfile
 import farms_pylog as pylog
+from farms_data.amphibious.data import AmphibiousData
 from ..simulation.simulation import AmphibiousSimulation
 from ..control.controller import AmphibiousController
 from ..control.kinematics import AmphibiousKinematics
 from ..model.animat import Amphibious
-from ..model.data import AmphibiousData
 from .options import get_animat_options, get_simulation_options
 
 

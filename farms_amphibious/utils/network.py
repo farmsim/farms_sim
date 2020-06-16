@@ -8,8 +8,8 @@ from matplotlib.colors import colorConverter, Normalize, ListedColormap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 import farms_pylog as pylog
+from farms_data.amphibious.animat_data_cy import ConnectionType
 from ..model.convention import AmphibiousConvention
-from ..data.animat_data_cy import ConnectionType
 
 
 def rotate(vector, theta):

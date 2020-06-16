@@ -11,7 +11,7 @@ from libc.math cimport sin, cos, fabs
 # from libc.stdlib cimport malloc, free
 from libc.stdio cimport printf
 
-from ..data.animat_data_cy cimport ConnectionType
+from farms_data.amphibious.animat_data_cy cimport ConnectionType
 
 
 cdef inline DTYPE phase(
