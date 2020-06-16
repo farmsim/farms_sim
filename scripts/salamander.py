@@ -26,7 +26,11 @@ def main():
     # Animat
     sdf = get_sdf_path(name='salamander', version='v1')
     pylog.info('Model SDF: {}'.format(sdf))
-    animat_options = get_salamander_options()
+    animat_options = get_salamander_options(
+        # spawn_position=[-5, 0, 0.1],
+        # spawn_orientation=[0, 0, np.pi],
+        # drives_init=[4.9, 0],
+    )
 
     # State
     # state_init = animat_options.control.network.state_init
