@@ -3,17 +3,17 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from farms_amphibious.model.options import (
-    AmphibiousMorphologyOptions,
-    AmphibiousControlOptions,
-)
-from farms_amphibious.model.data import AmphibiousData
+import farms_pylog as pylog
+from farms_data.amphibious.data import AmphibiousData
 from farms_amphibious.model.convention import AmphibiousConvention
 from farms_amphibious.control.network import NetworkODE
 from farms_amphibious.experiment.simulation import profile
 from farms_amphibious.utils.network import plot_networks_maps
 from farms_amphibious.utils.utils import prompt
-import farms_pylog as pylog
+from farms_amphibious.model.options import (
+    AmphibiousMorphologyOptions,
+    AmphibiousControlOptions,
+)
 
 
 def animat_options():
@@ -69,7 +69,8 @@ def simulation(times, control):
     control.network.drives[1].initial_value = 0
     animat_data = AmphibiousData.from_options(
         control,
-        n_iterations
+        n_iterations,
+        timestep,
     )
 
     # Animat network
