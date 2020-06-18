@@ -341,7 +341,7 @@ def get_fish_kwargs_options(**kwargs):
                 [-1e-5, -5e-2, -3e-2],
                 [-1e-7, -1e-7, -1e-7],
             ]
-            for i in range(20)
+            for i in range(21)
         ],
     }
     kwargs_options.update(kwargs)
