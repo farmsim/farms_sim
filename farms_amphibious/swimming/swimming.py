@@ -47,7 +47,7 @@ def compute_buoyancy(link, position, global2com, mass, surface, gravity):
     return np.array(pybullet.multiplyTransforms(
         *global2com,
         [0, 0, -1000*mass*gravity/link.density*min(
-            max(surface-position[2], 0)/link.height, 1
+            max(surface-position, 0)/link.height, 1
         )],
         [0, 0, 0, 1],
     )[0]) if mass > 0 else np.zeros(3)
@@ -64,14 +64,16 @@ def drag_forces(
         surface,
 ):
     """Drag swimming"""
-    links_swimming = []
-    for link in links:
-        sensor_i = data_gps.names.index(link.name)
-        position = data_gps.com_position(iteration, sensor_i)
-        if position[2] > surface:
-            continue
-        links_swimming.append(link)
-
+    positions = np.array(data_gps.array[iteration, :, 2], copy=False)
+    sensors = np.argwhere(positions < surface)[:, 0]
+    if not sensors.shape[0]:
+        return []
+    links_map = {link.name: link for link in links}
+    links_swimming = [
+        links_map[data_gps.names[sensor_i]]
+        for sensor_i in sensors
+    ]
+    for sensor_i, link, position in zip(sensors, links_swimming, positions):
         (
             link_velocity,
             link_angular_velocity,
@@ -94,11 +96,11 @@ def drag_forces(
         ) if use_buoyancy else np.zeros(3)
 
         # Drag forces
-        sensor_i = data_hydrodynamics.names.index(link.name)
+        hydro_i = data_hydrodynamics.names.index(link.name)
         coefficients = np.array(link.drag_coefficients)
         data_hydrodynamics.set_force(
             iteration,
-            sensor_i,
+            hydro_i,
             (
                 np.sign(link_velocity)
                 *np.array(pybullet.multiplyTransforms(
@@ -112,7 +114,7 @@ def drag_forces(
         )
         data_hydrodynamics.set_torque(
             iteration,
-            sensor_i,
+            hydro_i,
             (
                 np.sign(link_angular_velocity)
                 *np.array(pybullet.multiplyTransforms(
