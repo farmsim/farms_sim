@@ -73,11 +73,14 @@ class Amphibious(Animat):
             if controller is not None
             else None
         )
+
         # Hydrodynamic forces
         self.masses = {}
         self.hydrodynamics_plot = None
+
         # Sensors
         self.sensors = Sensors()
+
         # Physics
         self.units = units
 
@@ -94,11 +97,14 @@ class Amphibious(Animat):
         # Spawn
         use_pybullet_loader = self.options.spawn.loader == SpawnLoader.PYBULLET
         self.spawn_sdf(original=use_pybullet_loader)
+
         # Sensors
         if self.data:
             self.add_sensors()
+
         # Body properties
         self.set_body_properties()
+
         # Debug
         self.hydrodynamics_plot = [
             [
@@ -200,8 +206,16 @@ class Amphibious(Animat):
                 self.identity(),
                 self.links_map[link.name],
             )[0]
+        if self.data is not None:
+            gps = self.data.sensors.gps
+            gps.masses = [0 for _ in gps.names]
+            for link in self.options.morphology.links:
+                if link.name in gps.names:
+                    index = gps.names.index(link.name)
+                    gps.masses[index] = self.masses[link.name]
         if verbose:
             pylog.debug('Body mass: {} [kg]'.format(np.sum(self.masses.values())))
+
         # Deactivate collisions
         self.set_collisions(
             [
@@ -212,8 +226,10 @@ class Amphibious(Animat):
             group=0,
             mask=0
         )
+
         # Default dynamics
         for link in self.links_map:
+
             # Default friction
             self.set_link_dynamics(
                 link,
@@ -221,6 +237,7 @@ class Amphibious(Animat):
                 spinningFriction=0,
                 rollingFriction=0,
             )
+
             # Default damping
             self.set_link_dynamics(
                 link,
@@ -228,6 +245,7 @@ class Amphibious(Animat):
                 angularDamping=0,
                 jointDamping=0,
             )
+
         # Model options dynamics
         for link in self.options.morphology.links:
             self.set_link_dynamics(
@@ -272,6 +290,7 @@ class Amphibious(Animat):
     def draw_hydrodynamics(self, iteration, links):
         """Draw hydrodynamics forces"""
         active_links = [[hydro[0], False] for hydro in self.hydrodynamics_plot]
+
         for link in links:
             sensor_i = self.options.control.sensors.hydrodynamics.index(link.name)
             force = self.data.sensors.hydrodynamics.array[iteration, sensor_i, :3]
@@ -285,6 +304,7 @@ class Amphibious(Animat):
                 replaceItemUniqueId=self.hydrodynamics_plot[sensor_i][1],
             )
             active_links[sensor_i][1] = True
+
         for hydro_i, (old_active, new_active) in enumerate(active_links):
             if old_active and not new_active:
                 self.hydrodynamics_plot[hydro_i] = (

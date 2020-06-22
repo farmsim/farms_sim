@@ -84,6 +84,9 @@ class AmphibiousSimulation(Simulation):
             models=SimulationModels([animat, arena]),
             options=simulation_options
         )
+
+        # Animat properties
+
         # Interface
         self.interface = Interfaces(
             user_params=AmphibiousUserParameters(
@@ -118,8 +121,10 @@ class AmphibiousSimulation(Simulation):
                 rotating_camera=self.options.rotating_camera,
                 # top_camera=self.options.top_camera
             )
+
         # Real-time handling
         self.tic_rt = np.zeros(2)
+
         # Simulation state
         self.simulation_state = None
         self.save()
