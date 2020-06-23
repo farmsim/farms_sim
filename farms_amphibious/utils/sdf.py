@@ -268,6 +268,8 @@ def load_sdf(
         }
         link_masses = [
             mass_multiplier_map[link_name]*link_mass
+            if link_name in mass_multiplier_map
+            else link_mass
             for link_name, link_mass in zip(links_names, link_masses)
         ]
 
@@ -308,7 +310,7 @@ def load_sdf(
                     '{: >3} {: <15}'
                     ' - parent: {: <15} ({: >2})'
                     ' - mass: {:.4f} [kg]'
-                        ' - joint: {: <15} - axis: {}'
+                    ' - joint: {: <15} - axis: {}'
                 ).format(
                     '{}:'.format(link_i),
                     name,
@@ -345,10 +347,10 @@ def load_sdf(
         linkJointTypes=joint_types,
         linkJointAxis=joints_axis,
         flags=(
-            pybullet.URDF_MERGE_FIXED_LINKS
+            pybullet.URDF_USE_SELF_COLLISION
+            # | pybullet.URDF_MERGE_FIXED_LINKS
+            # | pybullet.URDF_MAINTAIN_LINK_ORDER  # Removes certain links?
             # | pybullet.URDF_ENABLE_SLEEPING
-            # | pybullet.URDF_USE_SELF_COLLISION
-            # | pybullet.URDF_MAINTAIN_LINK_ORDER
             # | pybullet.URDF_USE_INERTIA_FROM_FILE
             # | pybullet.URDF_ENABLE_CACHED_GRAPHICS_SHAPES
             # | pybullet.URDF_PRINT_URDF_INFO

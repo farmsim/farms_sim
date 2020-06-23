@@ -224,8 +224,27 @@ class Amphibious(Animat):
                 if not link.collisions
             ],
             group=0,
-            mask=0
+            mask=0,
         )
+        # Remove self collisions
+        for link0 in self.options.morphology.links:
+            for link1 in self.options.morphology.links:
+                pybullet.setCollisionFilterPair(
+                    bodyUniqueIdA=self.identity(),
+                    bodyUniqueIdB=self.identity(),
+                    linkIndexA=self.links_map[link0.name],
+                    linkIndexB=self.links_map[link1.name],
+                    enableCollision=0,
+                )
+        # Include user-defined self-collisions
+        for link0, link1 in self.options.morphology.self_collisions:
+            pybullet.setCollisionFilterPair(
+                bodyUniqueIdA=self.identity(),
+                bodyUniqueIdB=self.identity(),
+                linkIndexA=self.links_map[link0],
+                linkIndexB=self.links_map[link1],
+                enableCollision=1,
+            )
 
         # Default dynamics
         for link in self.links_map:

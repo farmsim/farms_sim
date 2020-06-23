@@ -77,6 +77,7 @@ class AmphibiousMorphologyOptions(Options):
             AmphibiousLinkOptions(**link)
             for link in kwargs.pop('links')
         ]
+        self.self_collisions = kwargs.pop('self_collisions')
         self.joints = [
             AmphibiousJointOptions(**joint)
             for joint in kwargs.pop('joints')
@@ -154,6 +155,7 @@ class AmphibiousMorphologyOptions(Options):
                 )
             ]
         )
+        options['self_collisions'] = kwargs.pop('self_collisions', [])
         joints_names = kwargs.pop('joints_names', convention.joints_names)
         joints_positions = kwargs.pop(
             'joints_positions',
@@ -186,7 +188,42 @@ class AmphibiousMorphologyOptions(Options):
                 )
             ]
         )
-        return cls(**options)
+        morphology = cls(**options)
+        if kwargs.pop('use_self_collisions', False):
+            convention = AmphibiousConvention(**morphology)
+            morphology.self_collisions = [
+                # Body-body collisions
+                [
+                    convention.bodylink2name(body0),
+                    convention.bodylink2name(body1),
+                ]
+                for body0 in range(0, options['n_joints_body']+1)
+                for body1 in range(0, options['n_joints_body']+1)
+                if abs(body1 - body0) > 1
+            ] + [
+                # Body-leg collisions
+                [
+                    convention.bodylink2name(body0),
+                    convention.leglink2name(leg_i, side_i, joint_i),
+                ]
+                for body0 in range(0, options['n_joints_body']+1)
+                for leg_i in range(options['n_legs']//2)
+                for side_i in range(2)
+                for joint_i in [options['n_dof_legs']-1]
+            ] + [
+                # Leg-leg collisions
+                [
+                    convention.leglink2name(leg0, side0, joint0),
+                    convention.leglink2name(leg1, side1, joint1),
+                ]
+                for leg0 in range(options['n_legs']//2)
+                for leg1 in range(options['n_legs']//2)
+                for side0 in range(2)
+                for side1 in range(2)
+                for joint0 in [options['n_dof_legs']-1]
+                for joint1 in [options['n_dof_legs']-1]
+            ]
+        return morphology
 
     def links_names(self):
         """Links names"""

@@ -125,13 +125,14 @@ def amphibious_options(animat_options, use_water_arena=True, **kwargs):
 def get_salamander_kwargs_options(**kwargs):
     """Salamander options"""
     kwargs_options = {
-        'spawn_loader': SpawnLoader.PYBULLET,  # SpawnLoader.FARMS
+        'spawn_loader': SpawnLoader.FARMS,  # SpawnLoader.PYBULLET,
         'default_control_type': ControlType.POSITION,
         'show_hydrodynamics': True,
         'swimming': False,
         'n_legs': 4,
         'n_dof_legs': 4,
         'n_joints_body': 11,
+        'use_self_collisions': True,
         'drag_coefficients': [
             [
                 [-1e-1, -1e1, -1e1]
@@ -230,11 +231,12 @@ def get_pleurobot_kwargs_options(**kwargs):
         'feet',
         ['link{}'.format(i+1) for i in [14, 18, 22, 26]]
     )
-    links_no_collisions = kwargs.pop('links_no_collisions', [
-        link
-        for link in links_names
-        if link not in feet+['Head', 'link_tail']
-    ])
+    # links_no_collisions = kwargs.pop('links_no_collisions', [
+    #     link
+    #     for link in links_names
+    #     if link not in feet+['Head', 'link_tail']
+    # ])
+    links_no_collisions = kwargs.pop('links_no_collisions', [])
 
     # Joint options
     gain_amplitude = kwargs.pop('gain_amplitude', None)
@@ -274,12 +276,13 @@ def get_pleurobot_kwargs_options(**kwargs):
 
     # Animat options
     kwargs_options = dict(
-        spawn_loader=SpawnLoader.PYBULLET,  # SpawnLoader.FARMS
+        spawn_loader=SpawnLoader.FARMS,  # SpawnLoader.PYBULLET,
         default_control_type=ControlType.POSITION,
         swimming=False,
         n_legs=4,
         n_dof_legs=4,
         n_joints_body=13,
+        use_self_collisions=True,
         body_stand_amplitude=0.2,
         legs_amplitudes=[np.pi/8, np.pi/16, np.pi/8, np.pi/8],
         legs_offsets_walking=[0, -np.pi/32, -np.pi/16, 0],

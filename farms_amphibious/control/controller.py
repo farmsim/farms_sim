@@ -145,8 +145,8 @@ class AmphibiousController(ModelController):
         """Ekeberg muscle"""
         # Sensors
         proprioception = self.animat_data.sensors.proprioception
-        positions = np.array(proprioception.positions(iteration))
-        velocities = np.array(proprioception.velocities(iteration))
+        positions = np.asarray(proprioception.positions(iteration))
+        velocities = np.asarray(proprioception.velocities(iteration))
 
         # Neural activity
         neural_activity = self.network.outputs(iteration)
