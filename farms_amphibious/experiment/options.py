@@ -431,6 +431,8 @@ def get_fish_options(animat, version, kinematics_file, sampling_timestep, **kwar
     )
     options.update(kwargs)
     animat_options = AmphibiousOptions.from_options(options)
+    for joint_i, joint in enumerate(animat_options.morphology.joints):
+        joint.initial_position = kinematics[0, 3+joint_i]
 
     # Arena
     arena = get_flat_arena()
