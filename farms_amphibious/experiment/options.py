@@ -415,6 +415,7 @@ def get_fish_options(animat, version, kinematics_file, sampling_timestep, **kwar
         n_dof_legs=0,
         n_joints_body=n_joints,
         drag=kwargs.pop('drag', True),
+        buoyancy=False,
         drag_coefficients=kwargs.pop('drag_coefficients', [
             np.array([-1e-5, -5e-2, -3e-2]),
             np.array([-1e-7, -1e-7, -1e-7]),
@@ -428,6 +429,11 @@ def get_fish_options(animat, version, kinematics_file, sampling_timestep, **kwar
         sensors_joints=joints_names,
         sensors_contacts=[],
         sensors_hydrodynamics=links_names,
+        spawn_position=position.tolist(),
+        spawn_orientation=orientation.tolist(),
+        spawn_velocity_lin=velocity.tolist(),
+        spawn_velocity_ang=[0, 0, 0],
+        kinematics_file=kinematics_file,
     )
     options.update(kwargs)
     animat_options = AmphibiousOptions.from_options(options)
@@ -436,18 +442,6 @@ def get_fish_options(animat, version, kinematics_file, sampling_timestep, **kwar
 
     # Arena
     arena = get_flat_arena()
-
-    # Animat options
-    animat_options.spawn.position = position.tolist()
-    animat_options.spawn.orientation = orientation.tolist()
-    animat_options.physics.buoyancy = False
-    animat_options.spawn.velocity_lin = velocity.tolist()
-    animat_options.spawn.velocity_ang = [0, 0, 0]
-    animat_options.spawn.joints_positions = kinematics[0, 3:].tolist()
-    animat_options.control.kinematics_file = kinematics_file
-    # np.shape(kinematics)[1] - 3
-    # animat_options.spawn.position = [-10, 0, 0]
-    # animat_options.spawn.orientation = [0, 0, np.pi]
 
     return (
         animat_options,

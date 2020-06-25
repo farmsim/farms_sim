@@ -53,10 +53,7 @@ class AmphibiousOptions(Options):
             options['control'] = kwargs.pop('control')
         else:
             options['control'] = AmphibiousControlOptions.from_options(kwargs)
-            options['control'].defaults_from_convention(
-                convention,
-                kwargs
-            )
+            options['control'].defaults_from_convention(convention, kwargs)
         options['show_hydrodynamics'] = kwargs.pop('show_hydrodynamics', False)
         options['transition'] = kwargs.pop('transition', False)
         if kwargs:
@@ -353,9 +350,9 @@ class AmphibiousControlOptions(Options):
     def __init__(self, **kwargs):
         super(AmphibiousControlOptions, self).__init__()
         self.kinematics_file = kwargs.pop('kinematics_file')
+        self.sensors = AmphibiousSensorsOptions(**kwargs.pop('sensors'))
+        self.network = AmphibiousNetworkOptions(**kwargs.pop('network'))
         if not self.kinematics_file:
-            self.sensors = AmphibiousSensorsOptions(**kwargs.pop('sensors'))
-            self.network = AmphibiousNetworkOptions(**kwargs.pop('network'))
             self.joints = [
                 AmphibiousJointControlOptions(**joint)
                 for joint in kwargs.pop('joints')
@@ -364,6 +361,9 @@ class AmphibiousControlOptions(Options):
                 AmphibiousMuscleSetOptions(**muscle)
                 for muscle in kwargs.pop('muscles')
             ]
+        else:
+            self.joints = kwargs.pop('joints', None)
+            self.muscles = kwargs.pop('muscles', None)
         if kwargs:
             raise Exception('Unknown kwargs: {}'.format(kwargs))
 
@@ -380,8 +380,9 @@ class AmphibiousControlOptions(Options):
             'network',
             AmphibiousNetworkOptions.from_options(kwargs).to_dict()
         )
-        options['joints'] = kwargs.pop('joints', [])
-        options['muscles'] = kwargs.pop('muscles', [])
+        if not options['kinematics_file']:
+            options['joints'] = kwargs.pop('joints', [])
+            options['muscles'] = kwargs.pop('muscles', [])
         return cls(**options)
 
     def defaults_from_convention(self, convention, kwargs):
@@ -510,39 +511,41 @@ class AmphibiousControlOptions(Options):
             if joint.max_torque is None:
                 joint.max_torque = max_torques[joint.joint]
 
-        # Muscles
-        if not self.muscles:
-            self.muscles = [
-                AmphibiousMuscleSetOptions(
-                    joint=None,
-                    osc1=None,
-                    osc2=None,
-                    alpha=None,
-                    beta=None,
-                    gamma=None,
-                    delta=None,
-                )
-                for muscle in range(n_joints)
-            ]
-        default_alpha = kwargs.pop('muscle_alpha', 1e0)
-        default_beta = kwargs.pop('muscle_beta', -1e0)
-        default_gamma = kwargs.pop('muscle_gamma', 1e0)
-        default_delta = kwargs.pop('muscle_delta', -1e-4)
-        for muscle_i, muscle in enumerate(self.muscles):
-            if muscle.joint is None:
-                muscle.joint = joints_names[muscle_i]
-            if muscle.osc1 is None:
-                muscle.osc1 = self.network.oscillators[2*muscle_i].name
-            if muscle.osc2 is None:
-                muscle.osc2 = self.network.oscillators[2*muscle_i+1].name
-            if muscle.alpha is None:
-                muscle.alpha = default_alpha
-            if muscle.beta is None:
-                muscle.beta = default_beta
-            if muscle.gamma is None:
-                muscle.gamma = default_gamma
-            if muscle.delta is None:
-                muscle.delta = default_delta
+        if not self.kinematics_file:
+
+            # Muscles
+            if not self.muscles:
+                self.muscles = [
+                    AmphibiousMuscleSetOptions(
+                        joint=None,
+                        osc1=None,
+                        osc2=None,
+                        alpha=None,
+                        beta=None,
+                        gamma=None,
+                        delta=None,
+                    )
+                    for muscle in range(n_joints)
+                ]
+            default_alpha = kwargs.pop('muscle_alpha', 1e0)
+            default_beta = kwargs.pop('muscle_beta', -1e0)
+            default_gamma = kwargs.pop('muscle_gamma', 1e0)
+            default_delta = kwargs.pop('muscle_delta', -1e-4)
+            for muscle_i, muscle in enumerate(self.muscles):
+                if muscle.joint is None:
+                    muscle.joint = joints_names[muscle_i]
+                if muscle.osc1 is None:
+                    muscle.osc1 = self.network.oscillators[2*muscle_i].name
+                if muscle.osc2 is None:
+                    muscle.osc2 = self.network.oscillators[2*muscle_i+1].name
+                if muscle.alpha is None:
+                    muscle.alpha = default_alpha
+                if muscle.beta is None:
+                    muscle.beta = default_beta
+                if muscle.gamma is None:
+                    muscle.gamma = default_gamma
+                if muscle.delta is None:
+                    muscle.delta = default_delta
 
     def joints_offsets(self):
         """Joints offsets"""
