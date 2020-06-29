@@ -4,6 +4,7 @@ import numpy as np
 from farms_data.options import Options
 from farms_bullet.model.control import ControlType
 from farms_bullet.model.options import (
+    ModelOptions,
     MorphologyOptions,
     LinkOptions,
     JointOptions,
@@ -15,15 +16,16 @@ from farms_bullet.model.options import (
 from .convention import AmphibiousConvention
 
 
-class AmphibiousOptions(Options):
+class AmphibiousOptions(ModelOptions):
     """Simulation options"""
 
     def __init__(self, **kwargs):
-        super(AmphibiousOptions, self).__init__()
-        self.morphology = AmphibiousMorphologyOptions(**kwargs.pop('morphology'))
-        self.spawn = SpawnOptions(**kwargs.pop('spawn'))
+        super(AmphibiousOptions, self).__init__(
+            spawn=SpawnOptions(**kwargs.pop('spawn')),
+            morphology=AmphibiousMorphologyOptions(**kwargs.pop('morphology')),
+            control=AmphibiousControlOptions(**kwargs.pop('control')),
+        )
         self.physics = AmphibiousPhysicsOptions(**kwargs.pop('physics'))
-        self.control = AmphibiousControlOptions(**kwargs.pop('control'))
         self.show_hydrodynamics = kwargs.pop('show_hydrodynamics')
         self.transition = kwargs.pop('transition')
         if kwargs:
