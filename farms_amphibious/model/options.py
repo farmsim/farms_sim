@@ -4,6 +4,7 @@ import numpy as np
 from farms_data.options import Options
 from farms_bullet.model.control import ControlType
 from farms_bullet.model.options import (
+    MorphologyOptions,
     LinkOptions,
     JointOptions,
     SpawnOptions,
@@ -62,24 +63,25 @@ class AmphibiousOptions(Options):
         return cls(**options)
 
 
-class AmphibiousMorphologyOptions(Options):
+class AmphibiousMorphologyOptions(MorphologyOptions):
     """Amphibious morphology options"""
 
     def __init__(self, **kwargs):
-        super(AmphibiousMorphologyOptions, self).__init__()
+        super(AmphibiousMorphologyOptions, self).__init__(
+            links=[
+                AmphibiousLinkOptions(**link)
+                for link in kwargs.pop('links')
+            ],
+            self_collisions=kwargs.pop('self_collisions'),
+            joints=[
+                JointOptions(**joint)
+                for joint in kwargs.pop('joints')
+            ],
+        )
         self.mesh_directory = kwargs.pop('mesh_directory')
         self.n_joints_body = kwargs.pop('n_joints_body')
         self.n_dof_legs = kwargs.pop('n_dof_legs')
         self.n_legs = kwargs.pop('n_legs')
-        self.links = [
-            AmphibiousLinkOptions(**link)
-            for link in kwargs.pop('links')
-        ]
-        self.self_collisions = kwargs.pop('self_collisions')
-        self.joints = [
-            JointOptions(**joint)
-            for joint in kwargs.pop('joints')
-        ]
         if kwargs:
             raise Exception('Unknown kwargs: {}'.format(kwargs))
 
@@ -223,18 +225,6 @@ class AmphibiousMorphologyOptions(Options):
             ]
         return morphology
 
-    def links_names(self):
-        """Links names"""
-        return [link.name for link in self.links]
-
-    def joints_names(self):
-        """Joints names"""
-        return [joint.name for joint in self.joints]
-
-    def n_joints(self):
-        """Number of joints"""
-        return self.n_joints_body + self.n_legs*self.n_dof_legs
-
     def n_joints_legs(self):
         """Number of legs joints"""
         return self.n_legs*self.n_dof_legs
@@ -242,10 +232,6 @@ class AmphibiousMorphologyOptions(Options):
     def n_links_body(self):
         """Number of body links"""
         return self.n_joints_body + 1
-
-    def n_links(self):
-        """Number of links"""
-        return self.n_links_body() + self.n_joints_legs()
 
 
 class AmphibiousLinkOptions(LinkOptions):
