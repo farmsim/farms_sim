@@ -4,6 +4,7 @@ from enum import IntEnum
 import numpy as np
 from farms_data.options import Options
 from farms_bullet.model.control import ControlType
+from farms_bullet.model.options import SensorsOptions
 from .convention import AmphibiousConvention
 
 
@@ -597,27 +598,20 @@ class AmphibiousJointControlOptions(Options):
             raise Exception('Unknown kwargs: {}'.format(kwargs))
 
 
-class AmphibiousSensorsOptions(Options):
+class AmphibiousSensorsOptions(SensorsOptions):
     """Amphibious sensors options"""
 
     def __init__(self, **kwargs):
-        super(AmphibiousSensorsOptions, self).__init__()
-        self.gps = kwargs.pop('gps')
-        self.joints = kwargs.pop('joints')
-        self.contacts = kwargs.pop('contacts')
-        self.hydrodynamics = kwargs.pop('hydrodynamics')
-        if kwargs:
-            raise Exception('Unknown kwargs: {}'.format(kwargs))
+        hydrodynamics = kwargs.pop('hydrodynamics')
+        super(AmphibiousSensorsOptions, self).__init__(**kwargs)
+        self.hydrodynamics = hydrodynamics
 
     @classmethod
-    def from_options(cls, kwargs):
-        """From options"""
-        options = {}
-        options['gps'] = kwargs.pop('sens_gps', None)
-        options['joints'] = kwargs.pop('sens_joints', None)
-        options['contacts'] = kwargs.pop('sens_contacts', None)
+    def options_from_kwargs(cls, kwargs):
+        """Options from kwargs"""
+        options = super(cls, cls).options_from_kwargs(kwargs)
         options['hydrodynamics'] = kwargs.pop('sens_hydrodynamics', None)
-        return cls(**options)
+        return options
 
     def defaults_from_convention(self, convention, kwargs):
         """Defaults from convention"""
