@@ -1,10 +1,10 @@
 """Animat options"""
 
-from enum import IntEnum
 import numpy as np
 from farms_data.options import Options
 from farms_bullet.model.control import ControlType
 from farms_bullet.model.options import (
+    JointOptions,
     SpawnOptions,
     ControlOptions,
     JointControlOptions,
@@ -76,7 +76,7 @@ class AmphibiousMorphologyOptions(Options):
         ]
         self.self_collisions = kwargs.pop('self_collisions')
         self.joints = [
-            AmphibiousJointOptions(**joint)
+            JointOptions(**joint)
             for joint in kwargs.pop('joints')
         ]
         if kwargs:
@@ -169,7 +169,7 @@ class AmphibiousMorphologyOptions(Options):
         options['joints'] = kwargs.pop(
             'joints',
             [
-                AmphibiousJointOptions(
+                JointOptions(
                     name=name,
                     initial_position=position,
                     initial_velocity=velocity,
@@ -263,23 +263,6 @@ class AmphibiousLinkOptions(Options):
         self.height = kwargs.pop('height')
         self.swimming = kwargs.pop('swimming')
         self.drag_coefficients = kwargs.pop('drag_coefficients')
-        self.pybullet_dynamics = kwargs.pop('pybullet_dynamics', {})
-        if kwargs:
-            raise Exception('Unknown kwargs: {}'.format(kwargs))
-
-
-class AmphibiousJointOptions(Options):
-    """Amphibious joint options
-
-    The Pybullet dynamics represent the input arguments called with
-    pybullet.changeDynamics(...). The appropriate link is called for it.
-    """
-
-    def __init__(self, **kwargs):
-        super(AmphibiousJointOptions, self).__init__()
-        self.name = kwargs.pop('name')
-        self.initial_position = kwargs.pop('initial_position')
-        self.initial_velocity = kwargs.pop('initial_velocity')
         self.pybullet_dynamics = kwargs.pop('pybullet_dynamics', {})
         if kwargs:
             raise Exception('Unknown kwargs: {}'.format(kwargs))
