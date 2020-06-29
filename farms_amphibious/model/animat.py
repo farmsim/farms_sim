@@ -4,21 +4,21 @@ import re
 import numpy as np
 import pybullet
 
+import farms_pylog as pylog
 from farms_bullet.model.animat import Animat
+from farms_bullet.model.options import SpawnLoader
+from farms_bullet.sensors.sensors import LinksStatesSensor
 from farms_bullet.sensors.sensors import (
     Sensors,
     JointsStatesSensor,
     ContactsSensors
 )
-import farms_pylog as pylog
-from farms_bullet.sensors.sensors import LinksStatesSensor
 from ..utils.sdf import load_sdf, load_sdf_pybullet
 from ..swimming.swimming import (
     drag_forces,
     swimming_motion,
     swimming_debug
 )
-from .options import SpawnLoader
 
 
 def links_ordering(text):

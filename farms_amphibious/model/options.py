@@ -5,17 +5,12 @@ import numpy as np
 from farms_data.options import Options
 from farms_bullet.model.control import ControlType
 from farms_bullet.model.options import (
+    SpawnOptions,
     ControlOptions,
     JointControlOptions,
     SensorsOptions,
 )
 from .convention import AmphibiousConvention
-
-
-class SpawnLoader(IntEnum):
-    """Spawn loader"""
-    FARMS = 0
-    PYBULLET = 1
 
 
 class AmphibiousOptions(Options):
@@ -24,7 +19,7 @@ class AmphibiousOptions(Options):
     def __init__(self, **kwargs):
         super(AmphibiousOptions, self).__init__()
         self.morphology = AmphibiousMorphologyOptions(**kwargs.pop('morphology'))
-        self.spawn = AmphibiousSpawnOptions(**kwargs.pop('spawn'))
+        self.spawn = SpawnOptions(**kwargs.pop('spawn'))
         self.physics = AmphibiousPhysicsOptions(**kwargs.pop('physics'))
         self.control = AmphibiousControlOptions(**kwargs.pop('control'))
         self.show_hydrodynamics = kwargs.pop('show_hydrodynamics')
@@ -48,7 +43,7 @@ class AmphibiousOptions(Options):
         convention = AmphibiousConvention(**options['morphology'])
         options['spawn'] = kwargs.pop(
             'spawn',
-            AmphibiousSpawnOptions.from_options(kwargs)
+            SpawnOptions.from_options(kwargs)
         )
         options['physics'] = kwargs.pop(
             'physics',
@@ -288,36 +283,6 @@ class AmphibiousJointOptions(Options):
         self.pybullet_dynamics = kwargs.pop('pybullet_dynamics', {})
         if kwargs:
             raise Exception('Unknown kwargs: {}'.format(kwargs))
-
-
-class AmphibiousSpawnOptions(Options):
-    """Amphibious spawn options"""
-
-    def __init__(self, **kwargs):
-        super(AmphibiousSpawnOptions, self).__init__()
-        self.loader = kwargs.pop('loader')
-        self.position = kwargs.pop('position')
-        self.orientation = kwargs.pop('orientation')
-        self.velocity_lin = kwargs.pop('velocity_lin')
-        self.velocity_ang = kwargs.pop('velocity_ang')
-        if kwargs:
-            raise Exception('Unknown kwargs: {}'.format(kwargs))
-
-    @classmethod
-    def from_options(cls, kwargs):
-        """From options"""
-        options = {}
-        # Loader
-        options['loader'] = kwargs.pop('spawn_loader', SpawnLoader.PYBULLET)
-        # Position in [m]
-        options['position'] = kwargs.pop('spawn_position', [0, 0, 0.1])
-        # Orientation in [rad] (Euler angles)
-        options['orientation'] = kwargs.pop('spawn_orientation', [0, 0, 0])
-        # Linear velocity in [m/s]
-        options['velocity_lin'] = kwargs.pop('spawn_velocity_lin', [0, 0, 0])
-        # Angular velocity in [rad/s] (Euler angles)
-        options['velocity_ang'] = kwargs.pop('spawn_velocity_ang', [0, 0, 0])
-        return cls(**options)
 
 
 class AmphibiousPhysicsOptions(Options):

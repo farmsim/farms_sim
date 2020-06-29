@@ -5,8 +5,9 @@ import farms_pylog as pylog
 from farms_models.utils import get_sdf_path
 from farms_bullet.simulation.options import SimulationOptions
 from farms_bullet.model.model import SimulationModels, DescriptionFormatModel
+from farms_bullet.model.options import SpawnLoader
 from farms_bullet.model.control import ControlType
-from ..model.options import AmphibiousOptions, SpawnLoader
+from ..model.options import AmphibiousOptions
 
 
 def get_animat_options(swimming=False, **kwargs):
