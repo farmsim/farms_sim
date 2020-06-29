@@ -4,6 +4,7 @@ import numpy as np
 from farms_data.options import Options
 from farms_bullet.model.control import ControlType
 from farms_bullet.model.options import (
+    LinkOptions,
     JointOptions,
     SpawnOptions,
     ControlOptions,
@@ -247,7 +248,7 @@ class AmphibiousMorphologyOptions(Options):
         return self.n_links_body() + self.n_joints_legs()
 
 
-class AmphibiousLinkOptions(Options):
+class AmphibiousLinkOptions(LinkOptions):
     """Amphibious link options
 
     The Pybullet dynamics represent the input arguments called with
@@ -255,15 +256,16 @@ class AmphibiousLinkOptions(Options):
     """
 
     def __init__(self, **kwargs):
-        super(AmphibiousLinkOptions, self).__init__()
-        self.name = kwargs.pop('name')
-        self.collisions = kwargs.pop('collisions')
+        super(AmphibiousLinkOptions, self).__init__(
+            name=kwargs.pop('name'),
+            collisions=kwargs.pop('collisions'),
+            mass_multiplier=kwargs.pop('mass_multiplier'),
+            pybullet_dynamics=kwargs.pop('pybullet_dynamics', {}),
+        )
         self.density = kwargs.pop('density')
-        self.mass_multiplier = kwargs.pop('mass_multiplier')
         self.height = kwargs.pop('height')
         self.swimming = kwargs.pop('swimming')
         self.drag_coefficients = kwargs.pop('drag_coefficients')
-        self.pybullet_dynamics = kwargs.pop('pybullet_dynamics', {})
         if kwargs:
             raise Exception('Unknown kwargs: {}'.format(kwargs))
 
