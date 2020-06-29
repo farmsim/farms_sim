@@ -4,7 +4,7 @@ from enum import IntEnum
 import numpy as np
 from farms_data.options import Options
 from farms_bullet.model.control import ControlType
-from farms_bullet.model.options import SensorsOptions
+from farms_bullet.model.options import JointControlOptions, SensorsOptions
 from .convention import AmphibiousConvention
 
 
@@ -578,13 +578,15 @@ class AmphibiousControlOptions(Options):
         return [joint.max_torque for joint in self.joints]
 
 
-class AmphibiousJointControlOptions(Options):
+class AmphibiousJointControlOptions(JointControlOptions):
     """Amphibious joint options"""
 
     def __init__(self, **kwargs):
-        super(AmphibiousJointControlOptions, self).__init__()
-        self.joint = kwargs.pop('joint')
-        self.control_type = kwargs.pop('control_type')
+        super(AmphibiousJointControlOptions, self).__init__(
+            joint=kwargs.pop('joint'),
+            control_type=kwargs.pop('control_type'),
+            max_torque=kwargs.pop('max_torque'),
+        )
         self.offset_gain = kwargs.pop('offset_gain')
         self.offset_bias = kwargs.pop('offset_bias')
         self.offset_low = kwargs.pop('offset_low')
@@ -593,7 +595,6 @@ class AmphibiousJointControlOptions(Options):
         self.rate = kwargs.pop('rate')
         self.gain_amplitude = kwargs.pop('gain_amplitude')
         self.bias = kwargs.pop('bias')
-        self.max_torque = kwargs.pop('max_torque')
         if kwargs:
             raise Exception('Unknown kwargs: {}'.format(kwargs))
 
@@ -602,9 +603,14 @@ class AmphibiousSensorsOptions(SensorsOptions):
     """Amphibious sensors options"""
 
     def __init__(self, **kwargs):
-        hydrodynamics = kwargs.pop('hydrodynamics')
-        super(AmphibiousSensorsOptions, self).__init__(**kwargs)
-        self.hydrodynamics = hydrodynamics
+        super(AmphibiousSensorsOptions, self).__init__(
+            gps=kwargs.pop('gps'),
+            joints=kwargs.pop('joints'),
+            contacts=kwargs.pop('contacts'),
+        )
+        self.hydrodynamics = kwargs.pop('hydrodynamics')
+        if kwargs:
+            raise Exception('Unknown kwargs: {}'.format(kwargs))
 
     @classmethod
     def options_from_kwargs(cls, kwargs):
