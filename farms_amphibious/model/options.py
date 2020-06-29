@@ -1,27 +1,31 @@
 """Animat options"""
 
-from enum import IntEnum
 import numpy as np
 from farms_data.options import Options
 from farms_bullet.model.control import ControlType
+from farms_bullet.model.options import (
+    ModelOptions,
+    MorphologyOptions,
+    LinkOptions,
+    JointOptions,
+    SpawnOptions,
+    ControlOptions,
+    JointControlOptions,
+    SensorsOptions,
+)
 from .convention import AmphibiousConvention
 
 
-class SpawnLoader(IntEnum):
-    """Spawn loader"""
-    FARMS = 0
-    PYBULLET = 1
-
-
-class AmphibiousOptions(Options):
+class AmphibiousOptions(ModelOptions):
     """Simulation options"""
 
     def __init__(self, **kwargs):
-        super(AmphibiousOptions, self).__init__()
-        self.morphology = AmphibiousMorphologyOptions(**kwargs.pop('morphology'))
-        self.spawn = AmphibiousSpawnOptions(**kwargs.pop('spawn'))
+        super(AmphibiousOptions, self).__init__(
+            spawn=SpawnOptions(**kwargs.pop('spawn')),
+            morphology=AmphibiousMorphologyOptions(**kwargs.pop('morphology')),
+            control=AmphibiousControlOptions(**kwargs.pop('control')),
+        )
         self.physics = AmphibiousPhysicsOptions(**kwargs.pop('physics'))
-        self.control = AmphibiousControlOptions(**kwargs.pop('control'))
         self.show_hydrodynamics = kwargs.pop('show_hydrodynamics')
         self.transition = kwargs.pop('transition')
         if kwargs:
@@ -43,7 +47,7 @@ class AmphibiousOptions(Options):
         convention = AmphibiousConvention(**options['morphology'])
         options['spawn'] = kwargs.pop(
             'spawn',
-            AmphibiousSpawnOptions.from_options(kwargs)
+            SpawnOptions.from_options(kwargs)
         )
         options['physics'] = kwargs.pop(
             'physics',
@@ -61,24 +65,25 @@ class AmphibiousOptions(Options):
         return cls(**options)
 
 
-class AmphibiousMorphologyOptions(Options):
+class AmphibiousMorphologyOptions(MorphologyOptions):
     """Amphibious morphology options"""
 
     def __init__(self, **kwargs):
-        super(AmphibiousMorphologyOptions, self).__init__()
+        super(AmphibiousMorphologyOptions, self).__init__(
+            links=[
+                AmphibiousLinkOptions(**link)
+                for link in kwargs.pop('links')
+            ],
+            self_collisions=kwargs.pop('self_collisions'),
+            joints=[
+                JointOptions(**joint)
+                for joint in kwargs.pop('joints')
+            ],
+        )
         self.mesh_directory = kwargs.pop('mesh_directory')
         self.n_joints_body = kwargs.pop('n_joints_body')
         self.n_dof_legs = kwargs.pop('n_dof_legs')
         self.n_legs = kwargs.pop('n_legs')
-        self.links = [
-            AmphibiousLinkOptions(**link)
-            for link in kwargs.pop('links')
-        ]
-        self.self_collisions = kwargs.pop('self_collisions')
-        self.joints = [
-            AmphibiousJointOptions(**joint)
-            for joint in kwargs.pop('joints')
-        ]
         if kwargs:
             raise Exception('Unknown kwargs: {}'.format(kwargs))
 
@@ -169,7 +174,7 @@ class AmphibiousMorphologyOptions(Options):
         options['joints'] = kwargs.pop(
             'joints',
             [
-                AmphibiousJointOptions(
+                JointOptions(
                     name=name,
                     initial_position=position,
                     initial_velocity=velocity,
@@ -222,18 +227,6 @@ class AmphibiousMorphologyOptions(Options):
             ]
         return morphology
 
-    def links_names(self):
-        """Links names"""
-        return [link.name for link in self.links]
-
-    def joints_names(self):
-        """Joints names"""
-        return [joint.name for joint in self.joints]
-
-    def n_joints(self):
-        """Number of joints"""
-        return self.n_joints_body + self.n_legs*self.n_dof_legs
-
     def n_joints_legs(self):
         """Number of legs joints"""
         return self.n_legs*self.n_dof_legs
@@ -242,12 +235,8 @@ class AmphibiousMorphologyOptions(Options):
         """Number of body links"""
         return self.n_joints_body + 1
 
-    def n_links(self):
-        """Number of links"""
-        return self.n_links_body() + self.n_joints_legs()
 
-
-class AmphibiousLinkOptions(Options):
+class AmphibiousLinkOptions(LinkOptions):
     """Amphibious link options
 
     The Pybullet dynamics represent the input arguments called with
@@ -255,64 +244,18 @@ class AmphibiousLinkOptions(Options):
     """
 
     def __init__(self, **kwargs):
-        super(AmphibiousLinkOptions, self).__init__()
-        self.name = kwargs.pop('name')
-        self.collisions = kwargs.pop('collisions')
+        super(AmphibiousLinkOptions, self).__init__(
+            name=kwargs.pop('name'),
+            collisions=kwargs.pop('collisions'),
+            mass_multiplier=kwargs.pop('mass_multiplier'),
+            pybullet_dynamics=kwargs.pop('pybullet_dynamics', {}),
+        )
         self.density = kwargs.pop('density')
-        self.mass_multiplier = kwargs.pop('mass_multiplier')
         self.height = kwargs.pop('height')
         self.swimming = kwargs.pop('swimming')
         self.drag_coefficients = kwargs.pop('drag_coefficients')
-        self.pybullet_dynamics = kwargs.pop('pybullet_dynamics', {})
         if kwargs:
             raise Exception('Unknown kwargs: {}'.format(kwargs))
-
-
-class AmphibiousJointOptions(Options):
-    """Amphibious joint options
-
-    The Pybullet dynamics represent the input arguments called with
-    pybullet.changeDynamics(...). The appropriate link is called for it.
-    """
-
-    def __init__(self, **kwargs):
-        super(AmphibiousJointOptions, self).__init__()
-        self.name = kwargs.pop('name')
-        self.initial_position = kwargs.pop('initial_position')
-        self.initial_velocity = kwargs.pop('initial_velocity')
-        self.pybullet_dynamics = kwargs.pop('pybullet_dynamics', {})
-        if kwargs:
-            raise Exception('Unknown kwargs: {}'.format(kwargs))
-
-
-class AmphibiousSpawnOptions(Options):
-    """Amphibious spawn options"""
-
-    def __init__(self, **kwargs):
-        super(AmphibiousSpawnOptions, self).__init__()
-        self.loader = kwargs.pop('loader')
-        self.position = kwargs.pop('position')
-        self.orientation = kwargs.pop('orientation')
-        self.velocity_lin = kwargs.pop('velocity_lin')
-        self.velocity_ang = kwargs.pop('velocity_ang')
-        if kwargs:
-            raise Exception('Unknown kwargs: {}'.format(kwargs))
-
-    @classmethod
-    def from_options(cls, kwargs):
-        """From options"""
-        options = {}
-        # Loader
-        options['loader'] = kwargs.pop('spawn_loader', SpawnLoader.PYBULLET)
-        # Position in [m]
-        options['position'] = kwargs.pop('spawn_position', [0, 0, 0.1])
-        # Orientation in [rad] (Euler angles)
-        options['orientation'] = kwargs.pop('spawn_orientation', [0, 0, 0])
-        # Linear velocity in [m/s]
-        options['velocity_lin'] = kwargs.pop('spawn_velocity_lin', [0, 0, 0])
-        # Angular velocity in [rad/s] (Euler angles)
-        options['velocity_ang'] = kwargs.pop('spawn_velocity_ang', [0, 0, 0])
-        return cls(**options)
 
 
 class AmphibiousPhysicsOptions(Options):
@@ -344,44 +287,45 @@ class AmphibiousPhysicsOptions(Options):
         return cls(**options)
 
 
-class AmphibiousControlOptions(Options):
+class AmphibiousControlOptions(ControlOptions):
     """Amphibious control options"""
 
     def __init__(self, **kwargs):
-        super(AmphibiousControlOptions, self).__init__()
-        self.kinematics_file = kwargs.pop('kinematics_file')
-        self.sensors = AmphibiousSensorsOptions(**kwargs.pop('sensors'))
-        self.network = AmphibiousNetworkOptions(**kwargs.pop('network'))
-        if not self.kinematics_file:
-            self.joints = [
+        super(AmphibiousControlOptions, self).__init__(
+            sensors=(AmphibiousSensorsOptions(**kwargs.pop('sensors'))),
+            joints=[
                 AmphibiousJointControlOptions(**joint)
                 for joint in kwargs.pop('joints')
-            ]
+            ],
+        )
+        self.kinematics_file = kwargs.pop('kinematics_file')
+        self.network = AmphibiousNetworkOptions(**kwargs.pop('network'))
+        if not self.kinematics_file:
             self.muscles = [
                 AmphibiousMuscleSetOptions(**muscle)
                 for muscle in kwargs.pop('muscles')
             ]
         else:
-            self.joints = kwargs.pop('joints', None)
             self.muscles = kwargs.pop('muscles', None)
         if kwargs:
             raise Exception('Unknown kwargs: {}'.format(kwargs))
 
     @classmethod
-    def from_options(cls, kwargs):
-        """From options"""
-        options = {}
+    def options_from_kwargs(cls, kwargs):
+        """Options from kwargs"""
+        options = super(cls, cls).options_from_kwargs({
+            'sensors': kwargs.pop(
+                'sensors',
+                AmphibiousSensorsOptions.options_from_kwargs(kwargs),
+            ),
+            'joints': kwargs.pop('joints', {}),
+        })
         options['kinematics_file'] = kwargs.pop('kinematics_file', '')
-        options['sensors'] = kwargs.pop(
-            'sensors',
-            AmphibiousSensorsOptions.from_options(kwargs).to_dict()
-        )
         options['network'] = kwargs.pop(
             'network',
             AmphibiousNetworkOptions.from_options(kwargs).to_dict()
         )
         if not options['kinematics_file']:
-            options['joints'] = kwargs.pop('joints', [])
             options['muscles'] = kwargs.pop('muscles', [])
         return cls(**options)
 
@@ -572,18 +516,16 @@ class AmphibiousControlOptions(Options):
         """Joints offset bias"""
         return [joint.offset_bias for joint in self.joints]
 
-    def joints_max_torque(self):
-        """Joints max torques"""
-        return [joint.max_torque for joint in self.joints]
 
-
-class AmphibiousJointControlOptions(Options):
+class AmphibiousJointControlOptions(JointControlOptions):
     """Amphibious joint options"""
 
     def __init__(self, **kwargs):
-        super(AmphibiousJointControlOptions, self).__init__()
-        self.joint = kwargs.pop('joint')
-        self.control_type = kwargs.pop('control_type')
+        super(AmphibiousJointControlOptions, self).__init__(
+            joint=kwargs.pop('joint'),
+            control_type=kwargs.pop('control_type'),
+            max_torque=kwargs.pop('max_torque'),
+        )
         self.offset_gain = kwargs.pop('offset_gain')
         self.offset_bias = kwargs.pop('offset_bias')
         self.offset_low = kwargs.pop('offset_low')
@@ -592,32 +534,29 @@ class AmphibiousJointControlOptions(Options):
         self.rate = kwargs.pop('rate')
         self.gain_amplitude = kwargs.pop('gain_amplitude')
         self.bias = kwargs.pop('bias')
-        self.max_torque = kwargs.pop('max_torque')
         if kwargs:
             raise Exception('Unknown kwargs: {}'.format(kwargs))
 
 
-class AmphibiousSensorsOptions(Options):
+class AmphibiousSensorsOptions(SensorsOptions):
     """Amphibious sensors options"""
 
     def __init__(self, **kwargs):
-        super(AmphibiousSensorsOptions, self).__init__()
-        self.gps = kwargs.pop('gps')
-        self.joints = kwargs.pop('joints')
-        self.contacts = kwargs.pop('contacts')
+        super(AmphibiousSensorsOptions, self).__init__(
+            gps=kwargs.pop('gps'),
+            joints=kwargs.pop('joints'),
+            contacts=kwargs.pop('contacts'),
+        )
         self.hydrodynamics = kwargs.pop('hydrodynamics')
         if kwargs:
             raise Exception('Unknown kwargs: {}'.format(kwargs))
 
     @classmethod
-    def from_options(cls, kwargs):
-        """From options"""
-        options = {}
-        options['gps'] = kwargs.pop('sens_gps', None)
-        options['joints'] = kwargs.pop('sens_joints', None)
-        options['contacts'] = kwargs.pop('sens_contacts', None)
+    def options_from_kwargs(cls, kwargs):
+        """Options from kwargs"""
+        options = super(cls, cls).options_from_kwargs(kwargs)
         options['hydrodynamics'] = kwargs.pop('sens_hydrodynamics', None)
-        return cls(**options)
+        return options
 
     def defaults_from_convention(self, convention, kwargs):
         """Defaults from convention"""
