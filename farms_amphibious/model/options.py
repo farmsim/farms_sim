@@ -4,7 +4,11 @@ from enum import IntEnum
 import numpy as np
 from farms_data.options import Options
 from farms_bullet.model.control import ControlType
-from farms_bullet.model.options import JointControlOptions, SensorsOptions
+from farms_bullet.model.options import (
+    ControlOptions,
+    JointControlOptions,
+    SensorsOptions,
+)
 from .convention import AmphibiousConvention
 
 
@@ -345,44 +349,45 @@ class AmphibiousPhysicsOptions(Options):
         return cls(**options)
 
 
-class AmphibiousControlOptions(Options):
+class AmphibiousControlOptions(ControlOptions):
     """Amphibious control options"""
 
     def __init__(self, **kwargs):
-        super(AmphibiousControlOptions, self).__init__()
-        self.kinematics_file = kwargs.pop('kinematics_file')
-        self.sensors = AmphibiousSensorsOptions(**kwargs.pop('sensors'))
-        self.network = AmphibiousNetworkOptions(**kwargs.pop('network'))
-        if not self.kinematics_file:
-            self.joints = [
+        super(AmphibiousControlOptions, self).__init__(
+            sensors=(AmphibiousSensorsOptions(**kwargs.pop('sensors'))),
+            joints=[
                 AmphibiousJointControlOptions(**joint)
                 for joint in kwargs.pop('joints')
-            ]
+            ],
+        )
+        self.kinematics_file = kwargs.pop('kinematics_file')
+        self.network = AmphibiousNetworkOptions(**kwargs.pop('network'))
+        if not self.kinematics_file:
             self.muscles = [
                 AmphibiousMuscleSetOptions(**muscle)
                 for muscle in kwargs.pop('muscles')
             ]
         else:
-            self.joints = kwargs.pop('joints', None)
             self.muscles = kwargs.pop('muscles', None)
         if kwargs:
             raise Exception('Unknown kwargs: {}'.format(kwargs))
 
     @classmethod
-    def from_options(cls, kwargs):
-        """From options"""
-        options = {}
+    def options_from_kwargs(cls, kwargs):
+        """Options from kwargs"""
+        options = super(cls, cls).options_from_kwargs({
+            'sensors': kwargs.pop(
+                'sensors',
+                AmphibiousSensorsOptions.options_from_kwargs(kwargs),
+            ),
+            'joints': kwargs.pop('joints', {}),
+        })
         options['kinematics_file'] = kwargs.pop('kinematics_file', '')
-        options['sensors'] = kwargs.pop(
-            'sensors',
-            AmphibiousSensorsOptions.from_options(kwargs).to_dict()
-        )
         options['network'] = kwargs.pop(
             'network',
             AmphibiousNetworkOptions.from_options(kwargs).to_dict()
         )
         if not options['kinematics_file']:
-            options['joints'] = kwargs.pop('joints', [])
             options['muscles'] = kwargs.pop('muscles', [])
         return cls(**options)
 
@@ -572,10 +577,6 @@ class AmphibiousControlOptions(Options):
     def joints_offset_bias(self):
         """Joints offset bias"""
         return [joint.offset_bias for joint in self.joints]
-
-    def joints_max_torque(self):
-        """Joints max torques"""
-        return [joint.max_torque for joint in self.joints]
 
 
 class AmphibiousJointControlOptions(JointControlOptions):
