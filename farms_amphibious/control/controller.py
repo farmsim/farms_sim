@@ -87,7 +87,7 @@ class AmphibiousController(ModelController):
         """Control step"""
         self.network.step(iteration, time, timestep)
 
-    def positions(self, iteration):
+    def positions(self, iteration, timestep):
         """Postions"""
         outputs = self.network.outputs(iteration)
         positions = (
@@ -101,7 +101,7 @@ class AmphibiousController(ModelController):
         )
         return dict(zip(self.joints[ControlType.POSITION], positions))
 
-    def pid_controller(self, iteration):
+    def pid_controller(self, iteration, timestep):
         """Torques"""
         proprioception = self.animat_data.sensors.proprioception
         positions = np.array(proprioception.positions(iteration))
@@ -141,7 +141,7 @@ class AmphibiousController(ModelController):
         proprioception.array[iteration, :, 11] = damping_torques
         return dict(zip(self.joints[ControlType.TORQUE], torques))
 
-    def ekeberg_muscle(self, iteration):
+    def ekeberg_muscle(self, iteration, timestep):
         """Ekeberg muscle"""
         # Sensors
         proprioception = self.animat_data.sensors.proprioception
@@ -186,6 +186,6 @@ class AmphibiousController(ModelController):
         proprioception.array[iteration, :, 11] = damping_torques
         return dict(zip(self.joints[ControlType.TORQUE], torques))
 
-    def torques(self, iteration):
+    def torques(self, iteration, timestep):
         """Torques"""
-        return self.ekeberg_muscle(iteration)
+        return self.ekeberg_muscle(iteration, timestep)

@@ -107,10 +107,10 @@ class AmphibiousKinematics(ModelController):
     def update(self, options):
         """Update drives"""
 
-    def positions(self, iteration):
+    def positions(self, iteration, timestep):
         """Postions"""
         return self.get_position_output()
 
-    def velocities(self, iteration):
+    def velocities(self, iteration, timestep):
         """Postions"""
         return self.get_velocity_output()
