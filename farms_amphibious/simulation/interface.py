@@ -19,6 +19,12 @@ class AmphibiousUserParameters(UserParameters):
             -0.2, 0.2
         )
 
+    def init(self):
+        """Initialise"""
+        super().init()
+        self['drive_speed'].init()
+        self['drive_turn'].init()
+
     def drive_speed(self):
         """Drive speed"""
         return self['drive_speed']
