@@ -169,21 +169,24 @@ class AmphibiousController(ModelController):
         active_torques = (
             self.gain_amplitude*self.alphas[ControlType.TORQUE]*neural_diff
         )
-        stiffness_torques = self.betas[ControlType.TORQUE]*(
-            neural_sum + self.gammas[ControlType.TORQUE]
+        active_stiffness = self.betas[ControlType.TORQUE]*(
+            neural_sum
         )*(positions - joints_offsets)
-        damping_torques = self.deltas[ControlType.TORQUE]*velocities
+        passive_stiffness = self.betas[ControlType.TORQUE]*(
+            self.gammas[ControlType.TORQUE]
+        )*(positions - joints_offsets)
+        damping = self.deltas[ControlType.TORQUE]*velocities
 
         # Final torques
         torques = np.clip(
-            active_torques + stiffness_torques + damping_torques,
+            active_torques + active_stiffness + passive_stiffness + damping,
             -self.max_torques[ControlType.TORQUE],
             self.max_torques[ControlType.TORQUE],
         )
         proprioception.array[iteration, :, 8] = torques
-        proprioception.array[iteration, :, 9] = active_torques
-        proprioception.array[iteration, :, 10] = stiffness_torques
-        proprioception.array[iteration, :, 11] = damping_torques
+        proprioception.array[iteration, :, 9] = active_torques + active_stiffness
+        proprioception.array[iteration, :, 10] = passive_stiffness
+        proprioception.array[iteration, :, 11] = damping
         return dict(zip(self.joints[ControlType.TORQUE], torques))
 
     def torques(self, iteration, timestep):
