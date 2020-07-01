@@ -1,14 +1,12 @@
 """Amphibious simulation"""
 
-import os
 import time
 import numpy as np
 
-from farms_bullet.simulation.simulation import Simulation
+from farms_bullet.simulation.simulation import AnimatSimulation
 from farms_bullet.simulation.simulator import real_time_handing
 from farms_bullet.model.model import SimulationModels
 from farms_bullet.interface.interface import Interfaces
-import farms_pylog as pylog
 
 from .interface import AmphibiousUserParameters
 
@@ -76,7 +74,7 @@ def gps_based_drive(iteration, animat, interface):
 
 
 
-class AmphibiousSimulation(Simulation):
+class AmphibiousSimulation(AnimatSimulation):
     """Amphibious simulation"""
 
     def __init__(self, simulation_options, animat, arena):
@@ -84,8 +82,6 @@ class AmphibiousSimulation(Simulation):
             models=SimulationModels([animat, arena]),
             options=simulation_options
         )
-
-        # Animat properties
 
         # Interface
         self.interface = Interfaces(
@@ -128,10 +124,6 @@ class AmphibiousSimulation(Simulation):
         # Simulation state
         self.simulation_state = None
         self.save()
-
-    def animat(self):
-        """Salamander animat"""
-        return self.models[0]
 
     def pre_step(self, iteration):
         """New step"""
@@ -232,49 +224,3 @@ class AmphibiousSimulation(Simulation):
                 self.interface.user_params.drive_turn().value
             )
             self.interface.user_params.drive_turn().changed = False
-
-    def postprocess(
-            self,
-            iteration,
-            log_path='',
-            plot=False,
-            video='',
-            **kwargs
-    ):
-        """Plot after simulation"""
-        times = np.arange(
-            0,
-            self.options.timestep*self.options.n_iterations,
-            self.options.timestep
-        )[:iteration]
-
-        # Log
-        if log_path:
-            pylog.info('Saving data to {}'.format(log_path))
-            self.animat().data.to_file(
-                os.path.join(
-                    log_path,
-                    'simulation.hdf5'
-                ),
-                iteration,
-            )
-            self.options.save(os.path.join(
-                log_path,
-                'simulation_options.yaml'
-            ))
-            self.animat().options.save(os.path.join(
-                log_path,
-                'animat_options.yaml'
-            ))
-
-        # Plot
-        if plot:
-            self.animat().data.plot(times)
-
-        # Record video
-        if video:
-            self.interface.video.save(
-                video,
-                iteration=iteration,
-                writer=kwargs.pop('writer', 'ffmpeg')
-            )
