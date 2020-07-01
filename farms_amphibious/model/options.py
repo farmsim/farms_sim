@@ -180,6 +180,7 @@ class AmphibiousMorphologyOptions(MorphologyOptions):
                     initial_velocity=velocity,
                     pybullet_dynamics={
                         'jointDamping': damping,
+                        'maxJointVelocity': 1e2,
                     },
                 )
                 for name, position, velocity, damping in zip(
@@ -427,9 +428,10 @@ class AmphibiousControlOptions(ControlOptions):
             'offsets_bias',
             {joint_name: 0 for joint_name in joints_names},
         )
+        default_max_torque = kwargs.pop('default_max_torque', 1e2)
         max_torques = kwargs.pop(
             'max_torques',
-            {joint_name: 1e2 for joint_name in joints_names},
+            {joint_name: default_max_torque for joint_name in joints_names},
         )
         for joint_i, joint in enumerate(self.joints):
             if joint.joint is None:

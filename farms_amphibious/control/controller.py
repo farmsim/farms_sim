@@ -87,7 +87,7 @@ class AmphibiousController(ModelController):
         """Control step"""
         self.network.step(iteration, time, timestep)
 
-    def positions(self, iteration, timestep):
+    def positions(self, iteration, time, timestep):
         """Postions"""
         outputs = self.network.outputs(iteration)
         positions = (
@@ -101,7 +101,7 @@ class AmphibiousController(ModelController):
         )
         return dict(zip(self.joints[ControlType.POSITION], positions))
 
-    def pid_controller(self, iteration, timestep):
+    def pid_controller(self, iteration, time, timestep):
         """Torques"""
         proprioception = self.animat_data.sensors.proprioception
         positions = np.array(proprioception.positions(iteration))
@@ -141,12 +141,24 @@ class AmphibiousController(ModelController):
         proprioception.array[iteration, :, 11] = damping_torques
         return dict(zip(self.joints[ControlType.TORQUE], torques))
 
-    def ekeberg_muscle(self, iteration, timestep):
+    def ekeberg_muscle(self, iteration, time, timestep, use_prediction=False):
         """Ekeberg muscle"""
         # Sensors
         proprioception = self.animat_data.sensors.proprioception
         positions = np.asarray(proprioception.positions(iteration))
         velocities = np.asarray(proprioception.velocities(iteration))
+        if use_prediction:
+            n_iters = 1
+            velocities_prev = (
+                np.asarray(proprioception.velocities(iteration-n_iters))
+                if iteration > n_iters
+                else velocities
+            )
+            acceleration = (velocities - velocities_prev)/(n_iters*timestep)
+            positions = positions + 0.5*timestep*velocities  #  + (
+            #     0.125*acceleration*timestep**2
+            # )
+            velocities = velocities + 0.5*acceleration*timestep
 
         # Neural activity
         neural_activity = self.network.outputs(iteration)
@@ -189,6 +201,6 @@ class AmphibiousController(ModelController):
         proprioception.array[iteration, :, 11] = damping
         return dict(zip(self.joints[ControlType.TORQUE], torques))
 
-    def torques(self, iteration, timestep):
+    def torques(self, iteration, time, timestep):
         """Torques"""
-        return self.ekeberg_muscle(iteration, timestep)
+        return self.ekeberg_muscle(iteration, time, timestep)
