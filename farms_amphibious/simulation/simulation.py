@@ -88,11 +88,13 @@ class AmphibiousSimulation(AnimatSimulation):
 
     def step(self, iteration):
         """Simulation step"""
+        animat = self.animat()
+
         # Interface
         if not self.options.headless:
 
             # # Drive changes depending on simulation time
-            # if self.animat().options.transition:
+            # if animat.options.transition:
             #     time_based_drive(
             #         iteration,
             #         self.options.n_iterations,
@@ -106,16 +108,16 @@ class AmphibiousSimulation(AnimatSimulation):
             self.animat_interface(iteration)
 
         # Animat sensors
-        self.animat().sensors.update(iteration)
+        animat.sensors.update(iteration)
 
         # Physics step
         if iteration < self.options.n_iterations-1:
             # Swimming
-            swimming_step(iteration, self.animat())
+            swimming_step(iteration, animat)
 
             # Update animat controller
-            if self.animat().controller is not None:
-                self.animat().controller.step(
+            if animat.controller is not None:
+                animat.controller.step(
                     iteration=iteration,
                     time=iteration*self.options.timestep,
                     timestep=self.options.timestep,
@@ -123,7 +125,6 @@ class AmphibiousSimulation(AnimatSimulation):
 
     def animat_interface(self, iteration):
         """Animat interface"""
-        super().animat_interface(iteration)
         animat = self.animat()
 
         # Drives

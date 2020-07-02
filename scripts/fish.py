@@ -4,7 +4,7 @@
 import time
 import matplotlib.pyplot as plt
 import farms_pylog as pylog
-from farms_amphibious.experiment.simulation import profile
+from farms_bullet.utils.profile import profile
 from farms_amphibious.experiment.fish import fish_simulation
 
 

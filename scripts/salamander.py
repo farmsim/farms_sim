@@ -9,11 +9,12 @@ import matplotlib.pyplot as plt
 import farms_pylog as pylog
 from farms_models.utils import get_sdf_path, get_simulation_data_path
 from farms_data.amphibious.animat_data import AnimatData
+from farms_bullet.utils.profile import profile
 from farms_bullet.simulation.options import SimulationOptions
 from farms_amphibious.model.options import AmphibiousOptions
 from farms_amphibious.utils.utils import prompt
 from farms_amphibious.utils.network import plot_networks_maps
-from farms_amphibious.experiment.simulation import simulation, profile
+from farms_amphibious.experiment.simulation import simulation
 from farms_amphibious.experiment.options import (
     amphibious_options,
     get_salamander_options,
