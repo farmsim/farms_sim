@@ -5,7 +5,6 @@ import farms_pylog as pylog
 from farms_data.amphibious.data import AmphibiousData
 from ..simulation.simulation import AmphibiousSimulation
 from ..control.controller import AmphibiousController
-from ..control.kinematics import AmphibiousKinematics
 from ..model.animat import Amphibious
 from .options import get_animat_options, get_simulation_options
 
@@ -31,21 +30,11 @@ def simulation_setup(animat_sdf, arena, **kwargs):
 
     # Animat controller
     if kwargs.pop('use_controller', False):
-        if animat_options.control.kinematics_file:
-            animat_controller = AmphibiousKinematics(
-                joints=animat_options.morphology.joints_names(),
-                animat_options=animat_options,
-                animat_data=animat_data,
-                timestep=simulation_options.timestep,
-                n_iterations=simulation_options.n_iterations,
-                sampling=kwargs.pop('sampling')
-            )
-        else:
-            animat_controller = AmphibiousController(
-                joints=animat_options.morphology.joints_names(),
-                animat_options=animat_options,
-                animat_data=animat_data,
-            )
+        animat_controller = AmphibiousController(
+            joints=animat_options.morphology.joints_names(),
+            animat_options=animat_options,
+            animat_data=animat_data,
+        )
     else:
         animat_controller = None
 
