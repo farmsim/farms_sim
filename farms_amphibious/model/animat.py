@@ -5,7 +5,7 @@ import numpy as np
 import pybullet
 
 from farms_bullet.model.animat import Animat
-from ..swimming.swimming import (
+from farms_bullet.swimming.swimming import (
     drag_forces,
     swimming_motion,
     swimming_debug
