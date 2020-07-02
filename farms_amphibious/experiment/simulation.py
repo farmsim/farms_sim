@@ -22,8 +22,6 @@ def simulation_setup(animat_sdf, arena, **kwargs):
         get_simulation_options()
     )
 
-    # Animat sensors
-
     # Animat data
     animat_data = AmphibiousData.from_options(
         animat_options.control,
