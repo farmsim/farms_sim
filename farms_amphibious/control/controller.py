@@ -66,6 +66,14 @@ class AmphibiousController(ModelController):
             ]
             for control_type in control_types
         ]
+        self.joints_indices = [
+            np.array([
+                joint_i
+                for joint_i, joint in enumerate(joints)
+                if joint in self.joints[control_type]
+            ])
+            for control_type in control_types
+        ]
         gain_amplitudes = {
             joint.joint: joint.gain_amplitude
             for joint in animat_options.control.joints
@@ -102,7 +110,9 @@ class AmphibiousController(ModelController):
                     outputs[self.muscle_groups[ControlType.POSITION][0]]
                     - outputs[self.muscle_groups[ControlType.POSITION][1]]
                 )
-                + self.network.offsets(iteration)
+                + np.asarray(self.network.offsets(iteration))[
+                    self.joints_indices[ControlType.POSITION]
+                ]
             ) + self.joints_bias[ControlType.POSITION]
         )
         return dict(zip(self.joints[ControlType.POSITION], positions))
@@ -118,11 +128,15 @@ class AmphibiousController(ModelController):
                 outputs[self.muscle_groups[0]]
                 - outputs[self.muscle_groups[1]]
             )
-            + self.gain_offset*self.network.offsets(iteration)
+            + self.gain_offset*np.asarray(self.network.offsets(iteration))[
+                self.joints_indices[ControlType.POSITION]
+            ]
             + self.joints_bias[ControlType.POSITION]
         )
         # cmd_velocities = self.get_velocity_output(iteration)
-        positions_rest = np.array(self.network.offsets()[iteration])
+        positions_rest = np.array(self.network.offsets(iteration))[
+            self.joints_indices[ControlType.POSITION]
+        ]
         # max_torque = 1  # Nm
         spring = 2e0  # Nm/rad
         damping = 5e-3  # max_torque/10  # 1e-1 # Nm*s/rad
@@ -172,7 +186,9 @@ class AmphibiousController(ModelController):
         # Joints offsets
         joints_offsets = (
             self.gain_amplitude[ControlType.TORQUE]
-            *self.network.offsets(iteration)
+            *np.asarray(self.network.offsets(iteration))[
+                self.joints_indices[ControlType.TORQUE]
+            ]
             + self.joints_bias[ControlType.TORQUE]
         )
 
