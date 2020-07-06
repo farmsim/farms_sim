@@ -70,18 +70,24 @@ class AmphibiousController(ModelController):
             joint.joint: joint.gain_amplitude
             for joint in animat_options.control.joints
         }
-        self.gain_amplitude = np.array([
-            gain_amplitudes[joint]
-            for joint in joints
-        ])
+        self.gain_amplitude = [
+            np.array([
+                gain_amplitudes[joint]
+                for joint in self.joints[control_type]
+            ])
+            for control_type in control_types
+        ]
         offsets_bias = {
             joint.joint: joint.bias
             for joint in animat_options.control.joints
         }
-        self.joints_bias = np.array([
-            offsets_bias[joint]
-            for joint in joints
-        ])
+        self.joints_bias = [
+            np.array([
+                offsets_bias[joint]
+                for joint in self.joints[control_type]
+            ])
+            for control_type in control_types
+        ]
 
     def step(self, iteration, time, timestep):
         """Control step"""
@@ -91,13 +97,13 @@ class AmphibiousController(ModelController):
         """Postions"""
         outputs = self.network.outputs(iteration)
         positions = (
-            self.gain_amplitude*(
+            self.gain_amplitude[ControlType.POSITION]*(
                 0.5*(
                     outputs[self.muscle_groups[ControlType.POSITION][0]]
                     - outputs[self.muscle_groups[ControlType.POSITION][1]]
                 )
                 + self.network.offsets(iteration)
-            ) + self.joints_bias
+            ) + self.joints_bias[ControlType.POSITION]
         )
         return dict(zip(self.joints[ControlType.POSITION], positions))
 
@@ -108,12 +114,12 @@ class AmphibiousController(ModelController):
         velocities = np.array(proprioception.velocities(iteration))
         outputs = self.network.outputs(iteration)
         cmd_positions = (
-            self.gain_amplitude*0.5*(
+            self.gain_amplitude[ControlType.POSITION]*0.5*(
                 outputs[self.muscle_groups[0]]
                 - outputs[self.muscle_groups[1]]
             )
             + self.gain_offset*self.network.offsets(iteration)
-            + self.joints_bias
+            + self.joints_bias[ControlType.POSITION]
         )
         # cmd_velocities = self.get_velocity_output(iteration)
         positions_rest = np.array(self.network.offsets()[iteration])
@@ -165,8 +171,9 @@ class AmphibiousController(ModelController):
 
         # Joints offsets
         joints_offsets = (
-            self.gain_amplitude*self.network.offsets(iteration)
-            + self.joints_bias
+            self.gain_amplitude[ControlType.TORQUE]
+            *self.network.offsets(iteration)
+            + self.joints_bias[ControlType.TORQUE]
         )
 
         # Torques
@@ -179,7 +186,9 @@ class AmphibiousController(ModelController):
             + neural_activity[self.muscle_groups[ControlType.TORQUE][1]]
         )
         active_torques = (
-            self.gain_amplitude*self.alphas[ControlType.TORQUE]*neural_diff
+            self.gain_amplitude[ControlType.TORQUE]
+            *self.alphas[ControlType.TORQUE]
+            *neural_diff
         )
         active_stiffness = self.betas[ControlType.TORQUE]*(
             neural_sum
