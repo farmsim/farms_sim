@@ -120,8 +120,12 @@ class AmphibiousController(ModelController):
     def pid_controller(self, iteration, time, timestep):
         """Torques"""
         proprioception = self.animat_data.sensors.proprioception
-        positions = np.array(proprioception.positions(iteration))
-        velocities = np.array(proprioception.velocities(iteration))
+        positions = np.array(proprioception.positions(iteration))[
+            self.joints_indices[ControlType.POSITION]
+        ]
+        velocities = np.array(proprioception.velocities(iteration))[
+            self.joints_indices[ControlType.POSITION]
+        ]
         outputs = self.network.outputs(iteration)
         cmd_positions = (
             self.gain_amplitude[ControlType.POSITION]*0.5*(
@@ -165,12 +169,18 @@ class AmphibiousController(ModelController):
         """Ekeberg muscle"""
         # Sensors
         proprioception = self.animat_data.sensors.proprioception
-        positions = np.asarray(proprioception.positions(iteration))
-        velocities = np.asarray(proprioception.velocities(iteration))
+        positions = np.asarray(proprioception.positions(iteration))[
+            self.joints_indices[ControlType.TORQUE]
+        ]
+        velocities = np.asarray(proprioception.velocities(iteration))[
+            self.joints_indices[ControlType.TORQUE]
+        ]
         if use_prediction:
             n_iters = 1
             velocities_prev = (
-                np.asarray(proprioception.velocities(iteration-n_iters))
+                np.asarray(proprioception.velocities(iteration-n_iters))[
+                    self.joints_indices[ControlType.TORQUE]
+                ]
                 if iteration > n_iters
                 else velocities
             )
