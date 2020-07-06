@@ -1203,8 +1203,8 @@ class AmphibiousNetworkOptions(Options):
                                             body_walk_phases[body_i] + np.pi*(
                                                 1 + lateral
                                                 + leg_i + side_leg_osc
-                                                + intralimb_phases[joint_i]
                                             )
+                                            + intralimb_phases[joint_i]
                                         ),
                                     })
         return connectivity
