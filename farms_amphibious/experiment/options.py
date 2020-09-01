@@ -325,7 +325,7 @@ def get_pleurobot_options(**kwargs):
     """Pleurobot default options"""
 
     # Animat
-    sdf = get_sdf_path(name='pleurobot', version='0')
+    sdf = get_sdf_path(name='pleurobot', version='1')
     pylog.info('Model SDF: {}'.format(sdf))
 
     kwargs_options = get_pleurobot_kwargs_options(**kwargs)
