@@ -65,7 +65,7 @@ def main():
         iteration=sim.iteration,
         log_path=log_path if prompt('Save data', False) else '',
         plot=prompt('Show plots', False),
-        video=video_name if sim.options.record else ''
+        video=video_name if sim.options.record else '',
     )
 
     # Plot network
