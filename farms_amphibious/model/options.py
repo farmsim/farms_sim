@@ -367,7 +367,7 @@ class AmphibiousControlOptions(ControlOptions):
         )
         leg_joint_turn_gain = kwargs.pop(
             'leg_joint_turn_gain',
-            [1, 0, 0, 0]
+            [1, 0, 0, 0, 0]
         )
         for leg_i in range(convention.n_legs//2):
             for side_i in range(2):
@@ -761,7 +761,7 @@ class AmphibiousNetworkOptions(Options):
                     kwargs.pop('weight_osc_legs_opposite', 1e1),
                     kwargs.pop('weight_osc_legs_following', 1e1),
                     kwargs.pop('weight_osc_legs2body', 3e1),
-                    kwargs.pop('intralimb_phases', [0, pi2, 0, pi2]),
+                    kwargs.pop('intralimb_phases', [0, pi2, 0, pi2, 0]),
                     kwargs.pop('leg_phase_follow', np.pi),
                     kwargs.pop(
                         'body_walk_phases',
@@ -877,7 +877,7 @@ class AmphibiousNetworkOptions(Options):
                     phases_init_body[joint_i]
                     + (0 if side_osc else np.pi)
                 )
-        phases_init_legs = [3*np.pi/2, 0, 3*np.pi/2, 0]
+        phases_init_legs = [3*np.pi/2, 0, 3*np.pi/2, 0, 0]
         for joint_i in range(convention.n_dof_legs):
             for leg_i in range(convention.n_legs//2):
                 for side_i in range(2):
