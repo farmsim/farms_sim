@@ -521,39 +521,233 @@ def get_orobot_kwargs_options(**kwargs):
     links_names = kwargs.pop(
         'links_names',
         [
+            # # Body
+            # 'base_link',
+            # 'OROBOT',
+            # 'PECTORAL_GIRDLE2',
+            # 'S_SPINE3_C',
+            # 'S_SPINE4_C',
+            # 'S_SPINE5_C',
+            # 'HIND_GIRDLE_C',
+            # 'SPINE6_BACK_TT_C',
+            # 'S_SPINE8_C',
+            # # Limb (FL)
+            # 'LEFT_FRONT_YAW_C',
+            # 'LEFT_FRONT_PITCH_C',
+            # # 'LEFT_FRONT_ELBOW_C',
+            # 'LEFT_ULNA_T_C',
+            # # Limb (FR)
+            # 'RIGHT_FRONT_YAW_C',
+            # 'RIGHT_FRONT_PITCH_C',
+            # # 'RIGHT_FRONT_ELBOW_C',
+            # 'RIGHT_ULNA_T_C',
+            # # Limb (HL)
+            # 'LEFT_HIP_PITCH_C',
+            # 'LEFT_HIND_ROLL_T_C',
+            # # 'LEFT_KNEE_T_C',
+            # 'LEFT_CRUS_T_C',
+            # # Limb (HR)
+            # 'RIGHT_HIP_PITCH_C',
+            # 'RIGHT_HIND_ROLL_T_C',
+            # # 'RIGHT_KNEE_T_C',
+            # 'RIGHT_CRUS_T_C',
+
             # Body
             'base_link',
             'OROBOT',
-            'PECTORAL_GIRDLE2',
+            # 'HEAD_TT',
+            # 'HEAD_TT_C',
+            # 'LOWER_JAW_TT',
+            # 'LOWER_JAW_TT_C',
+            # 'S_SPINE1T',
+            # 'S_SPINE1_C',
+            # 'PECTORAL_GIRDLE1',
+            # 'RX28_T',
+            # 'SPINE1_TT',
+            # 'SPINE1_TT_C',
+            # 'S_SPINE2T',
+            'S_SPINE2_C',
+            # 'PECTORAL_GIRDLE2',
+
+            # 'MOTOR_TT1',
+            # 'MOTOR_TT1_C',
+            # 'SPINE2_TT',
+            # 'SPINE2_TT_C',
+            # 'S_SPINE3T',
             'S_SPINE3_C',
+            # 'MOTOR_TT2',
+            # 'MOTOR_TT2_C',
+            # 'SPINE3_TT',
+            # 'SPINE3_TT_C',
+            # 'S_SPINE4T',
             'S_SPINE4_C',
+            # 'S_SPINE4_C_C',
+            # 'S_SPINE4_C_C_C',
+            # 'SPINE4_TT',
+            # 'SPINE4_TT_C',
+            # 'S_SPINE5T',
             'S_SPINE5_C',
-            'HIND_GIRDLE_C',
-            'SPINE6_BACK_TT_C',
+            # 'S_SPINE5_C_C',
+            # 'S_SPINE5_C_C_C',
+            # 'SPINE5_TT',
+            # 'SPINE5_TT_C',
+            # 'S_SPINE6T',
+            'S_SPINE6_C',
+            # 'HIND_GIRDLE',
+            # 'HIND_GIRDLE_C',
+            # 'HIND_GIRDLE_C_C',
+            # 'SPINE6_FRONT_TT',
+            # 'SPINE6_FRONT_TT_C',
+
+            # 'PS_SPINE1T',
+            # 'PS_SPINE1_C',
+            # 'SPINE6_BACK_TT',
+            # 'SPINE6_BACK_TT_C',
+            # 'S_SPINE7T',
+            'S_SPINE7_C',
+            # 'S_SPINE7_C_C',
+            # 'S_SPINE7_C_C_C',
+            # 'SPINE7_TT',
+            # 'SPINE7_TT_C',
+            # 'S_SPINE8T',
             'S_SPINE8_C',
-            # Limb (FL)
-            'LEFT_FRONT_YAW_C',
-            'LEFT_FRONT_PITCH_C',
+            # 'S_SPINE8_C_C',
+            # 'S_SPINE8_C_C_C',
+            # 'SPINE10_TT',
+            # 'SPINE10_TT_C',
+
+            'LEFT_SHOULDER_YAW',
+            # 'LEFT_SHOULDER_YAW_C',
+            # 'LEFT_FRONT_YAWT',
+            # 'LEFT_FRONT_YAW_C',
+            'LEFT_SHOULDER_PITCH',
+            # 'LEFT_SHOULDER_PITCH_C',
+            # 'LEFT_FRONT_PITCHT',
+            # 'LEFT_FRONT_PITCH_C',
+            'LEFT_HUMERUS_TT',
+            # 'LEFT_HUMERUS_TT_C',
+            # 'LEFT_ROLL_T',
+            # 'LEFT_ROLL_T_C',
+            # 'LEFT_FRONT_ROLLT',
+            # 'LEFT_FRONT_ROLL_C',
+            'LEFT_ELBOW_T',
+            # 'LEFT_ELBOW_T_C',
+            # 'LEFT_FRONT_ELBOWT',
             'LEFT_FRONT_ELBOW_C',
-            'LEFT_ULNA_T_C',
-            # Limb (FR)
-            'RIGHT_FRONT_YAW_C',
-            'RIGHT_FRONT_PITCH_C',
+            # 'LEFT_FRONT_MX28',
+            # 'LEFT_FRONT_WRISTT',
+            # 'LEFT_FRONT_WRIST_C',
+            # 'LEFT_ULNA_T',
+            # 'LEFT_ULNA_T_C',
+
+            'RIGHT_SHOULDER_YAW',
+            # 'RIGHT_SHOULDER_YAW_C',
+            # 'RIGHT_FRONT_YAWT',
+            # 'RIGHT_FRONT_YAW_C',
+            'RIGHT_SHOULDER_PITCH',
+            # 'RIGHT_SHOULDER_PITCH_C',
+            # 'RIGHT_FRONT_PITCHT',
+            # 'RIGHT_FRONT_PITCH_C',
+            'RIGHT_HUMERUS_TT',
+            # 'RIGHT_HUMERUS_TT_C',
+            # 'RIGHT_ROLL_T',
+            # 'RIGHT_ROLL_T_C',
+            # 'RIGHT_FRONT_ROLLT',
+            # 'RIGHT_FRONT_ROLL_C',
+            'RIGHT_ELBOW_T',
+            # 'RIGHT_ELBOW_T_C',
+            # 'RIGHT_FRONT_ELBOWT',
             'RIGHT_FRONT_ELBOW_C',
-            'RIGHT_ULNA_T_C',
-            # Limb (HL)
-            'LEFT_HIP_PITCH_C',
-            'LEFT_HIND_ROLL_T_C',
-            'LEFT_KNEE_T_C',
-            'LEFT_CRUS_T_C',
-            # Limb (HR)
-            'RIGHT_HIP_PITCH_C',
-            'RIGHT_HIND_ROLL_T_C',
-            'RIGHT_KNEE_T_C',
-            'RIGHT_CRUS_T_C',
+            # 'RIGHT_FRONT_MX28',
+            # 'RIGHT_FRONT_WRISTT',
+            # 'RIGHT_FRONT_WRIST_C',
+            # 'RIGHT_ULNA_T',
+            # 'RIGHT_ULNA_T_C',
+
+            'LEFT_HIP_TT',
+            # 'LEFT_HIP_TT_C',
+            # 'LEFT_HIP_TT_C_C',
+            # 'LEFT_HIND_YAWT',
+            # 'LEFT_HIND_YAW_C',
+            'LEFT_HIP_PITCH',
+            # 'LEFT_HIP_PITCH_C',
+            # 'LEFT_HIND_PITCHT',
+            # 'LEFT_HIND_PITCH_C',
+            'LEFT_FEMUR_TT',
+            # 'LEFT_FEMUR_TT_C',
+            # 'LEFT_HIND_ROLL_T',
+            # 'LEFT_HIND_ROLL_T_C',
+            # 'LEFT_HIND_ROLLT',
+            # 'LEFT_HIND_ROLL_C',
+            'LEFT_KNEE_T',
+            # 'LEFT_KNEE_T_C',
+            # 'LEFT_HIND_KNEET',
+            'LEFT_HIND_KNEE_C',
+            # 'LEFT_HIND_MX28',
+            # 'LEFT_HIND_WRISTT',
+            # 'LEFT_HIND_WRIST_C',
+            # 'LEFT_CRUS_T',
+            # 'LEFT_CRUS_T_C',
+
+            'RIGHT_HIP_TT',
+            # 'RIGHT_HIP_TT_C',
+            # 'RIGHT_HIP_TT_C_C',
+            # 'RIGHT_HIND_YAWT',
+            # 'RIGHT_HIND_YAW_C',
+            'RIGHT_HIP_PITCH',
+            # 'RIGHT_HIP_PITCH_C',
+            # 'RIGHT_HIND_PITCHT',
+            # 'RIGHT_HIND_PITCH_C',
+            'RIGHT_FEMUR_TT',
+            # 'RIGHT_FEMUR_TT_C',
+            # 'RIGHT_HIND_ROLL_T',
+            # 'RIGHT_HIND_ROLL_T_C',
+            # 'RIGHT_HIND_ROLLT',
+            # 'RIGHT_HIND_ROLL_C',
+            'RIGHT_KNEE_T',
+            # 'RIGHT_KNEE_T_C',
+            # 'RIGHT_HIND_KNEET',
+            'RIGHT_HIND_KNEE_C',
+            # 'RIGHT_HIND_MX28',
+            # 'RIGHT_HIND_WRISTT',
+            # 'RIGHT_HIND_WRIST_C',
+            # 'RIGHT_CRUS_T',
+            # 'RIGHT_CRUS_T_C',
         ]
     )
     joints_names = kwargs.pop('joints_names', [
+        # # Body
+        # 'S_SPINE1_C_to_S_SPINE1T_S_SPINE1',
+        # 'S_SPINE2_C_to_S_SPINE2T_S_SPINE2',
+        # 'S_SPINE3_C_to_S_SPINE3T_S_SPINE3',
+        # 'S_SPINE4_C_to_S_SPINE4T_S_SPINE4',
+        # 'S_SPINE5_C_to_S_SPINE5T_S_SPINE5',
+        # 'S_SPINE6_C_to_S_SPINE6T_S_SPINE6',
+        # 'S_SPINE7_C_to_S_SPINE7T_S_SPINE7',
+        # 'S_SPINE8_C_to_S_SPINE8T_S_SPINE8',
+        # # Limb (FL)
+        # 'LEFT_FRONT_YAW_C_to_LEFT_FRONT_YAWT_LEFT_FRONT_YAW',
+        # 'LEFT_FRONT_PITCH_C_to_LEFT_FRONT_PITCHT_LEFT_FRONT_PITCH',
+        # 'LEFT_FRONT_WRIST_C_to_LEFT_FRONT_WRISTT_LEFT_FRONT_WRIST',
+        # # 'LEFT_FRONT_ELBOW_C_to_LEFT_FRONT_ELBOWT_LEFT_FRONT_ELBOW',
+        # # Limb (FR)
+        # 'RIGHT_FRONT_YAW_C_to_RIGHT_FRONT_YAWT_RIGHT_FRONT_YAW',
+        # 'RIGHT_FRONT_PITCH_C_to_RIGHT_FRONT_PITCHT_RIGHT_FRONT_PITCH',
+        # 'RIGHT_FRONT_WRIST_C_to_RIGHT_FRONT_WRISTT_RIGHT_FRONT_WRIST',
+        # # 'RIGHT_FRONT_ELBOW_C_to_RIGHT_FRONT_ELBOWT_RIGHT_FRONT_ELBOW',
+        # # Limb (HL)
+        # 'LEFT_HIND_YAW_C_to_LEFT_HIND_YAWT_LEFT_HIND_YAW',
+        # 'LEFT_HIND_PITCH_C_to_LEFT_HIND_PITCHT_LEFT_HIND_PITCH',
+        # # 'LEFT_HIND_WRIST_C_to_LEFT_HIND_WRISTT_LEFT_HIND_WRIST',
+        # 'LEFT_HIND_KNEE_C_to_LEFT_HIND_KNEET_LEFT_HIND_KNEE',
+        # # Limb (HR)
+        # 'RIGHT_HIND_YAW_C_to_RIGHT_HIND_YAWT_RIGHT_HIND_YAW',
+        # 'RIGHT_HIND_PITCH_C_to_RIGHT_HIND_PITCHT_RIGHT_HIND_PITCH',
+        # # 'RIGHT_HIND_WRIST_C_to_RIGHT_HIND_WRISTT_RIGHT_HIND_WRIST',
+        # # 'RIGHT_HIND_MX28_to_RIGHT_HIND_KNEE_C',
+        # 'RIGHT_HIND_KNEE_C_to_RIGHT_HIND_KNEET_RIGHT_HIND_KNEE',
+
+
         # Body
         'S_SPINE1_C_to_S_SPINE1T_S_SPINE1',
         'S_SPINE2_C_to_S_SPINE2T_S_SPINE2',
@@ -563,34 +757,43 @@ def get_orobot_kwargs_options(**kwargs):
         'S_SPINE6_C_to_S_SPINE6T_S_SPINE6',
         'S_SPINE7_C_to_S_SPINE7T_S_SPINE7',
         'S_SPINE8_C_to_S_SPINE8T_S_SPINE8',
+        # 'PS_SPINE1_C_to_PS_SPINE1T_PS_SPINE1',  # Passive
         # Limb (FL)
         'LEFT_FRONT_YAW_C_to_LEFT_FRONT_YAWT_LEFT_FRONT_YAW',
         'LEFT_FRONT_PITCH_C_to_LEFT_FRONT_PITCHT_LEFT_FRONT_PITCH',
+        'LEFT_FRONT_ROLL_C_to_LEFT_FRONT_ROLLT_LEFT_FRONT_ROLL',
         'LEFT_FRONT_WRIST_C_to_LEFT_FRONT_WRISTT_LEFT_FRONT_WRIST',
         'LEFT_FRONT_ELBOW_C_to_LEFT_FRONT_ELBOWT_LEFT_FRONT_ELBOW',
         # Limb (FR)
         'RIGHT_FRONT_YAW_C_to_RIGHT_FRONT_YAWT_RIGHT_FRONT_YAW',
         'RIGHT_FRONT_PITCH_C_to_RIGHT_FRONT_PITCHT_RIGHT_FRONT_PITCH',
+        'RIGHT_FRONT_ROLL_C_to_RIGHT_FRONT_ROLLT_RIGHT_FRONT_ROLL',
         'RIGHT_FRONT_WRIST_C_to_RIGHT_FRONT_WRISTT_RIGHT_FRONT_WRIST',
         'RIGHT_FRONT_ELBOW_C_to_RIGHT_FRONT_ELBOWT_RIGHT_FRONT_ELBOW',
         # Limb (HL)
         'LEFT_HIND_YAW_C_to_LEFT_HIND_YAWT_LEFT_HIND_YAW',
         'LEFT_HIND_PITCH_C_to_LEFT_HIND_PITCHT_LEFT_HIND_PITCH',
-        'LEFT_HIND_WRIST_C_to_LEFT_HIND_WRISTT_LEFT_HIND_WRIST',
+        'LEFT_HIND_ROLL_C_to_LEFT_HIND_ROLLT_LEFT_HIND_ROLL',
         'LEFT_HIND_KNEE_C_to_LEFT_HIND_KNEET_LEFT_HIND_KNEE',
+        'LEFT_HIND_WRIST_C_to_LEFT_HIND_WRISTT_LEFT_HIND_WRIST',
         # Limb (HR)
         'RIGHT_HIND_YAW_C_to_RIGHT_HIND_YAWT_RIGHT_HIND_YAW',
         'RIGHT_HIND_PITCH_C_to_RIGHT_HIND_PITCHT_RIGHT_HIND_PITCH',
-        'RIGHT_HIND_WRIST_C_to_RIGHT_HIND_WRISTT_RIGHT_HIND_WRIST',
+        'RIGHT_HIND_ROLL_C_to_RIGHT_HIND_ROLLT_RIGHT_HIND_ROLL',
         'RIGHT_HIND_KNEE_C_to_RIGHT_HIND_KNEET_RIGHT_HIND_KNEE',
+        'RIGHT_HIND_WRIST_C_to_RIGHT_HIND_WRISTT_RIGHT_HIND_WRIST',
     ])
     feet = kwargs.pop(
         'feet',
         [
-            'LEFT_ULNA_T_C',
-            'RIGHT_ULNA_T_C',
-            'LEFT_CRUS_T_C',
-            'RIGHT_CRUS_T_C',
+            # 'LEFT_ULNA_T_C',
+            # 'RIGHT_ULNA_T_C',
+            # 'LEFT_CRUS_T_C',
+            # 'RIGHT_CRUS_T_C',
+            'LEFT_FRONT_ELBOW_C',
+            'RIGHT_FRONT_ELBOW_C',
+            'LEFT_HIND_KNEE_C',
+            'RIGHT_HIND_KNEE_C',
         ]
     )
     # links_no_collisions = kwargs.pop('links_no_collisions', [
@@ -606,46 +809,48 @@ def get_orobot_kwargs_options(**kwargs):
 
     # Amplitudes gains
     if gain_amplitude is None:
-        gain_amplitude = [0]*(8+4*4)  # np.ones(8+4*4)
+        gain_amplitude = [1]*(8+4*5)  # np.ones(8+4*5)
         # gain_amplitude[8] = 0
         for leg_i in range(2):
             for side_i in range(2):
                 mirror = (1 if side_i else -1)
-                mirror2 = (-1 if leg_i else 1)
-                gain_amplitude[8+2*leg_i*4+side_i*4+0] = 0  # 0.5*mirror
-                gain_amplitude[8+2*leg_i*4+side_i*4+1] = 0  # 3*mirror  # mirror
-                gain_amplitude[8+2*leg_i*4+side_i*4+2] = 0  # mirror2  # -mirror
-                gain_amplitude[8+2*leg_i*4+side_i*4+3] = 0  # mirror
+                # mirror2 = (-1 if leg_i else 1)
+                gain_amplitude[8+2*leg_i*5+side_i*5+0] = -mirror
+                gain_amplitude[8+2*leg_i*5+side_i*5+1] = mirror
+                gain_amplitude[8+2*leg_i*5+side_i*5+2] = 1
+                gain_amplitude[8+2*leg_i*5+side_i*5+3] = 1*mirror
+                gain_amplitude[8+2*leg_i*5+side_i*5+4] = 0*mirror
         gain_amplitude = dict(zip(joints_names, gain_amplitude))
 
     # Joints joints_offsets
     if joints_offsets is None:
-        joints_offsets = [0]*(8+4*4)
+        joints_offsets = [0]*(8+4*5)
         for leg_i in range(2):
             for side_i in range(2):
                 mirror = (1 if side_i else -1)
-                mirror2 = (-1 if leg_i else 1)
-                joints_offsets[8+2*leg_i*4+side_i*4+0] = 0  # -0.1*np.pi*mirror
-                joints_offsets[8+2*leg_i*4+side_i*4+1] = 0  # 0*np.pi*mirror
-                joints_offsets[8+2*leg_i*4+side_i*4+2] = 0  # 0.5*np.pi*mirror2
-                joints_offsets[8+2*leg_i*4+side_i*4+3] = 0
+                # mirror2 = (-1 if leg_i else 1)
+                joints_offsets[8+2*leg_i*5+side_i*5+0] = -0*mirror
+                joints_offsets[8+2*leg_i*5+side_i*5+1] = 0*mirror
+                joints_offsets[8+2*leg_i*5+side_i*5+2] = 0
+                joints_offsets[8+2*leg_i*5+side_i*5+3] = -0*mirror
+                joints_offsets[8+2*leg_i*5+side_i*5+4] = 0*mirror
         joints_offsets = dict(zip(joints_names, joints_offsets))
 
     # Animat options
     kwargs_options = dict(
         spawn_loader=SpawnLoader.PYBULLET,  # SpawnLoader.FARMS,
-        spawn_position=[0, 0, 0.5],
-        spawn_orientation=[0, 0, 0],
+        spawn_position=[0, 0, 0],
+        spawn_orientation=[0.5*np.pi, 0, 0],
         default_control_type=ControlType.POSITION,
         swimming=False,
         n_legs=4,
-        n_dof_legs=4,
+        n_dof_legs=5,
         n_joints_body=8,
         use_self_collisions=True,
         body_stand_amplitude=0.2,
-        legs_amplitudes=[np.pi/8, np.pi/16, np.pi/8, np.pi/8],
-        legs_offsets_walking=[0, -np.pi/32, -np.pi/16, 0],
-        legs_offsets_swimming=[2*np.pi/5, 0, 0, np.pi/2],
+        legs_amplitudes=[np.pi/8, np.pi/16, np.pi/8, np.pi/8, np.pi/8],
+        legs_offsets_walking=[0, -np.pi/32, -np.pi/16, 0, 0],
+        legs_offsets_swimming=[2*np.pi/5, 0, 0, np.pi/2, 0],
         gain_amplitude=gain_amplitude,
         offsets_bias=joints_offsets,
         weight_osc_body=1e0,
@@ -659,8 +864,8 @@ def get_orobot_kwargs_options(**kwargs):
         weight_sens_contact_diagonal=0,
         weight_sens_hydro_freq=0,
         weight_sens_hydro_amp=0,
-        modular_phases=np.array([3*np.pi/2, 0, 3*np.pi/2, 0]) - np.pi/4,
-        modular_amplitudes=np.full(4, 0.9),
+        modular_phases=np.array([3*np.pi/2, 0, 3*np.pi/2, 0, 0]) - np.pi/4,
+        modular_amplitudes=np.full(5, 0.9),
         links_names=links_names,
         links_swimming=[],
         links_no_collisions=links_no_collisions,
