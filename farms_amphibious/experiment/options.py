@@ -429,9 +429,9 @@ def get_krock_kwargs_options(**kwargs):
             for side_i in range(2):
                 mirror = (1 if side_i else -1)
                 mirror2 = (-1 if leg_i else 1)
-                gain_amplitude[5+2*leg_i*4+side_i*4+0] = 0.5*mirror
-                gain_amplitude[5+2*leg_i*4+side_i*4+1] = 3*mirror  # mirror
-                gain_amplitude[5+2*leg_i*4+side_i*4+2] = mirror2  # -mirror
+                gain_amplitude[5+2*leg_i*4+side_i*4+0] = mirror
+                gain_amplitude[5+2*leg_i*4+side_i*4+1] = mirror  # mirror
+                gain_amplitude[5+2*leg_i*4+side_i*4+2] = 1  # -mirror
                 gain_amplitude[5+2*leg_i*4+side_i*4+3] = 0  # mirror
         gain_amplitude = dict(zip(joints_names, gain_amplitude))
 
@@ -446,7 +446,7 @@ def get_krock_kwargs_options(**kwargs):
                 joints_offsets[5+2*leg_i*4+side_i*4+1] = 0*np.pi*mirror  # (
                 #     mirror*np.pi/16 if leg_i else mirror*np.pi/8
                 # )
-                joints_offsets[5+2*leg_i*4+side_i*4+2] = 0.5*np.pi*mirror2  # (
+                joints_offsets[5+2*leg_i*4+side_i*4+2] = 0.5*np.pi*mirror2
                 #     0 if leg_i else -mirror*np.pi/3
                 # )
                 joints_offsets[5+2*leg_i*4+side_i*4+3] = 0  # (
@@ -466,11 +466,12 @@ def get_krock_kwargs_options(**kwargs):
         n_joints_body=5,
         use_self_collisions=True,
         body_stand_amplitude=0.2,
-        legs_amplitudes=[np.pi/8, np.pi/16, np.pi/8, np.pi/8],
+        legs_amplitudes=[np.pi/16, np.pi/8, np.pi/8, np.pi/8],
         legs_offsets_walking=[0, -np.pi/32, -np.pi/16, 0],
         legs_offsets_swimming=[2*np.pi/5, 0, 0, np.pi/2],
         gain_amplitude=gain_amplitude,
         offsets_bias=joints_offsets,
+        intralimb_phases=[0, 0.5*np.pi, 0.5*np.pi, 0.5*np.pi, 0],
         weight_osc_body=1e0,
         weight_osc_legs_internal=3e1,
         weight_osc_legs_opposite=1e0,
@@ -483,7 +484,7 @@ def get_krock_kwargs_options(**kwargs):
         weight_sens_hydro_freq=0,
         weight_sens_hydro_amp=0,
         modular_phases=np.array([3*np.pi/2, 0, 3*np.pi/2, 0]) - np.pi/4,
-        modular_amplitudes=np.full(4, 0.9),
+        modular_amplitudes=np.full(4, 0.5),
         links_names=links_names,
         links_swimming=[],
         links_no_collisions=links_no_collisions,
