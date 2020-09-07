@@ -512,3 +512,180 @@ def get_krock_options(**kwargs):
     kwargs_options = get_krock_kwargs_options(**kwargs)
     animat_options = get_animat_options(**kwargs_options)
     return sdf, animat_options
+
+
+def get_orobot_kwargs_options(**kwargs):
+    """Orobot default options"""
+
+    # Morphology information
+    links_names = kwargs.pop(
+        'links_names',
+        [
+            # Body
+            'base_link',
+            'OROBOT',
+            'PECTORAL_GIRDLE2',
+            'S_SPINE3_C',
+            'S_SPINE4_C',
+            'S_SPINE5_C',
+            'HIND_GIRDLE_C',
+            'SPINE6_BACK_TT_C',
+            'S_SPINE8_C',
+            # Limb (FL)
+            'LEFT_FRONT_YAW_C',
+            'LEFT_FRONT_PITCH_C',
+            'LEFT_FRONT_ELBOW_C',
+            'LEFT_ULNA_T_C',
+            # Limb (FR)
+            'RIGHT_FRONT_YAW_C',
+            'RIGHT_FRONT_PITCH_C',
+            'RIGHT_FRONT_ELBOW_C',
+            'RIGHT_ULNA_T_C',
+            # Limb (HL)
+            'LEFT_HIP_PITCH_C',
+            'LEFT_HIND_ROLL_T_C',
+            'LEFT_KNEE_T_C',
+            'LEFT_CRUS_T_C',
+            # Limb (HR)
+            'RIGHT_HIP_PITCH_C',
+            'RIGHT_HIND_ROLL_T_C',
+            'RIGHT_KNEE_T_C',
+            'RIGHT_CRUS_T_C',
+        ]
+    )
+    joints_names = kwargs.pop('joints_names', [
+        # Body
+        'S_SPINE1_C_to_S_SPINE1T_S_SPINE1',
+        'S_SPINE2_C_to_S_SPINE2T_S_SPINE2',
+        'S_SPINE3_C_to_S_SPINE3T_S_SPINE3',
+        'S_SPINE4_C_to_S_SPINE4T_S_SPINE4',
+        'S_SPINE5_C_to_S_SPINE5T_S_SPINE5',
+        'S_SPINE6_C_to_S_SPINE6T_S_SPINE6',
+        'S_SPINE7_C_to_S_SPINE7T_S_SPINE7',
+        'S_SPINE8_C_to_S_SPINE8T_S_SPINE8',
+        # Limb (FL)
+        'LEFT_FRONT_YAW_C_to_LEFT_FRONT_YAWT_LEFT_FRONT_YAW',
+        'LEFT_FRONT_PITCH_C_to_LEFT_FRONT_PITCHT_LEFT_FRONT_PITCH',
+        'LEFT_FRONT_WRIST_C_to_LEFT_FRONT_WRISTT_LEFT_FRONT_WRIST',
+        'LEFT_FRONT_ELBOW_C_to_LEFT_FRONT_ELBOWT_LEFT_FRONT_ELBOW',
+        # Limb (FR)
+        'RIGHT_FRONT_YAW_C_to_RIGHT_FRONT_YAWT_RIGHT_FRONT_YAW',
+        'RIGHT_FRONT_PITCH_C_to_RIGHT_FRONT_PITCHT_RIGHT_FRONT_PITCH',
+        'RIGHT_FRONT_WRIST_C_to_RIGHT_FRONT_WRISTT_RIGHT_FRONT_WRIST',
+        'RIGHT_FRONT_ELBOW_C_to_RIGHT_FRONT_ELBOWT_RIGHT_FRONT_ELBOW',
+        # Limb (HL)
+        'LEFT_HIND_YAW_C_to_LEFT_HIND_YAWT_LEFT_HIND_YAW',
+        'LEFT_HIND_PITCH_C_to_LEFT_HIND_PITCHT_LEFT_HIND_PITCH',
+        'LEFT_HIND_WRIST_C_to_LEFT_HIND_WRISTT_LEFT_HIND_WRIST',
+        'LEFT_HIND_KNEE_C_to_LEFT_HIND_KNEET_LEFT_HIND_KNEE',
+        # Limb (HR)
+        'RIGHT_HIND_YAW_C_to_RIGHT_HIND_YAWT_RIGHT_HIND_YAW',
+        'RIGHT_HIND_PITCH_C_to_RIGHT_HIND_PITCHT_RIGHT_HIND_PITCH',
+        'RIGHT_HIND_WRIST_C_to_RIGHT_HIND_WRISTT_RIGHT_HIND_WRIST',
+        'RIGHT_HIND_KNEE_C_to_RIGHT_HIND_KNEET_RIGHT_HIND_KNEE',
+    ])
+    feet = kwargs.pop(
+        'feet',
+        [
+            'LEFT_ULNA_T_C',
+            'RIGHT_ULNA_T_C',
+            'LEFT_CRUS_T_C',
+            'RIGHT_CRUS_T_C',
+        ]
+    )
+    # links_no_collisions = kwargs.pop('links_no_collisions', [
+    #     link
+    #     for link in links_names
+    #     if link not in feet+['Head', 'link_tail']
+    # ])
+    links_no_collisions = kwargs.pop('links_no_collisions', [])
+
+    # Joint options
+    gain_amplitude = kwargs.pop('gain_amplitude', None)
+    joints_offsets = kwargs.pop('joints_offsets', None)
+
+    # Amplitudes gains
+    if gain_amplitude is None:
+        gain_amplitude = [0]*(8+4*4)  # np.ones(8+4*4)
+        # gain_amplitude[8] = 0
+        for leg_i in range(2):
+            for side_i in range(2):
+                mirror = (1 if side_i else -1)
+                mirror2 = (-1 if leg_i else 1)
+                gain_amplitude[8+2*leg_i*4+side_i*4+0] = 0  # 0.5*mirror
+                gain_amplitude[8+2*leg_i*4+side_i*4+1] = 0  # 3*mirror  # mirror
+                gain_amplitude[8+2*leg_i*4+side_i*4+2] = 0  # mirror2  # -mirror
+                gain_amplitude[8+2*leg_i*4+side_i*4+3] = 0  # mirror
+        gain_amplitude = dict(zip(joints_names, gain_amplitude))
+
+    # Joints joints_offsets
+    if joints_offsets is None:
+        joints_offsets = [0]*(8+4*4)
+        for leg_i in range(2):
+            for side_i in range(2):
+                mirror = (1 if side_i else -1)
+                mirror2 = (-1 if leg_i else 1)
+                joints_offsets[8+2*leg_i*4+side_i*4+0] = 0  # -0.1*np.pi*mirror
+                joints_offsets[8+2*leg_i*4+side_i*4+1] = 0  # 0*np.pi*mirror
+                joints_offsets[8+2*leg_i*4+side_i*4+2] = 0  # 0.5*np.pi*mirror2
+                joints_offsets[8+2*leg_i*4+side_i*4+3] = 0
+        joints_offsets = dict(zip(joints_names, joints_offsets))
+
+    # Animat options
+    kwargs_options = dict(
+        spawn_loader=SpawnLoader.PYBULLET,  # SpawnLoader.FARMS,
+        spawn_position=[0, 0, 0.5],
+        spawn_orientation=[0, 0, 0],
+        default_control_type=ControlType.POSITION,
+        swimming=False,
+        n_legs=4,
+        n_dof_legs=4,
+        n_joints_body=8,
+        use_self_collisions=True,
+        body_stand_amplitude=0.2,
+        legs_amplitudes=[np.pi/8, np.pi/16, np.pi/8, np.pi/8],
+        legs_offsets_walking=[0, -np.pi/32, -np.pi/16, 0],
+        legs_offsets_swimming=[2*np.pi/5, 0, 0, np.pi/2],
+        gain_amplitude=gain_amplitude,
+        offsets_bias=joints_offsets,
+        weight_osc_body=1e0,
+        weight_osc_legs_internal=3e1,
+        weight_osc_legs_opposite=1e0,
+        weight_osc_legs_following=5e-1,
+        weight_osc_legs2body=3e1,
+        weight_sens_contact_intralimb=-2e-1,
+        weight_sens_contact_opposite=5e-1,
+        weight_sens_contact_following=0,
+        weight_sens_contact_diagonal=0,
+        weight_sens_hydro_freq=0,
+        weight_sens_hydro_amp=0,
+        modular_phases=np.array([3*np.pi/2, 0, 3*np.pi/2, 0]) - np.pi/4,
+        modular_amplitudes=np.full(4, 0.9),
+        links_names=links_names,
+        links_swimming=[],
+        links_no_collisions=links_no_collisions,
+        joints_names=joints_names,
+        sensors_gps=links_names,
+        sensors_joints=joints_names,
+        sensors_contacts=feet,
+        sensors_hydrodynamics=[],
+        default_lateral_friction=2,
+        muscle_alpha=5e1,
+        muscle_beta=-1e1,
+        muscle_gamma=1e1,
+        muscle_delta=-3e-1,
+    )
+    kwargs_options.update(kwargs)
+    return kwargs_options
+
+
+def get_orobot_options(**kwargs):
+    """Orobot default options"""
+
+    # Animat
+    sdf = get_sdf_path(name='orobot', version='0')
+    pylog.info('Model SDF: {}'.format(sdf))
+
+    kwargs_options = get_orobot_kwargs_options(**kwargs)
+    animat_options = get_animat_options(**kwargs_options)
+    return sdf, animat_options
