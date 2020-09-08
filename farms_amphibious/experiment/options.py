@@ -810,16 +810,16 @@ def get_orobot_kwargs_options(**kwargs):
 
     # Amplitudes gains
     if gain_amplitude is None:
-        gain_amplitude = [1]*(8+4*5)  # np.ones(8+4*5)
+        gain_amplitude = [-1]*(8+4*5)  # np.ones(8+4*5)
         # gain_amplitude[8] = 0
         for leg_i in range(2):
             for side_i in range(2):
                 mirror = (1 if side_i else -1)
                 # mirror2 = (-1 if leg_i else 1)
-                gain_amplitude[8+2*leg_i*5+side_i*5+0] = -mirror
-                gain_amplitude[8+2*leg_i*5+side_i*5+1] = mirror
-                gain_amplitude[8+2*leg_i*5+side_i*5+2] = 1
-                gain_amplitude[8+2*leg_i*5+side_i*5+3] = 1*mirror
+                gain_amplitude[8+2*leg_i*5+side_i*5+0] = mirror
+                gain_amplitude[8+2*leg_i*5+side_i*5+1] = -mirror
+                gain_amplitude[8+2*leg_i*5+side_i*5+2] = -1
+                gain_amplitude[8+2*leg_i*5+side_i*5+3] = -0*mirror
                 gain_amplitude[8+2*leg_i*5+side_i*5+4] = 0*mirror
         gain_amplitude = dict(zip(joints_names, gain_amplitude))
 
@@ -832,8 +832,8 @@ def get_orobot_kwargs_options(**kwargs):
                 # mirror2 = (-1 if leg_i else 1)
                 joints_offsets[8+2*leg_i*5+side_i*5+0] = -0*mirror
                 joints_offsets[8+2*leg_i*5+side_i*5+1] = 0*mirror
-                joints_offsets[8+2*leg_i*5+side_i*5+2] = 0
-                joints_offsets[8+2*leg_i*5+side_i*5+3] = -0*mirror
+                joints_offsets[8+2*leg_i*5+side_i*5+2] = -0*np.pi
+                joints_offsets[8+2*leg_i*5+side_i*5+3] = -0.25*np.pi*mirror
                 joints_offsets[8+2*leg_i*5+side_i*5+4] = 0*mirror
         joints_offsets = dict(zip(joints_names, joints_offsets))
 
@@ -849,7 +849,7 @@ def get_orobot_kwargs_options(**kwargs):
         n_joints_body=8,
         use_self_collisions=True,
         body_stand_amplitude=0.2,
-        legs_amplitudes=[np.pi/8, np.pi/16, np.pi/8, np.pi/8, np.pi/8],
+        legs_amplitudes=[np.pi/6, np.pi/16, np.pi/16, np.pi/8, np.pi/8],
         legs_offsets_walking=[0, -np.pi/32, -np.pi/16, 0, 0],
         legs_offsets_swimming=[2*np.pi/5, 0, 0, np.pi/2, 0],
         gain_amplitude=gain_amplitude,
@@ -866,7 +866,7 @@ def get_orobot_kwargs_options(**kwargs):
         weight_sens_hydro_freq=0,
         weight_sens_hydro_amp=0,
         modular_phases=np.array([3*np.pi/2, 0, 3*np.pi/2, 0, 0]) - np.pi/4,
-        modular_amplitudes=np.full(5, 0.9),
+        modular_amplitudes=np.full(5, 0.5),
         links_names=links_names,
         links_swimming=[],
         links_no_collisions=links_no_collisions,
