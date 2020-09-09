@@ -82,6 +82,7 @@ class AmphibiousMorphologyOptions(MorphologyOptions):
         )
         self.mesh_directory = kwargs.pop('mesh_directory')
         self.n_joints_body = kwargs.pop('n_joints_body')
+        self.n_links_body = kwargs.pop('n_links_body', self.n_joints_body+1)
         self.n_dof_legs = kwargs.pop('n_dof_legs')
         self.n_legs = kwargs.pop('n_legs')
         if kwargs:
@@ -93,6 +94,8 @@ class AmphibiousMorphologyOptions(MorphologyOptions):
         options = {}
         options['mesh_directory'] = kwargs.pop('mesh_directory', '')
         options['n_joints_body'] = kwargs.pop('n_joints_body', 11)
+        if 'n_links_body' in kwargs:
+            options['n_links_body'] = kwargs.pop('n_links_body')
         options['n_dof_legs'] = kwargs.pop('n_dof_legs', 4)
         options['n_legs'] = kwargs.pop('n_legs', 4)
         convention = AmphibiousConvention(**options)
@@ -231,10 +234,6 @@ class AmphibiousMorphologyOptions(MorphologyOptions):
     def n_joints_legs(self):
         """Number of legs joints"""
         return self.n_legs*self.n_dof_legs
-
-    def n_links_body(self):
-        """Number of body links"""
-        return self.n_joints_body + 1
 
 
 class AmphibiousLinkOptions(LinkOptions):
@@ -578,6 +577,7 @@ class AmphibiousSensorsOptions(SensorsOptions):
             'sensors_hydrodynamics',
             convention.links_names
         )
+
 
 class AmphibiousNetworkOptions(Options):
     """Amphibious network options"""
