@@ -3,6 +3,7 @@
 
 import os
 import time
+import numpy as np
 import matplotlib.pyplot as plt
 
 import farms_pylog as pylog
@@ -13,6 +14,7 @@ from farms_amphibious.utils.network import plot_networks_maps
 from farms_amphibious.model.options import AmphibiousOptions
 from farms_amphibious.experiment.simulation import simulation
 from farms_amphibious.experiment.options import (
+    get_pleurobot_kwargs_options,
     get_pleurobot_options,
     amphibious_options,
 )
@@ -21,7 +23,23 @@ from farms_amphibious.experiment.options import (
 def main():
     """Main"""
 
-    sdf, animat_options = get_pleurobot_options()
+    kwargs = get_pleurobot_kwargs_options(
+        spawn_position=[0, 0, 0.1],
+        spawn_orientation=[0, 0, np.pi],
+        show_hydrodynamics=True,
+        drag_coefficients=[
+            [
+                [-1e0, -1e1, -1e0]
+                if i < 12
+                else [-1e0, -1e0, -1e0],
+                [-1e-8, -1e-8, -1e-8],
+            ]
+            for i in range(30)
+        ],
+    )
+    kwargs['links_swimming'] = kwargs['links_names']
+    kwargs['sensors_hydrodynamics'] = kwargs['links_names']
+    sdf, animat_options = get_pleurobot_options(**kwargs)
 
     # # State
     # n_joints = animat_options.morphology.n_joints()
@@ -33,7 +51,7 @@ def main():
     (
         simulation_options,
         arena,
-    ) = amphibious_options(animat_options, use_water_arena=False)
+    ) = amphibious_options(animat_options, use_water_arena=True)
 
     # Save options
     animat_options_filename = 'pleurobot_animat_options.yaml'

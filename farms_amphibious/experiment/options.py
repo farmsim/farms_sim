@@ -127,7 +127,7 @@ def get_salamander_kwargs_options(**kwargs):
     """Salamander options"""
     kwargs_options = {
         'spawn_loader': SpawnLoader.FARMS,  # SpawnLoader.PYBULLET,
-        'default_control_type': ControlType.POSITION,
+        'default_control_type': ControlType.POSITION,  # ControlType.TORQUE,
         'show_hydrodynamics': True,
         'swimming': False,
         'n_legs': 4,
@@ -287,7 +287,7 @@ def get_pleurobot_kwargs_options(**kwargs):
         body_stand_amplitude=0.2,
         legs_amplitudes=[np.pi/8, np.pi/16, np.pi/8, np.pi/8],
         legs_offsets_walking=[0, -np.pi/32, -np.pi/16, 0],
-        legs_offsets_swimming=[2*np.pi/5, 0, 0, np.pi/2],
+        legs_offsets_swimming=[-2*np.pi/5, 0, 0, -np.pi/4],
         gain_amplitude=gain_amplitude,
         offsets_bias=joints_offsets,
         weight_osc_body=1e0,
