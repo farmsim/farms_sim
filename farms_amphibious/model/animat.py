@@ -46,6 +46,23 @@ class Amphibious(Animat):
         """Spawn amphibious"""
         super().spawn()
 
+        # Links masses
+        link_mass_multiplier = {
+            link.name: link.mass_multiplier
+            for link in self.options.morphology.links
+        }
+        for link in self.links_map:
+            if link in link_mass_multiplier:
+                mass, *_ = pybullet.getDynamicsInfo(
+                    bodyUniqueId=self.identity(),
+                    linkIndex=self.links_map[link],
+                )
+                pybullet.changeDynamics(
+                    bodyUniqueId=self.identity(),
+                    linkIndex=self.links_map[link],
+                    mass=link_mass_multiplier[link]*mass,
+                )
+
         # Debug
         self.hydrodynamics_plot = [
             [
