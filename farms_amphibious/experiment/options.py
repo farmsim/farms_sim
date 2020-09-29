@@ -540,9 +540,9 @@ def get_krock_kwargs_options(**kwargs):
         use_self_collisions=False,
         drag_coefficients=[
             [
-                [-1e1, -1e1, -1e1],
-                # if i < 6
-                # else [0, 0, 0],
+                [-1e0, -1e0, -1e2]
+                if i < 6
+                else [-1e0, -1e0, -1e0],
                 [-1e-8, -1e-8, -1e-8],
             ]
             for i in range(6+4*4)
