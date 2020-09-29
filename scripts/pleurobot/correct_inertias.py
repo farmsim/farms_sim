@@ -19,7 +19,7 @@ def main():
             inertial = link.inertial
             mesh_path = os.path.join(directory, visual.geometry.uri)
             link.inertial = inertial.from_mesh(
-                mesh=mesh_path,
+                path=mesh_path,
                 scale=visual.geometry.scale[0],
                 pose=visual.pose,
                 units=inertial.units,
