@@ -196,6 +196,7 @@ def get_pleurobot_kwargs_options(**kwargs):
             for i in range(11, 27)
         ]
     )
+    links_swimming = links_names[:14]
     joints_names = kwargs.pop('joints_names', [
         # 'base_link_fixedjoint',
         'jHead',
@@ -277,34 +278,24 @@ def get_pleurobot_kwargs_options(**kwargs):
 
     # Animat options
     kwargs_options = dict(
-        spawn_loader=SpawnLoader.FARMS,  # SpawnLoader.PYBULLET,
+        spawn_loader=SpawnLoader.PYBULLET,  # SpawnLoader.FARMS,  # SpawnLoader.PYBULLET,
         default_control_type=ControlType.POSITION,
         swimming=False,
         n_legs=4,
         n_dof_legs=4,
         n_joints_body=13,
         use_self_collisions=True,
-        body_stand_amplitude=0.2,
-        legs_amplitudes=[np.pi/8, np.pi/16, np.pi/8, np.pi/8],
-        legs_offsets_walking=[0, -np.pi/32, -np.pi/16, 0],
-        legs_offsets_swimming=[-2*np.pi/5, 0, 0, -np.pi/4],
-        gain_amplitude=gain_amplitude,
-        offsets_bias=joints_offsets,
-        weight_osc_body=1e0,
-        weight_osc_legs_internal=3e1,
-        weight_osc_legs_opposite=1e0,
-        weight_osc_legs_following=5e-1,
-        weight_osc_legs2body=3e1,
-        weight_sens_contact_intralimb=-2e-1,
-        weight_sens_contact_opposite=5e-1,
-        weight_sens_contact_following=0,
-        weight_sens_contact_diagonal=0,
-        weight_sens_hydro_freq=0,
-        weight_sens_hydro_amp=0,
-        modular_phases=np.array([3*np.pi/2, 0, 3*np.pi/2, 0]) - np.pi/4,
-        modular_amplitudes=np.full(4, 0.9),
+        drag_coefficients=[
+            [
+                [-1e1, -1e1, -1e1]
+                if link in links_swimming
+                else [-0, -0, -0],
+                [0, 0, 0],
+            ]
+            for link in links_names
+        ],
         links_names=links_names,
-        links_swimming=[],
+        links_swimming=links_swimming,
         links_no_collisions=links_no_collisions,
         joints_names=joints_names,
         sensors_gps=links_names,
@@ -312,11 +303,33 @@ def get_pleurobot_kwargs_options(**kwargs):
         sensors_contacts=feet,
         sensors_hydrodynamics=[],
         default_lateral_friction=2,
-        muscle_alpha=5e1,
-        muscle_beta=-1e1,
-        muscle_gamma=1e1,
-        muscle_delta=-3e-1,
     )
+    if 'kinematics_file' not in kwargs:
+        kwargs_options.update(dict(
+            body_stand_amplitude=0.2,
+            legs_amplitudes=[np.pi/8, np.pi/16, np.pi/8, np.pi/8],
+            legs_offsets_walking=[0, -np.pi/32, -np.pi/16, 0],
+            legs_offsets_swimming=[-2*np.pi/5, 0, 0, -np.pi/4],
+            gain_amplitude=gain_amplitude,
+            offsets_bias=joints_offsets,
+            weight_osc_body=1e0,
+            weight_osc_legs_internal=3e1,
+            weight_osc_legs_opposite=1e0,
+            weight_osc_legs_following=5e-1,
+            weight_osc_legs2body=3e1,
+            weight_sens_contact_intralimb=-2e-1,
+            weight_sens_contact_opposite=5e-1,
+            weight_sens_contact_following=0,
+            weight_sens_contact_diagonal=0,
+            weight_sens_hydro_freq=0,
+            weight_sens_hydro_amp=0,
+            modular_phases=np.array([3*np.pi/2, 0, 3*np.pi/2, 0]) - np.pi/4,
+            modular_amplitudes=np.full(4, 0.9),
+            muscle_alpha=5e1,
+            muscle_beta=-1e1,
+            muscle_gamma=1e1,
+            muscle_delta=-3e-1,
+        ))
     kwargs_options.update(kwargs)
     return kwargs_options
 

@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """Run salamander simulation with bullet"""
 
+import numpy as np
 import farms_pylog as pylog
 from farms_data.amphibious.data import AmphibiousData
+from farms_bullet.control.kinematics import KinematicsController
 from ..simulation.simulation import AmphibiousSimulation
 from ..control.controller import AmphibiousController
 from ..model.animat import Amphibious
@@ -30,10 +32,21 @@ def simulation_setup(animat_sdf, arena, **kwargs):
 
     # Animat controller
     if kwargs.pop('use_controller', False):
-        animat_controller = AmphibiousController(
-            joints=animat_options.morphology.joints_names(),
-            animat_options=animat_options,
-            animat_data=animat_data,
+        animat_controller = (
+            KinematicsController(
+                joints=animat_options.morphology.joints_names(),
+                kinematics=np.loadtxt(animat_options.control.kinematics_file),
+                sampling=animat_options.control.kinematics_sampling,
+                timestep=simulation_options.timestep,
+                n_iterations=simulation_options.n_iterations,
+                animat_data=animat_data,
+            )
+            if animat_options.control.kinematics_file
+            else AmphibiousController(
+                joints=animat_options.morphology.joints_names(),
+                animat_options=animat_options,
+                animat_data=animat_data,
+            )
         )
     else:
         animat_controller = None

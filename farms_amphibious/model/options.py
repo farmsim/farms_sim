@@ -299,6 +299,7 @@ class AmphibiousControlOptions(ControlOptions):
             ],
         )
         self.kinematics_file = kwargs.pop('kinematics_file')
+        self.kinematics_sampling = kwargs.pop('kinematics_sampling')
         self.network = AmphibiousNetworkOptions(**kwargs.pop('network'))
         if not self.kinematics_file:
             self.muscles = [
@@ -321,6 +322,7 @@ class AmphibiousControlOptions(ControlOptions):
             'joints': kwargs.pop('joints', {}),
         })
         options['kinematics_file'] = kwargs.pop('kinematics_file', '')
+        options['kinematics_sampling'] = kwargs.pop('kinematics_sampling', 0)
         options['network'] = kwargs.pop(
             'network',
             AmphibiousNetworkOptions.from_options(kwargs).to_dict()
