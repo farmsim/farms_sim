@@ -100,7 +100,7 @@ def main():
         sdf=model,
         options={
             'author': 'Jonathan Arreguit',
-            'email': 'jonathan.arreguitoneill.@epfl.ch',
+            'email': 'jonathan.arreguitoneill@epfl.ch',
             'overwrite': True,
         }
     )
