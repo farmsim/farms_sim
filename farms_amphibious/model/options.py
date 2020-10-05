@@ -82,6 +82,7 @@ class AmphibiousMorphologyOptions(MorphologyOptions):
         )
         self.mesh_directory = kwargs.pop('mesh_directory')
         self.n_joints_body = kwargs.pop('n_joints_body')
+        self.n_links_body = kwargs.pop('n_links_body', self.n_joints_body+1)
         self.n_dof_legs = kwargs.pop('n_dof_legs')
         self.n_legs = kwargs.pop('n_legs')
         if kwargs:
@@ -93,6 +94,8 @@ class AmphibiousMorphologyOptions(MorphologyOptions):
         options = {}
         options['mesh_directory'] = kwargs.pop('mesh_directory', '')
         options['n_joints_body'] = kwargs.pop('n_joints_body', 11)
+        if 'n_links_body' in kwargs:
+            options['n_links_body'] = kwargs.pop('n_links_body')
         options['n_dof_legs'] = kwargs.pop('n_dof_legs', 4)
         options['n_legs'] = kwargs.pop('n_legs', 4)
         convention = AmphibiousConvention(**options)
@@ -232,10 +235,6 @@ class AmphibiousMorphologyOptions(MorphologyOptions):
         """Number of legs joints"""
         return self.n_legs*self.n_dof_legs
 
-    def n_links_body(self):
-        """Number of body links"""
-        return self.n_joints_body + 1
-
 
 class AmphibiousLinkOptions(LinkOptions):
     """Amphibious link options
@@ -300,6 +299,7 @@ class AmphibiousControlOptions(ControlOptions):
             ],
         )
         self.kinematics_file = kwargs.pop('kinematics_file')
+        self.kinematics_sampling = kwargs.pop('kinematics_sampling')
         self.network = AmphibiousNetworkOptions(**kwargs.pop('network'))
         if not self.kinematics_file:
             self.muscles = [
@@ -322,6 +322,7 @@ class AmphibiousControlOptions(ControlOptions):
             'joints': kwargs.pop('joints', {}),
         })
         options['kinematics_file'] = kwargs.pop('kinematics_file', '')
+        options['kinematics_sampling'] = kwargs.pop('kinematics_sampling', 0)
         options['network'] = kwargs.pop(
             'network',
             AmphibiousNetworkOptions.from_options(kwargs).to_dict()
@@ -367,7 +368,7 @@ class AmphibiousControlOptions(ControlOptions):
         )
         leg_joint_turn_gain = kwargs.pop(
             'leg_joint_turn_gain',
-            [1, 0, 0, 0]
+            [1, 0, 0, 0, 0]
         )
         for leg_i in range(convention.n_legs//2):
             for side_i in range(2):
@@ -579,6 +580,7 @@ class AmphibiousSensorsOptions(SensorsOptions):
             convention.links_names
         )
 
+
 class AmphibiousNetworkOptions(Options):
     """Amphibious network options"""
 
@@ -761,7 +763,7 @@ class AmphibiousNetworkOptions(Options):
                     kwargs.pop('weight_osc_legs_opposite', 1e1),
                     kwargs.pop('weight_osc_legs_following', 1e1),
                     kwargs.pop('weight_osc_legs2body', 3e1),
-                    kwargs.pop('intralimb_phases', [0, pi2, 0, pi2]),
+                    kwargs.pop('intralimb_phases', [0, pi2, 0, pi2, 0]),
                     kwargs.pop('leg_phase_follow', np.pi),
                     kwargs.pop(
                         'body_walk_phases',
@@ -877,7 +879,7 @@ class AmphibiousNetworkOptions(Options):
                     phases_init_body[joint_i]
                     + (0 if side_osc else np.pi)
                 )
-        phases_init_legs = [3*np.pi/2, 0, 3*np.pi/2, 0]
+        phases_init_legs = [3*np.pi/2, 0, 3*np.pi/2, 0, 0]
         for joint_i in range(convention.n_dof_legs):
             for leg_i in range(convention.n_legs//2):
                 for side_i in range(2):
