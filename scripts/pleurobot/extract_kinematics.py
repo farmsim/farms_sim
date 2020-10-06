@@ -23,6 +23,9 @@ def main(show=True):
     np.savetxt(os.path.join(kin_directory, 'kinematics.csv'), data)
     if show:
         plt.plot(data)
+        plt.grid(True)
+        plt.xlabel('Iteration')
+        plt.ylabel('Joint angle [rad]')
         plt.show()
 
 
