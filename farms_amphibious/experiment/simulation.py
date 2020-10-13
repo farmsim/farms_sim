@@ -72,7 +72,7 @@ def simulation_setup(animat_sdf, arena, **kwargs):
     return sim
 
 
-def simulation(animat_sdf, arena, show_progress=True, **kwargs):
+def simulation(animat_sdf, arena, **kwargs):
     """Simulation"""
 
     # Instatiate simulation
@@ -83,7 +83,7 @@ def simulation(animat_sdf, arena, show_progress=True, **kwargs):
     pylog.info('Running simulation')
     # sim.run(show_progress=show_progress)
     # contacts = sim.models.animat.data.sensors.contacts
-    for iteration in sim.iterator(show_progress=show_progress):
+    for iteration in sim.iterator(show_progress=sim.options.show_progress):
         # pylog.info(np.asarray(
         #     contacts.reaction(iteration, 0)
         # ))
