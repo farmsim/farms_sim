@@ -5,43 +5,9 @@ import numpy as np
 from farms_bullet.simulation.simulation import AnimatSimulation
 from farms_bullet.model.model import SimulationModels
 from farms_bullet.interface.interface import Interfaces
+from farms_bullet.swimming.drag import SwimmingHandler
 
 from .interface import AmphibiousUserParameters
-
-
-def swimming_step(iteration, animat):
-    """Swimming step"""
-    physics_options = animat.options.physics
-    if physics_options.drag or physics_options.sph:
-        water_surface = (
-            np.inf
-            if physics_options.sph
-            else physics_options.water_surface
-        )
-        links_swimming = [
-            link
-            for link in animat.options.morphology.links
-            if link.swimming
-        ]
-        if physics_options.drag:
-            links_swimming = animat.drag_swimming_forces(
-                iteration,
-                links=links_swimming,
-                surface=water_surface,
-                gravity=-9.81,
-                use_buoyancy=physics_options.buoyancy,
-            )
-        animat.apply_swimming_forces(
-            iteration,
-            links=links_swimming,
-            link_frame=True,
-            debug=False
-        )
-        if animat.options.show_hydrodynamics:
-            animat.draw_hydrodynamics(
-                iteration,
-                links=links_swimming,
-            )
 
 
 def time_based_drive(iteration, n_iterations, interface):
@@ -85,6 +51,12 @@ class AmphibiousSimulation(AnimatSimulation):
                 )
             )
         )
+        self.swimming_handler = (
+            SwimmingHandler(animat)
+            if animat.options.physics.drag
+            or animat.options.physics.drag
+            else None
+        )
 
     def step(self, iteration):
         """Simulation step"""
@@ -113,7 +85,8 @@ class AmphibiousSimulation(AnimatSimulation):
         # Physics step
         if iteration < self.options.n_iterations-1:
             # Swimming
-            swimming_step(iteration, animat)
+            if self.swimming_handler is not None:
+                self.swimming_handler.step(iteration)
 
             # Update animat controller
             if animat.controller is not None:
