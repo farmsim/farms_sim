@@ -51,6 +51,7 @@ def main():
         animat_options,
         use_water_arena=True,
     )
+    animat_options.show_hydrodynamics = not simulation_options.headless
 
     # Save options
     animat_options_filename = 'salamander_animat_options.yaml'
