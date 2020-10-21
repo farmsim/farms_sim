@@ -133,7 +133,7 @@ def get_salamander_kwargs_options(**kwargs):
         'n_legs': 4,
         'n_dof_legs': 4,
         'n_joints_body': 11,
-        'use_self_collisions': True,
+        'use_self_collisions': False,
         'drag_coefficients': [
             [
                 [-1e-1, -1e1, -1e1]

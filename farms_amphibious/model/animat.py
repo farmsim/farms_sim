@@ -72,4 +72,4 @@ class Amphibious(Animat):
                 )
             ]
             for i in range(self.data.sensors.hydrodynamics.array.shape[1])
-        ]
+        ] if self.options.show_hydrodynamics else []

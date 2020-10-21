@@ -299,8 +299,14 @@ class AmphibiousControlOptions(ControlOptions):
             ],
         )
         self.kinematics_file = kwargs.pop('kinematics_file')
+        self.manta_controller = kwargs.pop('manta_controller', False)
         self.kinematics_sampling = kwargs.pop('kinematics_sampling')
-        self.network = AmphibiousNetworkOptions(**kwargs.pop('network'))
+        network = kwargs.pop('network')
+        self.network = (
+            AmphibiousNetworkOptions(**network)
+            if network is not None
+            else None
+        )
         if not self.kinematics_file:
             self.muscles = [
                 AmphibiousMuscleSetOptions(**muscle)
