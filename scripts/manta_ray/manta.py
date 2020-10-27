@@ -2,6 +2,7 @@
 
 import os
 
+from farms_sdf.sdf import ModelSDF
 from farms_data.amphibious.animat_data import AnimatData
 from farms_models.utils import get_sdf_path, get_simulation_data_path
 from farms_bullet.model.control import ControlType
@@ -18,6 +19,7 @@ from farms_bullet.model.options import (
 )
 
 from farms_amphibious.experiment.simulation import simulation
+from farms_amphibious.control.manta_control import joints_sorted, control
 from farms_amphibious.model.options import (
     AmphibiousOptions,
     AmphibiousPhysicsOptions,
@@ -43,16 +45,26 @@ def main():
     arena = get_flat_arena()
 
     # Options
-    n_joints = 80
-    links_names = ['link_{}'.format(i) for i in range(n_joints+1)]
-    joints_names = ['joint_{}'.format(i) for i in range(n_joints)]
-    drag = 1e-3
+    model = ModelSDF.read(sdf)[0]
+    links_names = [link.name for link in model.links]
+    joints_names = [joint.name for joint in model.joints]
+    # print(len(links_names))
+    # print(len(joints_names))
+    # assert False
+    drag = -1e-3
+    (
+        j_left,
+        j_right,
+        j_passive_left,
+        j_passive_right,
+    ) = joints_sorted(names=joints_names)
+    j_control = control(0, j_left, j_right, j_passive_left, j_passive_right)
     animat_options = AmphibiousOptions(
         spawn=SpawnOptions.from_options({}),
         morphology=AmphibiousMorphologyOptions(
             links=[
                 AmphibiousLinkOptions(
-                    name=links_names[i],
+                    name=link_name,
                     collisions=False,
                     density=1000.0,
                     height=0.05,
@@ -64,17 +76,17 @@ def main():
                     mass_multiplier=1.0,
                     pybullet_dynamics={},
                 )
-                for i in range(n_joints+1)
+                for link_name in links_names
             ],
             self_collisions=[],
             joints=[
                 JointOptions(
-                    name=joints_names[i],
-                    initial_position=0,
+                    name=joint_name,
+                    initial_position=j_control[joint_name],
                     initial_velocity=0,
                     pybullet_dynamics={},
                 )
-                for i in range(n_joints)
+                for joint_name in joints_names
             ],
             mesh_directory='',
             n_joints_body=0,
