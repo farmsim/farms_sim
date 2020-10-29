@@ -48,9 +48,8 @@ def main():
     model = ModelSDF.read(sdf)[0]
     links_names = [link.name for link in model.links]
     joints_names = [joint.name for joint in model.joints]
-    # print(len(links_names))
-    # print(len(joints_names))
-    # assert False
+    print('Number of links: {}'.format(len(links_names)))
+    print('Number of joints: {}'.format(len(joints_names)))
     drag = -1e-3
     (
         j_left,
@@ -103,9 +102,9 @@ def main():
             ),
             joints=[
                 AmphibiousJointControlOptions(
-                    joint=joints_names[i],
+                    joint=name,
                     control_type=ControlType.POSITION,
-                    max_torque=0.1,
+                    max_torque=10,
                     offset_gain=0,
                     offset_bias=0,
                     offset_low=0,
@@ -115,7 +114,7 @@ def main():
                     gain_amplitude=1,
                     bias=0,
                 )
-                for i in range(40)
+                for name in joints_names
             ],
             kinematics_file=0,
             manta_controller=True,
