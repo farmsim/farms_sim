@@ -126,14 +126,14 @@ def amphibious_options(animat_options, use_water_arena=True, **kwargs):
 def get_salamander_kwargs_options(**kwargs):
     """Salamander options"""
     kwargs_options = {
-        'spawn_loader': SpawnLoader.FARMS,  # SpawnLoader.PYBULLET,
+        'spawn_loader': SpawnLoader.PYBULLET,  # SpawnLoader.FARMS,
         'default_control_type': ControlType.POSITION,  # ControlType.TORQUE,
         'show_hydrodynamics': True,
         'swimming': False,
         'n_legs': 4,
         'n_dof_legs': 4,
         'n_joints_body': 11,
-        'use_self_collisions': True,
+        'use_self_collisions': False,
         'drag_coefficients': [
             [
                 [-1e-1, -1e1, -1e1]

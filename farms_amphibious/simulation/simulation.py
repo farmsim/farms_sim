@@ -58,6 +58,14 @@ class AmphibiousSimulation(AnimatSimulation):
             else None
         )
 
+    def update_controller(self, iteration, animat):
+        """Update controller"""
+        animat.controller.step(
+            iteration=iteration,
+            time=iteration*self.options.timestep,
+            timestep=self.options.timestep,
+        )
+
     def step(self, iteration):
         """Simulation step"""
         animat = self.animat()
@@ -90,11 +98,7 @@ class AmphibiousSimulation(AnimatSimulation):
 
             # Update animat controller
             if animat.controller is not None:
-                animat.controller.step(
-                    iteration=iteration,
-                    time=iteration*self.options.timestep,
-                    timestep=self.options.timestep,
-                )
+                self.update_controller(iteration, animat)
 
     def animat_interface(self, iteration):
         """Animat interface"""

@@ -29,13 +29,14 @@ def main():
         show_hydrodynamics=True,
         drag_coefficients=[
             [
-                [-1e0, -1e1, -1e0]
-                if i < 12
-                else [-1e0, -1e0, -1e0],
+                [0, -1e1, 0]
+                if 3 < i < 12
+                else [0, 0, 0],
                 [-1e-8, -1e-8, -1e-8],
             ]
             for i in range(30)
         ],
+        height=0.1,
     )
     kwargs['links_swimming'] = kwargs['links_names']
     kwargs['sensors_hydrodynamics'] = kwargs['links_names']

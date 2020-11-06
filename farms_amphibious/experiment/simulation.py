@@ -7,6 +7,7 @@ from farms_data.amphibious.data import AmphibiousData
 from farms_bullet.control.kinematics import KinematicsController
 from ..simulation.simulation import AmphibiousSimulation
 from ..control.controller import AmphibiousController
+from ..control.manta_control import MantaController
 from ..model.animat import Amphibious
 from .options import get_animat_options, get_simulation_options
 
@@ -42,6 +43,12 @@ def simulation_setup(animat_sdf, arena, **kwargs):
                 animat_data=animat_data,
             )
             if animat_options.control.kinematics_file
+            else MantaController(
+                joints=animat_options.morphology.joints_names(),
+                animat_options=animat_options,
+                animat_data=animat_data,
+            )
+            if animat_options.control.manta_controller
             else AmphibiousController(
                 joints=animat_options.morphology.joints_names(),
                 animat_options=animat_options,
