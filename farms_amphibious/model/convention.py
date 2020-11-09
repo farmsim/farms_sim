@@ -37,13 +37,13 @@ class AmphibiousConvention:
             ],
         )
         n_joints = self.n_joints()
-        assert len(self.links_names) == n_joints + 1, (
-            'Provided {} names for links but there should be {}:\n{}'.format(
-                len(self.links_names),
-                n_joints + 1,
-                self.links_names,
-            )
-        )
+        # assert len(self.links_names) == n_joints + 1, (
+        #     'Provided {} names for links but there should be {}:\n{}'.format(
+        #         len(self.links_names),
+        #         n_joints + 1,
+        #         self.links_names,
+        #     )
+        # )
         assert len(self.joints_names) == n_joints, (
             'Provided {} names for joints but there should be {}:\n{}'.format(
                 len(self.joints_names),
