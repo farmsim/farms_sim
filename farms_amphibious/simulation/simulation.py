@@ -54,7 +54,7 @@ class AmphibiousSimulation(AnimatSimulation):
         self.swimming_handler = (
             SwimmingHandler(animat)
             if animat.options.physics.drag
-            or animat.options.physics.drag
+            or animat.options.physics.sph
             else None
         )
 
