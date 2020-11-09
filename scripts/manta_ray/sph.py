@@ -98,7 +98,7 @@ def simulate(output='/tmp/manta_sph'):
         spacing=1e-2,
         output_dir=output,
         density=1000,
-        factor=0.5,
+        factor=0.2,
     )
     app.run()
     app.simulation.end()
