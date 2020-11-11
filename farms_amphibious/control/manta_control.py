@@ -47,8 +47,14 @@ def joints_sorted(names):
 
 def control(time, left, right, passive_left, passive_right):
     """Control"""
-    value = 5e-2*np.sin(2*np.pi*0.5*time+0.5*np.pi)
-    value2 = 3e-1*np.sin(2*np.pi*0.5*time)
+    # value = np.sin(2*np.pi*0.5*time)
+    # value2 = np.sin(2*np.pi*0.5*time-0.5*np.pi)
+    value = np.sin(2*np.pi*0.5*time+0.5*np.pi)
+    value2 = np.sin(2*np.pi*0.5*time)
+    # value = np.sign(value)*np.power(np.abs(value), 3/7)
+    # value2 = np.sign(value2)*np.power(np.abs(value2), 3/7)
+    value *= 5e-2
+    value2 *= 1e0  # 3e-1
     n_left = len(left)
     n_right = len(right)
     n_left_long = len(passive_left[0])
