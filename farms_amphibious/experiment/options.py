@@ -125,6 +125,7 @@ def amphibious_options(animat_options, use_water_arena=True, **kwargs):
 
 def get_salamander_kwargs_options(**kwargs):
     """Salamander options"""
+    n_joints_body = kwargs.pop('n_joints_body', 11)
     kwargs_options = {
         'spawn_loader': SpawnLoader.PYBULLET,  # SpawnLoader.FARMS,
         'default_control_type': ControlType.POSITION,  # ControlType.TORQUE,
@@ -132,7 +133,7 @@ def get_salamander_kwargs_options(**kwargs):
         'swimming': False,
         'n_legs': 4,
         'n_dof_legs': 4,
-        'n_joints_body': 11,
+        'n_joints_body': n_joints_body,
         'use_self_collisions': False,
         'drag_coefficients': [
             [
@@ -143,7 +144,7 @@ def get_salamander_kwargs_options(**kwargs):
                 else [0, 0, 0],
                 [-1e-8, -1e-8, -1e-8],
             ]
-            for i in range(12+4*4)
+            for i in range((n_joints_body+1)+4*4)
         ],
         'drives_init': [2, 0],
         'weight_osc_body': 1e1,

@@ -21,13 +21,14 @@ from farms_amphibious.experiment.options import (
 )
 
 
-def main():
+def main(animat='salamander', version='v3'):
     """Main"""
 
     # Animat
-    sdf = get_sdf_path(name='salamander', version='v1')
+    sdf = get_sdf_path(name=animat, version=version)
     pylog.info('Model SDF: {}'.format(sdf))
     animat_options = get_salamander_options(
+        # n_joints_body=11,
         # spawn_position=[-5, 0, 0.1],
         # spawn_orientation=[0, 0, np.pi],
         # drives_init=[4.9, 0],
@@ -76,8 +77,8 @@ def main():
     # Post-processing
     pylog.info('Simulation post-processing')
     log_path = get_simulation_data_path(
-        name='salamander',
-        version='v1',
+        name=animat,
+        version=version,
         simulation_name='default',
     )
     video_name = os.path.join(log_path, 'simulation.mp4')
