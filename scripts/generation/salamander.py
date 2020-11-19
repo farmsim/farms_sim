@@ -1,0 +1,309 @@
+"""Generate salamander"""
+
+import os
+import shutil
+import numpy as np
+from farms_sdf.sdf import ModelSDF, Link, Joint, Visual
+from farms_amphibious.model.options import AmphibiousOptions
+from farms_amphibious.model.convention import AmphibiousConvention
+from farms_models.utils import (
+    get_sdf_path,
+    get_model_path,
+    create_new_model_from_farms_sdf,
+)
+
+
+def generate_sdf(leg_offset, leg_length, leg_radius, legs_parents, **kwargs):
+    """Generate sdf"""
+    options = kwargs.pop('options')
+    convention = kwargs.pop('convention')
+    scale = kwargs.pop('scale', 1.0)
+    model_name = kwargs.pop('model_name', 'animat')
+    use_2d = kwargs.pop('use_2d', False)
+    links = [None for _ in range(options.morphology.n_links())]
+    joints = [None for _ in range(options.morphology.n_joints())]
+
+    # Original
+    body_sdf_path = get_sdf_path(name='salamander', version='body')
+    original_model = ModelSDF.read(body_sdf_path)[0]
+
+    # Body
+    for i, link in enumerate(original_model.links):
+        link.name = convention.bodylink2name(i)
+        links[i] = link
+        link.visuals[0].color = [0.1, 0.7, 0.1, 1]
+        link.visuals[0].ambient = link.visuals[0].color
+        link.visuals[0].diffuse = link.visuals[0].color
+        link.visuals[0].specular = link.visuals[0].color
+        link.visuals[0].emissive = link.visuals[0].color
+        if i == 0:
+            for sign, name in [[-1, 'left'], [1, 'right']]:
+                link.visuals.append(Visual.sphere(
+                    'eye_{}'.format(name),
+                    pose=[0.04, sign*0.03, 0.015, 0, 0, 0],
+                    radius=0.01,
+                    color=[0, 0, 0, 1],
+                ))
+
+    for i, joint in enumerate(original_model.joints):
+        joint.name = convention.bodyjoint2name(i)
+        joint.parent = convention.bodylink2name(i)
+        joint.child = convention.bodylink2name(i+1)
+        joints[i] = joint
+
+    # Leg links
+    for leg_i in range(options.morphology.n_legs//2):
+        for side_i in range(2):
+            sign = 1 if side_i else -1
+            body_position = np.array(links[legs_parents[leg_i]].pose[:3])
+            # Shoulder 0
+            pose = np.concatenate([
+                body_position +  [
+                    0,
+                    sign*leg_offset[0],
+                    leg_offset[1]
+                ],
+                [0, 0, 0]
+            ])
+            index = convention.leglink2index(
+                leg_i,
+                side_i,
+                0
+            )
+            links[index] = Link.sphere(
+                name=convention.leglink2name(
+                    leg_i,
+                    side_i,
+                    0
+                ),
+                radius=1.1*leg_radius,
+                pose=pose,
+                color=[0.7, 0.5, 0.5, 0.5]
+            )
+            links[index].inertial.mass = 0
+            links[index].inertial.inertias = np.zeros(6)
+            # Shoulder 1
+            index = convention.leglink2index(
+                leg_i,
+                side_i,
+                1
+            )
+            links[index] = Link.sphere(
+                name=convention.leglink2name(
+                    leg_i,
+                    side_i,
+                    1
+                ),
+                radius=1.3*leg_radius,
+                pose=pose,
+                color=[0.9, 0.9, 0.9, 0.3]
+            )
+            links[index].inertial.mass = 0
+            links[index].inertial.inertias = np.zeros(6)
+            # Shoulder 2
+            shape_pose = [
+                0, sign*(0.5*leg_length), 0,
+                np.pi/2, 0, 0
+            ]
+            links[convention.leglink2index(
+                leg_i,
+                side_i,
+                2
+            )] = Link.capsule(
+                name=convention.leglink2name(
+                    leg_i,
+                    side_i,
+                    2
+                ),
+                length=leg_length,
+                radius=leg_radius,
+                pose=pose,
+                # inertial_pose=shape_pose,
+                shape_pose=shape_pose,
+            )
+            # Elbow
+            pose = np.copy(pose)
+            pose[1] += sign*leg_length
+            links[convention.leglink2index(
+                leg_i,
+                side_i,
+                3
+            )] = Link.capsule(
+                name=convention.leglink2name(
+                    leg_i,
+                    side_i,
+                    3
+                ),
+                length=leg_length,
+                radius=leg_radius,
+                pose=pose,
+                # inertial_pose=shape_pose,
+                shape_pose=shape_pose,
+                # color=[
+                #     [[0.9, 0.0, 0.0, 1.0], [0.0, 0.9, 0.0, 1.0]],
+                #     [[0.0, 0.0, 0.9, 1.0], [1.0, 0.7, 0.0, 1.0]]
+                # ][leg_i][side_i]
+            )
+    # Leg joints
+    for leg_i in range(options.morphology.n_legs//2):
+        for side_i in range(2):
+            for joint_i in range(options.morphology.n_dof_legs):
+                sign = 1 if side_i else -1
+                axis = [
+                    [0, 0, sign],
+                    [-sign, 0, 0],
+                    [0, 1, 0],
+                    [-sign, 0, 0]
+                ]
+                if joint_i == 0:
+                    joints[convention.legjoint2index(
+                        leg_i,
+                        side_i,
+                        joint_i
+                    )] = Joint(
+                        name=convention.legjoint2name(
+                            leg_i,
+                            side_i,
+                            joint_i
+                        ),
+                        joint_type='revolute',
+                        parent=links[legs_parents[leg_i]],
+                        child=links[convention.leglink2index(
+                            leg_i,
+                            side_i,
+                            joint_i
+                        )],
+                        xyz=axis[joint_i],
+                        limits=[-np.pi, np.pi, 1e10, 2*np.pi*100]
+                    )
+                else:
+                    joints[convention.legjoint2index(
+                        leg_i,
+                        side_i,
+                        joint_i
+                    )] = Joint(
+                        name=convention.legjoint2name(
+                            leg_i,
+                            side_i,
+                            joint_i
+                        ),
+                        joint_type='revolute',
+                        parent=links[convention.leglink2index(
+                            leg_i,
+                            side_i,
+                            joint_i-1
+                        )],
+                        child=links[convention.leglink2index(
+                            leg_i,
+                            side_i,
+                            joint_i
+                        )],
+                        xyz=axis[joint_i],
+                        limits=[-np.pi, np.pi, 1e10, 2*np.pi*100]
+                    )
+
+    # Use 2D
+    constraint_links = [
+        Link.empty(
+            name='world',
+            pose=[0, 0, 0, 0, 0, 0],
+        ),
+        Link.empty(
+            name='world_2',
+            pose=[0, 0, 0, 0, 0, 0],
+        )
+    ] if use_2d else []
+    constraint_joints = [
+        Joint(
+            name='world_joint',
+            joint_type='prismatic',
+            parent=constraint_links[0],
+            child=constraint_links[1],
+            pose=[0, 0, 0, 0, 0, 0],
+            xyz=[1, 0, 0],
+            limits=np.array([-1, 1, 0, 1])
+        ),
+        Joint(
+            name='world_joint2',
+            joint_type='prismatic',
+            parent=constraint_links[1],
+            child=links[0],
+            pose=[0, 0, 0, 0, 0, 0],
+            xyz=[0, 0, 1],
+            limits=np.array([-1, 1, 0, 1])
+        )
+    ] if use_2d else []
+
+    # Create SDF
+    
+    sdf = ModelSDF(
+        name=model_name,
+        pose=np.concatenate([
+            np.asarray([0, 0, 0.1])*scale,
+            [0, 0, 0]
+        ]),
+        links=constraint_links+links,
+        joints=constraint_joints+joints,
+    )
+    filename = create_new_model_from_farms_sdf(
+        name=model_name,
+        version=kwargs.get('model_version'),
+        sdf=sdf,
+        options={
+            'author': 'Jonathan Arreguit',
+            'email': 'jonathan.arreguitoneill@epfl.ch',
+            'overwrite': True,
+        }
+    )
+    print(filename)
+    return filename
+
+
+def main():
+    """Main"""
+    animat_options = AmphibiousOptions.from_options({
+        'n_legs': 4,
+        'n_dof_legs': 4,
+        'n_joints_body': 11,
+    })
+    animat_options.morphology.mesh_directory = 'meshes_salamander'
+    convention = AmphibiousConvention(**animat_options.morphology)
+    # print(convention)
+    # print(convention.n_joints_body)
+    # print(convention.n_dof_legs)
+    # print(convention.n_legs)
+    model_name = 'salamander'
+    model_version = 'v3'
+    # Generate SDF
+    filepath = generate_sdf(
+        leg_offset=[0.04, -0.02],
+        leg_length=0.04,
+        leg_radius=0.01,
+        legs_parents=[1, 4],
+        model_name=model_name,
+        model_version=model_version,
+        options=animat_options,
+        convention=convention,
+        scale=1,
+    )
+
+    # Setup meshes
+    original_meshes_path = os.path.join(
+        get_model_path(name='salamander', version='body'),
+        'sdf',
+        'meshes_salamander',
+    )
+    meshes_output_path = os.path.join(
+        os.path.dirname(filepath),
+        animat_options.morphology.mesh_directory,
+    )
+    if os.path.isdir(meshes_output_path):
+        shutil.rmtree(meshes_output_path, ignore_errors=True)
+    shutil.copytree(
+        original_meshes_path,
+        meshes_output_path,
+    )
+
+
+if __name__ == '__main__':
+    main()
