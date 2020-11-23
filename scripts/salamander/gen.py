@@ -31,7 +31,8 @@ def generate_sdf(leg_offset, leg_length, leg_radius, legs_parents, **kwargs):
     for i, link in enumerate(original_model.links):
         link.name = convention.bodylink2name(i)
         links[i] = link
-        link.visuals[0].color = [0.1, 0.7, 0.1, 1]
+        link.pose = np.array(link.pose, dtype=float).tolist()
+        link.visuals[0].color = [0.1, 0.7, 0.1, 1.0]
         link.visuals[0].ambient = link.visuals[0].color
         link.visuals[0].diffuse = link.visuals[0].color
         link.visuals[0].specular = link.visuals[0].color
@@ -40,13 +41,14 @@ def generate_sdf(leg_offset, leg_length, leg_radius, legs_parents, **kwargs):
             for sign, name in [[-1, 'left'], [1, 'right']]:
                 link.visuals.append(Visual.sphere(
                     'eye_{}'.format(name),
-                    pose=[0.04, sign*0.03, 0.015, 0, 0, 0],
+                    pose=[0.04, sign*0.03, 0.015, 0.0, 0.0, 0.0],
                     radius=0.01,
-                    color=[0, 0, 0, 1],
+                    color=[0.0, 0.0, 0.0, 1.0],
                 ))
 
     for i, joint in enumerate(original_model.joints):
         joint.name = convention.bodyjoint2name(i)
+        joint.pose = np.array(joint.pose, dtype=float).tolist()
         joint.parent = convention.bodylink2name(i)
         joint.child = convention.bodylink2name(i+1)
         joints[i] = joint
@@ -150,10 +152,10 @@ def generate_sdf(leg_offset, leg_length, leg_radius, legs_parents, **kwargs):
             for joint_i in range(options.morphology.n_dof_legs):
                 sign = 1 if side_i else -1
                 axis = [
-                    [0, 0, sign],
-                    [-sign, 0, 0],
-                    [0, 1, 0],
-                    [-sign, 0, 0]
+                    [0.0, 0.0, 1.0*sign],
+                    [-1.0*sign, 0.0, 0.0],
+                    [0.0, 1.0, 0.0],
+                    [-1.0*sign, 0.0, 0.0]
                 ]
                 if joint_i == 0:
                     joints[convention.legjoint2index(
@@ -235,7 +237,6 @@ def generate_sdf(leg_offset, leg_length, leg_radius, legs_parents, **kwargs):
     ] if use_2d else []
 
     # Create SDF
-    
     sdf = ModelSDF(
         name=model_name,
         pose=np.concatenate([
