@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Run krock simulation with bullet"""
+"""Run pleurobot simulation with bullet"""
 
 import os
 import time
+import numpy as np
 import matplotlib.pyplot as plt
 
 import farms_pylog as pylog
@@ -13,7 +14,8 @@ from farms_amphibious.utils.network import plot_networks_maps
 from farms_amphibious.model.options import AmphibiousOptions
 from farms_amphibious.experiment.simulation import simulation
 from farms_amphibious.experiment.options import (
-    get_krock_options,
+    get_pleurobot_kwargs_options,
+    get_pleurobot_options,
     amphibious_options,
 )
 
@@ -21,7 +23,25 @@ from farms_amphibious.experiment.options import (
 def main():
     """Main"""
 
-    sdf, animat_options = get_krock_options()
+    kwargs = get_pleurobot_kwargs_options(
+        spawn_position=[0, 0, 0.1],
+        spawn_orientation=[0, 0, np.pi],
+        show_hydrodynamics=True,
+        drag_coefficients=[
+            [
+                [0, -1e1, 0]
+                if 3 < i < 12
+                else [0, 0, 0],
+                [-1e-8, -1e-8, -1e-8],
+            ]
+            for i in range(30)
+        ],
+        height=0.1,
+    )
+    water = False
+    kwargs['links_swimming'] = kwargs['links_names'] if water else []
+    kwargs['sensors_hydrodynamics'] = kwargs['links_names']
+    sdf, animat_options = get_pleurobot_options(**kwargs)
 
     # # State
     # n_joints = animat_options.morphology.n_joints()
@@ -33,12 +53,12 @@ def main():
     (
         simulation_options,
         arena,
-    ) = amphibious_options(animat_options, use_water_arena=True)
+    ) = amphibious_options(animat_options, use_water_arena=water)
 
     # Save options
-    animat_options_filename = 'krock_animat_options.yaml'
+    animat_options_filename = 'pleurobot_animat_options.yaml'
     animat_options.save(animat_options_filename)
-    simulation_options_filename = 'krock_simulation_options.yaml'
+    simulation_options_filename = 'pleurobot_simulation_options.yaml'
     simulation_options.save(simulation_options_filename)
 
     # Load options
@@ -57,7 +77,7 @@ def main():
 
     # Post-processing
     pylog.info('Simulation post-processing')
-    log_path = 'krock_results'
+    log_path = 'pleurobot_results'
     video_name = os.path.join(log_path, 'simulation.mp4')
     if log_path and not os.path.isdir(log_path):
         os.mkdir(log_path)
