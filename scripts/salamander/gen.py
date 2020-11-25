@@ -17,11 +17,16 @@ def generate_sdf(leg_offset, leg_length, leg_radius, legs_parents, **kwargs):
     """Generate sdf"""
     options = kwargs.pop('options')
     convention = kwargs.pop('convention')
-    scale = kwargs.pop('scale', 1.0)
+    scale = kwargs.pop('scale', 0.2)
     model_name = kwargs.pop('model_name', 'animat')
     use_2d = kwargs.pop('use_2d', False)
     links = [None for _ in range(options.morphology.n_links())]
     joints = [None for _ in range(options.morphology.n_joints())]
+
+    # Scale
+    leg_radius *= scale
+    leg_length *= scale
+    leg_offset = scale*np.array(leg_offset)
 
     # Original
     body_sdf_path = get_sdf_path(name='salamander', version='body')
@@ -41,10 +46,22 @@ def generate_sdf(leg_offset, leg_length, leg_radius, legs_parents, **kwargs):
             for sign, name in [[-1, 'left'], [1, 'right']]:
                 link.visuals.append(Visual.sphere(
                     'eye_{}'.format(name),
-                    pose=[0.04, sign*0.03, 0.015, 0.0, 0.0, 0.0],
-                    radius=0.01,
+                    pose=[
+                        scale*0.04, scale*sign*0.03, scale*0.015,
+                        0.0, 0.0, 0.0,
+                    ],
+                    radius=scale*0.01,
                     color=[0.0, 0.0, 0.0, 1.0],
                 ))
+        for j in range(3):
+            link.pose[j] = scale*link.pose[j]
+        link.visuals[0].geometry.scale = [scale]*3
+        link.collisions[0].geometry.scale = [scale]*3
+        link.inertial.mass *= scale**3
+        for j in range(3):
+            link.inertial.pose[j] *= scale
+        for j in range(6):
+            link.inertial.inertias[j] *= scale**5
 
     for i, joint in enumerate(original_model.joints):
         joint.name = convention.bodyjoint2name(i)
@@ -52,6 +69,8 @@ def generate_sdf(leg_offset, leg_length, leg_radius, legs_parents, **kwargs):
         joint.parent = convention.bodylink2name(i)
         joint.child = convention.bodylink2name(i+1)
         joints[i] = joint
+        for j in range(3):
+            joint.pose[j] = scale*joint.pose[j]
 
     # Leg links
     for leg_i in range(options.morphology.n_legs//2):
@@ -285,7 +304,7 @@ def main():
         model_version=model_version,
         options=animat_options,
         convention=convention,
-        scale=1,
+        # scale=1,
     )
 
     # Setup meshes
