@@ -422,7 +422,7 @@ class AmphibiousControlOptions(ControlOptions):
         )
         joints_rates = kwargs.pop(
             'joints_rates',
-            {joint_name: 5 for joint_name in joints_names},
+            {joint_name: 2 for joint_name in joints_names},
         )
         gain_amplitude = kwargs.pop(
             'gain_amplitude',
@@ -906,15 +906,19 @@ class AmphibiousNetworkOptions(Options):
         """Walking parameters"""
         n_oscillators = 2*(convention.n_joints())
         frequencies = [None]*n_oscillators
+        # Body
         for joint_i in range(convention.n_joints_body):
             for side in range(2):
                 frequencies[convention.bodyosc2index(joint_i, side=side)] = {
-                    'gain': 2*np.pi*0.2,
-                    'bias': 2*np.pi*0.3,
+                    # 'gain': 2*np.pi*0.2,
+                    # 'bias': 2*np.pi*0.3,
+                    'gain': 2*np.pi*0.55, # 1.65 - 2.75 [Hz]
+                    'bias': 2*np.pi*0.0,
                     'low': 1,
                     'high': 5,
                     'saturation': 0,
                 }
+        # legs
         for joint_i in range(convention.n_dof_legs):
             for leg_i in range(convention.n_legs//2):
                 for side_i in range(2):
@@ -925,8 +929,10 @@ class AmphibiousNetworkOptions(Options):
                             joint_i,
                             side=side,
                         )] = {
-                            'gain': 2*np.pi*0.2,
-                            'bias': 2*np.pi*0.0,
+                            # 'gain': 2*np.pi*0.2,
+                            # 'bias': 2*np.pi*0.0,
+                            'gain': 2*np.pi*0.3, # 0.6 - 1.2 [Hz]
+                            'bias': 2*np.pi*0.3,
                             'low': 1,
                             'high': 3,
                             'saturation': 0,

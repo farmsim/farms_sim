@@ -109,10 +109,13 @@ def get_water_arena(water_surface):
 def amphibious_options(animat_options, use_water_arena=True, **kwargs):
     """Amphibious simulation"""
 
+    # Water
+    water_surface = kwargs.pop('water_surface', -0.1*0.1)
+
     # Arena
     if use_water_arena:
-        arena = get_water_arena(water_surface=-0.1)
-        set_swimming_options(animat_options, water_surface=-0.1)
+        arena = get_water_arena(water_surface=water_surface)
+        set_swimming_options(animat_options, water_surface=water_surface)
     else:
         arena = get_flat_arena()
         set_no_swimming_options(animat_options)
@@ -128,6 +131,9 @@ def get_salamander_kwargs_options(**kwargs):
     n_joints_body = kwargs.pop('n_joints_body', 11)
     kwargs_options = {
         'spawn_loader': SpawnLoader.PYBULLET,  # SpawnLoader.FARMS,
+        'spawn_position': [0, 0, 0.1*0.05],
+        'spawn_orientation': [0, 0, 0],
+        'use_self_collisions': True,
         'default_control_type': ControlType.POSITION,  # ControlType.TORQUE,
         'show_hydrodynamics': True,
         'swimming': False,
@@ -137,9 +143,9 @@ def get_salamander_kwargs_options(**kwargs):
         'use_self_collisions': False,
         'drag_coefficients': [
             [
-                [-1e-1, -1e1, -1e1]
+                [-1e-1, -1e0, -1e0]
                 if i < 12
-                else [-1e0, -1e0, -1e0]  # [-1e-1, -1e-1, -1e-1]
+                else [-1e-4, -1e-4, -1e-4]
                 if (i - 12) % 4 > 1
                 else [0, 0, 0],
                 [-1e-8, -1e-8, -1e-8],
@@ -153,7 +159,7 @@ def get_salamander_kwargs_options(**kwargs):
         'weight_osc_legs_following': 0,  # 1e1,
         'weight_osc_legs2body': 3e1,
         'weight_sens_contact_intralimb': -0.5,
-        'weight_sens_contact_opposite': 2,
+        'weight_sens_contact_opposite': 1,
         'weight_sens_contact_following': 0,
         'weight_sens_contact_diagonal': 0,
         'weight_sens_hydro_freq': -1e-1,
@@ -163,12 +169,28 @@ def get_salamander_kwargs_options(**kwargs):
         'legs_amplitudes': [np.pi/4, np.pi/32, np.pi/4, np.pi/8],
         'legs_offsets_walking': [0, np.pi/32, 0, np.pi/8],
         'modular_phases': np.array([3*np.pi/2, 0, 3*np.pi/2, 0]) - np.pi/4,
-        'modular_amplitudes': np.full(4, 1.0),
-        'default_lateral_friction': 2,
-        'muscle_alpha': 5e0,
-        'muscle_beta': -3e0,
-        'muscle_gamma': 3e0,
-        'muscle_delta': -2e-3,
+        # 'modular_amplitudes': np.full(4, 1.0),
+        'modular_amplitudes': np.full(4, 0),
+        'default_lateral_friction': 0.3,
+        # Timestep: 1e-3 [s]
+        # 'muscle_alpha': 3e-3,
+        # 'muscle_beta': -1e-6,
+        # 'muscle_gamma': 5e3,
+        # 'muscle_delta': -1e-8,
+        'muscle_alpha': 1e-3,
+        'muscle_beta': -1e-6,
+        'muscle_gamma': 1e3,
+        'muscle_delta': -1e-6,
+        # # Timestep: 1e-3 [s] (Full scale)
+        # 'muscle_alpha': 2e0,
+        # 'muscle_beta': -1e0,
+        # 'muscle_gamma': 3e0,
+        # 'muscle_delta': -1e-3,
+        # # Timestep: 1e-2 [s] NOT WORKING
+        # 'muscle_alpha': 1e-1,
+        # 'muscle_beta': -1e-2,
+        # 'muscle_gamma': 3e0,
+        # 'muscle_delta': -1e-6,
     }
     kwargs_options.update(kwargs)
     return kwargs_options
