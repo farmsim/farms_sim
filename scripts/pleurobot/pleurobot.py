@@ -36,7 +36,6 @@ def main():
             ]
             for i in range(30)
         ],
-        height=0.1,
     )
     water = False
     kwargs['links_swimming'] = kwargs['links_names'] if water else []
