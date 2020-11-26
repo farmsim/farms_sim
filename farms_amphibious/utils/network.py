@@ -164,6 +164,21 @@ def draw_network(source, destination, radius, connectivity, **kwargs):
     return nodes, nodes_texts, node_connectivity
 
 
+def create_colorbar(axes, cmap, vmin, vmax, size='5%', pad=0.05, **kwargs):
+    """Colorbar"""
+    return plt.colorbar(
+        mappable=cm.ScalarMappable(
+            norm=Normalize(
+                vmin=vmin,
+                vmax=vmax,
+                clip=True,
+            ),
+            cmap=cmap,
+        ),
+        **kwargs,
+    )
+
+
 class NetworkFigure:
     """Network figure"""
 
@@ -173,8 +188,13 @@ class NetworkFigure:
         self.morphology = morphology
 
         # Plot
+        self.axes = None
         self.figure = None
+
+        # Artists
         self.oscillators = None
+        self.contact_sensors = None
+        self.hydro_sensors = None
 
         # Animation
         self.animation = None
@@ -184,9 +204,60 @@ class NetworkFigure:
         self.interval = 25
         self.n_frames = self.n_iterations*self.timestep / (1e-3*self.interval)
         self.network = NetworkODE(self.data)
+        self.cmap_phases = plt.get_cmap('Greens')
+        self.cmap_contacts = plt.get_cmap('Oranges')
+        self.cmap_contact_max = 2e-1
+        self.cmap_hydro = plt.get_cmap('Blues')
+        self.cmap_hydro_max = 2e-2
 
     def animate(self):
         """Setup animation"""
+        plt.figure(num=self.figure.number)
+        self.time = plt.text(
+            x=-1, y=-7,
+            s='Time: {} [s]'.format(0),
+            va='center',
+            ha='left',
+            fontsize=16,
+            color='k',
+        )
+        # Oscillators
+        divider = make_axes_locatable(self.axes)
+        size = '5%'
+        pad = 0.5  # 0.05
+        cax = divider.append_axes('right', size=size, pad=pad)
+        cbar = create_colorbar(
+            axes=self.axes,
+            cmap=self.cmap_phases,
+            vmin=0, vmax=1,
+            cax=cax,
+        )
+        cbar.ax.set_ylabel('Oscillators output', rotation=270)
+        cbar.ax.get_yaxis().labelpad = -30
+
+        # Contacts
+        cax = divider.append_axes('right', size=size, pad=pad)
+        cbar = create_colorbar(
+            self.axes,
+            cmap=self.cmap_contacts,
+            vmin=0, vmax=self.cmap_contact_max,
+            cax=cax,
+        )
+        cbar.ax.set_ylabel('Contacts forces [N]', rotation=270)
+        cbar.ax.get_yaxis().labelpad = -45
+
+        # Hydroynamics
+        cax = divider.append_axes('right', size=size, pad=pad)
+        cbar = create_colorbar(
+            axes=self.axes,
+            cmap=self.cmap_hydro,
+            vmin=0, vmax=self.cmap_hydro_max,
+            cax=cax,
+        )
+        cbar.ax.set_ylabel('Hydrodynamics forces [N]', rotation=270)
+        cbar.ax.get_yaxis().labelpad = -50
+
+        # Animation
         self.animation = FuncAnimation(
             fig=self.figure,
             func=self.animation_update,
@@ -199,19 +270,12 @@ class NetworkFigure:
 
     def animation_elements(self):
         """Animation elements"""
-        return [self.time] + self.oscillators
+        return [self.time] + (
+            self.oscillators + self.contact_sensors + self.hydro_sensors
+        )
 
     def animation_init(self):
         """Animation  init"""
-        plt.figure(num=self.figure.number)
-        self.time = plt.text(
-            x=-1, y=-7,
-            s='Time: {} [s]'.format(0),
-            va='center',
-            ha='left',
-            fontsize=16,
-            color='k',
-        )
         return self.animation_elements()
 
     def animation_update(self, frame):
@@ -223,9 +287,28 @@ class NetworkFigure:
         # Oscillator
         phases = self.network.phases(iteration)
         for oscillator, phase in zip(self.oscillators, phases):
-            # color = 0.5*(1+np.sin(2*np.pi*frame/self.n_iterations)**2)
-            color = 0.5*(1+np.cos(phase))
-            oscillator.set_facecolor((color, color, color, 1))
+            value = 0.5*(1+np.cos(phase))
+            oscillator.set_facecolor(self.cmap_phases(value))
+
+        # Contacts sensors
+        for sensor_i, contact in enumerate(self.contact_sensors):
+            value = np.clip(
+                np.linalg.norm(
+                    self.data.sensors.contacts.total(iteration, sensor_i)
+                ),
+                0, self.cmap_contact_max,
+            )
+            contact.set_facecolor(self.cmap_contacts(value/self.cmap_contact_max))
+
+        # Hydros sensors
+        for sensor_i, hydr in enumerate(self.hydro_sensors):
+            value = np.clip(
+                np.linalg.norm(
+                    self.data.sensors.hydrodynamics.force(iteration, sensor_i)
+                ),
+                0, self.cmap_hydro_max,
+            )
+            hydr.set_facecolor(self.cmap_hydro(value/self.cmap_hydro_max))
 
         return self.animation_elements()
 
@@ -240,19 +323,21 @@ class NetworkFigure:
         margin_y = kwargs.pop('margin_y', 7)
         alpha = kwargs.pop('alpha', 0.3)
         title = kwargs.pop('title', 'Network')
+        show_title = kwargs.pop('show_title', True)
         rads = kwargs.pop('rads', [0.2, 0.0, 0.0])
         use_colorbar = kwargs.pop('use_colorbar', False)
 
         # Create figure
         self.figure = plt.figure(num=title, figsize=(12, 10))
-        axes = plt.gca()
-        axes.cla()
-        plt.title(title)
-        axes.set_xlim((-margin_x, n_oscillators-1+margin_x))
-        axes.set_ylim((-offset-margin_y, offset+margin_y))
-        axes.set_aspect('equal', adjustable='box')
-        axes.get_xaxis().set_visible(False)
-        axes.get_yaxis().set_visible(False)
+        self.axes = plt.gca()
+        self.axes.cla()
+        if show_title:
+            plt.title(title)
+        self.axes.set_xlim((-margin_x, n_oscillators-1+margin_x))
+        self.axes.set_ylim((-offset-margin_y, offset+margin_y))
+        self.axes.set_aspect('equal', adjustable='box')
+        self.axes.get_xaxis().set_visible(False)
+        self.axes.get_yaxis().set_visible(False)
         # plt.tight_layout()
 
         # Colorbar
@@ -347,7 +432,7 @@ class NetworkFigure:
             else:
                 options['weights'] = []
                 vmin, vmax = 0, 1
-        contact_sensors, contact_sensor_texts, contact_connectivity = draw_network(
+        self.contact_sensors, contact_sensor_texts, contact_connectivity = draw_network(
             source=contacts_positions,
             destination=oscillator_positions,
             radius=radius,
@@ -402,7 +487,7 @@ class NetworkFigure:
             else:
                 options['weights'] = []
                 vmin, vmax = 0, 1
-        hydro_sensors, hydro_sensor_texts, hydro_connectivity = draw_network(
+        self.hydro_sensors, hydro_sensor_texts, hydro_connectivity = draw_network(
             source=hydrodynamics_positions,
             destination=oscillator_positions,
             radius=radius,
@@ -448,41 +533,28 @@ class NetworkFigure:
         ]
         if show_oscillators_connectivity:
             for arrow in oscillators_connectivity:
-                axes.add_artist(arrow)
+                self.axes.add_artist(arrow)
         if show_contacts_connectivity:
             for arrow in contact_connectivity:
-                axes.add_artist(arrow)
+                self.axes.add_artist(arrow)
         if show_hydrodynamics_connectivity:
             for arrow in hydro_connectivity:
-                axes.add_artist(arrow)
+                self.axes.add_artist(arrow)
         if show_oscillators:
             for circle, text in zip(self.oscillators, oscillators_texts):
-                axes.add_artist(circle)
-                axes.add_artist(text)
+                self.axes.add_artist(circle)
+                self.axes.add_artist(text)
         if show_contacts:
-            for circle, text in zip(contact_sensors, contact_sensor_texts):
-                axes.add_artist(circle)
-                axes.add_artist(text)
+            for circle, text in zip(self.contact_sensors, contact_sensor_texts):
+                self.axes.add_artist(circle)
+                self.axes.add_artist(text)
         if show_hydrodynamics:
-            for circle, text in zip(hydro_sensors, hydro_sensor_texts):
-                axes.add_artist(circle)
-                axes.add_artist(text)
+            for circle, text in zip(self.hydro_sensors, hydro_sensor_texts):
+                self.axes.add_artist(circle)
+                self.axes.add_artist(text)
         if use_colorbar:
-            divider = make_axes_locatable(axes)
-            cax = divider.append_axes('right', size='5%', pad=0.05)
             pylog.debug('{}: {}, {}'.format(title, vmin, vmax))
-            plt.colorbar(
-                mappable=cm.ScalarMappable(
-                    norm=Normalize(
-                        vmin=vmin,
-                        vmax=vmax,
-                        clip=True,
-                    ),
-                    cmap=cmap,
-                ),
-                cax=cax,
-            )
-            plt.sca(axes)
+            create_colorbar(self.axes, cmap, vmin, vmax)
 
 
 def plot_networks_maps(morphology, data, show_all=False):
@@ -492,7 +564,7 @@ def plot_networks_maps(morphology, data, show_all=False):
 
     # Plot network
     network = NetworkFigure(morphology, data)
-    network.plot(title='Complete network')
+    network.plot(title='Complete network', show_title=False)
     network.animate()
 
     if show_all:
