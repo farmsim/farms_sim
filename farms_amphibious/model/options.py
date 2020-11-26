@@ -125,7 +125,6 @@ class AmphibiousMorphologyOptions(MorphologyOptions):
             ] if kwargs.pop('reduced_collisions', False) else []
         ))
         links_swimming = kwargs.pop('links_swimming', links_names)
-        links_height = kwargs.pop('height', 0.03)
         links_density = kwargs.pop('density', 500.0)
         links_mass_multiplier = kwargs.pop('mass_multiplier', 1)
         drag_coefficients = kwargs.pop(
@@ -140,7 +139,6 @@ class AmphibiousMorphologyOptions(MorphologyOptions):
                     collisions=name not in links_no_collisions,
                     density=links_density,
                     mass_multiplier=links_mass_multiplier,
-                    height=links_height,
                     swimming=name in links_swimming,
                     drag_coefficients=drag,
                     pybullet_dynamics={
@@ -251,7 +249,6 @@ class AmphibiousLinkOptions(LinkOptions):
             pybullet_dynamics=kwargs.pop('pybullet_dynamics', {}),
         )
         self.density = kwargs.pop('density')
-        self.height = kwargs.pop('height')
         self.swimming = kwargs.pop('swimming')
         self.drag_coefficients = kwargs.pop('drag_coefficients')
         if kwargs:
