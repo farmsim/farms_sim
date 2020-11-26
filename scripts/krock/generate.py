@@ -58,6 +58,8 @@ def main():
                 )
 
         if link.inertial:
+            if link.name == 'HRknee_HJ_C':
+                link.inertial.mass = 0.1
             mass += link.inertial.mass
             if link.visuals:
                 visual = link.visuals[0]
