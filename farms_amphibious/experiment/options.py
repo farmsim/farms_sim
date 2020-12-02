@@ -140,7 +140,6 @@ def get_salamander_kwargs_options(**kwargs):
         'n_legs': 4,
         'n_dof_legs': 4,
         'n_joints_body': n_joints_body,
-        'use_self_collisions': False,
         'drag_coefficients': [
             [
                 [-1e-1, -1e0, -1e0]
@@ -177,10 +176,10 @@ def get_salamander_kwargs_options(**kwargs):
         # 'muscle_beta': -1e-6,
         # 'muscle_gamma': 5e3,
         # 'muscle_delta': -1e-8,
-        'muscle_alpha': 1e-3,
+        'muscle_alpha': 2e-3,
         'muscle_beta': -1e-6,
-        'muscle_gamma': 1e3,
-        'muscle_delta': -1e-6,
+        'muscle_gamma': 2e3,
+        'muscle_delta': -1e-8,
         # # Timestep: 1e-3 [s] (Full scale)
         # 'muscle_alpha': 2e0,
         # 'muscle_beta': -1e0,
@@ -199,7 +198,18 @@ def get_salamander_kwargs_options(**kwargs):
 def get_salamander_options(**kwargs):
     """Salamander options"""
     kwargs_options = get_salamander_kwargs_options(**kwargs)
-    return get_animat_options(**kwargs_options)
+    options = get_animat_options(**kwargs_options)
+    for joint_i, joint in enumerate(options['morphology']['joints']):
+        joint['pybullet_dynamics']['jointDamping'] = 0
+        joint['pybullet_dynamics']['maxJointVelocity'] = 1e6  # 0.1
+        # joint['pybullet_dynamics']['jointLowerLimit'] = -1e8  # -0.1
+        # joint['pybullet_dynamics']['jointUpperLimit'] = +1e8  # +0.1
+        joint['pybullet_dynamics']['jointLimitForce'] = 1e6
+        joint_control = options['control']['joints'][joint_i]
+        assert joint['name'] == joint_control['joint']
+        joint['initial_position'] = joint_control['bias']
+        # print('{}: {} [rad]'.format(joint['name'], joint_control['bias']))
+    return options
 
 
 def get_pleurobot_kwargs_options(**kwargs):

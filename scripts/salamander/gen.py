@@ -229,7 +229,12 @@ def generate_sdf(leg_offset, leg_length, leg_radius, legs_parents, **kwargs):
                             joint_i
                         )],
                         xyz=axis[joint_i],
-                        limits=[-0.5*np.pi, 0.5*np.pi, max_torque, max_velocity],
+                        limits=[
+                            0 if joint_i == 3 else -0.5*np.pi,
+                            0.5*np.pi,
+                            max_torque,
+                            max_velocity,
+                        ],
                     )
 
     # Use 2D
