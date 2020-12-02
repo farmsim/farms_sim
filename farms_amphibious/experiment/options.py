@@ -171,7 +171,7 @@ def get_salamander_kwargs_options(**kwargs):
         'modular_phases': np.array([3*np.pi/2, 0, 3*np.pi/2, 0]) - np.pi/4,
         # 'modular_amplitudes': np.full(4, 1.0),
         'modular_amplitudes': np.full(4, 0),
-        'default_lateral_friction': 0.3,
+        'default_lateral_friction': 1.0,
         # Timestep: 1e-3 [s]
         # 'muscle_alpha': 3e-3,
         # 'muscle_beta': -1e-6,
