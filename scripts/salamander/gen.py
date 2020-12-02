@@ -22,6 +22,8 @@ def generate_sdf(leg_offset, leg_length, leg_radius, legs_parents, **kwargs):
     use_2d = kwargs.pop('use_2d', False)
     links = [None for _ in range(options.morphology.n_links())]
     joints = [None for _ in range(options.morphology.n_joints())]
+    max_velocity = 1e6
+    max_torque = 1e6
 
     # Scale
     leg_radius *= scale
@@ -63,6 +65,8 @@ def generate_sdf(leg_offset, leg_length, leg_radius, legs_parents, **kwargs):
         for j in range(6):
             link.inertial.inertias[j] *= scale**5
 
+    n_joints = len(original_model.joints)
+    angle_max = np.pi*(n_joints-2)/n_joints
     for i, joint in enumerate(original_model.joints):
         joint.name = convention.bodyjoint2name(i)
         joint.pose = np.array(joint.pose, dtype=float).tolist()
@@ -71,6 +75,10 @@ def generate_sdf(leg_offset, leg_length, leg_radius, legs_parents, **kwargs):
         joints[i] = joint
         for j in range(3):
             joint.pose[j] = scale*joint.pose[j]
+        joint.axis.limits[0] = -angle_max
+        joint.axis.limits[1] = +angle_max
+        joint.axis.limits[2] = max_torque
+        joint.axis.limits[3] = max_velocity
 
     # Leg links
     for leg_i in range(options.morphology.n_legs//2):
@@ -165,6 +173,7 @@ def generate_sdf(leg_offset, leg_length, leg_radius, legs_parents, **kwargs):
                 #     [[0.0, 0.0, 0.9, 1.0], [1.0, 0.7, 0.0, 1.0]]
                 # ][leg_i][side_i]
             )
+
     # Leg joints
     for leg_i in range(options.morphology.n_legs//2):
         for side_i in range(2):
@@ -195,7 +204,7 @@ def generate_sdf(leg_offset, leg_length, leg_radius, legs_parents, **kwargs):
                             joint_i
                         )],
                         xyz=axis[joint_i],
-                        limits=[-np.pi, np.pi, 1e10, 2*np.pi*100]
+                        limits=[-0.5*np.pi, 0.5*np.pi, max_torque, max_velocity],
                     )
                 else:
                     joints[convention.legjoint2index(
@@ -220,7 +229,7 @@ def generate_sdf(leg_offset, leg_length, leg_radius, legs_parents, **kwargs):
                             joint_i
                         )],
                         xyz=axis[joint_i],
-                        limits=[-np.pi, np.pi, 1e10, 2*np.pi*100]
+                        limits=[-0.5*np.pi, 0.5*np.pi, max_torque, max_velocity],
                     )
 
     # Use 2D
