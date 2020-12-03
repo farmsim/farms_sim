@@ -65,8 +65,7 @@ def generate_sdf(leg_offset, leg_length, leg_radius, legs_parents, **kwargs):
         for j in range(6):
             link.inertial.inertias[j] *= scale**5
 
-    n_joints = len(original_model.joints)
-    angle_max = np.pi*(n_joints-2)/n_joints
+    angle_max = 2*np.pi/len(original_model.joints)
     for i, joint in enumerate(original_model.joints):
         joint.name = convention.bodyjoint2name(i)
         joint.pose = np.array(joint.pose, dtype=float).tolist()
