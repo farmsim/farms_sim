@@ -289,6 +289,13 @@ def generate_sdf(leg_offset, leg_length, leg_radius, legs_parents, **kwargs):
         }
     )
     print(filename)
+
+    # Mass
+    mass = 0
+    for link in sdf.links:
+        mass += link.inertial.mass
+    print('Mass: {} [kg]'.format(mass))
+
     return filename
 
 
