@@ -130,8 +130,8 @@ def get_salamander_kwargs_options(**kwargs):
     """Salamander options"""
     n_joints_body = kwargs.pop('n_joints_body', 11)
     kwargs_options = {
-        'spawn_loader': SpawnLoader.PYBULLET,  # SpawnLoader.FARMS,
-        'spawn_position': [0, 0, 0.1*0.05],
+        'spawn_loader': SpawnLoader.FARMS,  # SpawnLoader.PYBULLET,
+        'spawn_position': [0, 0, 0.2*0.07],
         'spawn_orientation': [0, 0, 0],
         'use_self_collisions': True,
         'default_control_type': ControlType.POSITION,  # ControlType.TORQUE,
@@ -157,12 +157,12 @@ def get_salamander_kwargs_options(**kwargs):
         'weight_osc_legs_opposite': 1e0,  # 1e1,
         'weight_osc_legs_following': 0,  # 1e1,
         'weight_osc_legs2body': 3e1,
-        'weight_sens_contact_intralimb': -0.5,
-        'weight_sens_contact_opposite': 1,
+        'weight_sens_contact_intralimb': 0,
+        'weight_sens_contact_opposite': 0,
         'weight_sens_contact_following': 0,
         'weight_sens_contact_diagonal': 0,
-        'weight_sens_hydro_freq': -1e-1,
-        'weight_sens_hydro_amp': -1e-1,
+        'weight_sens_hydro_freq': 0,
+        'weight_sens_hydro_amp': 0,
         'body_stand_amplitude': 0.2,
         'body_stand_shift': np.pi/2,
         'legs_amplitudes': [np.pi/4, np.pi/32, np.pi/4, np.pi/8],
@@ -176,7 +176,11 @@ def get_salamander_kwargs_options(**kwargs):
         # 'muscle_beta': -1e-6,
         # 'muscle_gamma': 5e3,
         # 'muscle_delta': -1e-8,
-        'muscle_alpha': 2e-3,
+        # 'muscle_alpha': 2e-3,
+        # 'muscle_beta': -1e-6,
+        # 'muscle_gamma': 2e3,
+        # 'muscle_delta': -1e-8,
+        'muscle_alpha': 1e-3,
         'muscle_beta': -1e-6,
         'muscle_gamma': 2e3,
         'muscle_delta': -1e-8,
@@ -201,10 +205,10 @@ def get_salamander_options(**kwargs):
     options = get_animat_options(**kwargs_options)
     for joint_i, joint in enumerate(options['morphology']['joints']):
         joint['pybullet_dynamics']['jointDamping'] = 0
-        joint['pybullet_dynamics']['maxJointVelocity'] = 1e6  # 0.1
+        joint['pybullet_dynamics']['maxJointVelocity'] = np.inf  # 0.1
         # joint['pybullet_dynamics']['jointLowerLimit'] = -1e8  # -0.1
         # joint['pybullet_dynamics']['jointUpperLimit'] = +1e8  # +0.1
-        joint['pybullet_dynamics']['jointLimitForce'] = 1e6
+        joint['pybullet_dynamics']['jointLimitForce'] = np.inf
         joint_control = options['control']['joints'][joint_i]
         assert joint['name'] == joint_control['joint']
         joint['initial_position'] = joint_control['bias']
