@@ -93,11 +93,11 @@ class AmphibiousMorphologyOptions(MorphologyOptions):
         """From options"""
         options = {}
         options['mesh_directory'] = kwargs.pop('mesh_directory', '')
-        options['n_joints_body'] = kwargs.pop('n_joints_body', 11)
+        options['n_joints_body'] = kwargs.pop('n_joints_body')
         if 'n_links_body' in kwargs:
             options['n_links_body'] = kwargs.pop('n_links_body')
-        options['n_dof_legs'] = kwargs.pop('n_dof_legs', 4)
-        options['n_legs'] = kwargs.pop('n_legs', 4)
+        options['n_dof_legs'] = kwargs.pop('n_dof_legs')
+        options['n_legs'] = kwargs.pop('n_legs')
         convention = AmphibiousConvention(**options)
         links_names = kwargs.pop('links_names', convention.links_names)
         default_lateral_friction = kwargs.pop('default_lateral_friction', 1)
@@ -125,11 +125,24 @@ class AmphibiousMorphologyOptions(MorphologyOptions):
             ] if kwargs.pop('reduced_collisions', False) else []
         ))
         links_swimming = kwargs.pop('links_swimming', links_names)
-        links_density = kwargs.pop('density', 500.0)
+        links_density = kwargs.pop('density', 800.0)
         links_mass_multiplier = kwargs.pop('mass_multiplier', 1)
         drag_coefficients = kwargs.pop(
             'drag_coefficients',
             [None for name in links_names],
+        )
+        assert (
+            len(links_names)
+            == len(links_friction_lateral)
+            == len(links_friction_spinning)
+            == len(links_friction_rolling)
+            == len(drag_coefficients)
+        ), print(
+            len(links_names),
+            len(links_friction_lateral),
+            len(links_friction_spinning),
+            len(links_friction_rolling),
+            len(drag_coefficients),
         )
         options['links'] = kwargs.pop(
             'links',
@@ -364,6 +377,8 @@ class AmphibiousControlOptions(ControlOptions):
         leg_turn_gain = kwargs.pop(
             'leg_turn_gain',
             [-1, 1]
+            if convention.n_legs == 4
+            else np.zeros(convention.n_legs//2)
         )
         leg_side_turn_gain = kwargs.pop(
             'leg_side_turn_gain',

@@ -12,13 +12,9 @@ from ..model.animat import Amphibious
 from .options import get_animat_options, get_simulation_options
 
 
-def simulation_setup(animat_sdf, arena, **kwargs):
+def simulation_setup(animat_sdf, animat_options, arena, **kwargs):
     """Simulation setup"""
     # Get options
-    animat_options = kwargs.pop(
-        'animat_options',
-        get_animat_options(swimming=False)
-    )
     simulation_options = kwargs.pop(
         'simulation_options',
         get_simulation_options()
@@ -79,12 +75,12 @@ def simulation_setup(animat_sdf, arena, **kwargs):
     return sim
 
 
-def simulation(animat_sdf, arena, **kwargs):
+def simulation(animat_sdf, animat_options, arena, **kwargs):
     """Simulation"""
 
     # Instatiate simulation
     pylog.info('Creating simulation')
-    sim = simulation_setup(animat_sdf, arena, **kwargs)
+    sim = simulation_setup(animat_sdf, animat_options, arena, **kwargs)
 
     # Run simulation
     pylog.info('Running simulation')
