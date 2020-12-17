@@ -10,6 +10,7 @@ import farms_pylog as pylog
 from farms_models.utils import get_sdf_path, get_simulation_data_path
 from farms_data.amphibious.animat_data import AnimatData
 from farms_bullet.utils.profile import profile
+from farms_bullet.model.options import SpawnLoader
 from farms_bullet.model.control import ControlType
 from farms_bullet.simulation.options import SimulationOptions
 from farms_amphibious.model.options import AmphibiousOptions
@@ -35,10 +36,13 @@ def main(animat='salamander', version='v3', scale=0.2):
         # drives_init=[4.9, 0],
         # drives_init=[2.95, 0],
         drives_init=[2.0, 0],
-        spawn_position=[-0.1*scale, 0, scale*0.05],
-        spawn_orientation=[0, 0, 0],
+        # spawn_position=[-0.1*scale, 0, scale*0.05],
+        # spawn_orientation=[0, 0, 0],
         # drives_init=[4, 0],
         # spawn_position=[-0.3-0.5*scale, 0, scale*0.05],
+        # spawn_loader=SpawnLoader.PYBULLET,
+        # spawn_loader=SpawnLoader.FARMS,
+        default_control_type=ControlType.POSITION,
         # default_control_type=ControlType.TORQUE,
         # muscle_alpha=3e-3,
         # muscle_beta=-1e-6,
@@ -58,21 +62,21 @@ def main(animat='salamander', version='v3', scale=0.2):
         # modular_amplitudes=np.full(4, 0.9),
     )
 
-    for link in animat_options['morphology']['links']:
-        link['pybullet_dynamics']['restitution'] = 0.0
-        link['pybullet_dynamics']['lateralFriction'] = 1.0
-        link['pybullet_dynamics']['spinningFriction'] = 0.0
-        link['pybullet_dynamics']['rollingFriction'] = 0.0
-    for joint_i, joint in enumerate(animat_options['morphology']['joints']):
-        joint['pybullet_dynamics']['jointDamping'] = 0
-        joint['pybullet_dynamics']['maxJointVelocity'] = 1e8  # 0.1
-        joint['pybullet_dynamics']['jointLowerLimit'] = -1e8  # -0.1
-        joint['pybullet_dynamics']['jointUpperLimit'] = +1e8  # +0.1
-        joint['pybullet_dynamics']['jointLimitForce'] = 1e8
-        joint_control = animat_options['control']['joints'][joint_i]
-        assert joint['name'] == joint_control['joint']
-        joint['initial_position'] = joint_control['bias']
-        print('{}: {} [rad]'.format(joint['name'], joint_control['bias']))
+    # for link in animat_options['morphology']['links']:
+    #     link['pybullet_dynamics']['restitution'] = 0.0
+    #     link['pybullet_dynamics']['lateralFriction'] = 1.0
+    #     link['pybullet_dynamics']['spinningFriction'] = 0.0
+    #     link['pybullet_dynamics']['rollingFriction'] = 0.0
+    # for joint_i, joint in enumerate(animat_options['morphology']['joints']):
+    #     # joint['pybullet_dynamics']['jointDamping'] = 0
+    #     # joint['pybullet_dynamics']['maxJointVelocity'] = 1e8  # 0.1
+    #     # joint['pybullet_dynamics']['jointLowerLimit'] = -1e8  # -0.1
+    #     # joint['pybullet_dynamics']['jointUpperLimit'] = +1e8  # +0.1
+    #     # joint['pybullet_dynamics']['jointLimitForce'] = 1e8
+    #     joint_control = animat_options['control']['joints'][joint_i]
+    #     assert joint['name'] == joint_control['joint']
+    #     joint['initial_position'] = joint_control['bias']
+    #     print('{}: {} [rad]'.format(joint['name'], joint_control['bias']))
 
     # State
     # state_init = animat_options.control.network.state_init
@@ -90,8 +94,11 @@ def main(animat='salamander', version='v3', scale=0.2):
 
     simulation_options, arena = amphibious_options(
         animat_options,
-        use_water_arena=True,
+        use_water_arena=False,
     )
+    simulation_options.units.meters = 1
+    simulation_options.units.seconds = 1
+    simulation_options.units.kilograms = 1
     animat_options.show_hydrodynamics = not simulation_options.headless
 
     # Save options
