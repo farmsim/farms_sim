@@ -13,13 +13,22 @@ from farms_models.utils import (
 )
 
 
-def generate_sdf(leg_offset, leg_length, leg_radius, legs_parents, **kwargs):
+def generate_sdf(name, leg_offset, leg_length, leg_radius, legs_parents, **kwargs):
     """Generate sdf"""
+
+    # Arguments
+    model_version = kwargs.pop('model_version')
     options = kwargs.pop('options')
     convention = kwargs.pop('convention')
     scale = kwargs.pop('scale', 0.2)
     model_name = kwargs.pop('model_name', 'animat')
     use_2d = kwargs.pop('use_2d', False)
+    color = kwargs.pop('color', [0.1, 0.7, 0.1, 1.0])
+    eye_pos = kwargs.pop('eye_pos', [0.04, 0.03, 0.015])
+    eye_radius = kwargs.pop('eye_radius', 0.01)
+    assert not kwargs, kwargs
+
+    # Links and joints
     links = [None for _ in range(options.morphology.n_links())]
     joints = [None for _ in range(options.morphology.n_joints())]
     max_velocity = 1e6
@@ -31,7 +40,7 @@ def generate_sdf(leg_offset, leg_length, leg_radius, legs_parents, **kwargs):
     leg_offset = scale*np.array(leg_offset)
 
     # Original
-    body_sdf_path = get_sdf_path(name='salamander', version='body')
+    body_sdf_path = get_sdf_path(name=name, version='body')
     original_model = ModelSDF.read(body_sdf_path)[0]
 
     # Body
@@ -39,7 +48,7 @@ def generate_sdf(leg_offset, leg_length, leg_radius, legs_parents, **kwargs):
         link.name = convention.bodylink2name(i)
         links[i] = link
         link.pose = np.array(link.pose, dtype=float).tolist()
-        link.visuals[0].color = [0.1, 0.7, 0.1, 1.0]
+        link.visuals[0].color = color
         link.visuals[0].ambient = link.visuals[0].color
         link.visuals[0].diffuse = link.visuals[0].color
         link.visuals[0].specular = link.visuals[0].color
@@ -49,10 +58,10 @@ def generate_sdf(leg_offset, leg_length, leg_radius, legs_parents, **kwargs):
                 link.visuals.append(Visual.sphere(
                     'eye_{}'.format(name),
                     pose=[
-                        scale*0.04, scale*sign*0.03, scale*0.015,
+                        scale*eye_pos[0], scale*sign*eye_pos[1], scale*eye_pos[2],
                         0.0, 0.0, 0.0,
                     ],
-                    radius=scale*0.01,
+                    radius=scale*eye_radius,
                     color=[0.0, 0.0, 0.0, 1.0],
                 ))
         for j in range(3):
@@ -87,9 +96,9 @@ def generate_sdf(leg_offset, leg_length, leg_radius, legs_parents, **kwargs):
             # Shoulder 0
             pose = np.concatenate([
                 body_position +  [
-                    0,
-                    sign*leg_offset[0],
-                    leg_offset[1]
+                    leg_offset[0],
+                    sign*leg_offset[1],
+                    leg_offset[2]
                 ],
                 [0, 0, 0]
             ])
@@ -280,7 +289,7 @@ def generate_sdf(leg_offset, leg_length, leg_radius, legs_parents, **kwargs):
     )
     filename = create_new_model_from_farms_sdf(
         name=model_name,
-        version=kwargs.get('model_version'),
+        version=model_version,
         sdf=sdf,
         options={
             'author': 'Jonathan Arreguit',
@@ -299,39 +308,49 @@ def generate_sdf(leg_offset, leg_length, leg_radius, legs_parents, **kwargs):
     return filename
 
 
-def main():
-    """Main"""
+def generate_amphibious(model_name, model_version, **kwargs):
+    """Generate amphibious"""
+
+    # Arguments
+    n_joints_body = kwargs.pop('n_joints_body')
+    legs_parents = kwargs.pop('legs_parents')
+    n_legs = 2*len(legs_parents)
+    leg_offset = kwargs.pop('leg_offset', [0, 0.04, -0.02])
+    leg_length = kwargs.pop('leg_length', 0.04)
+    leg_radius = kwargs.pop('leg_radius', 0.01)
+
+    # Animat options
     animat_options = AmphibiousOptions.from_options({
-        'n_legs': 4,
+        'n_legs': n_legs,
         'n_dof_legs': 4,
-        'n_joints_body': 11,
+        'n_joints_body': n_joints_body,
     })
-    animat_options.morphology.mesh_directory = 'meshes_salamander'
+    animat_options.morphology.mesh_directory = 'meshes_{}'.format(model_name)
     convention = AmphibiousConvention(**animat_options.morphology)
     # print(convention)
     # print(convention.n_joints_body)
     # print(convention.n_dof_legs)
     # print(convention.n_legs)
-    model_name = 'salamander'
-    model_version = 'v3'
     # Generate SDF
     filepath = generate_sdf(
-        leg_offset=[0.04, -0.02],
-        leg_length=0.04,
-        leg_radius=0.01,
-        legs_parents=[1, 4],
+        name=model_name,
+        leg_offset=leg_offset,
+        leg_length=leg_length,
+        leg_radius=leg_radius,
+        legs_parents=legs_parents,
         model_name=model_name,
         model_version=model_version,
         options=animat_options,
         convention=convention,
         # scale=1,
+        **kwargs
     )
 
     # Setup meshes
     original_meshes_path = os.path.join(
-        get_model_path(name='salamander', version='body'),
+        get_model_path(name=model_name, version='body'),
         'sdf',
-        'meshes_salamander',
+        'meshes_{}'.format(model_name),
     )
     meshes_output_path = os.path.join(
         os.path.dirname(filepath),
@@ -342,6 +361,30 @@ def main():
     shutil.copytree(
         original_meshes_path,
         meshes_output_path,
+    )
+
+
+def main():
+    """Main"""
+    generate_amphibious(
+        model_name='salamander',
+        model_version='v3',
+        n_joints_body=11,
+        leg_radius=0.01,
+        legs_parents=[1, 4]
+    )
+    generate_amphibious(
+        model_name='centipede',
+        model_version='v1',
+        n_joints_body=20,
+        scale=0.05,
+        leg_offset=[0.05, 0.06, -0.03],
+        leg_length=0.07,
+        leg_radius=0.01,
+        legs_parents=list(range(1, 20)),
+        eye_pos=[0.015, 0.03, 0.015],
+        eye_radius=0.02,
+        color=[0.1, 0.0, 0.0, 1.0],
     )
 
 
