@@ -405,7 +405,7 @@ def get_pleurobot_kwargs_options(**kwargs):
 
     # Animat options
     kwargs_options = dict(
-        spawn_loader=SpawnLoader.PYBULLET,  # SpawnLoader.FARMS,  # SpawnLoader.PYBULLET,
+        spawn_loader=SpawnLoader.FARMS,  # SpawnLoader.PYBULLET,
         default_control_type=ControlType.POSITION,
         swimming=False,
         n_legs=4,
@@ -675,17 +675,19 @@ def get_krock_kwargs_options(**kwargs):
         show_hydrodynamics=True,
         n_legs=4,
         n_dof_legs=4,
-        n_links_body=7,
+        # n_links_body=7,
         n_joints_body=5,
         use_self_collisions=False,
         drag_coefficients=[
             [
-                [-1e0, -1e0, -1e2]
+                [0, 0, 0]
+                if i == 0
+                else [-1e0, -1e0, -1e2]
                 if i < 6
                 else [-1e0, -1e0, -1e0],
-                [-1e-8, -1e-8, -1e-8],
+                [0, 0, 0],
             ]
-            for i in range(6+4*4)
+            for i in range(7+4*4)
         ],
         body_stand_amplitude=0.2,
         legs_amplitudes=[np.pi/16, np.pi/8, np.pi/8, np.pi/8],

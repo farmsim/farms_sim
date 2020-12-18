@@ -27,7 +27,6 @@ class AmphibiousOptions(ModelOptions):
         )
         self.physics = AmphibiousPhysicsOptions(**kwargs.pop('physics'))
         self.show_hydrodynamics = kwargs.pop('show_hydrodynamics')
-        self.transition = kwargs.pop('transition')
         if kwargs:
             raise Exception('Unknown kwargs: {}'.format(kwargs))
 
@@ -59,7 +58,6 @@ class AmphibiousOptions(ModelOptions):
             options['control'] = AmphibiousControlOptions.from_options(kwargs)
             options['control'].defaults_from_convention(convention, kwargs)
         options['show_hydrodynamics'] = kwargs.pop('show_hydrodynamics', False)
-        options['transition'] = kwargs.pop('transition', False)
         if kwargs:
             raise Exception('Unknown kwargs: {}'.format(kwargs))
         return cls(**options)
@@ -80,9 +78,7 @@ class AmphibiousMorphologyOptions(MorphologyOptions):
                 for joint in kwargs.pop('joints')
             ],
         )
-        self.mesh_directory = kwargs.pop('mesh_directory')
         self.n_joints_body = kwargs.pop('n_joints_body')
-        self.n_links_body = kwargs.pop('n_links_body', self.n_joints_body+1)
         self.n_dof_legs = kwargs.pop('n_dof_legs')
         self.n_legs = kwargs.pop('n_legs')
         if kwargs:
@@ -92,10 +88,7 @@ class AmphibiousMorphologyOptions(MorphologyOptions):
     def from_options(cls, kwargs):
         """From options"""
         options = {}
-        options['mesh_directory'] = kwargs.pop('mesh_directory', '')
         options['n_joints_body'] = kwargs.pop('n_joints_body')
-        if 'n_links_body' in kwargs:
-            options['n_links_body'] = kwargs.pop('n_links_body')
         options['n_dof_legs'] = kwargs.pop('n_dof_legs')
         options['n_legs'] = kwargs.pop('n_legs')
         convention = AmphibiousConvention(**options)
@@ -137,12 +130,13 @@ class AmphibiousMorphologyOptions(MorphologyOptions):
             == len(links_friction_spinning)
             == len(links_friction_rolling)
             == len(drag_coefficients)
-        ), print(
+        ), (
             len(links_names),
             len(links_friction_lateral),
             len(links_friction_spinning),
             len(links_friction_rolling),
             len(drag_coefficients),
+            links_names,
         )
         options['links'] = kwargs.pop(
             'links',

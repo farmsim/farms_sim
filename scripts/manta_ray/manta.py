@@ -60,7 +60,6 @@ def manta_options(sdf, drag=-1e-3):
                     name=link_name,
                     collisions=False,
                     density=1000.0,
-                    height=0.05,
                     swimming=True,
                     drag_coefficients=[
                         [drag, drag, drag],
@@ -81,9 +80,7 @@ def manta_options(sdf, drag=-1e-3):
                 )
                 for joint_name in joints_names
             ],
-            mesh_directory='',
             n_joints_body=0,
-            n_links_body=0,
             n_dof_legs=0,
             n_legs=0,
         ),
@@ -113,10 +110,7 @@ def manta_options(sdf, drag=-1e-3):
             kinematics_file=0,
             manta_controller=True,
             kinematics_sampling=0,
-            network=None,  # AmphibiousNetworkOptions(
-            #     drives=[],
-            #     oscillators=[],
-            # ),
+            network=None,
             muscles=[],
         ),
         physics=AmphibiousPhysicsOptions(
@@ -126,7 +120,6 @@ def manta_options(sdf, drag=-1e-3):
             water_surface=10,
         ),
         show_hydrodynamics=True,
-        transition=False,
     )
 
 
