@@ -203,16 +203,16 @@ def get_salamander_options(**kwargs):
     """Salamander options"""
     kwargs_options = get_salamander_kwargs_options(**kwargs)
     options = get_animat_options(**kwargs_options)
-    for joint_i, joint in enumerate(options['morphology']['joints']):
-        joint['pybullet_dynamics']['jointDamping'] = 0
-        joint['pybullet_dynamics']['maxJointVelocity'] = np.inf  # 0.1
-        # joint['pybullet_dynamics']['jointLowerLimit'] = -1e8  # -0.1
-        # joint['pybullet_dynamics']['jointUpperLimit'] = +1e8  # +0.1
-        joint['pybullet_dynamics']['jointLimitForce'] = np.inf
-        joint_control = options['control']['joints'][joint_i]
-        assert joint['name'] == joint_control['joint']
-        joint['initial_position'] = joint_control['bias']
-        # print('{}: {} [rad]'.format(joint['name'], joint_control['bias']))
+    # for joint_i, joint in enumerate(options['morphology']['joints']):
+    #     joint['pybullet_dynamics']['jointDamping'] = 0
+    #     joint['pybullet_dynamics']['maxJointVelocity'] = np.inf  # 0.1
+    #     joint['pybullet_dynamics']['jointLowerLimit'] = -np.inf  # -0.1
+    #     joint['pybullet_dynamics']['jointUpperLimit'] = +np.inf # +0.1
+    #     joint['pybullet_dynamics']['jointLimitForce'] = np.inf
+    #     joint_control = options['control']['joints'][joint_i]
+    #     assert joint['name'] == joint_control['joint']
+    #     joint['initial_position'] = joint_control['bias']
+    #     # print('{}: {} [rad]'.format(joint['name'], joint_control['bias']))
     return options
 
 

@@ -35,7 +35,7 @@ def main(animat='salamander', version='v3', scale=0.2):
         # spawn_orientation=[0, 0, np.pi],
         # drives_init=[4.9, 0],
         # drives_init=[2.95, 0],
-        drives_init=[2.0, 0],
+        # drives_init=[2.0, 0],
         # spawn_position=[-0.1*scale, 0, scale*0.05],
         # spawn_orientation=[0, 0, 0],
         # drives_init=[4, 0],
@@ -64,15 +64,15 @@ def main(animat='salamander', version='v3', scale=0.2):
 
     # for link in animat_options['morphology']['links']:
     #     link['pybullet_dynamics']['restitution'] = 0.0
-    #     link['pybullet_dynamics']['lateralFriction'] = 1.0
+    #     link['pybullet_dynamics']['lateralFriction'] = 0.1
     #     link['pybullet_dynamics']['spinningFriction'] = 0.0
     #     link['pybullet_dynamics']['rollingFriction'] = 0.0
     # for joint_i, joint in enumerate(animat_options['morphology']['joints']):
-    #     # joint['pybullet_dynamics']['jointDamping'] = 0
-    #     # joint['pybullet_dynamics']['maxJointVelocity'] = 1e8  # 0.1
-    #     # joint['pybullet_dynamics']['jointLowerLimit'] = -1e8  # -0.1
-    #     # joint['pybullet_dynamics']['jointUpperLimit'] = +1e8  # +0.1
-    #     # joint['pybullet_dynamics']['jointLimitForce'] = 1e8
+    #     joint['pybullet_dynamics']['jointDamping'] = 0
+    #     joint['pybullet_dynamics']['maxJointVelocity'] = +np.inf  # 0.1
+    #     joint['pybullet_dynamics']['jointLowerLimit'] = -np.inf  # -0.1
+    #     joint['pybullet_dynamics']['jointUpperLimit'] = +np.inf  # +0.1
+    #     joint['pybullet_dynamics']['jointLimitForce'] = +np.inf
     #     joint_control = animat_options['control']['joints'][joint_i]
     #     assert joint['name'] == joint_control['joint']
     #     joint['initial_position'] = joint_control['bias']
