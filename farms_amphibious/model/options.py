@@ -372,7 +372,7 @@ class AmphibiousControlOptions(ControlOptions):
         )
         legs_offsets_swimming = kwargs.pop(
             'legs_offsets_swimming',
-            [-2*np.pi/5, 0, 0, 0]
+            [-np.pi/3, 0, 0, 0]
         )
         leg_turn_gain = kwargs.pop(
             'leg_turn_gain',
