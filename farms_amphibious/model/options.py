@@ -558,7 +558,7 @@ class AmphibiousSensorsOptions(SensorsOptions):
 
     def __init__(self, **kwargs):
         super(AmphibiousSensorsOptions, self).__init__(
-            gps=kwargs.pop('gps'),
+            links=kwargs.pop('links'),
             joints=kwargs.pop('joints'),
             contacts=kwargs.pop('contacts'),
         )
@@ -575,8 +575,8 @@ class AmphibiousSensorsOptions(SensorsOptions):
 
     def defaults_from_convention(self, convention, kwargs):
         """Defaults from convention"""
-        self.gps = kwargs.pop(
-            'sensors_gps',
+        self.links = kwargs.pop(
+            'sensors_links',
             convention.links_names
         )
         self.joints = kwargs.pop(

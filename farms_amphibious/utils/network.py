@@ -200,7 +200,7 @@ class NetworkFigure:
         self.animation = None
         self.timestep = self.data.timestep
         self.time = None
-        self.n_iterations = np.shape(self.data.sensors.gps.array)[0]
+        self.n_iterations = np.shape(self.data.sensors.links.array)[0]
         self.interval = 25
         self.n_frames = self.n_iterations*self.timestep / (1e-3*self.interval)
         self.network = NetworkODE(self.data)
