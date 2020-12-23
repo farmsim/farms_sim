@@ -119,11 +119,11 @@ class AmphibiousController(ModelController):
 
     def pid_controller(self, iteration, time, timestep):
         """Torques"""
-        proprioception = self.animat_data.sensors.proprioception
-        positions = np.array(proprioception.positions(iteration))[
+        joints = self.animat_data.sensors.joints
+        positions = np.array(joints.positions(iteration))[
             self.joints_indices[ControlType.POSITION]
         ]
-        velocities = np.array(proprioception.velocities(iteration))[
+        velocities = np.array(joints.velocities(iteration))[
             self.joints_indices[ControlType.POSITION]
         ]
         outputs = self.network.outputs(iteration)
@@ -159,26 +159,26 @@ class AmphibiousController(ModelController):
             -self.max_torques[ControlType.TORQUE],
             self.max_torques[ControlType.TORQUE],
         )
-        proprioception.array[iteration, :, 8] = torques
-        proprioception.array[iteration, :, 9] = motor_torques
-        proprioception.array[iteration, :, 10] = spring_torques
-        proprioception.array[iteration, :, 11] = damping_torques
+        joints.array[iteration, :, 8] = torques
+        joints.array[iteration, :, 9] = motor_torques
+        joints.array[iteration, :, 10] = spring_torques
+        joints.array[iteration, :, 11] = damping_torques
         return dict(zip(self.joints[ControlType.TORQUE], torques))
 
     def ekeberg_muscle(self, iteration, time, timestep, use_prediction=False):
         """Ekeberg muscle"""
         # Sensors
-        proprioception = self.animat_data.sensors.proprioception
-        positions = np.asarray(proprioception.positions(iteration))[
+        joints = self.animat_data.sensors.joints
+        positions = np.asarray(joints.positions(iteration))[
             self.joints_indices[ControlType.TORQUE]
         ]
-        velocities = np.asarray(proprioception.velocities(iteration))[
+        velocities = np.asarray(joints.velocities(iteration))[
             self.joints_indices[ControlType.TORQUE]
         ]
         if use_prediction:
             n_iters = 1
             velocities_prev = (
-                np.asarray(proprioception.velocities(iteration-n_iters))[
+                np.asarray(joints.velocities(iteration-n_iters))[
                     self.joints_indices[ControlType.TORQUE]
                 ]
                 if iteration > n_iters
@@ -230,10 +230,10 @@ class AmphibiousController(ModelController):
             -self.max_torques[ControlType.TORQUE],
             self.max_torques[ControlType.TORQUE],
         )
-        proprioception.array[iteration, :, 8] = torques
-        proprioception.array[iteration, :, 9] = active_torques + active_stiffness
-        proprioception.array[iteration, :, 10] = passive_stiffness
-        proprioception.array[iteration, :, 11] = damping
+        joints.array[iteration, :, 8] = torques
+        joints.array[iteration, :, 9] = active_torques + active_stiffness
+        joints.array[iteration, :, 10] = passive_stiffness
+        joints.array[iteration, :, 11] = damping
         return dict(zip(self.joints[ControlType.TORQUE], torques))
 
     def torques(self, iteration, time, timestep):

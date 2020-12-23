@@ -211,7 +211,7 @@ cpdef inline void ode_joints(
     DTYPEv1 state,
     DTYPEv1 dstate,
     DriveArrayCy drives,
-    JointsArrayCy joints,
+    JointsControlArrayCy joints,
     unsigned int n_oscillators,
 ) nogil:
     """Joints offset
