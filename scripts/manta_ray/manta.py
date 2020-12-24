@@ -86,7 +86,7 @@ def manta_options(sdf, drag=-1e-3):
         ),
         control=AmphibiousControlOptions(
             sensors=AmphibiousSensorsOptions(
-                gps=links_names,
+                links=links_names,
                 joints=joints_names,
                 contacts=[],
                 hydrodynamics=links_names,
