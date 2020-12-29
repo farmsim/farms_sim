@@ -49,7 +49,7 @@ class MantaRaySimulation(AmphibiousSimulation):
         arena = get_flat_arena()
 
         # Options
-        animat_options = manta_options(sdf)
+        animat_options = manta_options(sdf, spawn_position=[0, -0.2, 0.1])
         sim_options = get_simulation_options(
             timestep=timestep,
             n_iterations=int(duration/timestep),

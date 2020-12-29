@@ -38,7 +38,7 @@ from farms_amphibious.experiment.options import (
 )
 
 
-def manta_options(sdf, drag=-1e-3):
+def manta_options(sdf, drag=-1e-3, spawn_position=None):
     """Manta options"""
     model = ModelSDF.read(sdf)[0]
     links_names = [link.name for link in model.links]
@@ -52,8 +52,11 @@ def manta_options(sdf, drag=-1e-3):
         j_passive_right,
     ) = joints_sorted(names=joints_names)
     j_control = control(0, j_left, j_right, j_passive_left, j_passive_right)
+    spawn_options = {}
+    if spawn_position is not None:
+        spawn_options['spawn_position'] = spawn_position
     return AmphibiousOptions(
-        spawn=SpawnOptions.from_options({}),
+        spawn=SpawnOptions.from_options(spawn_options),
         morphology=AmphibiousMorphologyOptions(
             links=[
                 AmphibiousLinkOptions(
