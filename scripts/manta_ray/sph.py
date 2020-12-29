@@ -85,7 +85,8 @@ class MantaRaySimulation(AmphibiousSimulation):
             density=density_solid,
             tank_position=tank_position,
             tank_size=tank_size,
-            fluid_velocity=[0, 0, 0],
+            fluid_velocity=[0, -0.3, 0],
+            use_inlet_outlet=True,
             **kwargs,
         )
 
@@ -93,7 +94,7 @@ class MantaRaySimulation(AmphibiousSimulation):
 def simulate(output='/tmp/manta_sph'):
     """Simulate"""
     app = MantaRaySimulation(
-        duration=4,  # 0.4,  # 8
+        duration=6,  # 0.4,  # 8
         timestep=1e-4,
         spacing=1e-2,
         output_dir=output,
