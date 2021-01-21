@@ -21,6 +21,10 @@ from farms_amphibious.experiment.options import (
     amphibious_options,
     get_centipede_options,
 )
+from farms_amphibious.utils.prompt import (
+    parse_args,
+    prompt_postprocessing,
+)
 
 
 def main(animat='centipede', version='v1', scale=0.2):
@@ -63,49 +67,13 @@ def main(animat='centipede', version='v1', scale=0.2):
     )
 
     # Post-processing
-    pylog.info('Simulation post-processing')
-    log_path = get_simulation_data_path(
-        name=animat,
-        version=version,
-        simulation_name='default',
-    )
-    video_name = os.path.join(log_path, 'simulation.mp4')
-    save_data = prompt('Save data', False)
-    if log_path and not os.path.isdir(log_path):
-        os.mkdir(log_path)
-    show_plots = prompt('Show plots', False)
-    sim.postprocess(
-        iteration=sim.iteration,
-        log_path=log_path if save_data else '',
-        plot=show_plots,
-        video=video_name if sim.options.record else ''
-    )
-    if save_data:
-        pylog.debug('Data saved, now loading back to check validity')
-        data = AnimatData.from_file(os.path.join(log_path, 'simulation.hdf5'))
-        pylog.debug('Data successfully saved and logged back: {}'.format(data))
-
-    # Plot network
-    show_connectivity = prompt('Show connectivity maps', False)
-    if show_connectivity:
-        plot_networks_maps(animat_options.morphology, sim.animat().data)
-
-    # Plot
-    if (show_plots or show_connectivity) and prompt('Save plots', False):
-        extension = 'pdf'
-        for fig in [plt.figure(num) for num in plt.get_fignums()]:
-            filename = '{}.{}'.format(
-                os.path.join(log_path, fig.canvas.get_window_title()),
-                extension,
-            )
-            filename = filename.replace(' ', '_')
-            pylog.debug('Saving to {}'.format(filename))
-            fig.savefig(filename, format=extension)
-    if show_plots or (
-            show_connectivity
-            and prompt('Show connectivity plots', False)
-    ):
-        plt.show()
+    if parse_args()[0].prompt:
+        prompt_postprocessing(
+            animat=animat,
+            version=version,
+            sim=sim,
+            animat_options=animat_options,
+        )
 
 
 if __name__ == '__main__':

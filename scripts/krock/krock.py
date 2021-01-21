@@ -8,13 +8,16 @@ import matplotlib.pyplot as plt
 import farms_pylog as pylog
 from farms_bullet.utils.profile import profile
 from farms_bullet.simulation.options import SimulationOptions
-from farms_amphibious.utils.prompt import prompt
 from farms_amphibious.utils.network import plot_networks_maps
 from farms_amphibious.model.options import AmphibiousOptions
 from farms_amphibious.experiment.simulation import simulation
 from farms_amphibious.experiment.options import (
     get_krock_options,
     amphibious_options,
+)
+from farms_amphibious.utils.prompt import (
+    parse_args,
+    prompt_postprocessing,
 )
 
 
@@ -56,24 +59,13 @@ def main():
     )
 
     # Post-processing
-    pylog.info('Simulation post-processing')
-    log_path = 'krock_results'
-    video_name = os.path.join(log_path, 'simulation.mp4')
-    if log_path and not os.path.isdir(log_path):
-        os.mkdir(log_path)
-    sim.postprocess(
-        iteration=sim.iteration,
-        log_path=log_path if prompt('Save data', False) else '',
-        plot=prompt('Show plots', False),
-        video=video_name if sim.options.record else '',
-    )
-
-    # Plot network
-    if prompt('Show connectivity maps', False):
-        plot_networks_maps(animat_options.morphology, sim.animat().data)
-
-    # Plot
-    plt.show()
+    if parse_args()[0].prompt:
+        prompt_postprocessing(
+            animat='krock',
+            version='0',
+            sim=sim,
+            animat_options=animat_options,
+        )
 
 
 if __name__ == '__main__':
