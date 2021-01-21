@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import farms_pylog as pylog
 from farms_bullet.utils.profile import profile
 from farms_bullet.simulation.options import SimulationOptions
-from farms_amphibious.utils.utils import prompt
+from farms_amphibious.utils.prompt import prompt
 from farms_amphibious.utils.network import plot_networks_maps
 from farms_amphibious.model.options import AmphibiousOptions
 from farms_amphibious.experiment.simulation import simulation

@@ -14,7 +14,7 @@ from farms_bullet.model.options import SpawnLoader
 from farms_bullet.model.control import ControlType
 from farms_bullet.simulation.options import SimulationOptions
 from farms_amphibious.model.options import AmphibiousOptions
-from farms_amphibious.utils.utils import prompt
+from farms_amphibious.utils.prompt import prompt, parse_args
 from farms_amphibious.utils.network import plot_networks_maps
 from farms_amphibious.experiment.simulation import simulation
 from farms_amphibious.experiment.options import (
@@ -121,50 +121,53 @@ def main(animat='salamander', version='v3', scale=0.2):
         use_controller=True,
     )
 
-    # Post-processing
-    pylog.info('Simulation post-processing')
-    log_path = get_simulation_data_path(
-        name=animat,
-        version=version,
-        simulation_name='default',
-    )
-    video_name = os.path.join(log_path, 'simulation.mp4')
-    save_data = prompt('Save data', False)
-    if log_path and not os.path.isdir(log_path):
-        os.mkdir(log_path)
-    show_plots = prompt('Show plots', False)
-    sim.postprocess(
-        iteration=sim.iteration,
-        log_path=log_path if save_data else '',
-        plot=show_plots,
-        video=video_name if sim.options.record else ''
-    )
-    if save_data:
-        pylog.debug('Data saved, now loading back to check validity')
-        data = AnimatData.from_file(os.path.join(log_path, 'simulation.hdf5'))
-        pylog.debug('Data successfully saved and logged back: {}'.format(data))
+    # Prompts
+    if parse_args()[0].prompt:
 
-    # Plot network
-    show_connectivity = prompt('Show connectivity maps', False)
-    if show_connectivity:
-        plot_networks_maps(animat_options.morphology, sim.animat().data)
+        # Post-processing
+        pylog.info('Simulation post-processing')
+        log_path = get_simulation_data_path(
+            name=animat,
+            version=version,
+            simulation_name='default',
+        )
+        video_name = os.path.join(log_path, 'simulation.mp4')
+        save_data = prompt('Save data', False)
+        if log_path and not os.path.isdir(log_path):
+            os.mkdir(log_path)
+        show_plots = prompt('Show plots', False)
+        sim.postprocess(
+            iteration=sim.iteration,
+            log_path=log_path if save_data else '',
+            plot=show_plots,
+            video=video_name if sim.options.record else ''
+        )
+        if save_data:
+            pylog.debug('Data saved, now loading back to check validity')
+            data = AnimatData.from_file(os.path.join(log_path, 'simulation.hdf5'))
+            pylog.debug('Data successfully saved and logged back: {}'.format(data))
 
-    # Plot
-    if (show_plots or show_connectivity) and prompt('Save plots', False):
-        extension = 'pdf'
-        for fig in [plt.figure(num) for num in plt.get_fignums()]:
-            filename = '{}.{}'.format(
-                os.path.join(log_path, fig.canvas.get_window_title()),
-                extension,
-            )
-            filename = filename.replace(' ', '_')
-            pylog.debug('Saving to {}'.format(filename))
-            fig.savefig(filename, format=extension)
-    if show_plots or (
-            show_connectivity
-            and prompt('Show connectivity plots', False)
-    ):
-        plt.show()
+        # Plot network
+        show_connectivity = prompt('Show connectivity maps', False)
+        if show_connectivity:
+            plot_networks_maps(animat_options.morphology, sim.animat().data)
+
+        # Plot
+        if (show_plots or show_connectivity) and prompt('Save plots', False):
+            extension = 'pdf'
+            for fig in [plt.figure(num) for num in plt.get_fignums()]:
+                filename = '{}.{}'.format(
+                    os.path.join(log_path, fig.canvas.get_window_title()),
+                    extension,
+                )
+                filename = filename.replace(' ', '_')
+                pylog.debug('Saving to {}'.format(filename))
+                fig.savefig(filename, format=extension)
+        if show_plots or (
+                show_connectivity
+                and prompt('Show connectivity plots', False)
+        ):
+            plt.show()
 
 
 if __name__ == '__main__':

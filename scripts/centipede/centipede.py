@@ -14,7 +14,7 @@ from farms_bullet.model.options import SpawnLoader
 from farms_bullet.model.control import ControlType
 from farms_bullet.simulation.options import SimulationOptions
 from farms_amphibious.model.options import AmphibiousOptions
-from farms_amphibious.utils.utils import prompt
+from farms_amphibious.utils.prompt import prompt
 from farms_amphibious.utils.network import plot_networks_maps
 from farms_amphibious.experiment.simulation import simulation
 from farms_amphibious.experiment.options import (

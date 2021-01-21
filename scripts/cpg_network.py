@@ -9,7 +9,7 @@ from farms_amphibious.model.convention import AmphibiousConvention
 from farms_amphibious.control.network import NetworkODE
 from farms_amphibious.experiment.simulation import profile
 from farms_amphibious.utils.network import plot_networks_maps
-from farms_amphibious.utils.utils import prompt
+from farms_amphibious.utils.prompt import prompt
 from farms_amphibious.model.options import (
     AmphibiousMorphologyOptions,
     AmphibiousControlOptions,
