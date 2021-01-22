@@ -26,6 +26,9 @@ from farms_amphibious.experiment.options import (
 def main(animat='salamander', version='v3'):
     """Main"""
 
+    # Arguments
+    clargs = parse_args()[0]
+
     # Animat
     sdf = get_sdf_path(name=animat, version=version)
     pylog.info('Model SDF: {}'.format(sdf))
@@ -122,13 +125,14 @@ def main(animat='salamander', version='v3'):
     )
 
     # Post-processing
-    if parse_args()[0].prompt:
-        prompt_postprocessing(
-            animat=animat,
-            version=version,
-            sim=sim,
-            animat_options=animat_options,
-        )
+    prompt_postprocessing(
+        animat=animat,
+        version=version,
+        sim=sim,
+        animat_options=animat_options,
+        query=clargs.prompt,
+        save=clargs.save,
+    )
 
 
 if __name__ == '__main__':

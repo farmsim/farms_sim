@@ -10,6 +10,7 @@ import farms_pylog as pylog
 from farms_models.utils import get_simulation_data_path
 from farms_data.amphibious.animat_data import AnimatData
 from farms_amphibious.utils.network import plot_networks_maps
+from farms_bullet.simulation.parse_args import argument_parser
 
 
 def prompt(query, default):
@@ -28,15 +29,19 @@ def prompt(query, default):
 
 def parse_args():
     """Parse args"""
-    parser = argparse.ArgumentParser(
-        description='FARMS amphibious',
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-    )
+    parser = argument_parser()
+    parser.description = 'Salamander simulation'
     parser.add_argument(
         '-p', '--prompt',
         dest='prompt',
         action='store_true',
         help='Prompt at end of simulation',
+    )
+    parser.add_argument(
+        '-s', '--save',
+        dest='save',
+        action='store_true',
+        help='Save simulation data to default location',
     )
     return parser.parse_known_args()
 
@@ -46,6 +51,8 @@ def prompt_postprocessing(
         version,
         sim,
         animat_options,
+        query=True,
+        save=False,
 ):
     """Prompt postprocessing"""
     # Post-processing
@@ -56,10 +63,10 @@ def prompt_postprocessing(
         simulation_name='default',
     )
     video_name = os.path.join(log_path, 'simulation.mp4')
-    save_data = prompt('Save data', False)
+    save_data = save or prompt('Save data', False) if query else save
     if log_path and not os.path.isdir(log_path):
         os.mkdir(log_path)
-    show_plots = prompt('Show plots', False)
+    show_plots = prompt('Show plots', False) if query else False
     sim.postprocess(
         iteration=sim.iteration,
         log_path=log_path if save_data else '',
@@ -72,12 +79,20 @@ def prompt_postprocessing(
         pylog.debug('Data successfully saved and logged back: {}'.format(data))
 
     # Plot network
-    show_connectivity = prompt('Show connectivity maps', False)
+    show_connectivity = (
+        prompt('Show connectivity maps', False)
+        if query
+        else False
+    )
     if show_connectivity:
         plot_networks_maps(animat_options.morphology, sim.animat().data)
 
     # Plot
-    if (show_plots or show_connectivity) and prompt('Save plots', False):
+    if (
+            (show_plots or show_connectivity)
+            and query
+            and prompt('Save plots', False)
+    ):
         extension = 'pdf'
         for fig in [plt.figure(num) for num in plt.get_fignums()]:
             filename = '{}.{}'.format(
@@ -89,6 +104,7 @@ def prompt_postprocessing(
             fig.savefig(filename, format=extension)
     if show_plots or (
             show_connectivity
+            and query
             and prompt('Show connectivity plots', False)
     ):
         plt.show()
