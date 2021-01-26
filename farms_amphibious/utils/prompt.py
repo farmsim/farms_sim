@@ -52,6 +52,11 @@ def parse_args():
         default='simulation.profile',
         help='Save simulation profile to given filename',
     )
+    parser.add_argument(
+        '--test',
+        action='store_true',
+        help='Test simulation configuratioin files',
+    )
     return parser.parse_args()
 
 

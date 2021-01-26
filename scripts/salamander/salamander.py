@@ -104,15 +104,16 @@ def main(animat='salamander', version='v3'):
     simulation_options.units.kilograms = 1
     animat_options.show_hydrodynamics = not simulation_options.headless
 
-    # Save options
-    animat_options_filename = 'salamander_animat_options.yaml'
-    animat_options.save(animat_options_filename)
-    simulation_options_filename = 'salamander_simulation_options.yaml'
-    simulation_options.save(simulation_options_filename)
+    if clargs.test:
+        # Save options
+        animat_options_filename = 'salamander_animat_options.yaml'
+        animat_options.save(animat_options_filename)
+        simulation_options_filename = 'salamander_simulation_options.yaml'
+        simulation_options.save(simulation_options_filename)
 
-    # Load options
-    animat_options = AmphibiousOptions.load(animat_options_filename)
-    simulation_options = SimulationOptions.load(simulation_options_filename)
+        # Load options
+        animat_options = AmphibiousOptions.load(animat_options_filename)
+        simulation_options = SimulationOptions.load(simulation_options_filename)
 
     # Simulation
     sim = profile(

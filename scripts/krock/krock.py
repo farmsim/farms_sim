@@ -41,15 +41,16 @@ def main():
         arena,
     ) = amphibious_options(animat_options, use_water_arena=False)
 
-    # Save options
-    animat_options_filename = 'krock_animat_options.yaml'
-    animat_options.save(animat_options_filename)
-    simulation_options_filename = 'krock_simulation_options.yaml'
-    simulation_options.save(simulation_options_filename)
+    if clargs.test:
+        # Save options
+        animat_options_filename = 'krock_animat_options.yaml'
+        animat_options.save(animat_options_filename)
+        simulation_options_filename = 'krock_simulation_options.yaml'
+        simulation_options.save(simulation_options_filename)
 
-    # Load options
-    animat_options = AmphibiousOptions.load(animat_options_filename)
-    simulation_options = SimulationOptions.load(simulation_options_filename)
+        # Load options
+        animat_options = AmphibiousOptions.load(animat_options_filename)
+        simulation_options = SimulationOptions.load(simulation_options_filename)
 
     # Simulation
     sim = profile(
