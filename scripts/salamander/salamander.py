@@ -122,6 +122,7 @@ def main(animat='salamander', version='v3'):
         simulation_options=simulation_options,
         arena=arena,
         use_controller=True,
+        profile_filename=clargs.profile,
     )
 
     # Post-processing

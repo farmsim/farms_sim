@@ -46,6 +46,12 @@ def parse_args():
         action='store_true',
         help='Save data to farms_models_data',
     )
+    parser.add_argument(
+        '--profile',
+        type=str,
+        default='simulation.profile',
+        help='Save simulation profile to given filename',
+    )
     return parser.parse_args()
 
 
