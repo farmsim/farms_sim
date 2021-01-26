@@ -27,7 +27,7 @@ def main(animat='salamander', version='v3'):
     """Main"""
 
     # Arguments
-    clargs = parse_args()[0]
+    clargs = parse_args()
 
     # Animat
     sdf = get_sdf_path(name=animat, version=version)
@@ -43,7 +43,7 @@ def main(animat='salamander', version='v3'):
         # spawn_orientation=[0, 0, 0],
         # drives_init=[4, 0],
         # spawn_position=[-0.3-0.5*scale, 0, scale*0.05],
-        # spawn_loader=SpawnLoader.PYBULLET,
+        spawn_loader=SpawnLoader.PYBULLET,
         # spawn_loader=SpawnLoader.FARMS,
         default_control_type=ControlType.POSITION,
         # default_control_type=ControlType.TORQUE,
@@ -132,6 +132,7 @@ def main(animat='salamander', version='v3'):
         animat_options=animat_options,
         query=clargs.prompt,
         save=clargs.save,
+        models=clargs.models,
     )
 
 

@@ -1,7 +1,6 @@
 """Prompt"""
 
 import os
-import argparse
 from distutils.util import strtobool
 
 import matplotlib.pyplot as plt
@@ -33,17 +32,21 @@ def parse_args():
     parser.description = 'Salamander simulation'
     parser.add_argument(
         '-p', '--prompt',
-        dest='prompt',
         action='store_true',
         help='Prompt at end of simulation',
     )
     parser.add_argument(
         '-s', '--save',
-        dest='save',
-        action='store_true',
-        help='Save simulation data to default location',
+        type=str,
+        default='',
+        help='Save simulation data to provided path',
     )
-    return parser.parse_known_args()
+    parser.add_argument(
+        '--models',
+        action='store_true',
+        help='Save data to farms_models_data',
+    )
+    return parser.parse_args()
 
 
 def prompt_postprocessing(
@@ -52,18 +55,25 @@ def prompt_postprocessing(
         sim,
         animat_options,
         query=True,
-        save=False,
+        **kwargs
 ):
     """Prompt postprocessing"""
+    # Arguments
+    save = kwargs.pop('save', '')
+    models = kwargs.pop('models', '')
+    extension = kwargs.pop('extension', 'pdf')
+
     # Post-processing
     pylog.info('Simulation post-processing')
     log_path = get_simulation_data_path(
         name=animat,
         version=version,
-        simulation_name='default',
+        simulation_name=save if save else 'default',
+    ) if models else save
+    save_data = (
+        (query and prompt('Save data', False))
+        or (save or models) and not query
     )
-    video_name = os.path.join(log_path, 'simulation.mp4')
-    save_data = save or prompt('Save data', False) if query else save
     if log_path and not os.path.isdir(log_path):
         os.mkdir(log_path)
     show_plots = prompt('Show plots', False) if query else False
@@ -71,7 +81,11 @@ def prompt_postprocessing(
         iteration=sim.iteration,
         log_path=log_path if save_data else '',
         plot=show_plots,
-        video=video_name if sim.options.record else ''
+        video=(
+            os.path.join(log_path, 'simulation.mp4')
+            if sim.options.record
+            else ''
+        ),
     )
     if save_data:
         pylog.debug('Data saved, now loading back to check validity')
@@ -93,7 +107,6 @@ def prompt_postprocessing(
             and query
             and prompt('Save plots', False)
     ):
-        extension = 'pdf'
         for fig in [plt.figure(num) for num in plt.get_fignums()]:
             filename = '{}.{}'.format(
                 os.path.join(log_path, fig.canvas.get_window_title()),
