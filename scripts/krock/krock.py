@@ -24,6 +24,9 @@ from farms_amphibious.utils.prompt import (
 def main():
     """Main"""
 
+    # Arguments
+    clargs = parse_args()
+
     sdf, animat_options = get_krock_options()
 
     # # State
@@ -56,16 +59,19 @@ def main():
         simulation_options=simulation_options,
         arena=arena,
         use_controller=True,
+        profile_filename=clargs.profile,
     )
 
     # Post-processing
-    if parse_args()[0].prompt:
-        prompt_postprocessing(
-            animat='krock',
-            version='0',
-            sim=sim,
-            animat_options=animat_options,
-        )
+    prompt_postprocessing(
+        animat='krock',
+        version='0',
+        sim=sim,
+        animat_options=animat_options,
+        query=clargs.prompt,
+        save=clargs.save,
+        models=clargs.models,
+    )
 
 
 if __name__ == '__main__':
