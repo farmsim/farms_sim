@@ -312,7 +312,7 @@ def get_pleurobot_kwargs_options(**kwargs):
     # Morphology information
     links_names = kwargs.pop(
         'links_names',
-        ['Head'] + [  # 'base_link',
+        ['base_link'] + [  # 'Head',
             'link{}'.format(i+1)
             for i in range(6)
         ] + ['link_tailBone'] + [
