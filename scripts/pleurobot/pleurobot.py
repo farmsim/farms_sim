@@ -85,8 +85,8 @@ def main():
 
     # Post-processing
     prompt_postprocessing(
-        animat='orobot',
-        version='0',
+        animat='pleurobot',
+        version='1',
         sim=sim,
         animat_options=animat_options,
         query=clargs.prompt,
