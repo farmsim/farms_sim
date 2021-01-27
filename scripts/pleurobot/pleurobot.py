@@ -18,11 +18,19 @@ from farms_amphibious.experiment.options import (
     get_pleurobot_options,
     amphibious_options,
 )
+from farms_amphibious.utils.prompt import (
+    parse_args,
+    prompt_postprocessing,
+)
 
 
 def main():
     """Main"""
 
+    # Arguments
+    clargs = parse_args()
+
+    # Options
     kwargs = get_pleurobot_kwargs_options(
         spawn_position=[0, 0, 0.1],
         spawn_orientation=[0, 0, np.pi],
@@ -41,6 +49,10 @@ def main():
     kwargs['links_swimming'] = kwargs['links_names'] if water else []
     kwargs['sensors_hydrodynamics'] = kwargs['links_names']
     sdf, animat_options = get_pleurobot_options(**kwargs)
+    (
+        simulation_options,
+        arena,
+    ) = amphibious_options(animat_options, use_water_arena=water)
 
     # # State
     # n_joints = animat_options.morphology.n_joints()
@@ -49,20 +61,16 @@ def main():
     #     osc.initial_phase = state_init[osc_i]
     #     osc.initial_amplitude = state_init[osc_i+n_joints]
 
-    (
-        simulation_options,
-        arena,
-    ) = amphibious_options(animat_options, use_water_arena=water)
+    if clargs.test:
+        # Save options
+        animat_options_filename = 'pleurobot_animat_options.yaml'
+        animat_options.save(animat_options_filename)
+        simulation_options_filename = 'pleurobot_simulation_options.yaml'
+        simulation_options.save(simulation_options_filename)
 
-    # Save options
-    animat_options_filename = 'pleurobot_animat_options.yaml'
-    animat_options.save(animat_options_filename)
-    simulation_options_filename = 'pleurobot_simulation_options.yaml'
-    simulation_options.save(simulation_options_filename)
-
-    # Load options
-    animat_options = AmphibiousOptions.load(animat_options_filename)
-    simulation_options = SimulationOptions.load(simulation_options_filename)
+        # Load options
+        animat_options = AmphibiousOptions.load(animat_options_filename)
+        simulation_options = SimulationOptions.load(simulation_options_filename)
 
     # Simulation
     sim = profile(
@@ -72,27 +80,24 @@ def main():
         simulation_options=simulation_options,
         arena=arena,
         use_controller=True,
+        profile_filename=clargs.profile,
     )
 
     # Post-processing
-    pylog.info('Simulation post-processing')
-    log_path = 'pleurobot_results'
-    video_name = os.path.join(log_path, 'simulation.mp4')
-    if log_path and not os.path.isdir(log_path):
-        os.mkdir(log_path)
-    sim.postprocess(
-        iteration=sim.iteration,
-        log_path=log_path if prompt('Save data', False) else '',
-        plot=prompt('Show plots', False),
-        video=video_name if sim.options.record else '',
+    prompt_postprocessing(
+        animat='orobot',
+        version='0',
+        sim=sim,
+        animat_options=animat_options,
+        query=clargs.prompt,
+        save=clargs.save,
+        models=clargs.models,
     )
 
     # Plot network
-    if prompt('Show connectivity maps', False):
+    if clargs.prompt and prompt('Show connectivity maps', False):
         plot_networks_maps(animat_options.morphology, sim.animat().data)
-
-    # Plot
-    plt.show()
+        plt.show()
 
 
 if __name__ == '__main__':

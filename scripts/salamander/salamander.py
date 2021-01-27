@@ -29,7 +29,7 @@ def main(animat='salamander', version='v3'):
     # Arguments
     clargs = parse_args()
 
-    # Animat
+    # Options
     sdf = get_sdf_path(name=animat, version=version)
     pylog.info('Model SDF: {}'.format(sdf))
     animat_options = get_salamander_options(

@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 import farms_pylog as pylog
 from farms_bullet.utils.profile import profile
 from farms_bullet.simulation.options import SimulationOptions
-from farms_amphibious.utils.prompt import prompt
 from farms_amphibious.utils.network import plot_networks_maps
 from farms_amphibious.model.options import AmphibiousOptions
 from farms_amphibious.experiment.simulation import simulation
@@ -25,7 +24,15 @@ from farms_amphibious.utils.prompt import (
 def main():
     """Main"""
 
+    # Arguments
+    clargs = parse_args()
+
+    # Options
     sdf, animat_options = get_orobot_options()
+    (
+        simulation_options,
+        arena,
+    ) = amphibious_options(animat_options, use_water_arena=False)
 
     # # State
     # n_joints = animat_options.morphology.n_joints()
@@ -34,20 +41,16 @@ def main():
     #     osc.initial_phase = state_init[osc_i]
     #     osc.initial_amplitude = state_init[osc_i+n_joints]
 
-    (
-        simulation_options,
-        arena,
-    ) = amphibious_options(animat_options, use_water_arena=False)
+    if clargs.test:
+        # Save options
+        animat_options_filename = 'orobot_animat_options.yaml'
+        animat_options.save(animat_options_filename)
+        simulation_options_filename = 'orobot_simulation_options.yaml'
+        simulation_options.save(simulation_options_filename)
 
-    # Save options
-    animat_options_filename = 'orobot_animat_options.yaml'
-    animat_options.save(animat_options_filename)
-    simulation_options_filename = 'orobot_simulation_options.yaml'
-    simulation_options.save(simulation_options_filename)
-
-    # Load options
-    animat_options = AmphibiousOptions.load(animat_options_filename)
-    simulation_options = SimulationOptions.load(simulation_options_filename)
+        # Load options
+        animat_options = AmphibiousOptions.load(animat_options_filename)
+        simulation_options = SimulationOptions.load(simulation_options_filename)
 
     # Simulation
     sim = profile(
@@ -57,16 +60,19 @@ def main():
         simulation_options=simulation_options,
         arena=arena,
         use_controller=True,
+        profile_filename=clargs.profile,
     )
 
     # Post-processing
-    if parse_args()[0].prompt:
-        prompt_postprocessing(
-            animat='orobot',
-            version='0',
-            sim=sim,
-            animat_options=animat_options,
-        )
+    prompt_postprocessing(
+        animat='orobot',
+        version='0',
+        sim=sim,
+        animat_options=animat_options,
+        query=clargs.prompt,
+        save=clargs.save,
+        models=clargs.models,
+    )
 
 
 if __name__ == '__main__':

@@ -27,7 +27,12 @@ def main():
     # Arguments
     clargs = parse_args()
 
+    # Options
     sdf, animat_options = get_krock_options()
+    (
+        simulation_options,
+        arena,
+    ) = amphibious_options(animat_options, use_water_arena=False)
 
     # # State
     # n_joints = animat_options.morphology.n_joints()
@@ -36,10 +41,6 @@ def main():
     #     osc.initial_phase = state_init[osc_i]
     #     osc.initial_amplitude = state_init[osc_i+n_joints]
 
-    (
-        simulation_options,
-        arena,
-    ) = amphibious_options(animat_options, use_water_arena=False)
 
     if clargs.test:
         # Save options
