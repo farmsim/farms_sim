@@ -28,7 +28,9 @@ def main():
     clargs = parse_args()
 
     # Options
-    sdf, animat_options = get_krock_options()
+    sdf, animat_options = get_krock_options(
+        drives_init=clargs.drives,
+    )
     (
         simulation_options,
         arena,

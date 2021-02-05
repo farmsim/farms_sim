@@ -32,6 +32,7 @@ def main():
 
     # Options
     kwargs = get_pleurobot_kwargs_options(
+        drives_init=clargs.drives,
         spawn_position=[0, 0, 0.1],
         spawn_orientation=[0, 0, np.pi],
         show_hydrodynamics=True,

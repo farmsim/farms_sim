@@ -57,6 +57,14 @@ def parse_args():
         action='store_true',
         help='Test simulation configuratioin files',
     )
+    parser.add_argument(
+        '--drives',
+        nargs=2,
+        type=float,
+        metavar=('forward', 'turn'),
+        default=(2, 0),
+        help='Animat descending drives',
+    )
     return parser.parse_args()
 
 

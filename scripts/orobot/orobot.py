@@ -28,7 +28,9 @@ def main():
     clargs = parse_args()
 
     # Options
-    sdf, animat_options = get_orobot_options()
+    sdf, animat_options = get_orobot_options(
+        drives_init=clargs.drives,
+    )
     (
         simulation_options,
         arena,
