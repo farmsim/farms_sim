@@ -79,7 +79,7 @@ def get_flat_arena():
     )
 
 
-def get_water_arena(water_surface):
+def get_ramp_arena(water_surface):
     """Water arena"""
     return SimulationModels([
         DescriptionFormatModel(
@@ -106,19 +106,57 @@ def get_water_arena(water_surface):
     ])
 
 
-def amphibious_options(animat_options, use_water_arena=True, **kwargs):
+def get_water_arena(water_surface, ground_height=None):
+    """Water arena"""
+    if ground_height is None:
+        ground_height = water_surface - 1
+    return SimulationModels([
+        DescriptionFormatModel(
+            path=get_sdf_path(
+                name='arena_flat',
+                version='v0',
+            ),
+            spawn_options={
+                'posObj': [0, 0, ground_height],
+                'ornObj': [0, 0, 0, 1],
+            },
+            visual_options={
+                'path': 'BIOROB2_blue.png',
+                'rgbaColor': [1, 1, 1, 1],
+                'specularColor': [1, 1, 1],
+            }
+        ),
+        DescriptionFormatModel(
+            path=get_sdf_path(
+                name='arena_water',
+                version='v0',
+            ),
+            spawn_options={
+                'posObj': [0, 0, water_surface],
+                'ornObj': [0, 0, 0, 1],
+            }
+        ),
+    ])
+
+
+def amphibious_options(animat_options, arena='flat', **kwargs):
     """Amphibious simulation"""
 
     # Water
     water_surface = kwargs.pop('water_surface', -0.1*0.1)
 
     # Arena
-    if use_water_arena:
+    if arena == 'flat':
+        arena = get_flat_arena()
+        set_no_swimming_options(animat_options)
+    elif arena == 'ramp':
+        arena = get_ramp_arena(water_surface=water_surface)
+        set_swimming_options(animat_options, water_surface=water_surface)
+    elif arena == 'water':
         arena = get_water_arena(water_surface=water_surface)
         set_swimming_options(animat_options, water_surface=water_surface)
     else:
-        arena = get_flat_arena()
-        set_no_swimming_options(animat_options)
+        raise Exception('Unknown arena: "{}"'.format(arena))
 
     # Simulation
     simulation_options = get_simulation_options(**kwargs)
