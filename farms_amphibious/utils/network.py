@@ -563,9 +563,9 @@ def plot_networks_maps(morphology, data, show_all=False):
     convention = AmphibiousConvention(**morphology)
 
     # Plot network
-    network = NetworkFigure(morphology, data)
-    network.plot(title='Complete network', show_title=False)
-    network.animate()
+    network_anim = NetworkFigure(morphology, data)
+    network_anim.plot(title='Complete network', show_title=False)
+    network_anim.animate()
 
     if show_all:
 
@@ -773,3 +773,5 @@ def plot_networks_maps(morphology, data, show_all=False):
             use_colorbar=True,
             hydro_amplitude_weights=True,
         )
+
+    return network_anim
