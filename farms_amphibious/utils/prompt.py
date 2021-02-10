@@ -36,6 +36,22 @@ def parse_args():
         help='Prompt at end of simulation',
     )
     parser.add_argument(
+        '--position',
+        nargs=3,
+        type=float,
+        metavar=('x', 'y', 'z'),
+        default=(0, 0, 0),
+        help='Spawn position',
+    )
+    parser.add_argument(
+        '--orientation',
+        nargs=3,
+        type=float,
+        metavar=('alpha', 'beta', 'gamma'),
+        default=(0, 0, 0),
+        help='Spawn orientation',
+    )
+    parser.add_argument(
         '-a', '--arena',
         type=str,
         choices=('flat', 'ramp', 'water'),  # 'rough', 'pool'
