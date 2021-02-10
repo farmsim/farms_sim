@@ -131,11 +131,11 @@ class AmphibiousMorphologyOptions(MorphologyOptions):
             == len(links_friction_rolling)
             == len(drag_coefficients)
         ), (
-            len(links_names),
-            len(links_friction_lateral),
-            len(links_friction_spinning),
-            len(links_friction_rolling),
-            len(drag_coefficients),
+            np.shape(links_names),
+            np.shape(links_friction_lateral),
+            np.shape(links_friction_spinning),
+            np.shape(links_friction_rolling),
+            np.shape(drag_coefficients),
             links_names,
         )
         options['links'] = kwargs.pop(
