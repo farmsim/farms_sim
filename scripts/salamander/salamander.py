@@ -97,8 +97,8 @@ def main(animat='salamander', version='v3'):
     #     osc.initial_amplitude = state_init[osc_i+n_joints]
 
     simulation_options, arena = amphibious_options(
-        animat_options,
-        use_water_arena=False,
+        animat_options=animat_options,
+        arena=clargs.arena,
     )
     simulation_options.units.meters = 1
     simulation_options.units.seconds = 1

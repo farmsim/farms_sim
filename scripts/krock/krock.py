@@ -31,10 +31,10 @@ def main():
     sdf, animat_options = get_krock_options(
         drives_init=clargs.drives,
     )
-    (
-        simulation_options,
-        arena,
-    ) = amphibious_options(animat_options, use_water_arena=False)
+    simulation_options, arena = amphibious_options(
+        animat_options=animat_options,
+        arena=clargs.arena,
+    )
 
     # # State
     # n_joints = animat_options.morphology.n_joints()

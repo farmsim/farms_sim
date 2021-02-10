@@ -39,8 +39,8 @@ def main(animat='centipede', version='v1'):
     )
 
     simulation_options, arena = amphibious_options(
-        animat_options,
-        use_water_arena=False,
+        animat_options=animat_options,
+        arena=clargs.arena,
     )
     simulation_options.units.meters = 10
     simulation_options.units.seconds = 1

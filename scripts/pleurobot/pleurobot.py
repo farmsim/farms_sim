@@ -46,14 +46,14 @@ def main():
             for i in range(30)
         ],
     )
-    water = False
+    water = clargs.arena != 'flat'
     kwargs['links_swimming'] = kwargs['links_names'] if water else []
     kwargs['sensors_hydrodynamics'] = kwargs['links_names']
     sdf, animat_options = get_pleurobot_options(**kwargs)
-    (
-        simulation_options,
-        arena,
-    ) = amphibious_options(animat_options, use_water_arena=water)
+    simulation_options, arena = amphibious_options(
+        animat_options=animat_options,
+        arena=clargs.arena,
+    )
 
     # # State
     # n_joints = animat_options.morphology.n_joints()
