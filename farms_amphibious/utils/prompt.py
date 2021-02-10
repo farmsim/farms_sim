@@ -36,6 +36,13 @@ def parse_args():
         help='Prompt at end of simulation',
     )
     parser.add_argument(
+        '-a', '--arena',
+        type=str,
+        choices=('flat', 'ramp', 'water'),  # 'rough', 'pool'
+        default='flat',
+        help='Simulation arena',
+    )
+    parser.add_argument(
         '-s', '--save',
         type=str,
         default='',
