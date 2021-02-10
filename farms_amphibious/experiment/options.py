@@ -978,6 +978,16 @@ def get_orobot_kwargs_options(**kwargs):
             # 'RIGHT_CRUS_T_C',
         ]
     )
+    links_swimming = links_names[1:]
+    drag_coefficients=[
+        [
+            [-1e2, -1e2, -1e2]
+            if i < 8 and name in links_swimming
+            else [0, 0, 0],
+            [-1e-8, -1e-8, -1e-8],
+        ]
+        for i, name in enumerate(links_names)
+    ]
     joints_names = kwargs.pop('joints_names', [
         # # Body
         # 'S_SPINE1_C_to_S_SPINE1T_S_SPINE1',
@@ -1130,13 +1140,14 @@ def get_orobot_kwargs_options(**kwargs):
         modular_phases=np.array([3*np.pi/2, 0, 3*np.pi/2, 0, 0]) - np.pi/4,
         modular_amplitudes=np.full(5, 0.5),
         links_names=links_names,
-        links_swimming=[],
+        drag_coefficients=drag_coefficients,
+        links_swimming=links_swimming,
         links_no_collisions=links_no_collisions,
         joints_names=joints_names,
         sensors_links=links_names,
         sensors_joints=joints_names,
         sensors_contacts=feet,
-        sensors_hydrodynamics=[],
+        sensors_hydrodynamics=links_swimming,
         default_lateral_friction=2,
         muscle_alpha=5e1,
         muscle_beta=-1e1,
