@@ -6,7 +6,7 @@ from farms_sdf.sdf import ModelSDF, Mesh, Inertial
 from farms_models.utils import get_model_path, create_new_model_from_farms_sdf
 
 
-def main():
+def convert_from_urdf_old():
     """Main"""
     # Load URDF
     model_path = get_model_path(name='krock', version='0')
@@ -109,5 +109,29 @@ def main():
     print(filename)
 
 
+def convert_from_sdf():
+    """Main"""
+    # Load URDF
+    model_path = get_model_path(name='krock', version='0')
+    sdf_original = os.path.join(
+        model_path, 'design', 'sdf', 'krock.sdf'
+    )
+    assert os.path.isfile(sdf_original), sdf_original
+    model = ModelSDF.read(sdf_original)[0]
+
+    # Write to SDF
+    filename = create_new_model_from_farms_sdf(
+        name='krock',
+        version='0',
+        sdf=model,
+        options={
+            'author': 'Jonathan Arreguit',
+            'email': 'jonathan.arreguitoneill@epfl.ch',
+            'overwrite': True,
+        }
+    )
+    print(filename)
+
+
 if __name__ == '__main__':
-    main()
+    convert_from_sdf()
