@@ -34,6 +34,8 @@ def main(animat='salamander', version='v3'):
     pylog.info('Model SDF: {}'.format(sdf))
     animat_options = get_salamander_options(
         drives_init=clargs.drives,
+        spawn_position=clargs.position,
+        spawn_orientation=clargs.orientation,
         # n_joints_body=11,
         # spawn_position=[-5, 0, 0.1],
         # spawn_orientation=[0, 0, np.pi],

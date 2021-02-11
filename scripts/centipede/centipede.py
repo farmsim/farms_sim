@@ -34,6 +34,8 @@ def main(animat='centipede', version='v1'):
     pylog.info('Model SDF: {}'.format(sdf))
     animat_options = get_centipede_options(
         drives_init=clargs.drives,
+        spawn_position=clargs.position,
+        spawn_orientation=clargs.orientation,
         spawn_loader=SpawnLoader.PYBULLET,
         default_control_type=ControlType.POSITION,
     )

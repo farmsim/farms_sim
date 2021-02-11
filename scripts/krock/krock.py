@@ -30,6 +30,8 @@ def main():
     # Options
     sdf, animat_options = get_krock_options(
         drives_init=clargs.drives,
+        spawn_position=clargs.position,
+        spawn_orientation=clargs.orientation,
     )
     simulation_options, arena = amphibious_options(
         animat_options=animat_options,
@@ -42,7 +44,6 @@ def main():
     # for osc_i, osc in enumerate(animat_options.control.network.oscillators):
     #     osc.initial_phase = state_init[osc_i]
     #     osc.initial_amplitude = state_init[osc_i+n_joints]
-
 
     if clargs.test:
         # Save options

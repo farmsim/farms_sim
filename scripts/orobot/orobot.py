@@ -30,6 +30,8 @@ def main():
     # Options
     sdf, animat_options = get_orobot_options(
         drives_init=clargs.drives,
+        spawn_position=clargs.position,
+        spawn_orientation=clargs.orientation,
     )
     simulation_options, arena = amphibious_options(
         animat_options=animat_options,
