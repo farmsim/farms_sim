@@ -515,58 +515,12 @@ def get_krock_kwargs_options(**kwargs):
     """Krock default options"""
 
     # Morphology information
-    # links_all = [
-    #     'base_link', 'krock2', 'Head_T', 'solid_head',
-    #     'Head_transform', 'FrontGirdle', 'FrontGirdleSpineMX',
-    #     'FrontGirdleMain', 'FrontLeftPitchMX', 'FrontRightPitchMX', 'SPINE1_T',
-    #     'solid_spine1_endpoint', 'solid_spine1_endpoint_C', 'SPINE2_T',
-    #     'solid_spine2_endpoint', 'Tail1MX', 'TAIL1_T', 'solid_tail1_endpoint',
-    #     'TAIL2_T', 'solid_tail1_passive_endpoint', 'TAIL3_T',
-    #     'solid_tail3_endpoint', 'Fin_Transform', 'TAIL2MX', 'Tail2MX',
-    #     'HLpitch_T', 'solid_hlpitch_hj_endpoint', 'HLyaw_HJ_C', 'HLroll_T',
-    #     'HLroll_HJ_C', 'HLknee_HJ_C', 'HL_TOUCH_T', 'TS_HL', 'LeftHindFoot',
-    #     'HindLeftKneeMX', 'HindLeftRollMX', 'HindLeftFemur', 'HindLeftYawMX',
-    #     'HRpitch_T', 'HRpitch_HJ_C', 'HRyaw_HJ_C', 'HRroll_T', 'HRroll_HJ_C',
-    #     'HRknee_HJ_C', 'HR_TOUCH_T', 'TS_HR', 'RightHindFoot',
-    #     'HindRightKneeMX', 'HindRightRollMX', 'HindRightFemur',
-    #     'HindRightYawMX', 'HindLeftPitchMX', 'HindRightPitchMX',
-    #     'HindGirdleSpineMX', 'HindGirdleMain', 'SPINE_Transform', 'FLpitch_T',
-    #     'solid_flpitch_hj_endpoint', 'solid_flyaw_hj_endpoint', 'FLroll_T',
-    #     'FLroll_HJ_C', 'FLknee_HJ_C', 'FL_TOUCH_T', 'TS_FL', 'LeftFrontFoot',
-    #     'FrontLeftKneeMX', 'FrontLeftRollMX', 'FrontLeftFemur',
-    #     'FrontLeftYawMX', 'FRpitch_T', 'FRpitch_HJ_C', 'FRyaw_HJ_C', 'FRroll_T',
-    #     'FRroll_HJ_C', 'FRknee_HJ_C', 'FR_TOUCH_T', 'TS_FR', 'RightFrontFoot',
-    #     'FrontRightKneeMX', 'FrontRightRollMX', 'FrontRightFemur',
-    #     'FrontRightYawMX',
-    # ]
-    # joints_all = [
-    #     'solid_spine1_endpoint_to_SPINE1_T_SPINE1_HJ',
-    #     'solid_spine2_endpoint_to_SPINE2_T_SPINE2_HJ',
-    #     'solid_tail1_endpoint_to_TAIL1_T_TAIL1_T_C',
-    #     'solid_tail1_passive_endpoint_to_TAIL2_T_TAIL2_T_C',
-    #     'solid_tail3_endpoint_to_TAIL3_T_TAIL3_T_C',
-    #     'solid_hlpitch_hj_endpoint_to_HLpitch_T_HLpitch_HJ',
-    #     'HLyaw_HJ_C_to_solid_hlpitch_hj_endpoint_HLyaw_HJ',
-    #     'HLroll_HJ_C_to_HLroll_T_HLroll_HJ',
-    #     'HLknee_HJ_C_to_HLroll_HJ_C_HLknee_HJ',
-    #     'HRpitch_HJ_C_to_HRpitch_T_HRpitch_HJ',
-    #     'HRyaw_HJ_C_to_HRpitch_HJ_C_HRyaw_HJ',
-    #     'HRroll_HJ_C_to_HRroll_T_HRroll_HJ',
-    #     'HRknee_HJ_C_to_HRroll_HJ_C_HRknee_HJ',
-    #     'solid_flpitch_hj_endpoint_to_FLpitch_T_FLpitch_HJ',
-    #     'solid_flyaw_hj_endpoint_to_solid_flpitch_hj_endpoint_FLyaw_HJ',
-    #     'FLroll_HJ_C_to_FLroll_T_FLroll_HJ',
-    #     'FLknee_HJ_C_to_FLroll_HJ_C_FLknee_HJ',
-    #     'FRpitch_HJ_C_to_FRpitch_T_FRpitch_HJ',
-    #     'FRyaw_HJ_C_to_FRpitch_HJ_C_FRyaw_HJ',
-    #     'FRroll_HJ_C_to_FRroll_T_FRroll_HJ',
-    #     'FRknee_HJ_C_to_FRroll_HJ_C_FRknee_HJ',
-    # ]
     links_inertials = [
-        'krock2',
+        'Girdle',
         'solid_head',
         'solid_spine1_endpoint',
         'solid_spine2_endpoint',
+        'Tail1MX',
         'solid_tail1_endpoint',
         'solid_tail1_passive_endpoint',
         'solid_tail3_endpoint',
@@ -596,7 +550,7 @@ def get_krock_kwargs_options(**kwargs):
         [
             # Body
             'base_link',
-            'krock2',
+            'Girdle',
             'solid_spine1_endpoint',
             'Tail1MX',
             'solid_tail1_endpoint',
@@ -702,14 +656,16 @@ def get_krock_kwargs_options(**kwargs):
         joints_offsets = dict(zip(joints_names, joints_offsets))
 
     # Animat options
+    fri = -3e-1
+    swi = -1e1
     kwargs_options = dict(
         spawn_loader=SpawnLoader.PYBULLET,  # SpawnLoader.FARMS,
-        density=300.0,
+        density=550.0,
         # mass_multiplier=0.7,
         spawn_position=[0, 0, 0.5],
         spawn_orientation=[-0.5*np.pi, 0, np.pi],
         default_control_type=ControlType.POSITION,
-        swimming=False,
+        swimming=True,
         show_hydrodynamics=True,
         n_legs=4,
         n_dof_legs=4,
@@ -718,22 +674,25 @@ def get_krock_kwargs_options(**kwargs):
         use_self_collisions=False,
         drag_coefficients=[
             [
-                [0, 0, 0]
+                [0.0, 0.0, 0.0]
                 if i == 0
-                else [-1e0, -1e0, -1e2]
-                if i < 6
-                else [-1e0, -1e0, -1e0],
-                [0, 0, 0],
+                # else [-1e-1, -1e-1, -1e0]
+                # if i < 4
+                else [fri, fri, swi]
+                if i < 7
+                else [fri, fri, fri],
+                [-1e-3]*3,
             ]
             for i in range(7+4*4)
         ],
-        body_stand_amplitude=0.2,
+        body_stand_amplitude=0.25,
         legs_amplitudes=[np.pi/16, np.pi/8, np.pi/8, np.pi/8],
         legs_offsets_walking=[0, -np.pi/32, -np.pi/16, 0],
         legs_offsets_swimming=[0, 0.25*np.pi, 0.5*np.pi, 0, np.pi/2],
         gain_amplitude=gain_amplitude,
         offsets_bias=joints_offsets,
         intralimb_phases=[0, 0.5*np.pi, 0.5*np.pi, 0.5*np.pi, 0],
+        body_phase_bias=0.5*np.pi/6,
         weight_osc_body=1e0,
         weight_osc_legs_internal=3e1,
         weight_osc_legs_opposite=1e0,
@@ -765,7 +724,7 @@ def get_krock_kwargs_options(**kwargs):
     return kwargs_options
 
 
-def get_krock_options(**kwargs):
+def get_krock_options(slow=2, **kwargs):
     """Krock default options"""
 
     # Animat
@@ -774,6 +733,9 @@ def get_krock_options(**kwargs):
 
     kwargs_options = get_krock_kwargs_options(**kwargs)
     animat_options = get_animat_options(**kwargs_options)
+    for oscillator in animat_options.control.network.oscillators:
+        oscillator['frequency_gain'] /= slow
+        oscillator['frequency_bias'] /= slow
     return sdf, animat_options
 
 

@@ -52,7 +52,7 @@ def parse_args():
         help='Spawn orientation',
     )
     parser.add_argument(
-        '-a', '--arena',
+        '--arena',
         type=str,
         choices=('flat', 'ramp', 'water'),  # 'rough', 'pool'
         default='flat',

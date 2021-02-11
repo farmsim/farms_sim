@@ -1052,6 +1052,7 @@ class AmphibiousNetworkOptions(Options):
 
         # Body
         if weight_body2body != 0:
+            # Antagonist oscillators
             for i in range(n_body_joints):
                 for sides in [[1, 0], [0, 1]]:
                     connectivity.append({
@@ -1067,6 +1068,7 @@ class AmphibiousNetworkOptions(Options):
                         'weight': weight_body2body,
                         'phase_bias': np.pi,
                     })
+            # Following oscillators
             for i in range(n_body_joints-1):
                 for side in range(2):
                     for osc, phase in [
