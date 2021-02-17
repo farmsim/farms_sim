@@ -23,6 +23,16 @@ def main():
         'SalamanderRobot.urdf',
     ))
 
+    # Links
+    print('Links:')
+    for link in model.links:
+        print("'{}',".format(link.name))
+
+    # Joints
+    print('\nJoints:')
+    for joint in model.joints:
+        print("'{}',".format(joint.name))
+
     # Write to SDF
     filename = create_new_model_from_farms_sdf(
         name='hfsp_robot',
