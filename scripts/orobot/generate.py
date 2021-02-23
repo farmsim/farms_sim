@@ -1,7 +1,7 @@
 """Convert URDF to SDF"""
 
 import os
-from farms_sdf.sdf import ModelSDF, Mesh, Visual
+from farms_sdf.sdf import ModelSDF, Mesh, Visual, Inertial
 from farms_models.utils import get_model_path, create_new_model_from_farms_sdf
 
 
@@ -44,7 +44,11 @@ def main():
                 color=[0, 0, 0, 1],
             )
             link.visuals.append(eye)
-            break
+
+        if not link.inertial:
+            link.inertial = Inertial.empty()
+            if link.name == 'base_link':
+                link.inertial.mass = 1e-3
 
     print('\nJoints:')
     for joint in model.joints:
