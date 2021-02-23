@@ -363,7 +363,7 @@ def get_pleurobot_kwargs_options(**kwargs):
             for i in range(11, 27)
         ]
     )
-    links_swimming = links_names[:14]
+    links_swimming = links_names[1:14]
     joints_names = kwargs.pop('joints_names', [
         # 'base_link_fixedjoint',
         'jHead',
@@ -444,9 +444,12 @@ def get_pleurobot_kwargs_options(**kwargs):
         joints_offsets = dict(zip(joints_names, joints_offsets))
 
     # Animat options
+    drag = -1e0
     kwargs_options = dict(
-        spawn_loader=SpawnLoader.FARMS,  # SpawnLoader.PYBULLET,
+        spawn_loader=SpawnLoader.PYBULLET,  # SpawnLoader.FARMS,
+        density=700.0,
         default_control_type=ControlType.POSITION,
+        show_hydrodynamics=True,
         scale_hydrodynamics=1e-1,
         swimming=False,
         n_legs=4,
@@ -455,10 +458,10 @@ def get_pleurobot_kwargs_options(**kwargs):
         use_self_collisions=True,
         drag_coefficients=[
             [
-                [-1e1, -1e1, -1e1]
+                [drag, -1e1, drag]
                 if link in links_swimming
-                else [-0, -0, -0],
-                [0, 0, 0],
+                else [drag, drag, drag],
+                [-1e-2]*3,
             ]
             for link in links_names
         ],
@@ -502,7 +505,7 @@ def get_pleurobot_kwargs_options(**kwargs):
     return kwargs_options
 
 
-def get_pleurobot_options(**kwargs):
+def get_pleurobot_options(slow=2, **kwargs):
     """Pleurobot default options"""
 
     # Animat
@@ -511,6 +514,9 @@ def get_pleurobot_options(**kwargs):
 
     kwargs_options = get_pleurobot_kwargs_options(**kwargs)
     animat_options = get_animat_options(**kwargs_options)
+    for oscillator in animat_options.control.network.oscillators:
+        oscillator['frequency_gain'] /= slow
+        oscillator['frequency_bias'] /= slow
     return sdf, animat_options
 
 

@@ -36,15 +36,6 @@ def main():
         spawn_position=clargs.position,
         spawn_orientation=clargs.orientation,
         show_hydrodynamics=True,
-        drag_coefficients=[
-            [
-                [0, -1e1, 0]
-                if 3 < i < 12
-                else [0, 0, 0],
-                [-1e-8, -1e-8, -1e-8],
-            ]
-            for i in range(30)
-        ],
     )
     water = clargs.arena != 'flat'
     kwargs['links_swimming'] = kwargs['links_names'] if water else []
