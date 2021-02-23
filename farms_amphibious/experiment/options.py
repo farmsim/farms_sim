@@ -346,6 +346,98 @@ def get_centipede_options(**kwargs):
     return options
 
 
+def get_polypterus_kwargs_options(**kwargs):
+    """Polypterus options"""
+    n_joints_body = kwargs.pop('n_joints_body', 20)
+    kwargs_options = {
+        'spawn_loader': SpawnLoader.PYBULLET,  # SpawnLoader.FARMS,
+        'spawn_position': [0, 0, 0.2*0.07],
+        'spawn_orientation': [0, 0, 0],
+        'use_self_collisions': False,
+        'default_control_type': ControlType.POSITION,  # ControlType.TORQUE,
+        'show_hydrodynamics': True,
+        'scale_hydrodynamics': 1,
+        'density': 100.0,
+        'swimming': False,
+        'n_legs': 2,
+        'n_dof_legs': 4,
+        'n_joints_body': n_joints_body,
+        'drag_coefficients': [
+            [
+                [-1e-1, -1e0, -1e0]
+                if i < 12
+                else [-1e-4, -1e-4, -1e-4]
+                if (i - 12) % 4 > 1
+                else [0, 0, 0],
+                [-1e-8, -1e-8, -1e-8],
+            ]
+            for i in range((n_joints_body+1)+2*4)
+        ],
+        'drives_init': [2, 0],
+        'weight_osc_body': 1e1,
+        'weight_osc_legs_internal': 3e1,
+        'weight_osc_legs_opposite': 1e0,  # 1e1,
+        'weight_osc_legs_following': 0,  # 1e1,
+        'weight_osc_legs2body': 3e1,
+        'weight_sens_contact_intralimb': -1e-6,
+        'weight_sens_contact_opposite': +1e-6,
+        'weight_sens_contact_following': 0,
+        'weight_sens_contact_diagonal': 0,
+        'weight_sens_hydro_freq': 0,
+        'weight_sens_hydro_amp': 0,
+        'body_stand_amplitude': 0.2,
+        'body_stand_shift': np.pi/2,
+        'legs_amplitudes': [np.pi/4, np.pi/32, np.pi/4, np.pi/8],
+        'legs_offsets_walking': [0, np.pi/32, 0, np.pi/8],
+        'modular_phases': np.array([3*np.pi/2, 0, 3*np.pi/2, 0]) - np.pi/4,
+        # 'modular_amplitudes': np.full(4, 1.0),
+        'modular_amplitudes': np.full(4, 0),
+        'default_lateral_friction': 1.0,
+        # Timestep: 1e-3 [s]
+        # 'muscle_alpha': 3e-3,
+        # 'muscle_beta': -1e-6,
+        # 'muscle_gamma': 5e3,
+        # 'muscle_delta': -1e-8,
+        # 'muscle_alpha': 2e-3,
+        # 'muscle_beta': -1e-6,
+        # 'muscle_gamma': 2e3,
+        # 'muscle_delta': -1e-8,
+        'muscle_alpha': 1e-3,
+        'muscle_beta': -1e-6,
+        'muscle_gamma': 2e3,
+        'muscle_delta': -1e-8,
+        # # Timestep: 1e-3 [s] (Full scale)
+        # 'muscle_alpha': 2e0,
+        # 'muscle_beta': -1e0,
+        # 'muscle_gamma': 3e0,
+        # 'muscle_delta': -1e-3,
+        # # Timestep: 1e-2 [s] NOT WORKING
+        # 'muscle_alpha': 1e-1,
+        # 'muscle_beta': -1e-2,
+        # 'muscle_gamma': 3e0,
+        # 'muscle_delta': -1e-6,
+    }
+    kwargs_options.update(kwargs)
+    return kwargs_options
+
+
+def get_polypterus_options(**kwargs):
+    """Polypterus options"""
+    kwargs_options = get_polypterus_kwargs_options(**kwargs)
+    options = get_animat_options(**kwargs_options)
+    for joint_i, joint in enumerate(options['morphology']['joints']):
+        joint['pybullet_dynamics']['jointDamping'] = 0
+        joint['pybullet_dynamics']['maxJointVelocity'] = np.inf  # 0.1
+        # joint['pybullet_dynamics']['jointLowerLimit'] = -1e8  # -0.1
+        # joint['pybullet_dynamics']['jointUpperLimit'] = +1e8  # +0.1
+        joint['pybullet_dynamics']['jointLimitForce'] = np.inf
+        joint_control = options['control']['joints'][joint_i]
+        assert joint['name'] == joint_control['joint']
+        joint['initial_position'] = joint_control['bias']
+        # print('{}: {} [rad]'.format(joint['name'], joint_control['bias']))
+    return options
+
+
 def get_pleurobot_kwargs_options(**kwargs):
     """Pleurobot default options"""
 
