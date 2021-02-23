@@ -57,6 +57,10 @@ class AmphibiousSimulation(AnimatSimulation):
             or animat.options.physics.sph
             else None
         )
+        if isinstance(self.swimming_handler, SwimmingHandler):
+            self.swimming_handler.set_hydrodynamics_scale(
+                animat.options.scale_hydrodynamics
+            )
 
     def update_controller(self, iteration, animat):
         """Update controller"""

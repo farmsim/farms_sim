@@ -27,6 +27,7 @@ class AmphibiousOptions(ModelOptions):
         )
         self.physics = AmphibiousPhysicsOptions(**kwargs.pop('physics'))
         self.show_hydrodynamics = kwargs.pop('show_hydrodynamics')
+        self.scale_hydrodynamics = kwargs.pop('scale_hydrodynamics')
         if kwargs:
             raise Exception('Unknown kwargs: {}'.format(kwargs))
 
@@ -58,6 +59,7 @@ class AmphibiousOptions(ModelOptions):
             options['control'] = AmphibiousControlOptions.from_options(kwargs)
             options['control'].defaults_from_convention(convention, kwargs)
         options['show_hydrodynamics'] = kwargs.pop('show_hydrodynamics', False)
+        options['scale_hydrodynamics'] = kwargs.pop('scale_hydrodynamics', 1)
         if kwargs:
             raise Exception('Unknown kwargs: {}'.format(kwargs))
         return cls(**options)
@@ -380,7 +382,7 @@ class AmphibiousControlOptions(ControlOptions):
         )
         leg_joint_turn_gain = kwargs.pop(
             'leg_joint_turn_gain',
-            [1, 0, 0, 0, 0]
+            [-1, 0, 0, 0, 0]
         )
         for leg_i in range(convention.n_legs//2):
             for side_i in range(2):
