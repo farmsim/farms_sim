@@ -1140,3 +1140,162 @@ def get_orobot_options(**kwargs):
     kwargs_options = get_orobot_kwargs_options(**kwargs)
     animat_options = get_animat_options(**kwargs_options)
     return sdf, animat_options
+
+
+def get_hfsp_robot_kwargs_options(**kwargs):
+    """HFSP robot default options"""
+
+    # Morphology information
+    links_names = kwargs.pop(
+        'links_names',
+        [
+            'base_link',
+            'XM430_W350_R_v1_v21X-430_IDLE1',
+            'link_spine_v21XM430_W350_R_v1_v21X-430_IDLE1',
+            'link_spine_v22XM430_W350_R_v1_v21X-430_IDLE1',
+            'link_spine_v23XM430_W350_R_v1_v21X-430_IDLE1',
+            'link_girdle_salamander_2_v31link_girdle_v71girdle_v31girdle1',
+            'link_tail_v21XM430_W210_R_v1_v31X-430_IDLE1',
+            'link_tail_v22XM430_W210_R_v1_v31X-430_IDLE1',
+            'XM430_W210_R_v1_v31X-430_IDLE1',
+            'link_left_leg_v21XM430_W350_R_v1_v21X-430_IDLE1',
+            'link_left_leg_v22XM430_W350_R_v1_v21X-430_IDLE1',
+            'link_right_leg_v21XM430_W350_R_v1_v21X-430_IDLE1',
+            'link_right_leg_v22XM430_W350_R_v1_v21X-430_IDLE1',
+            'link_foot_v21fr12_h1011',
+            'link_foot_v22fr12_h1011',
+            'link_foot_v23fr12_h1011',
+            'link_foot_v24fr12_h1011',
+        ]
+    )
+    links_swimming = links_names[1:]
+    drag_coefficients=[
+        [
+            [-1e2, -1e2, -1e2]
+            if i < 8 and name in links_swimming
+            else [0, 0, 0],
+            [-1e-8, -1e-8, -1e-8],
+        ]
+        for i, name in enumerate(links_names)
+    ]
+    joints_names = kwargs.pop('joints_names', [
+        'Joint1',
+        'Joint2',
+        'Joint3',
+        'Joint4',
+        'Joint5',
+        'Joint6',
+        'Joint7',
+        'Joint8',
+        'Joint11',
+        'Joint31',
+        'Joint21',
+        'Joint41',
+        'Joint12',
+        'Joint22',
+        'Joint32',
+        'Joint42',
+    ])
+    feet = kwargs.pop(
+        'feet',
+        [
+            'link_foot_v21fr12_h1011',
+            'link_foot_v22fr12_h1011',
+            'link_foot_v23fr12_h1011',
+            'link_foot_v24fr12_h1011',
+        ]
+    )
+    links_no_collisions = kwargs.pop('links_no_collisions', [])
+
+    # Joint options
+    gain_amplitude = kwargs.pop('gain_amplitude', None)
+    joints_offsets = kwargs.pop('joints_offsets', None)
+
+    # Amplitudes gains
+    if gain_amplitude is None:
+        gain_amplitude = [-1]*(8+4*5)  # np.ones(8+4*5)
+        # gain_amplitude[8] = 0
+        for leg_i in range(2):
+            for side_i in range(2):
+                mirror = (1 if side_i else -1)
+                # mirror2 = (-1 if leg_i else 1)
+                gain_amplitude[8+2*leg_i*5+side_i*5+0] = mirror
+                gain_amplitude[8+2*leg_i*5+side_i*5+1] = -mirror
+                gain_amplitude[8+2*leg_i*5+side_i*5+2] = -1
+                gain_amplitude[8+2*leg_i*5+side_i*5+3] = -0*mirror
+                gain_amplitude[8+2*leg_i*5+side_i*5+4] = 0*mirror
+        gain_amplitude = dict(zip(joints_names, gain_amplitude))
+
+    # Joints joints_offsets
+    if joints_offsets is None:
+        joints_offsets = [0]*(8+4*5)
+        for leg_i in range(2):
+            for side_i in range(2):
+                mirror = (1 if side_i else -1)
+                # mirror2 = (-1 if leg_i else 1)
+                joints_offsets[8+2*leg_i*5+side_i*5+0] = -0*mirror
+                joints_offsets[8+2*leg_i*5+side_i*5+1] = 0*mirror
+                joints_offsets[8+2*leg_i*5+side_i*5+2] = -0*np.pi
+                joints_offsets[8+2*leg_i*5+side_i*5+3] = -0.25*np.pi*mirror
+                joints_offsets[8+2*leg_i*5+side_i*5+4] = 0*mirror
+        joints_offsets = dict(zip(joints_names, joints_offsets))
+
+    # Animat options
+    kwargs_options = dict(
+        spawn_loader=SpawnLoader.PYBULLET,  # SpawnLoader.FARMS,
+        spawn_position=[0, 0, 0],
+        spawn_orientation=[0.5*np.pi, 0, 0],
+        default_control_type=ControlType.POSITION,
+        swimming=False,
+        n_legs=4,
+        n_dof_legs=2,
+        n_joints_body=8,
+        use_self_collisions=True,
+        body_stand_amplitude=0.2,
+        legs_amplitudes=[np.pi/6, np.pi/16, np.pi/16, np.pi/8, np.pi/8],
+        legs_offsets_walking=[0, -np.pi/32, -np.pi/16, 0, 0],
+        legs_offsets_swimming=[2*np.pi/5, 0, 0, np.pi/2, 0],
+        gain_amplitude=gain_amplitude,
+        offsets_bias=joints_offsets,
+        weight_osc_body=1e0,
+        weight_osc_legs_internal=3e1,
+        weight_osc_legs_opposite=1e0,
+        weight_osc_legs_following=5e-1,
+        weight_osc_legs2body=3e1,
+        weight_sens_contact_intralimb=0,
+        weight_sens_contact_opposite=0,
+        weight_sens_contact_following=0,
+        weight_sens_contact_diagonal=0,
+        weight_sens_hydro_freq=0,
+        weight_sens_hydro_amp=0,
+        modular_phases=np.array([3*np.pi/2, 0, 3*np.pi/2, 0, 0]) - np.pi/4,
+        modular_amplitudes=np.full(5, 0.5),
+        links_names=links_names,
+        drag_coefficients=drag_coefficients,
+        links_swimming=links_swimming,
+        links_no_collisions=links_no_collisions,
+        joints_names=joints_names,
+        sensors_links=links_names,
+        sensors_joints=joints_names,
+        sensors_contacts=feet,
+        sensors_hydrodynamics=links_swimming,
+        default_lateral_friction=2,
+        muscle_alpha=5e1,
+        muscle_beta=-1e1,
+        muscle_gamma=1e1,
+        muscle_delta=-3e-1,
+    )
+    kwargs_options.update(kwargs)
+    return kwargs_options
+
+
+def get_hfsp_robot_options(**kwargs):
+    """HFSP robot default options"""
+
+    # Animat
+    sdf = get_sdf_path(name='hfsp_robot', version='0')
+    pylog.info('Model SDF: {}'.format(sdf))
+
+    kwargs_options = get_hfsp_robot_kwargs_options(**kwargs)
+    animat_options = get_animat_options(**kwargs_options)
+    return sdf, animat_options
