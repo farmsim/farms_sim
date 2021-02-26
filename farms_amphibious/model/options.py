@@ -382,7 +382,7 @@ class AmphibiousControlOptions(ControlOptions):
         )
         leg_joint_turn_gain = kwargs.pop(
             'leg_joint_turn_gain',
-            [-1, 0, 0, 0, 0]
+            [1, 0, 0, 0, 0]
         )
         for leg_i in range(convention.n_legs//2):
             for side_i in range(2):
@@ -785,7 +785,7 @@ class AmphibiousNetworkOptions(Options):
                             body_i*2*np.pi/convention.n_joints_body
                             + body_stand_shift
                             for body_i in range(convention.n_joints_body)
-                        ] if kwargs.pop('fluid_walk', True) else
+                        ] if kwargs.pop('fluid_walk', False) else
                         np.concatenate(
                             [
                                 np.full(len(split), np.pi*(split_i+1))
