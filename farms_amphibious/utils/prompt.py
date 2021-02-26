@@ -59,6 +59,12 @@ def parse_args():
         help='Simulation arena',
     )
     parser.add_argument(
+        '--water',
+        type=float,
+        default=0.0,
+        help='Water surface height',
+    )
+    parser.add_argument(
         '-s', '--save',
         type=str,
         default='',

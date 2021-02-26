@@ -142,11 +142,11 @@ def get_water_arena(water_surface, ground_height=None, meters=1):
 def amphibious_options(animat_options, arena='flat', **kwargs):
     """Amphibious simulation"""
 
-    # Simulation
-    simulation_options = get_simulation_options(**kwargs)
-
     # Water
     water_surface = kwargs.pop('water_surface', 0)
+
+    # Simulation
+    simulation_options = get_simulation_options(**kwargs)
 
     # Arena
     if arena == 'flat':

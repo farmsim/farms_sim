@@ -101,6 +101,7 @@ def main(animat='salamander', version='v3'):
     simulation_options, arena = amphibious_options(
         animat_options=animat_options,
         arena=clargs.arena,
+        water_surface=clargs.water,
     )
     animat_options.show_hydrodynamics = not simulation_options.headless
 
