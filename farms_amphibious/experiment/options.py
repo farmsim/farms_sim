@@ -64,8 +64,10 @@ def set_swimming_options(animat_options, water_surface):
     animat_options.physics.water_surface = water_surface
 
 
-def get_flat_arena():
+def get_flat_arena(ground_height, meters=1):
     """Flat arena"""
+    if ground_height is None:
+        ground_height = 0.0
     return DescriptionFormatModel(
         path=get_sdf_path(
             name='arena_flat',
@@ -75,12 +77,18 @@ def get_flat_arena():
             'path': 'BIOROB2_blue.png',
             'rgbaColor': [1, 1, 1, 1],
             'specularColor': [1, 1, 1],
-        }
+        },
+        spawn_options={
+            'posObj': [0, 0, ground_height*meters],
+            'ornObj': [0, 0, 0, 1],
+        },
     )
 
 
-def get_ramp_arena(water_surface, meters=1):
+def get_ramp_arena(water_surface, ground_height=None, meters=1):
     """Water arena"""
+    if ground_height is None:
+        ground_height = 0.0
     return SimulationModels([
         DescriptionFormatModel(
             path=get_sdf_path(
@@ -91,7 +99,11 @@ def get_ramp_arena(water_surface, meters=1):
                 'path': 'BIOROB2_blue.png',
                 'rgbaColor': [1, 1, 1, 1],
                 'specularColor': [1, 1, 1],
-            }
+            },
+            spawn_options={
+                'posObj': [0, 0, ground_height*meters],
+                'ornObj': [0.5, 0, 0, 0.5],
+            },
         ),
         DescriptionFormatModel(
             path=get_sdf_path(
@@ -144,17 +156,23 @@ def amphibious_options(animat_options, arena='flat', **kwargs):
 
     # Water
     water_surface = kwargs.pop('water_surface', 0)
+    ground_height = kwargs.pop('ground_height', 0)
 
     # Simulation
     simulation_options = get_simulation_options(**kwargs)
 
     # Arena
     if arena == 'flat':
-        arena = get_flat_arena()
+        arena = get_flat_arena(
+            ground_height=ground_height,
+            meters=simulation_options.units.meters,
+        )
         set_no_swimming_options(animat_options)
     elif arena == 'ramp':
         arena = get_ramp_arena(
-            water_surface=water_surface*simulation_options.units.meters,
+            water_surface=water_surface,
+            ground_height=ground_height,
+            meters=simulation_options.units.meters,
         )
         set_swimming_options(
             animat_options,
@@ -162,7 +180,8 @@ def amphibious_options(animat_options, arena='flat', **kwargs):
         )
     elif arena == 'water':
         arena = get_water_arena(
-            water_surface=water_surface*simulation_options.units.meters,
+            water_surface=water_surface,
+            ground_height=ground_height,
             meters=simulation_options.units.meters,
         )
         set_swimming_options(

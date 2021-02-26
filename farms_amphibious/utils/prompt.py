@@ -65,6 +65,12 @@ def parse_args():
         help='Water surface height',
     )
     parser.add_argument(
+        '--ground',
+        type=float,
+        default=None,
+        help='Ground height',
+    )
+    parser.add_argument(
         '-s', '--save',
         type=str,
         default='',
