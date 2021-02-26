@@ -185,65 +185,39 @@ def generate_sdf(name, leg_offset, leg_length, leg_radius, legs_parents, **kwarg
     # Leg joints
     for leg_i in range(options.morphology.n_legs//2):
         for side_i in range(2):
+            sign = 1 if side_i else -1
             for joint_i in range(options.morphology.n_dof_legs):
-                sign = 1 if side_i else -1
                 axis = [
                     [0.0, 0.0, 1.0*sign],
                     [-1.0*sign, 0.0, 0.0],
                     [0.0, 1.0, 0.0],
                     [-1.0*sign, 0.0, 0.0]
                 ]
-                if joint_i == 0:
-                    joints[convention.legjoint2index(
+                name = convention.legjoint2name(leg_i, side_i, joint_i)
+                l_index = convention.leglink2index(leg_i, side_i, joint_i)
+                j_index = convention.legjoint2index(leg_i, side_i, joint_i)
+                p_index = (
+                    legs_parents[leg_i]
+                    if joint_i == 0
+                    else convention.leglink2index(
                         leg_i,
                         side_i,
-                        joint_i
-                    )] = Joint(
-                        name=convention.legjoint2name(
-                            leg_i,
-                            side_i,
-                            joint_i
-                        ),
-                        joint_type='revolute',
-                        parent=links[legs_parents[leg_i]],
-                        child=links[convention.leglink2index(
-                            leg_i,
-                            side_i,
-                            joint_i
-                        )],
-                        xyz=axis[joint_i],
-                        limits=[-0.5*np.pi, 0.5*np.pi, max_torque, max_velocity],
+                        joint_i-1
                     )
-                else:
-                    joints[convention.legjoint2index(
-                        leg_i,
-                        side_i,
-                        joint_i
-                    )] = Joint(
-                        name=convention.legjoint2name(
-                            leg_i,
-                            side_i,
-                            joint_i
-                        ),
-                        joint_type='revolute',
-                        parent=links[convention.leglink2index(
-                            leg_i,
-                            side_i,
-                            joint_i-1
-                        )],
-                        child=links[convention.leglink2index(
-                            leg_i,
-                            side_i,
-                            joint_i
-                        )],
-                        xyz=axis[joint_i],
-                        limits=[
-                            0 if joint_i == 3 else -0.5*np.pi,
-                            0.5*np.pi,
-                            max_torque,
-                            max_velocity,
-                        ],
-                    )
+                )
+                joints[j_index] = Joint(
+                    name=name,
+                    joint_type='revolute',
+                    parent=links[p_index],
+                    child=links[l_index],
+                    xyz=axis[joint_i],
+                    limits=[
+                        0 if joint_i == 3 else -0.5*np.pi,
+                        0.5*np.pi,
+                        max_torque,
+                        max_velocity,
+                    ],
+                )
 
     # Use 2D
     constraint_links = [
