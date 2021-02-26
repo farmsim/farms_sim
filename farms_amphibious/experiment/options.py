@@ -33,9 +33,9 @@ def get_animat_options(swimming=False, **kwargs):
 def get_simulation_options(**kwargs):
     """Get simulation options - Should load a config file in the future"""
     simulation_options = SimulationOptions.with_clargs(**kwargs)
-    simulation_options.units.meters = 1
-    simulation_options.units.seconds = 1
-    simulation_options.units.kilograms = 1
+    # simulation_options.units.meters = 1
+    # simulation_options.units.seconds = 1
+    # simulation_options.units.kilograms = 1
 
     # Camera options
     # simulation_options.video_yaw = 0
@@ -79,7 +79,7 @@ def get_flat_arena():
     )
 
 
-def get_ramp_arena(water_surface):
+def get_ramp_arena(water_surface, meters=1):
     """Water arena"""
     return SimulationModels([
         DescriptionFormatModel(
@@ -99,14 +99,14 @@ def get_ramp_arena(water_surface):
                 version='v0',
             ),
             spawn_options={
-                'posObj': [0, 0, water_surface],
+                'posObj': [0, 0, water_surface*meters],
                 'ornObj': [0, 0, 0, 1],
             }
         ),
     ])
 
 
-def get_water_arena(water_surface, ground_height=None):
+def get_water_arena(water_surface, ground_height=None, meters=1):
     """Water arena"""
     if ground_height is None:
         ground_height = water_surface - 1
@@ -117,7 +117,7 @@ def get_water_arena(water_surface, ground_height=None):
                 version='v0',
             ),
             spawn_options={
-                'posObj': [0, 0, ground_height],
+                'posObj': [0, 0, ground_height*meters],
                 'ornObj': [0, 0, 0, 1],
             },
             visual_options={
@@ -132,7 +132,7 @@ def get_water_arena(water_surface, ground_height=None):
                 version='v0',
             ),
             spawn_options={
-                'posObj': [0, 0, water_surface],
+                'posObj': [0, 0, water_surface*meters],
                 'ornObj': [0, 0, 0, 1],
             }
         ),
@@ -142,24 +142,35 @@ def get_water_arena(water_surface, ground_height=None):
 def amphibious_options(animat_options, arena='flat', **kwargs):
     """Amphibious simulation"""
 
+    # Simulation
+    simulation_options = get_simulation_options(**kwargs)
+
     # Water
-    water_surface = kwargs.pop('water_surface', -0.1*0.1)
+    water_surface = kwargs.pop('water_surface', 0)
 
     # Arena
     if arena == 'flat':
         arena = get_flat_arena()
         set_no_swimming_options(animat_options)
     elif arena == 'ramp':
-        arena = get_ramp_arena(water_surface=water_surface)
-        set_swimming_options(animat_options, water_surface=water_surface)
+        arena = get_ramp_arena(
+            water_surface=water_surface*simulation_options.units.meters,
+        )
+        set_swimming_options(
+            animat_options,
+            water_surface=water_surface,
+        )
     elif arena == 'water':
-        arena = get_water_arena(water_surface=water_surface)
-        set_swimming_options(animat_options, water_surface=water_surface)
+        arena = get_water_arena(
+            water_surface=water_surface*simulation_options.units.meters,
+            meters=simulation_options.units.meters,
+        )
+        set_swimming_options(
+            animat_options,
+            water_surface=water_surface,
+        )
     else:
         raise Exception('Unknown arena: "{}"'.format(arena))
-
-    # Simulation
-    simulation_options = get_simulation_options(**kwargs)
 
     return (simulation_options, arena)
 
@@ -168,7 +179,7 @@ def get_salamander_kwargs_options(**kwargs):
     """Salamander options"""
     n_joints_body = kwargs.pop('n_joints_body', 11)
     kwargs_options = {
-        'spawn_loader': SpawnLoader.FARMS,  # SpawnLoader.PYBULLET,
+        'spawn_loader': SpawnLoader.PYBULLET,  # SpawnLoader.FARMS,
         'spawn_position': [0, 0, 0.2*0.07],
         'spawn_orientation': [0, 0, 0],
         'use_self_collisions': True,
@@ -182,7 +193,7 @@ def get_salamander_kwargs_options(**kwargs):
         'drag_coefficients': [
             [
                 [-1e-1, -1e0, -1e0]
-                if i < 12
+                if i < 13
                 else [-1e-4, -1e-4, -1e-4]
                 if (i - 12) % 4 > 1
                 else [0, 0, 0],
@@ -259,23 +270,24 @@ def get_centipede_kwargs_options(**kwargs):
     """Centipede options"""
     n_joints_body = kwargs.pop('n_joints_body', 20)
     kwargs_options = {
-        'spawn_loader': SpawnLoader.FARMS,  # SpawnLoader.PYBULLET,
+        'spawn_loader': SpawnLoader.PYBULLET,  # SpawnLoader.FARMS,
         'spawn_position': [0, 0, 0.2*0.07],
         'spawn_orientation': [0, 0, 0],
         'use_self_collisions': False,
         'default_control_type': ControlType.POSITION,  # ControlType.TORQUE,
         'show_hydrodynamics': True,
         'scale_hydrodynamics': 1,
+        'density': 800.0,
         'swimming': False,
         'n_legs': 2*19,
         'n_dof_legs': 4,
         'n_joints_body': n_joints_body,
         'drag_coefficients': [
             [
-                [-1e-1, -1e0, -1e0]
-                if i < 12
-                else [-1e-4, -1e-4, -1e-4]
-                if (i - 12) % 4 > 1
+                [-1e-2, -1e-1, -1e-2]
+                if i < 21
+                # else [-1e-4, -1e-4, -1e-4]
+                # if (i - 12) % 4 > 1
                 else [0, 0, 0],
                 [-1e-8, -1e-8, -1e-8],
             ]
@@ -356,18 +368,16 @@ def get_polypterus_kwargs_options(**kwargs):
         'use_self_collisions': False,
         'default_control_type': ControlType.POSITION,  # ControlType.TORQUE,
         'show_hydrodynamics': True,
-        'scale_hydrodynamics': 1,
-        'density': 100.0,
+        'scale_hydrodynamics': 1e2,
+        'density': 900.0,
         'swimming': False,
         'n_legs': 2,
         'n_dof_legs': 4,
         'n_joints_body': n_joints_body,
         'drag_coefficients': [
             [
-                [-1e-1, -1e0, -1e0]
-                if i < 12
-                else [-1e-4, -1e-4, -1e-4]
-                if (i - 12) % 4 > 1
+                [-1e-2, -1e0, -1e-2]
+                if i < 21
                 else [0, 0, 0],
                 [-1e-8, -1e-8, -1e-8],
             ]
@@ -536,7 +546,7 @@ def get_pleurobot_kwargs_options(**kwargs):
         joints_offsets = dict(zip(joints_names, joints_offsets))
 
     # Animat options
-    drag = -1e0
+    drag = -1e-1
     kwargs_options = dict(
         spawn_loader=SpawnLoader.PYBULLET,  # SpawnLoader.FARMS,
         density=700.0,

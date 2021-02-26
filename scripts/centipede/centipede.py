@@ -44,9 +44,6 @@ def main(animat='centipede', version='v1'):
         animat_options=animat_options,
         arena=clargs.arena,
     )
-    simulation_options.units.meters = 10
-    simulation_options.units.seconds = 1
-    simulation_options.units.kilograms = 1
     animat_options.show_hydrodynamics = not simulation_options.headless
 
     if clargs.test:
