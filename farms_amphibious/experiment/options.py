@@ -156,7 +156,7 @@ def amphibious_options(animat_options, arena='flat', **kwargs):
 
     # Water
     water_surface = kwargs.pop('water_surface', 0)
-    ground_height = kwargs.pop('ground_height', 0)
+    ground_height = kwargs.pop('ground_height', None)
 
     # Simulation
     simulation_options = get_simulation_options(**kwargs)
