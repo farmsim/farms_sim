@@ -36,6 +36,18 @@ def parse_args():
         help='Prompt at end of simulation',
     )
     parser.add_argument(
+        '--animat',
+        type=str,
+        default='salamander',
+        help='Animat',
+    )
+    parser.add_argument(
+        '--version',
+        type=str,
+        default='',
+        help='Animat version',
+    )
+    parser.add_argument(
         '--position',
         nargs=3,
         type=float,
