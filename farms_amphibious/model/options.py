@@ -767,19 +767,37 @@ class AmphibiousNetworkOptions(Options):
             ) if convention.n_legs else None
             self.osc2osc = (
                 self.default_osc2osc(
-                    convention,
-                    kwargs.pop('weight_osc_body', 1e0),
-                    kwargs.pop(
+                    convention=convention,
+                    weight_body2body=kwargs.pop('weight_osc_body', 1e0),
+                    phase_body2body=kwargs.pop(
                         'body_phase_bias',
                         2*np.pi/convention.n_joints_body
                     ),
-                    kwargs.pop('weight_osc_legs_internal', 3e1),
-                    kwargs.pop('weight_osc_legs_opposite', 1e1),
-                    kwargs.pop('weight_osc_legs_following', 1e1),
-                    kwargs.pop('weight_osc_legs2body', 3e1),
-                    kwargs.pop('intralimb_phases', [0, pi2, 0, pi2, 0]),
-                    kwargs.pop('leg_phase_follow', np.pi),
-                    kwargs.pop(
+                    weight_intralimb=kwargs.pop(
+                        'weight_osc_legs_internal',
+                        3e1,
+                    ),
+                    weight_interlimb_opposite=kwargs.pop(
+                        'weight_osc_legs_opposite',
+                        1e1,
+                    ),
+                    weight_interlimb_following=kwargs.pop(
+                        'weight_osc_legs_following',
+                        1e1,
+                    ),
+                    weight_limb2body=kwargs.pop(
+                        'weight_osc_legs2body',
+                        3e1,
+                    ),
+                    intralimb_phases=kwargs.pop(
+                        'intralimb_phases',
+                        [0, pi2, 0, pi2, 0],
+                    ),
+                    phase_limb_follow=kwargs.pop(
+                        'leg_phase_follow',
+                        np.pi,
+                    ),
+                    body_walk_phases=kwargs.pop(
                         'body_walk_phases',
                         [
                             body_i*2*np.pi/convention.n_joints_body
@@ -793,8 +811,11 @@ class AmphibiousNetworkOptions(Options):
                             ]
                         ).tolist(),
                     ),
-                    kwargs.pop('legbodyjoints', range(convention.n_dof_legs-1)),
-                    kwargs.pop(
+                    legbodyjoints=kwargs.pop(
+                        'legbodyjoints',
+                        range(convention.n_dof_legs-1),
+                    ),
+                    legbodyconnections=kwargs.pop(
                         'legbodyconnections',
                         [
                             range(convention.n_joints_body)
