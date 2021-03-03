@@ -806,13 +806,16 @@ class AmphibiousNetworkOptions(Options):
                             body_i*2*np.pi/convention.n_joints_body
                             + body_stand_shift
                             for body_i in range(convention.n_joints_body)
-                        ] if kwargs.pop('fluid_walk', False) else
-                        np.concatenate(
+                        ]
+                        if kwargs.pop('fluid_walk', False)
+                        else np.concatenate(
                             [
                                 np.full(len(split), np.pi*(split_i+1))
                                 for split_i, split in enumerate(legs_splits)
                             ]
-                        ).tolist(),
+                        ).tolist()
+                        if legs_splits is not None
+                        else [],
                     ),
                     legbodyjoints=kwargs.pop(
                         'legbodyjoints',
@@ -824,7 +827,9 @@ class AmphibiousNetworkOptions(Options):
                             range(convention.n_joints_body)
                             for leg_i in range(n_leg_pairs)
                         ] if kwargs.pop('full_leg_body', True) else
-                        legs_splits,
+                        legs_splits
+                        if legs_splits is not None
+                        else [],
                     )
                 )
             )
