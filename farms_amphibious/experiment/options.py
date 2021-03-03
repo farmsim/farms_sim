@@ -68,6 +68,7 @@ def get_flat_arena(ground_height, meters=1):
             'posObj': [0, 0, ground_height*meters],
             'ornObj': [0, 0, 0, 1],
         },
+        load_options={'globalScaling': meters},
     )
 
 
@@ -90,6 +91,7 @@ def get_ramp_arena(water_surface, ground_height=None, meters=1):
                 'posObj': [0, 0, ground_height*meters],
                 'ornObj': [0.5, 0, 0, 0.5],
             },
+            load_options={'globalScaling': meters},
         ),
         DescriptionFormatModel(
             path=get_sdf_path(
@@ -99,7 +101,8 @@ def get_ramp_arena(water_surface, ground_height=None, meters=1):
             spawn_options={
                 'posObj': [0, 0, water_surface*meters],
                 'ornObj': [0, 0, 0, 1],
-            }
+            },
+            load_options={'globalScaling': meters},
         ),
     ])
 
@@ -122,7 +125,8 @@ def get_water_arena(water_surface, ground_height=None, meters=1):
                 'path': 'BIOROB2_blue.png',
                 'rgbaColor': [1, 1, 1, 1],
                 'specularColor': [1, 1, 1],
-            }
+            },
+            load_options={'globalScaling': meters},
         ),
         DescriptionFormatModel(
             path=get_sdf_path(
@@ -132,7 +136,8 @@ def get_water_arena(water_surface, ground_height=None, meters=1):
             spawn_options={
                 'posObj': [0, 0, water_surface*meters],
                 'ornObj': [0, 0, 0, 1],
-            }
+            },
+            load_options={'globalScaling': meters},
         ),
     ])
 
