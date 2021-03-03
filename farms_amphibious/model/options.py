@@ -768,7 +768,10 @@ class AmphibiousNetworkOptions(Options):
             self.osc2osc = (
                 self.default_osc2osc(
                     convention=convention,
-                    weight_body2body=kwargs.pop('weight_osc_body', 1e0),
+                    weight_body2body=kwargs.pop(
+                        'weight_osc_body',
+                        1e1,
+                    ),
                     phase_body2body=kwargs.pop(
                         'body_phase_bias',
                         2*np.pi/convention.n_joints_body
