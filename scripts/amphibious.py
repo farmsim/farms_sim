@@ -19,13 +19,11 @@ from farms_amphibious.utils.prompt import (
 from farms_amphibious.experiment.simulation import simulation
 from farms_amphibious.experiment.options import (
     amphibious_options,
-    get_salamander_options,
-    get_polypterus_options,
-    get_centipede_options,
+    get_animat_options_from_model,
 )
 
 
-def main(animat='salamander', version='v3'):
+def main():
     """Main"""
 
     # Arguments
@@ -40,33 +38,25 @@ def main(animat='salamander', version='v3'):
         'spawn_loader': SpawnLoader.PYBULLET,
         'default_control_type': ControlType.POSITION,
     }
-    if clargs.animat == 'salamander':
-        animat_options = get_salamander_options(**options)
-    elif clargs.animat == 'polypterus':
-        animat_options = get_polypterus_options(**options)
-    elif clargs.animat == 'centipede':
-        animat_options = get_centipede_options(**options)
-    else:
-        raise Exception('Unknown animat {animat} {version}'.format(
-            animat=clargs.animat,
-            version=clargs.version,
-        ))
-
+    animat_options = get_animat_options_from_model(
+        animat=clargs.animat,
+        version=clargs.version,
+        **options,
+    )
     simulation_options, arena = amphibious_options(
         animat_options=animat_options,
         arena=clargs.arena,
         water_surface=clargs.water,
         ground_height=clargs.ground,
     )
-    animat_options.show_hydrodynamics = not simulation_options.headless
 
+    # Test options saving and loading
     if clargs.test:
         # Save options
         animat_options_filename = 'salamander_animat_options.yaml'
         animat_options.save(animat_options_filename)
         simulation_options_filename = 'salamander_simulation_options.yaml'
         simulation_options.save(simulation_options_filename)
-
         # Load options
         animat_options = AmphibiousOptions.load(animat_options_filename)
         simulation_options = SimulationOptions.load(simulation_options_filename)
@@ -84,8 +74,8 @@ def main(animat='salamander', version='v3'):
 
     # Post-processing
     prompt_postprocessing(
-        animat=animat,
-        version=version,
+        animat=clargs.animat,
+        version=clargs.version,
         sim=sim,
         animat_options=animat_options,
         query=clargs.prompt,

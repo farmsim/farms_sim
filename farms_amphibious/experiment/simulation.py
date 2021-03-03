@@ -4,12 +4,12 @@
 import numpy as np
 import farms_pylog as pylog
 from farms_data.amphibious.data import AmphibiousData
+from farms_bullet.simulation.options import SimulationOptions
 from farms_bullet.control.kinematics import KinematicsController
 from ..simulation.simulation import AmphibiousSimulation
 from ..control.controller import AmphibiousController
 from ..control.manta_control import MantaController
 from ..model.animat import Amphibious
-from .options import get_animat_options, get_simulation_options
 
 
 def simulation_setup(animat_sdf, animat_options, arena, **kwargs):
@@ -17,7 +17,7 @@ def simulation_setup(animat_sdf, animat_options, arena, **kwargs):
     # Get options
     simulation_options = kwargs.pop(
         'simulation_options',
-        get_simulation_options()
+        SimulationOptions.with_clargs()
     )
 
     # Animat data
