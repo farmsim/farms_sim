@@ -792,6 +792,10 @@ class AmphibiousNetworkOptions(Options):
                         'weight_osc_legs2body',
                         3e1,
                     ),
+                    weight_body2limb=kwargs.pop(
+                        'weight_osc_body2legs',
+                        0,
+                    ),
                     intralimb_phases=kwargs.pop(
                         'intralimb_phases',
                         [0, pi2, 0, pi2, 0],
@@ -1071,6 +1075,7 @@ class AmphibiousNetworkOptions(Options):
             weight_interlimb_opposite,
             weight_interlimb_following,
             weight_limb2body,
+            weight_body2limb,
             intralimb_phases,
             phase_limb_follow,
             body_walk_phases,
@@ -1260,6 +1265,36 @@ class AmphibiousNetworkOptions(Options):
                                             + intralimb_phases[joint_i]
                                         ),
                                     })
+
+        # Body-legs interaction
+        joint_i = 0
+        if weight_body2limb != 0:
+            for leg_i in range(convention.n_legs//2):
+                for side_i in range(2):
+                    # for joint_i in legbodyjoints:
+                        for side_leg_osc in range(2):
+                            for lateral in range(1):
+                                connectivity.append({
+                                    'in': convention.legosc2name(
+                                        leg_i=leg_i,
+                                        side_i=side_i,
+                                        joint_i=joint_i,
+                                        side=side_leg_osc
+                                    ),
+                                    'out': convention.bodyosc2name(
+                                        joint_i=leg_i,
+                                        side=(side_i+lateral)%2
+                                    ),
+                                    'type': 'OSC2OSC',
+                                    'weight': weight_body2limb,
+                                    'phase_bias': (
+                                        body_walk_phases[leg_i] + np.pi*(
+                                            1 + lateral
+                                            + leg_i + side_leg_osc
+                                        )
+                                        + intralimb_phases[joint_i]
+                                    )-0.5*np.pi,
+                                })
         return connectivity
 
     @staticmethod
