@@ -13,19 +13,21 @@ from farms_models.utils import (
 )
 
 
-def generate_sdf(name, leg_offset, leg_length, leg_radius, legs_parents, **kwargs):
+def generate_sdf(model_name, model_version, **kwargs):
     """Generate sdf"""
 
     # Arguments
-    model_version = kwargs.pop('model_version')
     options = kwargs.pop('options')
     convention = kwargs.pop('convention')
     scale = kwargs.pop('scale', 0.2)
-    model_name = kwargs.pop('model_name', 'animat')
     use_2d = kwargs.pop('use_2d', False)
     color = kwargs.pop('color', [0.1, 0.7, 0.1, 1.0])
     eye_pos = kwargs.pop('eye_pos', [0.04, 0.03, 0.015])
     eye_radius = kwargs.pop('eye_radius', 0.01)
+    leg_offset = kwargs.pop('leg_offset')
+    leg_length = kwargs.pop('leg_length')
+    leg_radius = kwargs.pop('leg_radius')
+    legs_parents = kwargs.pop('legs_parents')
     assert not kwargs, kwargs
 
     # Links and joints
@@ -40,7 +42,7 @@ def generate_sdf(name, leg_offset, leg_length, leg_radius, legs_parents, **kwarg
     leg_offset = scale*np.array(leg_offset)
 
     # Original
-    body_sdf_path = get_sdf_path(name=name, version='body')
+    body_sdf_path = get_sdf_path(name=model_name, version='body')
     original_model = ModelSDF.read(body_sdf_path)[0]
 
     # Body
@@ -188,10 +190,10 @@ def generate_sdf(name, leg_offset, leg_length, leg_radius, legs_parents, **kwarg
             sign = 1 if side_i else -1
             for joint_i in range(options.morphology.n_dof_legs):
                 axis = [
-                    [0.0, 0.0, 1.0*sign],
-                    [-1.0*sign, 0.0, 0.0],
-                    [0.0, 1.0, 0.0],
-                    [-1.0*sign, 0.0, 0.0]
+                    [0, 0, sign],
+                    [-sign, 0, 0],
+                    [0, 1, 0],
+                    [-sign, 0, 0]
                 ]
                 name = convention.legjoint2name(leg_i, side_i, joint_i)
                 l_index = convention.leglink2index(leg_i, side_i, joint_i)
@@ -307,13 +309,12 @@ def generate_amphibious(model_name, model_version, **kwargs):
     # print(convention.n_legs)
     # Generate SDF
     filepath = generate_sdf(
-        name=model_name,
+        model_name=model_name,
+        model_version=model_version,
         leg_offset=leg_offset,
         leg_length=leg_length,
         leg_radius=leg_radius,
         legs_parents=legs_parents,
-        model_name=model_name,
-        model_version=model_version,
         options=animat_options,
         convention=convention,
         # scale=1,
