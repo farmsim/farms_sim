@@ -770,7 +770,7 @@ class AmphibiousNetworkOptions(Options):
                     convention=convention,
                     weight_body2body=kwargs.pop(
                         'weight_osc_body',
-                        1e1,
+                        0,
                     ),
                     phase_body2body=kwargs.pop(
                         'body_phase_bias',
