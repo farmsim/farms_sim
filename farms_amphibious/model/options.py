@@ -778,19 +778,19 @@ class AmphibiousNetworkOptions(Options):
                     ),
                     weight_intralimb=kwargs.pop(
                         'weight_osc_legs_internal',
-                        3e1,
+                        0,
                     ),
                     weight_interlimb_opposite=kwargs.pop(
                         'weight_osc_legs_opposite',
-                        1e1,
+                        0,
                     ),
                     weight_interlimb_following=kwargs.pop(
                         'weight_osc_legs_following',
-                        1e1,
+                        0,
                     ),
                     weight_limb2body=kwargs.pop(
                         'weight_osc_legs2body',
-                        3e1,
+                        0,
                     ),
                     weight_body2limb=kwargs.pop(
                         'weight_osc_body2legs',
