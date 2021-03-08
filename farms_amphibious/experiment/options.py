@@ -215,6 +215,7 @@ def get_salamander_kwargs_options(**kwargs):
         'weight_osc_legs_opposite': 1e0,  # 1e1,
         'weight_osc_legs_following': 0,  # 1e1,
         'weight_osc_legs2body': 3e1,
+        'weight_osc_body2legs': 0,
         'weight_sens_contact_intralimb': -1e-6,
         'weight_sens_contact_opposite': +1e-6,
         'weight_sens_contact_following': 0,
@@ -225,9 +226,11 @@ def get_salamander_kwargs_options(**kwargs):
         'body_stand_shift': np.pi/2,
         'legs_amplitudes': [np.pi/4, np.pi/32, np.pi/4, np.pi/8],
         'legs_offsets_walking': [0, np.pi/32, 0, np.pi/8],
-        'modular_phases': np.array([3*np.pi/2, 0, 3*np.pi/2, 0]) - np.pi/4,
+        'modular_phases': (
+            np.array([3*np.pi/2, 0, 3*np.pi/2, 0]) - np.pi/4
+        ).tolist(),
         # 'modular_amplitudes': np.full(4, 1.0),
-        'modular_amplitudes': np.full(4, 0),
+        'modular_amplitudes': np.full(4, 0).tolist(),
         'default_lateral_friction': 1.0,
         # Timestep: 1e-3 [s]
         # 'muscle_alpha': 3e-3,
@@ -304,7 +307,8 @@ def get_centipede_kwargs_options(**kwargs):
         'weight_osc_legs_internal': 3e1,
         'weight_osc_legs_opposite': 1e0,  # 1e1,
         'weight_osc_legs_following': 0,  # 1e1,
-        'weight_osc_legs2body': 3e1,
+        'weight_osc_legs2body': 0,  # 3e1
+        'weight_osc_body2legs': 3e2,
         'weight_sens_contact_intralimb': -1e-6,
         'weight_sens_contact_opposite': +1e-6,
         'weight_sens_contact_following': 0,
@@ -315,9 +319,11 @@ def get_centipede_kwargs_options(**kwargs):
         'body_stand_shift': np.pi/2,
         'legs_amplitudes': [np.pi/4, np.pi/32, np.pi/4, np.pi/8],
         'legs_offsets_walking': [0, np.pi/32, 0, np.pi/8],
-        'modular_phases': np.array([3*np.pi/2, 0, 3*np.pi/2, 0]) - np.pi/4,
+        'modular_phases': (
+            np.array([3*np.pi/2, 0, 3*np.pi/2, 0]) - np.pi/4
+        ).tolist(),
         # 'modular_amplitudes': np.full(4, 1.0),
-        'modular_amplitudes': np.full(4, 0),
+        'modular_amplitudes': np.full(4, 0).tolist(),
         'default_lateral_friction': 1.0,
     }
     kwargs_options.update(kwargs)
@@ -357,19 +363,20 @@ def get_polypterus_kwargs_options(**kwargs):
         'n_joints_body': n_joints_body,
         'drag_coefficients': [
             [
-                [-1e-2, -1e-1, -1e-2]
+                [-1e-2, -3e-1, -1e-2]
                 if i < 21
-                else [0, 0, 0],
+                else [-1e-3, -1e-3, -1e-3],
                 [-1e-8, -1e-8, -1e-8],
             ]
             for i in range((n_joints_body+1)+2*4)
         ],
         'drives_init': [2, 0],
-        'weight_osc_body': 1e1,
+        'weight_osc_body': 3e1,
         'weight_osc_legs_internal': 3e1,
         'weight_osc_legs_opposite': 1e0,  # 1e1,
         'weight_osc_legs_following': 0,  # 1e1,
         'weight_osc_legs2body': 3e1,
+        'weight_osc_body2legs': 0,
         'weight_sens_contact_intralimb': -1e-6,
         'weight_sens_contact_opposite': +1e-6,
         'weight_sens_contact_following': 0,
@@ -377,19 +384,21 @@ def get_polypterus_kwargs_options(**kwargs):
         'weight_sens_hydro_freq': 0,
         'weight_sens_hydro_amp': 0,
         'body_stand_amplitude': 0.1,
-        'body_stand_shift': np.pi/2,
-        'legs_amplitudes': [np.pi/4, np.pi/32, np.pi/4, np.pi/8],
-        'legs_offsets_walking': [0, np.pi/32, 0, np.pi/8],
-        'modular_phases': np.array([3*np.pi/2, 0, 3*np.pi/2, 0]) - np.pi/4,
+        'body_stand_shift': np.pi,  # np.pi/2,
+        'legs_amplitudes': [np.pi/4, np.pi/8, np.pi/4, np.pi/8],
+        'legs_offsets_walking': [0, np.pi/8, 0, np.pi/8],
+        'modular_phases': (
+            np.array([3*np.pi/2, 0, 3*np.pi/2, 0]) - np.pi/4
+        ).tolist(),
         # 'modular_amplitudes': np.full(4, 1.0),
-        'modular_amplitudes': np.full(4, 0),
-        'default_lateral_friction': 1.0,
+        'modular_amplitudes': np.full(4, 0).tolist(),
+        'default_lateral_friction': 1,
     }
     kwargs_options.update(kwargs)
     return kwargs_options
 
 
-def get_polypterus_options(**kwargs):
+def get_polypterus_options(multiplier=1.7, **kwargs):
     """Polypterus options"""
     kwargs_options = get_polypterus_kwargs_options(**kwargs)
     options = AmphibiousOptions.from_options(kwargs_options)
@@ -403,6 +412,8 @@ def get_polypterus_options(**kwargs):
         assert joint['name'] == joint_control['joint']
         joint['initial_position'] = joint_control['bias']
         # print('{}: {} [rad]'.format(joint['name'], joint_control['bias']))
+    for oscillator in options.control.network.oscillators:
+        oscillator['amplitude_gain'] *= multiplier
     return options
 
 
@@ -553,8 +564,10 @@ def get_pleurobot_kwargs_options(**kwargs):
             weight_sens_contact_diagonal=0,
             weight_sens_hydro_freq=0,
             weight_sens_hydro_amp=0,
-            modular_phases=np.array([3*np.pi/2, 0, 3*np.pi/2, 0]) - np.pi/4,
-            modular_amplitudes=np.full(4, 0.9),
+            modular_phases=(
+                np.array([3*np.pi/2, 0, 3*np.pi/2, 0]) - np.pi/4
+            ).tolist(),
+            modular_amplitudes=np.full(4, 0.9).tolist(),
             muscle_alpha=5e1,
             muscle_beta=-1e1,
             muscle_gamma=1e1,
@@ -771,8 +784,10 @@ def get_krock_kwargs_options(**kwargs):
         weight_sens_contact_diagonal=0,
         weight_sens_hydro_freq=0,
         weight_sens_hydro_amp=0,
-        modular_phases=np.array([3*np.pi/2, 0, 3*np.pi/2, 0]) - np.pi/4,
-        modular_amplitudes=np.full(4, 0.5),
+        modular_phases=(
+            np.array([3*np.pi/2, 0, 3*np.pi/2, 0]) - np.pi/4
+        ).tolist(),
+        modular_amplitudes=np.full(4, 0.5).tolist(),
         links_names=links_names,
         links_swimming=links_inertials,
         links_no_collisions=links_no_collisions,
@@ -1166,8 +1181,10 @@ def get_orobot_kwargs_options(**kwargs):
         weight_sens_contact_diagonal=0,
         weight_sens_hydro_freq=0,
         weight_sens_hydro_amp=0,
-        modular_phases=np.array([3*np.pi/2, 0, 3*np.pi/2, 0, 0]) - np.pi/4,
-        modular_amplitudes=np.full(5, 0.5),
+        modular_phases=(
+            np.array([3*np.pi/2, 0, 3*np.pi/2, 0, 0]) - np.pi/4
+        ).tolist(),
+        modular_amplitudes=np.full(5, 0.5).tolist(),
         links_names=links_names,
         drag_coefficients=drag_coefficients,
         links_swimming=links_swimming,
@@ -1228,9 +1245,9 @@ def get_hfsp_robot_kwargs_options(**kwargs):
     links_swimming = links_names[1:]
     drag_coefficients=[
         [
-            [-1e2, -1e2, -1e2]
+            [-3e1, -3e0, -3e0]
             if i < 8 and name in links_swimming
-            else [0, 0, 0],
+            else [-3e0, -3e0, -3e0],
             [-1e-8, -1e-8, -1e-8],
         ]
         for i, name in enumerate(links_names)
@@ -1245,12 +1262,12 @@ def get_hfsp_robot_kwargs_options(**kwargs):
         'Joint7',
         'Joint8',
         'Joint11',
-        'Joint31',
-        'Joint21',
-        'Joint41',
         'Joint12',
+        'Joint21',
         'Joint22',
+        'Joint31',
         'Joint32',
+        'Joint41',
         'Joint42',
     ])
     feet = kwargs.pop(
@@ -1270,31 +1287,22 @@ def get_hfsp_robot_kwargs_options(**kwargs):
 
     # Amplitudes gains
     if gain_amplitude is None:
-        gain_amplitude = [-1]*(8+4*5)  # np.ones(8+4*5)
-        # gain_amplitude[8] = 0
-        for leg_i in range(2):
-            for side_i in range(2):
-                mirror = (1 if side_i else -1)
-                # mirror2 = (-1 if leg_i else 1)
-                gain_amplitude[8+2*leg_i*5+side_i*5+0] = mirror
-                gain_amplitude[8+2*leg_i*5+side_i*5+1] = -mirror
-                gain_amplitude[8+2*leg_i*5+side_i*5+2] = -1
-                gain_amplitude[8+2*leg_i*5+side_i*5+3] = -0*mirror
-                gain_amplitude[8+2*leg_i*5+side_i*5+4] = 0*mirror
+        gain_amplitude = [1]*(8+4*4)  # np.ones(8+4*5)
+        for i in [2, 3, 4, 6, 7]:
+            gain_amplitude[i] = -1
+        gain_amplitude[8+2*2*0+2*1+0] = -1
+        gain_amplitude[8+2*2*1+2*1+0] = -1
+        gain_amplitude[8+2*2*0+2*0+1] = -1
+        gain_amplitude[8+2*2*1+2*0+1] = -1
         gain_amplitude = dict(zip(joints_names, gain_amplitude))
 
     # Joints joints_offsets
     if joints_offsets is None:
-        joints_offsets = [0]*(8+4*5)
-        for leg_i in range(2):
-            for side_i in range(2):
-                mirror = (1 if side_i else -1)
-                # mirror2 = (-1 if leg_i else 1)
-                joints_offsets[8+2*leg_i*5+side_i*5+0] = -0*mirror
-                joints_offsets[8+2*leg_i*5+side_i*5+1] = 0*mirror
-                joints_offsets[8+2*leg_i*5+side_i*5+2] = -0*np.pi
-                joints_offsets[8+2*leg_i*5+side_i*5+3] = -0.25*np.pi*mirror
-                joints_offsets[8+2*leg_i*5+side_i*5+4] = 0*mirror
+        joints_offsets = [0]*(8+4*4)
+        joints_offsets[8+2*2*0+2*0+1] = 0.25*np.pi
+        joints_offsets[8+2*2*0+2*1+1] = -0.25*np.pi
+        joints_offsets[8+2*2*1+2*0+1] = 0.25*np.pi
+        joints_offsets[8+2*2*1+2*1+1] = -0.25*np.pi
         joints_offsets = dict(zip(joints_names, joints_offsets))
 
     # Animat options
@@ -1306,11 +1314,12 @@ def get_hfsp_robot_kwargs_options(**kwargs):
         n_legs=4,
         n_dof_legs=2,
         n_joints_body=8,
+        density=500.0,
         use_self_collisions=True,
-        body_stand_amplitude=0.2,
+        body_stand_amplitude=0.3,
         legs_amplitudes=[np.pi/6, np.pi/16, np.pi/16, np.pi/8, np.pi/8],
         legs_offsets_walking=[0, -np.pi/32, -np.pi/16, 0, 0],
-        legs_offsets_swimming=[2*np.pi/5, 0, 0, np.pi/2, 0],
+        legs_offsets_swimming=[-0.5*np.pi, -0.25*np.pi],
         gain_amplitude=gain_amplitude,
         offsets_bias=joints_offsets,
         weight_osc_body=1e0,
@@ -1324,8 +1333,10 @@ def get_hfsp_robot_kwargs_options(**kwargs):
         weight_sens_contact_diagonal=0,
         weight_sens_hydro_freq=0,
         weight_sens_hydro_amp=0,
-        modular_phases=np.array([3*np.pi/2, 0, 3*np.pi/2, 0, 0]) - np.pi/4,
-        modular_amplitudes=np.full(5, 0.5),
+        modular_phases=(
+            np.array([3*np.pi/2, 0, 3*np.pi/2, 0, 0]) - np.pi/4
+        ).tolist(),
+        modular_amplitudes=np.full(5, 0.5).tolist(),
         links_names=links_names,
         drag_coefficients=drag_coefficients,
         links_swimming=links_swimming,
@@ -1345,7 +1356,7 @@ def get_hfsp_robot_kwargs_options(**kwargs):
     return kwargs_options
 
 
-def get_hfsp_robot_options(**kwargs):
+def get_hfsp_robot_options(slow=2, **kwargs):
     """HFSP robot default options"""
 
     # Animat
@@ -1354,4 +1365,7 @@ def get_hfsp_robot_options(**kwargs):
 
     kwargs_options = get_hfsp_robot_kwargs_options(**kwargs)
     animat_options = AmphibiousOptions.from_options(kwargs_options)
+    for oscillator in animat_options.control.network.oscillators:
+        oscillator['frequency_gain'] /= slow
+        oscillator['frequency_bias'] /= slow
     return sdf, animat_options
