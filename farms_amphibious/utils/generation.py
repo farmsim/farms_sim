@@ -271,6 +271,7 @@ def generate_sdf(model_name, model_version, **kwargs):
             'author': 'Jonathan Arreguit',
             'email': 'jonathan.arreguitoneill@epfl.ch',
             'overwrite': True,
+            'subfolders': ['amphibious'],
         }
     )
     print(filename)
