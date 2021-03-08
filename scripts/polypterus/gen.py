@@ -9,7 +9,7 @@ def main():
         model_version='v0',
         n_joints_body=20,
         scale=0.05,
-        leg_offset=[0, 0.06, -0.01],
+        leg_offset=[0, 0.06, -0.02],
         leg_length=0.04,
         leg_radius=0.01,
         legs_parents=[1],
