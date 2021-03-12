@@ -231,7 +231,6 @@ def get_salamander_kwargs_options(**kwargs):
         ).tolist(),
         # 'modular_amplitudes': np.full(4, 1.0),
         'modular_amplitudes': np.full(4, 0).tolist(),
-        'default_lateral_friction': 1.0,
         # Timestep: 1e-3 [s]
         # 'muscle_alpha': 3e-3,
         # 'muscle_beta': -1e-6,
@@ -324,7 +323,6 @@ def get_centipede_kwargs_options(**kwargs):
         ).tolist(),
         # 'modular_amplitudes': np.full(4, 1.0),
         'modular_amplitudes': np.full(4, 0).tolist(),
-        'default_lateral_friction': 1.0,
     }
     kwargs_options.update(kwargs)
     return kwargs_options
@@ -392,7 +390,6 @@ def get_polypterus_kwargs_options(**kwargs):
         ).tolist(),
         # 'modular_amplitudes': np.full(4, 1.0),
         'modular_amplitudes': np.full(4, 0).tolist(),
-        'default_lateral_friction': 1,
     }
     kwargs_options.update(kwargs)
     return kwargs_options
@@ -543,7 +540,6 @@ def get_pleurobot_kwargs_options(**kwargs):
         sensors_joints=joints_names,
         sensors_contacts=feet,
         sensors_hydrodynamics=links_swimming,
-        default_lateral_friction=2,
     )
     if 'kinematics_file' not in kwargs:
         kwargs_options.update(dict(
@@ -796,7 +792,6 @@ def get_krock_kwargs_options(**kwargs):
         sensors_joints=joints_names,
         sensors_contacts=feet,
         sensors_hydrodynamics=links_inertials,
-        default_lateral_friction=2,
         muscle_alpha=5e1,
         muscle_beta=-1e1,
         muscle_gamma=1e1,
@@ -1194,7 +1189,6 @@ def get_orobot_kwargs_options(**kwargs):
         sensors_joints=joints_names,
         sensors_contacts=feet,
         sensors_hydrodynamics=links_swimming,
-        default_lateral_friction=2,
         muscle_alpha=5e1,
         muscle_beta=-1e1,
         muscle_gamma=1e1,
@@ -1346,7 +1340,6 @@ def get_hfsp_robot_kwargs_options(**kwargs):
         sensors_joints=joints_names,
         sensors_contacts=feet,
         sensors_hydrodynamics=links_swimming,
-        default_lateral_friction=2,
         muscle_alpha=5e1,
         muscle_beta=-1e1,
         muscle_gamma=1e1,

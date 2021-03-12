@@ -112,6 +112,12 @@ def parse_args():
         default=(2, 0),
         help='Animat descending drives',
     )
+    parser.add_argument(
+        '--lateral_friction',
+        type=float,
+        default=1.0,
+        help='Lateral friction',
+    )
     return parser.parse_args()
 
 

@@ -41,6 +41,7 @@ def main():
     animat_options = get_animat_options_from_model(
         animat=clargs.animat,
         version=clargs.version,
+        default_lateral_friction=clargs.lateral_friction,
         **options,
     )
     simulation_options, arena = amphibious_options(
