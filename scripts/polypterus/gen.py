@@ -17,6 +17,32 @@ def main():
         eye_radius=0.02,
         color=[1.0, 1.0, 0.0, 1.0],
     )
+    generate_amphibious(
+        model_name='polypterus',
+        model_version='v0_short_fins',
+        n_joints_body=20,
+        scale=0.05,
+        leg_offset=[0, 0.06, -0.02],
+        leg_length=0.02,
+        leg_radius=0.01,
+        legs_parents=[1],
+        eye_pos=[0.015, 0.03, 0.015],
+        eye_radius=0.02,
+        color=[1.0, 1.0, 0.0, 1.0],
+    )
+    generate_amphibious(
+        model_name='polypterus',
+        model_version='v0_long_fins',
+        n_joints_body=20,
+        scale=0.05,
+        leg_offset=[0, 0.06, -0.02],
+        leg_length=0.06,
+        leg_radius=0.01,
+        legs_parents=[1],
+        eye_pos=[0.015, 0.03, 0.015],
+        eye_radius=0.02,
+        color=[1.0, 1.0, 0.0, 1.0],
+    )
 
 
 if __name__ == '__main__':
