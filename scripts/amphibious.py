@@ -47,6 +47,7 @@ def main():
     simulation_options, arena = amphibious_options(
         animat_options=animat_options,
         arena=clargs.arena,
+        viscosity=clargs.viscosity,
         water_surface=clargs.water,
         ground_height=clargs.ground,
     )

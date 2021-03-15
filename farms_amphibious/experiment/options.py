@@ -42,11 +42,12 @@ def set_no_swimming_options(animat_options):
     animat_options.physics.water_surface = None
 
 
-def set_swimming_options(animat_options, water_surface):
+def set_swimming_options(animat_options, water_surface, viscosity):
     """Set swimming options"""
     animat_options.physics.sph = False
     animat_options.physics.drag = True
     animat_options.physics.buoyancy = True
+    animat_options.physics.viscosity = viscosity
     animat_options.physics.water_surface = water_surface
 
 
@@ -146,6 +147,7 @@ def amphibious_options(animat_options, arena='flat', **kwargs):
     """Amphibious simulation"""
 
     # Water
+    viscosity = kwargs.pop('viscosity', 1)
     water_surface = kwargs.pop('water_surface', 0)
     ground_height = kwargs.pop('ground_height', None)
 
@@ -169,6 +171,7 @@ def amphibious_options(animat_options, arena='flat', **kwargs):
         set_swimming_options(
             animat_options,
             water_surface=water_surface,
+            viscosity=viscosity,
         )
     elif arena == 'water':
         arena = get_water_arena(
@@ -179,6 +182,7 @@ def amphibious_options(animat_options, arena='flat', **kwargs):
         set_swimming_options(
             animat_options,
             water_surface=water_surface,
+            viscosity=viscosity,
         )
     else:
         raise Exception('Unknown arena: "{}"'.format(arena))

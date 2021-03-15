@@ -118,6 +118,12 @@ def parse_args():
         default=1.0,
         help='Lateral friction',
     )
+    parser.add_argument(
+        '--viscosity',
+        type=float,
+        default=1.0,
+        help='Viscosity',
+    )
     return parser.parse_args()
 
 

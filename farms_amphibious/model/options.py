@@ -272,6 +272,7 @@ class AmphibiousPhysicsOptions(Options):
         self.drag = kwargs.pop('drag')
         self.sph = kwargs.pop('sph')
         self.buoyancy = kwargs.pop('buoyancy')
+        self.viscosity = kwargs.pop('viscosity')
         self.water_surface = kwargs.pop('water_surface')
         if kwargs:
             raise Exception('Unknown kwargs: {}'.format(kwargs))
@@ -290,6 +291,7 @@ class AmphibiousPhysicsOptions(Options):
             'water_surface',
             options['drag'] or options['sph']
         )
+        options['viscosity'] = kwargs.pop('viscosity', 1.0)
         return cls(**options)
 
 
