@@ -4,13 +4,14 @@ import os
 import shutil
 import numpy as np
 from farms_sdf.sdf import ModelSDF, Link, Joint, Visual
-from farms_amphibious.model.options import AmphibiousOptions
-from farms_amphibious.model.convention import AmphibiousConvention
 from farms_models.utils import (
     get_sdf_path,
     get_model_path,
     create_new_model_from_farms_sdf,
 )
+
+from ..model.options import AmphibiousOptions
+from ..model.convention import AmphibiousConvention
 
 
 def generate_sdf(model_name, model_version, **kwargs):

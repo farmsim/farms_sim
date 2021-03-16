@@ -24,7 +24,10 @@ def get_animat_options_from_model(animat, version, **options):
         _sdf, animat_options = get_krock_options(**options)
     elif animat == 'orobot':
         _sdf, animat_options = get_orobot_options(**options)
-    elif animat == 'hfsp_robot':
+    elif animat == 'hfsp_robot' and version == 'salamander_0':
+        _sdf, animat_options = get_hfsp_robot_options(**options)
+    elif animat == 'hfsp_robot' and version == 'polypterus_0':
+        options['hindlimbs'] = False
         _sdf, animat_options = get_hfsp_robot_options(**options)
     else:
         raise Exception('Unknown animat {animat} {version}'.format(
@@ -1214,7 +1217,7 @@ def get_orobot_options(**kwargs):
     return sdf, animat_options
 
 
-def get_hfsp_robot_kwargs_options(**kwargs):
+def get_hfsp_robot_kwargs_options(hindlimbs=True, **kwargs):
     """HFSP robot default options"""
 
     # Morphology information
@@ -1231,14 +1234,19 @@ def get_hfsp_robot_kwargs_options(**kwargs):
             'link_tail_v22XM430_W210_R_v1_v31X-430_IDLE1',
             'XM430_W210_R_v1_v31X-430_IDLE1',
             'link_left_leg_v21XM430_W350_R_v1_v21X-430_IDLE1',
-            'link_left_leg_v22XM430_W350_R_v1_v21X-430_IDLE1',
-            'link_right_leg_v21XM430_W350_R_v1_v21X-430_IDLE1',
-            'link_right_leg_v22XM430_W350_R_v1_v21X-430_IDLE1',
             'link_foot_v21fr12_h1011',
+            'link_right_leg_v21XM430_W350_R_v1_v21X-430_IDLE1',
             'link_foot_v22fr12_h1011',
-            'link_foot_v23fr12_h1011',
-            'link_foot_v24fr12_h1011',
-        ]
+        ] + (
+            [
+                'link_left_leg_v22XM430_W350_R_v1_v21X-430_IDLE1',
+                'link_foot_v23fr12_h1011',
+                'link_right_leg_v22XM430_W350_R_v1_v21X-430_IDLE1',
+                'link_foot_v24fr12_h1011',
+            ]
+            if hindlimbs
+            else []
+        )
     )
     links_swimming = links_names[1:]
     drag_coefficients=[
@@ -1250,32 +1258,45 @@ def get_hfsp_robot_kwargs_options(**kwargs):
         ]
         for i, name in enumerate(links_names)
     ]
-    joints_names = kwargs.pop('joints_names', [
-        'Joint1',
-        'Joint2',
-        'Joint3',
-        'Joint4',
-        'Joint5',
-        'Joint6',
-        'Joint7',
-        'Joint8',
-        'Joint11',
-        'Joint12',
-        'Joint21',
-        'Joint22',
-        'Joint31',
-        'Joint32',
-        'Joint41',
-        'Joint42',
-    ])
+    joints_names = kwargs.pop(
+        'joints_names',
+        [
+            'Joint1',
+            'Joint2',
+            'Joint3',
+            'Joint4',
+            'Joint5',
+            'Joint6',
+            'Joint7',
+            'Joint8',
+            'Joint11',
+            'Joint12',
+            'Joint21',
+            'Joint22',
+        ] + (
+            [
+                'Joint31',
+                'Joint32',
+                'Joint41',
+                'Joint42',
+            ]
+            if hindlimbs
+            else []
+        )
+    )
     feet = kwargs.pop(
         'feet',
         [
             'link_foot_v21fr12_h1011',
             'link_foot_v22fr12_h1011',
-            'link_foot_v23fr12_h1011',
-            'link_foot_v24fr12_h1011',
-        ]
+        ] + (
+            [
+                'link_foot_v23fr12_h1011',
+                'link_foot_v24fr12_h1011',
+            ]
+            if hindlimbs
+            else []
+        )
     )
     links_no_collisions = kwargs.pop('links_no_collisions', [])
 
@@ -1309,7 +1330,7 @@ def get_hfsp_robot_kwargs_options(**kwargs):
         spawn_position=[0, 0, 0],
         spawn_orientation=[0.5*np.pi, 0, 0],
         default_control_type=ControlType.POSITION,
-        n_legs=4,
+        n_legs=4 if hindlimbs else 2,
         n_dof_legs=2,
         n_joints_body=8,
         density=500.0,
