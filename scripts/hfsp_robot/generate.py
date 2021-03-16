@@ -47,8 +47,28 @@ def generate(version):
     for joint in model.joints:
         print("'{}',".format(joint.name))
 
-    # Remove legs
+    # Polypterus version handling
     if 'polypterus' in version:
+
+        # Girdle
+        girdle_name = 'link_girdle_salamander_2_v31link_girdle_v71girdle_v31girdle1'
+        girdle_mesh = 'meshes/link_girdle_Polypt_2_v21link_girdle_v71girdle_v31girdle1.stl'
+        girdle_path = os.path.join(directory, girdle_mesh)
+        for link in model.links:
+            if link.name == girdle_name:
+                visual = link.visuals[0]
+                visual.geometry.uri = girdle_mesh
+                link.collisions[0].geometry.uri = girdle_mesh
+                link.inertial = inertial.from_mesh(
+                    path=girdle_path,
+                    scale=visual.geometry.scale[0],
+                    pose=visual.pose,
+                    units=inertial.units,
+                    mass=0.15306822632853107,
+                )
+                break
+
+        # Links from hindlimbs
         hindlinks = [
             'link_left_leg_v22XM430_W350_R_v1_v21X-430_IDLE1',
             'link_right_leg_v22XM430_W350_R_v1_v21X-430_IDLE1',
@@ -56,6 +76,7 @@ def generate(version):
             'link_foot_v24fr12_h1011',
         ]
 
+        # Links
         links_remove = []
         print('\nRemoving links:')
         for link in model.links:
@@ -65,6 +86,7 @@ def generate(version):
         for link in links_remove:
             model.links.remove(link)
 
+        # Joints
         joints_remove = []
         print('\nRemoving joints')
         for joint in model.joints:
