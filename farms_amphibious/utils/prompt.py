@@ -9,7 +9,9 @@ import farms_pylog as pylog
 from farms_models.utils import get_simulation_data_path
 from farms_data.amphibious.animat_data import AnimatData
 from farms_amphibious.utils.network import plot_networks_maps
-from farms_bullet.simulation.parse_args import argument_parser
+from farms_bullet.simulation.parse_args import (
+    argument_parser as bullet_argument_parser,
+)
 
 
 def prompt(query, default):
@@ -26,12 +28,12 @@ def prompt(query, default):
     return ret
 
 
-def parse_args():
+def argument_parser():
     """Parse args"""
-    parser = argument_parser()
-    parser.description = 'Salamander simulation'
+    parser = bullet_argument_parser()
+    parser.description = 'Amphibious simulation'
     parser.add_argument(
-        '-p', '--prompt',
+        '--prompt',
         action='store_true',
         help='Prompt at end of simulation',
     )
@@ -124,6 +126,12 @@ def parse_args():
         default=1.0,
         help='Viscosity',
     )
+    return parser
+
+
+def parse_args():
+    """Parse args"""
+    parser = argument_parser()
     return parser.parse_args()
 
 
