@@ -82,7 +82,7 @@ def main():
         animat_options=animat_options,
         query=clargs.prompt,
         save=clargs.save,
-        models=clargs.models,
+        save_to_models=clargs.save_to_models,
     )
 
 

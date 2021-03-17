@@ -91,7 +91,7 @@ def argument_parser():
         help='Save simulation data to provided path',
     )
     parser.add_argument(
-        '--models',
+        '--save_to_models',
         action='store_true',
         help='Save data to farms_models_data',
     )
@@ -146,7 +146,7 @@ def prompt_postprocessing(
     """Prompt postprocessing"""
     # Arguments
     save = kwargs.pop('save', '')
-    models = kwargs.pop('models', '')
+    save_to_models = kwargs.pop('save_to_models', '')
     extension = kwargs.pop('extension', 'pdf')
 
     # Post-processing
@@ -155,10 +155,10 @@ def prompt_postprocessing(
         name=animat,
         version=version,
         simulation_name=save if save else 'default',
-    ) if models else save
+    ) if save_to_models else save
     save_data = (
         (query and prompt('Save data', False))
-        or (save or models) and not query
+        or (save or save_to_models) and not query
     )
     if log_path and not os.path.isdir(log_path):
         os.mkdir(log_path)
