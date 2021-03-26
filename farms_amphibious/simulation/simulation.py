@@ -40,9 +40,13 @@ def gps_based_drive(iteration, animat, interface):
 class AmphibiousSimulation(AnimatSimulation):
     """Amphibious simulation"""
 
-    def __init__(self, simulation_options, animat, arena):
+    def __init__(self, simulation_options, animat, arena=None):
         super(AmphibiousSimulation, self).__init__(
-            models=SimulationModels([animat, arena]),
+            models=SimulationModels(
+                [animat, arena]
+                if arena is not None
+                else [animat]
+            ),
             options=simulation_options,
             interface=Interfaces(
                 user_params=AmphibiousUserParameters(
