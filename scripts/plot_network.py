@@ -49,25 +49,25 @@ def parse_args():
     return parser.parse_args()
 
 
-class FasterFFMpegWriter(animation.FFMpegWriter):
-    """FFMpeg-pipe writer bypassing figure.savefig"""
+# class FasterFFMpegWriter(animation.FFMpegWriter):
+#     """FFMpeg-pipe writer bypassing figure.savefig"""
 
-    def __init__(self, anim, **kwargs):
-        super(FasterFFMpegWriter, self).__init__(**kwargs)
-        self.frame_format = 'argb'
-        # self.anim = anim
-        # self.anim.animation_init()
-        # self.frame = 0
+#     def __init__(self, anim, **kwargs):
+#         super(FasterFFMpegWriter, self).__init__(**kwargs)
+#         self.frame_format = 'argb'
+#         # self.anim = anim
+#         # self.anim.animation_init()
+#         # self.frame = 0
 
-    def grab_frame(self, **kwargs):
-        """Grab frame"""
-        self.fig.set_size_inches(self._w, self._h)
-        self.fig.set_dpi(self.dpi)
-        # if self.frame == 0:
-        self.fig.canvas.draw()
-        # self.anim.animation_update(self.frame)
-        self._frame_sink().write(self.fig.canvas.tostring_argb())
-        # self.frame += 1
+#     def grab_frame(self, **kwargs):
+#         """Grab frame"""
+#         self.fig.set_size_inches(self._w, self._h)
+#         self.fig.set_dpi(self.dpi)
+#         # if self.frame == 0:
+#         self.fig.canvas.draw()
+#         # self.anim.animation_update(self.frame)
+#         self._frame_sink().write(self.fig.canvas.tostring_argb())
+#         # self.frame += 1
 
 
 def main():
@@ -100,29 +100,59 @@ def main():
     #         network_anim.animation_update(frame)
     #         writer.grab_frame()
 
-    pylog.info('Saving to {}'.format(args.output))
-    ffmpegwriter = animation.writers['ffmpeg']
-    network_anim.animation.save(
-        args.output,
-        writer=FasterFFMpegWriter(  # ffmpegwriter
-            # width=20, height=10,
-            anim=network_anim,
+    # pylog.info('Saving to {}'.format(args.output))
+    # ffmpegwriter = animation.writers['ffmpeg']
+    # network_anim.animation.save(
+    #     args.output,
+    #     writer=ffmpegwriter(  # ffmpegwriter FasterFFMpegWriter
+    #         # width=20, height=10,
+    #         # anim=network_anim,
+    #         fps=1/(1e-3*network_anim.interval),
+    #         # codec="libx264",
+    #         metadata = dict(
+    #             title='FARMS network',
+    #             artist='FARMS',
+    #             comment='FARMS network',
+    #         ),
+    #         extra_args=['-vcodec', 'libx264'],
+    #         # bitrate=1800,
+    #     ),
+    #     dpi=200,
+    #     # writer='pillow',
+    #     progress_callback=lambda i, n: print(i),
+    # )
+
+    _, extension = os.path.splitext(args.output)
+    if extension == '.png':
+        for frame in range(network_anim.n_frames):
+            pylog.debug('Saving frame {}'.format(frame))
+            network_anim.animation_update(frame)
+            fig.canvas.print_figure(args.output.format(frame=frame), dpi=100)
+    elif extension == '.mp4':
+        moviewriter = animation.writers['ffmpeg'](
             fps=1/(1e-3*network_anim.interval),
-            # codec="libx264",
             metadata = dict(
                 title='FARMS network',
                 artist='FARMS',
                 comment='FARMS network',
             ),
             extra_args=['-vcodec', 'libx264'],
-            # bitrate=1800,
-        ),
-        dpi=200,
-        # writer='pillow',
-        progress_callback=lambda i, n: print(i),
-    )
+        )
+        with moviewriter.saving(
+                fig=fig,
+                outfile=args.output,
+                dpi=100,
+        ):
+            for frame in range(network_anim.n_frames):
+                pylog.debug('Saving frame {}'.format(frame))
+                network_anim.animation_update(frame)
+                moviewriter.grab_frame()
+    else:
+        raise Exception('Unknown file extension {}'.format(extension))
     pylog.info('Saved to {}'.format(args.output))
 
 
 if __name__ == '__main__':
-    main()
+    from farms_bullet.utils.profile import profile
+    profile(main)
+    # main()
