@@ -202,7 +202,7 @@ class NetworkFigure:
         self.time = None
         self.n_iterations = np.shape(self.data.sensors.links.array)[0]
         self.interval = 25
-        self.n_frames = self.n_iterations*self.timestep / (1e-3*self.interval)
+        self.n_frames = round(self.n_iterations*self.timestep / (1e-3*self.interval))
         self.network = NetworkODE(self.data)
         self.cmap_phases = plt.get_cmap('Greens')
         self.cmap_contacts = plt.get_cmap('Oranges')
