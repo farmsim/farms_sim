@@ -3,13 +3,71 @@
 
 import numpy as np
 import farms_pylog as pylog
+
 from farms_data.amphibious.data import AmphibiousData
+from farms_models.utils import get_sdf_path
+from farms_bullet.model.options import SpawnLoader
+from farms_bullet.model.control import ControlType
 from farms_bullet.simulation.options import SimulationOptions
 from farms_bullet.control.kinematics import KinematicsController
+
 from ..simulation.simulation import AmphibiousSimulation
 from ..control.controller import AmphibiousController
 from ..control.manta_control import MantaController
+from ..model.options import AmphibiousOptions
 from ..model.animat import Amphibious
+from ..utils.prompt import (
+    parse_args,
+    prompt_postprocessing,
+)
+from .options import (
+    amphibious_options,
+    get_animat_options_from_model,
+)
+
+
+def setup_from_clargs(clargs=None):
+    """Simulation setup from clargs"""
+
+    # Arguments
+    if clargs is None:
+        clargs = parse_args()
+
+    # Options
+    sdf = get_sdf_path(name=clargs.animat, version=clargs.version)
+    options = {
+        'drives_init': clargs.drives,
+        'spawn_position': clargs.position,
+        'spawn_orientation': clargs.orientation,
+        'spawn_loader': SpawnLoader.PYBULLET,
+        'default_control_type': ControlType.POSITION,
+    }
+    animat_options = get_animat_options_from_model(
+        animat=clargs.animat,
+        version=clargs.version,
+        default_lateral_friction=clargs.lateral_friction,
+        **options,
+    )
+    simulation_options, arena = amphibious_options(
+        animat_options=animat_options,
+        arena=clargs.arena,
+        viscosity=clargs.viscosity,
+        water_surface=clargs.water,
+        ground_height=clargs.ground,
+    )
+
+    # Test options saving and loading
+    if clargs.test:
+        # Save options
+        animat_options_filename = 'animat_options.yaml'
+        animat_options.save(animat_options_filename)
+        simulation_options_filename = 'simulation_options.yaml'
+        simulation_options.save(simulation_options_filename)
+        # Load options
+        animat_options = AmphibiousOptions.load(animat_options_filename)
+        simulation_options = SimulationOptions.load(simulation_options_filename)
+
+    return clargs, sdf, animat_options, simulation_options, arena
 
 
 def simulation_setup(animat_sdf, animat_options, arena, **kwargs):
@@ -106,4 +164,19 @@ def simulation_post(sim, log_path='', plot=False, video=''):
         log_path=log_path,
         plot=plot,
         video=video if not sim.options.headless else ''
+    )
+
+
+def postprocessing_from_clargs(sim, animat_options, clargs=None):
+    """Simulation postproces"""
+    if clargs is None:
+        clargs = parse_args()
+    prompt_postprocessing(
+        animat=clargs.animat,
+        version=clargs.version,
+        sim=sim,
+        animat_options=animat_options,
+        query=clargs.prompt,
+        save=clargs.save,
+        save_to_models=clargs.save_to_models,
     )
