@@ -199,7 +199,7 @@ def get_salamander_kwargs_options(**kwargs):
         'spawn_loader': SpawnLoader.PYBULLET,  # SpawnLoader.FARMS,
         'spawn_position': [0, 0, 0.2*0.07],
         'spawn_orientation': [0, 0, 0],
-        'use_self_collisions': True,
+        'use_self_collisions': False,
         'default_control_type': ControlType.POSITION,  # ControlType.TORQUE,
         'scale_hydrodynamics': 10,
         'n_legs': 4,
@@ -528,7 +528,7 @@ def get_pleurobot_kwargs_options(**kwargs):
         n_legs=4,
         n_dof_legs=4,
         n_joints_body=13,
-        use_self_collisions=True,
+        use_self_collisions=False,
         drag_coefficients=[
             [
                 [drag, -1e1, drag]
@@ -1164,7 +1164,7 @@ def get_orobot_kwargs_options(**kwargs):
         n_legs=4,
         n_dof_legs=5,
         n_joints_body=8,
-        use_self_collisions=True,
+        use_self_collisions=False,
         density=600.0,
         body_stand_amplitude=0.2,
         legs_amplitudes=[np.pi/6, np.pi/16, np.pi/16, np.pi/8, np.pi/8],
@@ -1334,7 +1334,7 @@ def get_hfsp_robot_kwargs_options(hindlimbs=True, **kwargs):
         n_dof_legs=2,
         n_joints_body=8,
         density=500.0,
-        use_self_collisions=True,
+        use_self_collisions=False,
         body_stand_amplitude=0.3,
         legs_amplitudes=[np.pi/6, np.pi/16, np.pi/16, np.pi/8, np.pi/8],
         legs_offsets_walking=[0, -np.pi/32, -np.pi/16, 0, 0],

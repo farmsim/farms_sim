@@ -126,6 +126,11 @@ def argument_parser():
         default=1.0,
         help='Viscosity',
     )
+    parser.add_argument(
+        '--self_collisions',
+        action='store_true',
+        help='Apply self collisions',
+    )
     return parser
 
 

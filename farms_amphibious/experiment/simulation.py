@@ -46,6 +46,7 @@ def setup_from_clargs(clargs=None):
         animat=clargs.animat,
         version=clargs.version,
         default_lateral_friction=clargs.lateral_friction,
+        use_self_collisions=clargs.self_collisions,
         **options,
     )
     simulation_options, arena = amphibious_options(
