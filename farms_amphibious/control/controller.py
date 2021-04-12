@@ -117,53 +117,53 @@ class AmphibiousController(ModelController):
         )
         return dict(zip(self.joints[ControlType.POSITION], positions))
 
-    def pid_controller(self, iteration, time, timestep):
-        """Torques"""
-        joints = self.animat_data.sensors.joints
-        positions = np.array(joints.positions(iteration))[
-            self.joints_indices[ControlType.POSITION]
-        ]
-        velocities = np.array(joints.velocities(iteration))[
-            self.joints_indices[ControlType.POSITION]
-        ]
-        outputs = self.network.outputs(iteration)
-        cmd_positions = (
-            self.gain_amplitude[ControlType.POSITION]*0.5*(
-                outputs[self.muscle_groups[0]]
-                - outputs[self.muscle_groups[1]]
-            )
-            + self.gain_offset*np.asarray(self.network.offsets(iteration))[
-                self.joints_indices[ControlType.POSITION]
-            ]
-            + self.joints_bias[ControlType.POSITION]
-        )
-        # cmd_velocities = self.get_velocity_output(iteration)
-        positions_rest = np.array(self.network.offsets(iteration))[
-            self.joints_indices[ControlType.POSITION]
-        ]
-        # max_torque = 1  # Nm
-        spring = 2e0  # Nm/rad
-        damping = 5e-3  # max_torque/10  # 1e-1 # Nm*s/rad
-        cmd_kp = 5*spring  # Nm/rad
-        # cmd_kd = 0.5*damping  # Nm*s/rad
-        motor_torques = cmd_kp*(cmd_positions-positions)
-        spring_torques = spring*(positions_rest-positions)
-        damping_torques = - damping*velocities
-        # if iteration > 0:
-        #     motor_torques += cmd_kd*(
-        #         (cmd_positions - self.positions(iteration-1))/self._timestep
-        #         - velocities
-        #     )
-        torques = np.clip(
-            motor_torques + spring_torques + damping_torques,
-            -self.max_torques[ControlType.TORQUE],
-            self.max_torques[ControlType.TORQUE],
-        )
-        joints.array[iteration, :, 8] = torques
-        joints.array[iteration, :, 9] = motor_torques
-        joints.array[iteration, :, 10] = spring_torques
-        joints.array[iteration, :, 11] = damping_torques
-        return dict(zip(self.joints[ControlType.TORQUE], torques))
+    # def pid_controller(self, iteration, time, timestep):
+    #     """Torques"""
+    #     joints = self.animat_data.sensors.joints
+    #     positions = np.array(joints.positions(iteration))[
+    #         self.joints_indices[ControlType.POSITION]
+    #     ]
+    #     velocities = np.array(joints.velocities(iteration))[
+    #         self.joints_indices[ControlType.POSITION]
+    #     ]
+    #     outputs = self.network.outputs(iteration)
+    #     cmd_positions = (
+    #         self.gain_amplitude[ControlType.POSITION]*0.5*(
+    #             outputs[self.muscle_groups[0]]
+    #             - outputs[self.muscle_groups[1]]
+    #         )
+    #         + self.gain_offset*np.asarray(self.network.offsets(iteration))[
+    #             self.joints_indices[ControlType.POSITION]
+    #         ]
+    #         + self.joints_bias[ControlType.POSITION]
+    #     )
+    #     # cmd_velocities = self.get_velocity_output(iteration)
+    #     positions_rest = np.array(self.network.offsets(iteration))[
+    #         self.joints_indices[ControlType.POSITION]
+    #     ]
+    #     # max_torque = 1  # Nm
+    #     spring = 2e0  # Nm/rad
+    #     damping = 5e-3  # max_torque/10  # 1e-1 # Nm*s/rad
+    #     cmd_kp = 5*spring  # Nm/rad
+    #     # cmd_kd = 0.5*damping  # Nm*s/rad
+    #     motor_torques = cmd_kp*(cmd_positions-positions)
+    #     spring_torques = spring*(positions_rest-positions)
+    #     damping_torques = - damping*velocities
+    #     # if iteration > 0:
+    #     #     motor_torques += cmd_kd*(
+    #     #         (cmd_positions - self.positions(iteration-1))/self._timestep
+    #     #         - velocities
+    #     #     )
+    #     torques = np.clip(
+    #         motor_torques + spring_torques + damping_torques,
+    #         -self.max_torques[ControlType.TORQUE],
+    #         self.max_torques[ControlType.TORQUE],
+    #     )
+    #     joints.array[iteration, :, 8] = torques
+    #     joints.array[iteration, :, 9] = motor_torques
+    #     joints.array[iteration, :, 10] = spring_torques
+    #     joints.array[iteration, :, 11] = damping_torques
+    #     return dict(zip(self.joints[ControlType.TORQUE], torques))
 
     def ekeberg_muscle(self, iteration, time, timestep, use_prediction=False):
         """Ekeberg muscle"""
