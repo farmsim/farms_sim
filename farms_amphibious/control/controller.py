@@ -22,11 +22,45 @@ class AmphibiousController(ModelController):
         )
         self.network = NetworkODE(animat_data)
         self.animat_data = animat_data
+
+        # Joint settings
         control_types = [
             ControlType.POSITION,
             ControlType.VELOCITY,
             ControlType.TORQUE,
         ]
+        self.joints_indices = [
+            np.array([
+                joint_i
+                for joint_i, joint in enumerate(joints)
+                if joint in self.joints[control_type]
+            ])
+            for control_type in control_types
+        ]
+        gain_amplitudes = {
+            joint.joint: joint.gain_amplitude
+            for joint in animat_options.control.joints
+        }
+        self.gain_amplitude = [
+            np.array([
+                gain_amplitudes[joint]
+                for joint in self.joints[control_type]
+            ])
+            for control_type in control_types
+        ]
+        offsets_bias = {
+            joint.joint: joint.bias
+            for joint in animat_options.control.joints
+        }
+        self.joints_bias = [
+            np.array([
+                offsets_bias[joint]
+                for joint in self.joints[control_type]
+            ])
+            for control_type in control_types
+        ]
+
+        # Muscles
         joint_muscle_map = {
             muscle.joint: muscle
             for muscle in animat_options.control.muscles
@@ -64,36 +98,6 @@ class AmphibiousController(ModelController):
                 [osc_map[muscle.osc1] for muscle in muscles[control_type]],
                 [osc_map[muscle.osc2] for muscle in muscles[control_type]],
             ]
-            for control_type in control_types
-        ]
-        self.joints_indices = [
-            np.array([
-                joint_i
-                for joint_i, joint in enumerate(joints)
-                if joint in self.joints[control_type]
-            ])
-            for control_type in control_types
-        ]
-        gain_amplitudes = {
-            joint.joint: joint.gain_amplitude
-            for joint in animat_options.control.joints
-        }
-        self.gain_amplitude = [
-            np.array([
-                gain_amplitudes[joint]
-                for joint in self.joints[control_type]
-            ])
-            for control_type in control_types
-        ]
-        offsets_bias = {
-            joint.joint: joint.bias
-            for joint in animat_options.control.joints
-        }
-        self.joints_bias = [
-            np.array([
-                offsets_bias[joint]
-                for joint in self.joints[control_type]
-            ])
             for control_type in control_types
         ]
 
