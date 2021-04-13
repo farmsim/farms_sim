@@ -5,6 +5,7 @@ import time
 
 import numpy as np
 import farms_pylog as pylog
+from farms_bullet.model.control import ControlType
 from farms_amphibious.experiment.simulation import (
     setup_from_clargs,
     simulation_setup,
@@ -18,6 +19,22 @@ def main():
     # Setup simulation
     pylog.info('Creating simulation')
     clargs, sdf, animat_options, simulation_options, arena = setup_from_clargs()
+    joints = {
+        joint['joint']: joint
+        for joint in animat_options['control']['joints']
+    }
+    muscles = {
+        muscle['joint']: muscle
+        for muscle in animat_options['control']['muscles']
+    }
+    animat_options['control']['torque_equation'] = 'passive'
+    for name in ('j_tailBone', 'j_tail'):
+        if name in joints:
+            joints[name]['control_type'] = ControlType.TORQUE
+            muscles[name]['alpha'] = 0
+            muscles[name]['beta'] = 0
+            muscles[name]['gamma'] = 0  # Spring stiffness
+            muscles[name]['delta'] = 0  # Damping coeffiecient
     sim = simulation_setup(
         animat_sdf=sdf,
         animat_options=animat_options,
