@@ -306,6 +306,7 @@ class AmphibiousControlOptions(ControlOptions):
                 for joint in kwargs.pop('joints')
             ],
         )
+        self.torque_equation = kwargs.pop('torque_equation', 'ekeberg_muscle')
         self.kinematics_file = kwargs.pop('kinematics_file')
         self.manta_controller = kwargs.pop('manta_controller', False)
         self.kinematics_sampling = kwargs.pop('kinematics_sampling')
