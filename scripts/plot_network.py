@@ -12,6 +12,9 @@ from farms_bullet.simulation.options import SimulationOptions
 from farms_amphibious.model.options import AmphibiousOptions
 from farms_amphibious.utils.network import plot_networks_maps
 
+from moviepy.editor import VideoClip
+from moviepy.video.io.bindings import mplfig_to_npimage
+
 
 def parse_args():
     """Parse args"""
@@ -70,7 +73,7 @@ def parse_args():
 #         # self.frame += 1
 
 
-def main():
+def main(use_moviepy=True):
     """Main"""
     args = parse_args()
     animat_options = AmphibiousOptions.load(args.animat)
@@ -127,26 +130,53 @@ def main():
         for frame in range(network_anim.n_frames):
             pylog.debug('Saving frame {}'.format(frame))
             network_anim.animation_update(frame)
-            fig.canvas.print_figure(args.output.format(frame=frame), dpi=100)
-    elif extension == '.mp4':
-        moviewriter = animation.writers['ffmpeg'](
-            fps=1/(1e-3*network_anim.interval),
-            metadata = dict(
-                title='FARMS network',
-                artist='FARMS',
-                comment='FARMS network',
-            ),
-            extra_args=['-vcodec', 'libx264'],
-        )
-        with moviewriter.saving(
-                fig=fig,
-                outfile=args.output,
+            fig.canvas.print_figure(
+                args.output.format(frame=frame),
                 dpi=100,
-        ):
-            for frame in range(network_anim.n_frames):
-                pylog.debug('Saving frame {}'.format(frame))
+            )
+    elif extension == '.mp4':
+        if use_moviepy:
+            # Use Moviepy
+            fps = 1/(1e-3*network_anim.interval)
+            duration = network_anim.timestep*network_anim.n_iterations
+            n_frames = network_anim.n_frames
+            def make_frame(t):
+                """Make frame"""
+                frame = min([int(t*fps), network_anim.n_frames])
+                pylog.debug('Saving frame {frame}/{total}'.format(
+                    frame=frame,
+                    total=n_frames,
+                ))
                 network_anim.animation_update(frame)
-                moviewriter.grab_frame()
+                return mplfig_to_npimage(fig)
+            anim = VideoClip(make_frame, duration=duration)
+            anim.write_videofile(
+                filename=args.output,
+                fps=fps,
+                codec='libx264',
+                logger=None,
+            )
+            anim.close()
+        else:
+            # Use Matplotlib
+            moviewriter = animation.writers['ffmpeg'](
+                fps=1/(1e-3*network_anim.interval),
+                metadata = dict(
+                    title='FARMS network',
+                    artist='FARMS',
+                    comment='FARMS network',
+                ),
+                extra_args=['-vcodec', 'libx264'],
+            )
+            with moviewriter.saving(
+                    fig=fig,
+                    outfile=args.output,
+                    dpi=100,
+            ):
+                for frame in range(network_anim.n_frames):
+                    pylog.debug('Saving frame {}'.format(frame))
+                    network_anim.animation_update(frame)
+                    moviewriter.grab_frame()
     else:
         raise Exception('Unknown file extension {}'.format(extension))
     pylog.info('Saved to {}'.format(args.output))

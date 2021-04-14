@@ -263,7 +263,7 @@ class NetworkFigure:
             func=self.animation_update,
             frames=np.arange(self.n_frames),
             init_func=self.animation_init,
-            blit=True,
+            blit=False,
             interval=self.interval,
             cache_frame_data=False,
         )
