@@ -570,7 +570,8 @@ def get_pleurobot_kwargs_options(**kwargs):
             modular_phases=(
                 np.array([3*np.pi/2, 0, 3*np.pi/2, 0]) - np.pi/4
             ).tolist(),
-            modular_amplitudes=np.full(4, 0.9).tolist(),
+            # modular_amplitudes=np.full(4, 0.9).tolist(),
+            modular_amplitudes=np.full(4, 0).tolist(),
             muscle_alpha=5e1,
             muscle_beta=-1e1,
             muscle_gamma=1e1,
@@ -790,7 +791,8 @@ def get_krock_kwargs_options(**kwargs):
         modular_phases=(
             np.array([3*np.pi/2, 0, 3*np.pi/2, 0]) - np.pi/4
         ).tolist(),
-        modular_amplitudes=np.full(4, 0.5).tolist(),
+        # modular_amplitudes=np.full(4, 0.5).tolist(),
+        modular_amplitudes=np.full(4, 0).tolist(),
         links_names=links_names,
         links_swimming=links_inertials,
         links_no_collisions=links_no_collisions,
@@ -1186,7 +1188,8 @@ def get_orobot_kwargs_options(**kwargs):
         modular_phases=(
             np.array([3*np.pi/2, 0, 3*np.pi/2, 0, 0]) - np.pi/4
         ).tolist(),
-        modular_amplitudes=np.full(5, 0.5).tolist(),
+        # modular_amplitudes=np.full(5, 0.5).tolist(),
+        modular_amplitudes=np.full(4, 0).tolist(),
         links_names=links_names,
         drag_coefficients=drag_coefficients,
         links_swimming=links_swimming,
@@ -1355,7 +1358,8 @@ def get_hfsp_robot_kwargs_options(hindlimbs=True, **kwargs):
         modular_phases=(
             np.array([3*np.pi/2, 0, 3*np.pi/2, 0, 0]) - np.pi/4
         ).tolist(),
-        modular_amplitudes=np.full(5, 0.5).tolist(),
+        # modular_amplitudes=np.full(5, 0.5).tolist(),
+        modular_amplitudes=np.full(4, 0).tolist(),
         links_names=links_names,
         drag_coefficients=drag_coefficients,
         links_swimming=links_swimming,
