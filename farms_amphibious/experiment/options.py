@@ -223,8 +223,8 @@ def get_salamander_kwargs_options(**kwargs):
         'weight_osc_legs_following': 0,  # 1e1,
         'weight_osc_legs2body': 3e1,
         'weight_osc_body2legs': 0,
-        'weight_sens_contact_intralimb': -1e-6,
-        'weight_sens_contact_opposite': +1e-6,
+        'weight_sens_contact_intralimb': 0,
+        'weight_sens_contact_opposite': 0,
         'weight_sens_contact_following': 0,
         'weight_sens_contact_diagonal': 0,
         'weight_sens_hydro_freq': 0,
@@ -270,6 +270,12 @@ def get_salamander_options(**kwargs):
     """Salamander options"""
     kwargs_options = get_salamander_kwargs_options(**kwargs)
     options = AmphibiousOptions.from_options(kwargs_options)
+    for link in options['morphology']['links']:
+        link['pybullet_dynamics']['lateralFriction'] = (
+            1 if link['name'] in ('link_leg_0_L_3', 'link_leg_0_R_3')
+            else 0.3 if link['name'] in ('link_leg_1_L_3', 'link_leg_1_R_3')
+            else 0.1
+        )
     # for joint_i, joint in enumerate(options['morphology']['joints']):
     #     joint['pybullet_dynamics']['jointDamping'] = 0
     #     joint['pybullet_dynamics']['maxJointVelocity'] = np.inf  # 0.1
