@@ -596,6 +596,12 @@ def get_pleurobot_options(slow=2, **kwargs):
 
     kwargs_options = get_pleurobot_kwargs_options(**kwargs)
     animat_options = AmphibiousOptions.from_options(kwargs_options)
+    for link in animat_options['morphology']['links']:
+        link['pybullet_dynamics']['lateralFriction'] = (
+            1 if link['name'] in ('link15', 'link19')
+            else 0.3 if link['name'] in ('link23', 'link27')
+            else 0.1
+        )
     for oscillator in animat_options.control.network.oscillators:
         oscillator['frequency_gain'] /= slow
         oscillator['frequency_bias'] /= slow
