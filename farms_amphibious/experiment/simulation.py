@@ -80,10 +80,13 @@ def simulation_setup(animat_sdf, animat_options, arena, **kwargs):
     )
 
     # Animat data
-    animat_data = AmphibiousData.from_options(
-        animat_options.control,
-        simulation_options.n_iterations,
-        simulation_options.timestep,
+    animat_data = kwargs.pop(
+        'animat_data',
+        AmphibiousData.from_options(
+            animat_options.control,
+            simulation_options.n_iterations,
+            simulation_options.timestep,
+        ),
     )
 
     # Animat controller
