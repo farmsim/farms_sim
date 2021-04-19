@@ -90,11 +90,13 @@ def simulation_setup(animat_sdf, animat_options, arena, **kwargs):
     )
 
     # Animat controller
-    if kwargs.pop('use_controller', False):
+    if kwargs.pop('use_controller', False) or 'animat_controller' in kwargs:
         animat_controller = (
-            KinematicsController(
+            kwargs.pop('animat_controller')
+            if 'animat_controller' in kwargs
+            else KinematicsController(
                 joints=animat_options.morphology.joints_names(),
-                kinematics=np.loadtxt(animat_options.control.kinematics_file),
+                kinematics=np.genfromtxt(animat_options.control.kinematics_file),
                 sampling=animat_options.control.kinematics_sampling,
                 timestep=simulation_options.timestep,
                 n_iterations=simulation_options.n_iterations,
