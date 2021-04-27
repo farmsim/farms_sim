@@ -278,8 +278,12 @@ def get_salamander_options(**kwargs):
     options = AmphibiousOptions.from_options(kwargs_options)
     for link in options['morphology']['links']:
         link['pybullet_dynamics']['lateralFriction'] = (
-            1 if link['name'] in ('link_leg_0_L_3', 'link_leg_0_R_3')
-            else 0.3 if link['name'] in ('link_leg_1_L_3', 'link_leg_1_R_3')
+            1 if link['name'] in (
+                'link_leg_0_L_3',
+                'link_leg_0_R_3',
+                'link_leg_1_L_3',
+                'link_leg_1_R_3',
+            )
             else 0.1
         )
     # for joint_i, joint in enumerate(options['morphology']['joints']):
