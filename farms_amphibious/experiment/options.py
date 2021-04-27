@@ -231,8 +231,14 @@ def get_salamander_kwargs_options(**kwargs):
         'weight_sens_hydro_amp': 0,
         'body_stand_amplitude': 0.2,
         'body_stand_shift': np.pi/2,
-        'legs_amplitudes': [np.pi/4, np.pi/32, np.pi/4, np.pi/8],
-        'legs_offsets_walking': [0, np.pi/32, 0, np.pi/3],
+        'legs_amplitudes': [
+            [np.pi/4, np.pi/16, np.pi/8, 0*np.pi/16],
+            [np.pi/4, np.pi/16, np.pi/8, 0*np.pi/16],
+        ],
+        'legs_offsets_walking': [
+            [0, 0, np.pi/4, np.pi/3],
+            [0, 0, 0, np.pi/3],
+        ],
         'modular_phases': (
             np.array([3*np.pi/2, 0, 3*np.pi/2, 0]) - np.pi/4
         ).tolist(),
