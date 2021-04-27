@@ -232,8 +232,8 @@ def get_salamander_kwargs_options(**kwargs):
         'body_stand_amplitude': 0.2,
         'body_stand_shift': np.pi/2,
         'legs_amplitudes': [
-            [np.pi/4, np.pi/16, np.pi/8, 0*np.pi/16],
-            [np.pi/4, np.pi/16, np.pi/8, 0*np.pi/16],
+            [np.pi/4, np.pi/16, np.pi/8, 0],
+            [np.pi/4, np.pi/16, np.pi/8, 0],
         ],
         'legs_offsets_walking': [
             [0, 0, np.pi/4, np.pi/3],
@@ -538,7 +538,7 @@ def get_pleurobot_kwargs_options(**kwargs):
     drag = -1e-1
     kwargs_options = dict(
         spawn_loader=SpawnLoader.PYBULLET,  # SpawnLoader.FARMS,
-        density=700.0,
+        density=600.0,
         default_control_type=ControlType.POSITION,
         scale_hydrodynamics=1e-1,
         n_legs=4,
@@ -597,7 +597,7 @@ def get_pleurobot_kwargs_options(**kwargs):
     return kwargs_options
 
 
-def get_pleurobot_options(slow=2, **kwargs):
+def get_pleurobot_options(slow=2, passive=True, **kwargs):
     """Pleurobot default options"""
 
     # Animat
@@ -612,6 +612,22 @@ def get_pleurobot_options(slow=2, **kwargs):
             else 0.3 if link['name'] in ('link23', 'link27')
             else 0.1
         )
+    if passive:
+        joints = {
+            joint['joint']: joint
+            for joint in animat_options['control']['joints']
+        }
+        muscles = {
+            muscle['joint']: muscle
+            for muscle in animat_options['control']['muscles']
+        }
+        for name in ('j_tailBone', 'j_tail'):
+            assert name in joints, '{} not in joints'.format(name)
+            joints[name]['control_type'] = ControlType.TORQUE
+            muscles[name]['alpha'] = 0
+            muscles[name]['beta'] = 0
+            muscles[name]['gamma'] = 0  # Spring stiffness
+            muscles[name]['delta'] = 0  # Damping coeffiecient
     for oscillator in animat_options.control.network.oscillators:
         oscillator['frequency_gain'] /= slow
         oscillator['frequency_bias'] /= slow
