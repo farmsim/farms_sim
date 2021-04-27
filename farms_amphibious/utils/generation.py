@@ -2,6 +2,7 @@
 
 import os
 import shutil
+from functools import partial
 import numpy as np
 from farms_sdf.sdf import ModelSDF, Link, Joint, Visual
 from farms_models.utils import (
@@ -30,6 +31,11 @@ def generate_sdf(model_name, model_version, **kwargs):
     leg_radius = kwargs.pop('leg_radius')
     legs_parents = kwargs.pop('legs_parents')
     assert not kwargs, kwargs
+
+    # Augment parameters
+    repeat = partial(np.repeat, repeats=convention.n_legs//2, axis=0)
+    if np.ndim(leg_offset) == 1:
+        leg_offset = repeat([leg_offset])
 
     # Links and joints
     links = [None for _ in range(options.morphology.n_links())]
@@ -99,9 +105,9 @@ def generate_sdf(model_name, model_version, **kwargs):
             # Shoulder 0
             pose = np.concatenate([
                 body_position +  [
-                    leg_offset[0],
-                    sign*leg_offset[1],
-                    leg_offset[2]
+                    leg_offset[leg_i][0],
+                    sign*leg_offset[leg_i][1],
+                    leg_offset[leg_i][2]
                 ],
                 [0, 0, 0]
             ])
