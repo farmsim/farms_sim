@@ -1053,7 +1053,7 @@ class AmphibiousNetworkOptions(Options):
     def default_osc_modular_phases(convention, phases):
         """Default"""
         n_oscillators = 2*(convention.n_joints())
-        values = 0*np.ones(n_oscillators)
+        values = np.zeros(n_oscillators)
         for joint_i in range(convention.n_dof_legs):
             phase = phases[joint_i]
             for leg_i in range(convention.n_legs//2):
@@ -1076,7 +1076,7 @@ class AmphibiousNetworkOptions(Options):
     def default_osc_modular_amplitudes(convention, amplitudes):
         """Default"""
         n_oscillators = 2*(convention.n_joints())
-        values = 0*np.ones(n_oscillators)
+        values = np.zeros(n_oscillators)
         for joint_i in range(convention.n_dof_legs):
             amplitude = amplitudes[joint_i]
             for leg_i in range(convention.n_legs//2):

@@ -1227,7 +1227,7 @@ def get_orobot_kwargs_options(**kwargs):
             np.array([3*np.pi/2, 0, 3*np.pi/2, 0, 0]) - np.pi/4
         ).tolist(),
         # modular_amplitudes=np.full(5, 0.5).tolist(),
-        modular_amplitudes=np.full(4, 0).tolist(),
+        modular_amplitudes=np.full(5, 0).tolist(),
         links_names=links_names,
         drag_coefficients=drag_coefficients,
         links_swimming=links_swimming,
