@@ -16,10 +16,8 @@ from ..control.controller import AmphibiousController
 from ..control.manta_control import MantaController
 from ..model.options import AmphibiousOptions
 from ..model.animat import Amphibious
-from ..utils.prompt import (
-    parse_args,
-    prompt_postprocessing,
-)
+from ..utils.parse_args import parse_args
+from ..utils.prompt import prompt_postprocessing
 from .options import (
     amphibious_options,
     get_animat_options_from_model,
