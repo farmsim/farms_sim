@@ -131,6 +131,13 @@ def argument_parser():
         action='store_true',
         help='Apply self collisions',
     )
+    parser.add_argument(
+        '--spawn_loader',
+        type=str,
+        choices=('FARMS', 'PYBULLET'),
+        default='FARMS',
+        help='Spawn loader',
+    )
     return parser
 
 

@@ -223,7 +223,7 @@ class AmphibiousMorphologyOptions(MorphologyOptions):
                 for body0 in range(0, options['n_joints_body']+1)
                 for leg_i in range(options['n_legs']//2)
                 for side_i in range(2)
-                for joint_i in [options['n_dof_legs']-1]
+                for joint_i in [options['n_dof_legs']-1]  # End-effector
             ] + [
                 # Leg-leg collisions
                 [

@@ -39,7 +39,6 @@ def setup_from_clargs(clargs=None):
         'drives_init': clargs.drives,
         'spawn_position': clargs.position,
         'spawn_orientation': clargs.orientation,
-        'spawn_loader': SpawnLoader.PYBULLET,
         'default_control_type': ControlType.POSITION,
     }
     animat_options = get_animat_options_from_model(
@@ -47,6 +46,10 @@ def setup_from_clargs(clargs=None):
         version=clargs.version,
         default_lateral_friction=clargs.lateral_friction,
         use_self_collisions=clargs.self_collisions,
+        spawn_loader={
+            'FARMS': SpawnLoader.FARMS,
+            'PYBULLET': SpawnLoader.PYBULLET,
+        }[clargs.spawn_loader],
         **options,
     )
     simulation_options, arena = amphibious_options(
