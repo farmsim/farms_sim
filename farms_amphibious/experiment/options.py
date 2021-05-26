@@ -54,12 +54,12 @@ def set_swimming_options(animat_options, water_surface, viscosity):
     animat_options.physics.water_surface = water_surface
 
 
-def get_flat_arena(ground_height, meters=1):
+def get_flat_arena(ground_height, arena_sdf='', meters=1):
     """Flat arena"""
     if ground_height is None:
         ground_height = 0.0
     return DescriptionFormatModel(
-        path=get_sdf_path(
+        path=arena_sdf if arena_sdf else get_sdf_path(
             name='arena_flat',
             version='v0',
         ),
@@ -76,13 +76,15 @@ def get_flat_arena(ground_height, meters=1):
     )
 
 
-def get_ramp_arena(water_surface, ground_height=None, meters=1):
+def get_ramp_arena(water_surface, arena_sdf='', water_sdf='', **kwargs):
     """Water arena"""
+    meters = kwargs.pop('meters', 1)
+    ground_height = kwargs.pop('ground_height', None)
     if ground_height is None:
-        ground_height = 0.0
+        ground_height = 0
     return SimulationModels([
         DescriptionFormatModel(
-            path=get_sdf_path(
+            path=arena_sdf if arena_sdf else get_sdf_path(
                 name='arena_ramp',
                 version='angle_-10_texture',
             ),
@@ -98,7 +100,7 @@ def get_ramp_arena(water_surface, ground_height=None, meters=1):
             load_options={'globalScaling': meters},
         ),
         DescriptionFormatModel(
-            path=get_sdf_path(
+            path=water_sdf if water_sdf else get_sdf_path(
                 name='arena_water',
                 version='v0',
             ),
@@ -111,13 +113,15 @@ def get_ramp_arena(water_surface, ground_height=None, meters=1):
     ])
 
 
-def get_water_arena(water_surface, ground_height=None, meters=1):
+def get_water_arena(water_surface, arena_sdf='', water_sdf='', **kwargs):
     """Water arena"""
+    meters = kwargs.pop('meters', 1)
+    ground_height = kwargs.pop('ground_height', None)
     if ground_height is None:
         ground_height = water_surface - 1
     return SimulationModels([
         DescriptionFormatModel(
-            path=get_sdf_path(
+            path=arena_sdf if arena_sdf else get_sdf_path(
                 name='arena_flat',
                 version='v0',
             ),
@@ -133,7 +137,7 @@ def get_water_arena(water_surface, ground_height=None, meters=1):
             load_options={'globalScaling': meters},
         ),
         DescriptionFormatModel(
-            path=get_sdf_path(
+            path=water_sdf if water_sdf else get_sdf_path(
                 name='arena_water',
                 version='v0',
             ),
@@ -149,10 +153,12 @@ def get_water_arena(water_surface, ground_height=None, meters=1):
 def amphibious_options(animat_options, arena='flat', **kwargs):
     """Amphibious simulation"""
 
-    # Water
+    # Kwargs
     viscosity = kwargs.pop('viscosity', 1)
     water_surface = kwargs.pop('water_surface', 0)
     ground_height = kwargs.pop('ground_height', None)
+    arena_sdf = kwargs.pop('arena_sdf', '')
+    water_sdf = kwargs.pop('water_sdf', '')
 
     # Simulation
     simulation_options = SimulationOptions.with_clargs(**kwargs)
@@ -161,12 +167,15 @@ def amphibious_options(animat_options, arena='flat', **kwargs):
     # Arena
     if arena == 'flat':
         arena = get_flat_arena(
+            arena_sdf=arena_sdf,
             ground_height=ground_height,
             meters=simulation_options.units.meters,
         )
         set_no_swimming_options(animat_options)
     elif arena == 'ramp':
         arena = get_ramp_arena(
+            arena_sdf=arena_sdf,
+            water_sdf=water_sdf,
             water_surface=water_surface,
             ground_height=ground_height,
             meters=simulation_options.units.meters,
@@ -178,6 +187,8 @@ def amphibious_options(animat_options, arena='flat', **kwargs):
         )
     elif arena == 'water':
         arena = get_water_arena(
+            arena_sdf=arena_sdf,
+            water_sdf=water_sdf,
             water_surface=water_surface,
             ground_height=ground_height,
             meters=simulation_options.units.meters,

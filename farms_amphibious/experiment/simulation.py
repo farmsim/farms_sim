@@ -33,8 +33,8 @@ def setup_from_clargs(clargs=None):
 
     # Options
     sdf = (
-        os.path.expandvars(clargs.sdf)
-        if not clargs.sdf
+        clargs.sdf
+        if clargs.sdf
         else get_sdf_path(name=clargs.animat, version=clargs.version)
     )
     options = {
@@ -57,8 +57,10 @@ def setup_from_clargs(clargs=None):
     simulation_options, arena = amphibious_options(
         animat_options=animat_options,
         arena=clargs.arena,
+        arena_sdf=clargs.arena_sdf,
         viscosity=clargs.viscosity,
         water_surface=clargs.water,
+        water_sdf=clargs.water_sdf,
         ground_height=clargs.ground,
     )
 

@@ -21,19 +21,13 @@ class Amphibious(Animat):
     def __init__(self, sdf, options, controller, timestep, iterations, units):
         super(Amphibious, self).__init__(
             options=options,
-            data=(
-                controller.animat_data
-                if controller is not None
-                else None
-            ),
+            data=controller.animat_data if controller is not None else None,
             units=units,
         )
         self.sdf = sdf
         self.timestep = timestep
         self.n_iterations = iterations
         self.controller = controller
-
-        # Hydrodynamic forces
         self.hydrodynamics_plot = None
 
     def spawn(self):

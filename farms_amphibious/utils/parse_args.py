@@ -10,11 +10,6 @@ def argument_parser():
     parser = bullet_argument_parser()
     parser.description = 'Amphibious simulation'
     parser.add_argument(
-        '--prompt',
-        action='store_true',
-        help='Prompt at end of simulation',
-    )
-    parser.add_argument(
         '--sdf',
         type=str,
         default='',
@@ -56,10 +51,22 @@ def argument_parser():
         help='Simulation arena',
     )
     parser.add_argument(
+        '--arena_sdf',
+        type=str,
+        default='',
+        help='Arena SDF file',
+    )
+    parser.add_argument(
         '--water',
         type=float,
         default=0.0,
         help='Water surface height',
+    )
+    parser.add_argument(
+        '--water_sdf',
+        type=str,
+        default='',
+        help='Water SDF file',
     )
     parser.add_argument(
         '--ground',
@@ -120,6 +127,11 @@ def argument_parser():
         choices=('FARMS', 'PYBULLET'),
         default='FARMS',
         help='Spawn loader',
+    )
+    parser.add_argument(
+        '--prompt',
+        action='store_true',
+        help='Prompt at end of simulation',
     )
     return parser
 
