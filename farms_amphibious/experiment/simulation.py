@@ -34,7 +34,11 @@ def setup_from_clargs(clargs=None):
         clargs = parse_args()
 
     # Options
-    sdf = get_sdf_path(name=clargs.animat, version=clargs.version)
+    sdf = (
+        os.path.expandvars(clargs.sdf)
+        if not clargs.sdf
+        else get_sdf_path(name=clargs.animat, version=clargs.version)
+    )
     options = {
         'drives_init': clargs.drives,
         'spawn_position': clargs.position,

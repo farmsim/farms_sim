@@ -38,6 +38,12 @@ def argument_parser():
         help='Prompt at end of simulation',
     )
     parser.add_argument(
+        '--sdf',
+        type=str,
+        default='',
+        help='SDF file',
+    )
+    parser.add_argument(
         '--animat',
         type=str,
         default='salamander',
