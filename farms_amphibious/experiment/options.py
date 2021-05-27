@@ -19,16 +19,16 @@ def get_animat_options_from_model(animat, version, **options):
     elif animat == 'centipede':
         animat_options = get_centipede_options(**options)
     elif animat == 'pleurobot':
-        _sdf, animat_options = get_pleurobot_options(**options)
+        animat_options = get_pleurobot_options(**options)
     elif animat == 'krock':
-        _sdf, animat_options = get_krock_options(**options)
+        animat_options = get_krock_options(**options)
     elif animat == 'orobot':
-        _sdf, animat_options = get_orobot_options(**options)
+        animat_options = get_orobot_options(**options)
     elif animat == 'hfsp_robot' and version == 'salamander_0':
-        _sdf, animat_options = get_hfsp_robot_options(**options)
+        animat_options = get_hfsp_robot_options(**options)
     elif animat == 'hfsp_robot' and version == 'polypterus_0':
         options['hindlimbs'] = False
-        _sdf, animat_options = get_hfsp_robot_options(**options)
+        animat_options = get_hfsp_robot_options(**options)
     else:
         raise Exception('Unknown animat {animat} {version}'.format(
             animat=animat,
@@ -611,11 +611,6 @@ def get_pleurobot_kwargs_options(**kwargs):
 
 def get_pleurobot_options(slow=2, passive=True, **kwargs):
     """Pleurobot default options"""
-
-    # Animat
-    sdf = get_sdf_path(name='pleurobot', version='1')
-    pylog.info('Model SDF: {}'.format(sdf))
-
     kwargs_options = get_pleurobot_kwargs_options(**kwargs)
     animat_options = AmphibiousOptions.from_options(kwargs_options)
     for link in animat_options['morphology']['links']:
@@ -643,7 +638,7 @@ def get_pleurobot_options(slow=2, passive=True, **kwargs):
     for oscillator in animat_options.control.network.oscillators:
         oscillator['frequency_gain'] /= slow
         oscillator['frequency_bias'] /= slow
-    return sdf, animat_options
+    return animat_options
 
 
 def get_krock_kwargs_options(**kwargs):
@@ -862,17 +857,12 @@ def get_krock_kwargs_options(**kwargs):
 
 def get_krock_options(slow=2, **kwargs):
     """Krock default options"""
-
-    # Animat
-    sdf = get_sdf_path(name='krock', version='0')
-    pylog.info('Model SDF: {}'.format(sdf))
-
     kwargs_options = get_krock_kwargs_options(**kwargs)
     animat_options = AmphibiousOptions.from_options(kwargs_options)
     for oscillator in animat_options.control.network.oscillators:
         oscillator['frequency_gain'] /= slow
         oscillator['frequency_bias'] /= slow
-    return sdf, animat_options
+    return animat_options
 
 
 def get_orobot_kwargs_options(**kwargs):
@@ -1260,14 +1250,9 @@ def get_orobot_kwargs_options(**kwargs):
 
 def get_orobot_options(**kwargs):
     """Orobot default options"""
-
-    # Animat
-    sdf = get_sdf_path(name='orobot', version='0')
-    pylog.info('Model SDF: {}'.format(sdf))
-
     kwargs_options = get_orobot_kwargs_options(**kwargs)
     animat_options = AmphibiousOptions.from_options(kwargs_options)
-    return sdf, animat_options
+    return animat_options
 
 
 def get_hfsp_robot_kwargs_options(hindlimbs=True, **kwargs):
@@ -1430,14 +1415,9 @@ def get_hfsp_robot_kwargs_options(hindlimbs=True, **kwargs):
 
 def get_hfsp_robot_options(slow=2, **kwargs):
     """HFSP robot default options"""
-
-    # Animat
-    sdf = get_sdf_path(name='hfsp_robot', version='0')
-    pylog.info('Model SDF: {}'.format(sdf))
-
     kwargs_options = get_hfsp_robot_kwargs_options(**kwargs)
     animat_options = AmphibiousOptions.from_options(kwargs_options)
     for oscillator in animat_options.control.network.oscillators:
         oscillator['frequency_gain'] /= slow
         oscillator['frequency_bias'] /= slow
-    return sdf, animat_options
+    return animat_options
