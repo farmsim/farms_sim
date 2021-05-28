@@ -53,6 +53,7 @@ def draw_nodes(positions, radius, color, prefix):
             facecolor=color,
             edgecolor=0.7*np.array(colorConverter.to_rgb(color)),
             linewidth=2,
+            animated=True,
         )  # fill=False, clip_on=False
         for position in positions
     ]
@@ -69,6 +70,7 @@ def draw_nodes(positions, radius, color, prefix):
             ha='center',
             fontsize=8,
             color='k',
+            animated=True,
         )
         for i, position in enumerate(positions)
     ]
@@ -193,8 +195,11 @@ class NetworkFigure:
 
         # Artists
         self.oscillators = None
+        self.oscillators_texts = None
         self.contact_sensors = None
+        self.contact_sensor_texts = None
         self.hydro_sensors = None
+        self.hydro_sensor_texts = None
 
         # Animation
         self.animation = None
@@ -215,11 +220,12 @@ class NetworkFigure:
         plt.figure(num=self.figure.number)
         self.time = plt.text(
             x=-1, y=-7,
-            s='Time: {} [s]'.format(0),
+            s='Time: {:02.1f} [s]'.format(0),
             va='center',
             ha='left',
             fontsize=16,
             color='k',
+            animated=True,
         )
         # Oscillators
         divider = make_axes_locatable(self.axes)
@@ -271,7 +277,12 @@ class NetworkFigure:
     def animation_elements(self):
         """Animation elements"""
         return [self.time] + (
-            self.oscillators + self.contact_sensors + self.hydro_sensors
+            self.oscillators
+            + self.oscillators_texts
+            + self.contact_sensors
+            + self.contact_sensor_texts
+            + self.hydro_sensors
+            + self.hydro_sensor_texts
         )
 
     def animation_init(self):
@@ -391,7 +402,7 @@ class NetworkFigure:
             else:
                 options['weights'] = []
                 vmin, vmax = 0, 1
-        self.oscillators, oscillators_texts, oscillators_connectivity = draw_network(
+        self.oscillators, self.oscillators_texts, oscillators_connectivity = draw_network(
             source=oscillator_positions,
             destination=oscillator_positions,
             radius=radius,
@@ -432,7 +443,7 @@ class NetworkFigure:
             else:
                 options['weights'] = []
                 vmin, vmax = 0, 1
-        self.contact_sensors, contact_sensor_texts, contact_connectivity = draw_network(
+        self.contact_sensors, self.contact_sensor_texts, contact_connectivity = draw_network(
             source=contacts_positions,
             destination=oscillator_positions,
             radius=radius,
@@ -487,7 +498,7 @@ class NetworkFigure:
             else:
                 options['weights'] = []
                 vmin, vmax = 0, 1
-        self.hydro_sensors, hydro_sensor_texts, hydro_connectivity = draw_network(
+        self.hydro_sensors, self.hydro_sensor_texts, hydro_connectivity = draw_network(
             source=hydrodynamics_positions,
             destination=oscillator_positions,
             radius=radius,
@@ -541,15 +552,15 @@ class NetworkFigure:
             for arrow in hydro_connectivity:
                 self.axes.add_artist(arrow)
         if show_oscillators:
-            for circle, text in zip(self.oscillators, oscillators_texts):
+            for circle, text in zip(self.oscillators, self.oscillators_texts):
                 self.axes.add_artist(circle)
                 self.axes.add_artist(text)
         if show_contacts:
-            for circle, text in zip(self.contact_sensors, contact_sensor_texts):
+            for circle, text in zip(self.contact_sensors, self.contact_sensor_texts):
                 self.axes.add_artist(circle)
                 self.axes.add_artist(text)
         if show_hydrodynamics:
-            for circle, text in zip(self.hydro_sensors, hydro_sensor_texts):
+            for circle, text in zip(self.hydro_sensors, self.hydro_sensor_texts):
                 self.axes.add_artist(circle)
                 self.axes.add_artist(text)
         if use_colorbar:
