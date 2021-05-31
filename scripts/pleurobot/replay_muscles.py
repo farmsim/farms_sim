@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run salamander simulation with bullet"""
+"""Replay Pleurobot muscles data"""
 
 import time
 import numpy as np
