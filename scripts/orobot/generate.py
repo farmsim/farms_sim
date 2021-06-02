@@ -3,16 +3,26 @@
 import os
 from farms_sdf.sdf import ModelSDF, Mesh, Visual, Inertial
 from farms_models.utils import get_model_path, create_new_model_from_farms_sdf
+from farms_amphibious.utils.parse_args import parse_args_model_gen
 
 
 def main():
     """Main"""
+    clargs = parse_args_model_gen(description='Generate Orobot')
+
     # Load URDF
-    model_path = get_model_path(name='orobot', version='0')
-    model = ModelSDF.from_urdf(os.path.join(
-        model_path, 'urdf', 'orobot_final.urdf'
-    ))
-    # print(model)
+    model_path = (
+        clargs.model_path
+        if clargs.model_path
+        else get_model_path(name='orobot', version='0')
+    )
+    urdf_original = (
+        clargs.original
+        if clargs.original
+        else os.path.join(model_path, 'urdf', 'orobot_final.urdf')
+    )
+    assert os.path.isfile(urdf_original), urdf_original
+    model = ModelSDF.from_urdf(urdf_original)
 
     # Final corrections
     print('\nLinks:')
@@ -61,6 +71,8 @@ def main():
         name='orobot',
         version='0',
         sdf=model,
+        sdf_path=clargs.sdf_path,
+        model_path=clargs.model_path,
         options={
             'author': 'Jonathan Arreguit',
             'email': 'jonathan.arreguitoneill@epfl.ch',

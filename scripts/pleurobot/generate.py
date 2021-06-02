@@ -4,11 +4,17 @@ import os
 import numpy as np
 from farms_sdf.sdf import ModelSDF, Visual
 from farms_models.utils import get_sdf_path, create_new_model_from_farms_sdf
+from farms_amphibious.utils.parse_args import parse_args_model_gen
 
 
 def main():
     """Main"""
-    filename = get_sdf_path(name='pleurobot', version='0')
+    clargs = parse_args_model_gen(description='Generate Pleurobot')
+    filename = (
+        clargs.original
+        if clargs.original
+        else get_sdf_path(name='pleurobot', version='0')
+    )
     sdf = ModelSDF.read(filename=filename)[0]
     directory = os.path.dirname(filename)
 
@@ -55,6 +61,8 @@ def main():
         name='pleurobot',
         version='1',
         sdf=sdf,
+        sdf_path=clargs.sdf_path,
+        model_path=clargs.model_path,
         options={
             'author': 'Jonathan Arreguit',
             'email': 'jonathan.arreguitoneill.@epfl.ch',

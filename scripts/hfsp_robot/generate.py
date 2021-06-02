@@ -7,20 +7,29 @@ from farms_models.utils import (
     get_model_path,
     create_new_model_from_farms_sdf,
 )
+from farms_amphibious.utils.parse_args import parse_args_model_gen
 
 
 def generate(version):
     """Generate"""
+    clargs = parse_args_model_gen(description='Generate HFSP robot')
+
     # Load URDF
-    model_path = get_model_path(name='hfsp_robot', version='0')
-    urdf_parth = os.path.join(
-        model_path,
-        'urdf',
-        'V2SalamanderRobot.urdf'
-        # 'SalamanderRobot.urdf',
+    model_path = (
+        os.path.join(os.path.dirname(clargs.original), '..')
+        if clargs.original
+        else os.path.join(clargs.model_path, '..', 'hfsp_robot_0')
+        if clargs.model_path
+        else get_model_path(name='hfsp_robot', version='0')
     )
-    model = ModelSDF.from_urdf(urdf_parth)
-    directory = os.path.dirname(urdf_parth)
+    urdf_path = (
+        clargs.original
+        if clargs.original
+        else os.path.join(model_path, 'urdf', 'V2SalamanderRobot.urdf')
+    )
+    assert os.path.isfile(urdf_path)
+    model = ModelSDF.from_urdf(urdf_path)
+    directory = os.path.dirname(urdf_path)
 
     # Links
     print('\nLinks:')
@@ -101,6 +110,8 @@ def generate(version):
         name='hfsp_robot',
         version=version,
         sdf=model,
+        sdf_path=clargs.sdf_path,
+        model_path=clargs.model_path,
         options={
             'author': 'Jonathan Arreguit',
             'email': 'jonathan.arreguitoneill@epfl.ch',
@@ -119,6 +130,7 @@ def generate(version):
     if os.path.isdir(meshes_output_path):
         shutil.rmtree(meshes_output_path, ignore_errors=True)
     shutil.copytree(original_meshes_path, meshes_output_path)
+
 
 def main():
     """Main"""

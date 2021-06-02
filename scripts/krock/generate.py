@@ -4,12 +4,19 @@ import os
 import numpy as np
 from farms_sdf.sdf import ModelSDF, Mesh, Inertial
 from farms_models.utils import get_model_path, create_new_model_from_farms_sdf
+from farms_amphibious.utils.parse_args import parse_args_model_gen
 
 
 def convert_from_urdf_old():
     """Main"""
+    clargs = parse_args_model_gen(description='Generate Korck')
+
     # Load URDF
-    model_path = get_model_path(name='krock', version='0')
+    model_path = (
+        clargs.model_path
+        if clargs.model_path
+        else get_model_path(name='krock', version='0')
+    )
     model = ModelSDF.from_urdf(os.path.join(
         model_path, 'urdf', 'krock_final.urdf'
     ))
@@ -100,6 +107,8 @@ def convert_from_urdf_old():
         name='krock',
         version='0',
         sdf=model,
+        sdf_path=clargs.sdf_path,
+        model_path=clargs.model_path,
         options={
             'author': 'Jonathan Arreguit',
             'email': 'jonathan.arreguitoneill@epfl.ch',
@@ -111,10 +120,18 @@ def convert_from_urdf_old():
 
 def convert_from_sdf():
     """Main"""
+    clargs = parse_args_model_gen(description='Generate Korck')
+
     # Load URDF
-    model_path = get_model_path(name='krock', version='0')
-    sdf_original = os.path.join(
-        model_path, 'design', 'sdf', 'krock.sdf'
+    model_path = (
+        clargs.model_path
+        if clargs.model_path
+        else get_model_path(name='krock', version='0')
+    )
+    sdf_original = (
+        clargs.original
+        if clargs.original
+        else os.path.join(model_path, 'design', 'sdf', 'krock.sdf')
     )
     assert os.path.isfile(sdf_original), sdf_original
     model = ModelSDF.read(sdf_original)[0]
@@ -124,6 +141,8 @@ def convert_from_sdf():
         name='krock',
         version='0',
         sdf=model,
+        sdf_path=clargs.sdf_path,
+        model_path=clargs.model_path,
         options={
             'author': 'Jonathan Arreguit',
             'email': 'jonathan.arreguitoneill@epfl.ch',

@@ -1,5 +1,6 @@
 """Parse command line arguments"""
 
+import argparse
 from farms_bullet.simulation.parse_args import (
     argument_parser as bullet_argument_parser,
 )
@@ -139,4 +140,40 @@ def argument_parser():
 def parse_args():
     """Parse args"""
     parser = argument_parser()
+    return parser.parse_args()
+
+
+def parse_args_model_gen(description='Generate model'):
+    """Parse args"""
+    parser = argparse.ArgumentParser(description=description)
+    parser.add_argument(
+        '--animat',
+        type=str,
+        default='',
+        help='Animat name',
+    )
+    parser.add_argument(
+        '--version',
+        type=str,
+        default='',
+        help='Animat version',
+    )
+    parser.add_argument(
+        '--sdf_path',
+        type=str,
+        default='',
+        help='SDF path',
+    )
+    parser.add_argument(
+        '--model_path',
+        type=str,
+        default='',
+        help='Model directory path',
+    )
+    parser.add_argument(
+        '--original',
+        type=str,
+        default='',
+        help='Original file',
+    )
     return parser.parse_args()
