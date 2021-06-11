@@ -10,31 +10,30 @@ from farms_bullet.model.control import ControlType
 from ..model.options import AmphibiousOptions
 
 
-def get_animat_options_from_model(animat, version, **options):
+def get_animat_options_from_model(animat, version, kwargs_only=False, **options):
     """Get animat options from model"""
-    if animat == 'salamander':
-        animat_options = get_salamander_options(**options)
-    elif animat == 'polypterus':
-        animat_options = get_polypterus_options(**options)
-    elif animat == 'centipede':
-        animat_options = get_centipede_options(**options)
-    elif animat == 'pleurobot':
-        animat_options = get_pleurobot_options(**options)
-    elif animat == 'krock':
-        animat_options = get_krock_options(**options)
-    elif animat == 'orobot':
-        animat_options = get_orobot_options(**options)
-    elif animat == 'hfsp_robot' and version == 'salamander_0':
-        animat_options = get_hfsp_robot_options(**options)
-    elif animat == 'hfsp_robot' and version == 'polypterus_0':
+    options_function = (
+        {
+            'salamander': get_salamander_kwargs_options,
+            'polypterus': get_polypterus_kwargs_options,
+            'centipede': get_centipede_kwargs_options,
+            'pleurobot': get_pleurobot_kwargs_options,
+            'krock': get_krock_kwargs_options,
+            'orobot': get_orobot_kwargs_options,
+            'hfsp_robot': get_hfsp_robot_kwargs_options,
+        } if kwargs_only else {
+            'salamander': get_salamander_options,
+            'polypterus': get_polypterus_options,
+            'centipede': get_centipede_options,
+            'pleurobot': get_pleurobot_options,
+            'krock': get_krock_options,
+            'orobot': get_orobot_options,
+            'hfsp_robot': get_hfsp_robot_options,
+        }
+    )[animat]
+    if animat == 'hfsp_robot' and version == 'polypterus_0':
         options['hindlimbs'] = False
-        animat_options = get_hfsp_robot_options(**options)
-    else:
-        raise Exception('Unknown animat {animat} {version}'.format(
-            animat=animat,
-            version=version,
-        ))
-    return animat_options
+    return options_function(**options)
 
 
 def set_no_swimming_options(animat_options):
