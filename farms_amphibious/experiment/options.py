@@ -685,7 +685,7 @@ def get_krock_kwargs_options(**kwargs):
         'links_names',
         [
             # Body
-            'base_link',
+            # 'base_link',
             'Girdle',
             'solid_spine1_endpoint',
             'Tail1MX',
@@ -795,7 +795,7 @@ def get_krock_kwargs_options(**kwargs):
     fri = -3e-1
     swi = -1e1
     kwargs_options = dict(
-        spawn_loader=SpawnLoader.PYBULLET,  # SpawnLoader.FARMS,
+        spawn_loader=SpawnLoader.FARMS,  # SpawnLoader.PYBULLET,
         density=550.0,
         # mass_multiplier=0.7,
         spawn_position=[0, 0, 0.5],
@@ -814,15 +814,21 @@ def get_krock_kwargs_options(**kwargs):
                 # else [-1e-1, -1e-1, -1e0]
                 # if i < 4
                 else [fri, fri, swi]
-                if i < 7
+                if i < 6
                 else [fri, fri, fri],
                 [-1e-3]*3,
             ]
-            for i in range(7+4*4)
+            for i in range(6+4*4)
         ],
         body_stand_amplitude=0.25,
-        legs_amplitudes=[np.pi/16, np.pi/8, np.pi/8, np.pi/8],
-        legs_offsets_walking=[0, -np.pi/32, -np.pi/16, 0],
+        legs_amplitudes=[
+            [np.pi/16, np.pi/8, np.pi/8, np.pi/8],
+            [np.pi/16, np.pi/8, np.pi/8, np.pi/8],
+        ],
+        legs_offsets_walking=[
+            [0, -np.pi/32, -np.pi/16, 0],
+            [0, -np.pi/32, -np.pi/16, 0],
+        ],
         legs_offsets_swimming=[0, 0.25*np.pi, 0.5*np.pi, 0, np.pi/2],
         gain_amplitude=gain_amplitude,
         offsets_bias=joints_offsets,
@@ -1215,8 +1221,14 @@ def get_orobot_kwargs_options(**kwargs):
         use_self_collisions=False,
         density=600.0,
         body_stand_amplitude=0.2,
-        legs_amplitudes=[np.pi/6, np.pi/16, np.pi/16, np.pi/8, np.pi/8],
-        legs_offsets_walking=[0, -np.pi/32, -np.pi/16, 0, 0],
+        legs_amplitudes=[
+            [np.pi/6, np.pi/16, np.pi/16, np.pi/8, np.pi/8],
+            [np.pi/6, np.pi/16, np.pi/16, np.pi/8, np.pi/8],
+        ],
+        legs_offsets_walking=[
+            [0, -np.pi/32, -np.pi/16, 0, 0],
+            [0, -np.pi/32, -np.pi/16, 0, 0],
+        ],
         legs_offsets_swimming=[2*np.pi/5, 0, 0, np.pi/2, 0],
         gain_amplitude=gain_amplitude,
         offsets_bias=joints_offsets,
