@@ -340,7 +340,7 @@ def get_centipede_kwargs_options(**kwargs):
         'weight_osc_legs_internal': 3e1,
         'weight_osc_legs_opposite': 1e0,  # 1e1,
         'weight_osc_legs_following': 0,  # 1e1,
-        'weight_osc_legs2body': 0,  # 3e1
+        'weight_osc_legs2body': 1e-8,  # 3e1
         'weight_osc_body2legs': 3e2,
         'weight_sens_contact_intralimb': -1e-6,
         'weight_sens_contact_opposite': +1e-6,
@@ -350,8 +350,14 @@ def get_centipede_kwargs_options(**kwargs):
         'weight_sens_hydro_amp': 0,
         'body_stand_amplitude': 0.2,
         'body_stand_shift': np.pi/2,
-        'legs_amplitudes': [np.pi/4, np.pi/32, np.pi/4, np.pi/8],
-        'legs_offsets_walking': [0, np.pi/32, 0, np.pi/8],
+        'legs_amplitudes': [
+            [np.pi/4, np.pi/32, np.pi/4, np.pi/8]
+            for _ in range(19)
+        ],
+        'legs_offsets_walking': [
+            [0, np.pi/32, 0, np.pi/8]
+            for _ in range(19)
+        ],
         'modular_phases': (
             np.array([3*np.pi/2, 0, 3*np.pi/2, 0]) - np.pi/4
         ).tolist(),
@@ -417,8 +423,8 @@ def get_polypterus_kwargs_options(**kwargs):
         'weight_sens_hydro_amp': 0,
         'body_stand_amplitude': 0.1,
         'body_stand_shift': np.pi,  # np.pi/2,
-        'legs_amplitudes': [np.pi/4, np.pi/8, np.pi/4, np.pi/8],
-        'legs_offsets_walking': [0, np.pi/8, 0, np.pi/8],
+        'legs_amplitudes': [[np.pi/4, np.pi/8, np.pi/4, np.pi/8]],
+        'legs_offsets_walking': [[0, np.pi/8, 0, np.pi/8]],
         'modular_phases': (
             np.array([3*np.pi/2, 0, 3*np.pi/2, 0]) - np.pi/4
         ).tolist(),
