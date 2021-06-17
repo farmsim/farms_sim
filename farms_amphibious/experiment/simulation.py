@@ -192,4 +192,5 @@ def postprocessing_from_clargs(sim, animat_options, clargs=None):
         query=clargs.prompt,
         save=clargs.save,
         save_to_models=clargs.save_to_models,
+        verify=clargs.verify_save,
     )

@@ -36,8 +36,10 @@ def prompt_postprocessing(
     """Prompt postprocessing"""
     # Arguments
     save = kwargs.pop('save', '')
+    verify = kwargs.pop('verify', False)
     save_to_models = kwargs.pop('save_to_models', '')
     extension = kwargs.pop('extension', 'pdf')
+    assert not kwargs, kwargs
 
     # Post-processing
     pylog.info('Simulation post-processing')
@@ -63,7 +65,7 @@ def prompt_postprocessing(
             else ''
         ),
     )
-    if save_data:
+    if save_data and verify:
         pylog.debug('Data saved, now loading back to check validity')
         data = AnimatData.from_file(os.path.join(log_path, 'simulation.hdf5'))
         pylog.debug('Data successfully saved and logged back: {}'.format(data))

@@ -87,6 +87,11 @@ def argument_parser():
         help='Save data to farms_models_data',
     )
     parser.add_argument(
+        '--verify_save',
+        action='store_true',
+        help='Verify if saved simulation data can be loaded',
+    )
+    parser.add_argument(
         '--profile',
         type=str,
         default='simulation.profile',
