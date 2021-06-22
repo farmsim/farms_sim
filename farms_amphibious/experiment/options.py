@@ -3,6 +3,7 @@
 import numpy as np
 import farms_pylog as pylog
 from farms_models.utils import get_sdf_path
+from farms_data.units import SimulationUnitScaling
 from farms_bullet.simulation.options import SimulationOptions
 from farms_bullet.model.model import SimulationModels, DescriptionFormatModel
 from farms_bullet.model.options import SpawnLoader
@@ -71,7 +72,8 @@ def get_flat_arena(ground_height, arena_sdf='', meters=1):
             'posObj': [0, 0, ground_height*meters],
             'ornObj': [0, 0, 0, 1],
         },
-        load_options={'globalScaling': meters},
+        # load_options={'globalScaling': meters},
+        load_options={'units': SimulationUnitScaling(meters=meters)},
     )
 
 
@@ -94,9 +96,10 @@ def get_ramp_arena(water_surface, arena_sdf='', water_sdf='', **kwargs):
             },
             spawn_options={
                 'posObj': [0, 0, ground_height*meters],
-                'ornObj': [0.5, 0, 0, 0.5],
+                'ornObj': [0, 0, 0, 1],  # [0.5, 0, 0, 0.5],
             },
-            load_options={'globalScaling': meters},
+            # load_options={'globalScaling': meters},
+            load_options={'units': SimulationUnitScaling(meters=meters)},
         ),
         DescriptionFormatModel(
             path=water_sdf if water_sdf else get_sdf_path(
@@ -107,7 +110,8 @@ def get_ramp_arena(water_surface, arena_sdf='', water_sdf='', **kwargs):
                 'posObj': [0, 0, water_surface*meters],
                 'ornObj': [0, 0, 0, 1],
             },
-            load_options={'globalScaling': meters},
+            # load_options={'globalScaling': meters},
+            load_options={'units': SimulationUnitScaling(meters=meters)},
         ),
     ])
 
@@ -133,7 +137,8 @@ def get_water_arena(water_surface, arena_sdf='', water_sdf='', **kwargs):
                 'rgbaColor': [1, 1, 1, 1],
                 'specularColor': [1, 1, 1],
             },
-            load_options={'globalScaling': meters},
+            # load_options={'globalScaling': meters},
+            load_options={'units': SimulationUnitScaling(meters=meters)},
         ),
         DescriptionFormatModel(
             path=water_sdf if water_sdf else get_sdf_path(
@@ -144,7 +149,8 @@ def get_water_arena(water_surface, arena_sdf='', water_sdf='', **kwargs):
                 'posObj': [0, 0, water_surface*meters],
                 'ornObj': [0, 0, 0, 1],
             },
-            load_options={'globalScaling': meters},
+            # load_options={'globalScaling': meters},
+            load_options={'units': SimulationUnitScaling(meters=meters)},
         ),
     ])
 
