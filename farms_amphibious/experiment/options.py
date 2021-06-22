@@ -197,6 +197,8 @@ def amphibious_options(animat_options, arena='flat', **kwargs):
             water_surface=water_surface,
             viscosity=viscosity,
         )
+    elif arena == 'aletsch':
+        arena = DescriptionFormatModel(path=arena_sdf)
     else:
         raise Exception('Unknown arena: "{}"'.format(arena))
     return (simulation_options, arena)

@@ -47,7 +47,7 @@ def argument_parser():
     parser.add_argument(
         '--arena',
         type=str,
-        choices=('flat', 'ramp', 'water'),  # 'rough', 'pool'
+        choices=('flat', 'ramp', 'water', 'aletsch'),  # 'rough', 'pool'
         default='flat',
         help='Simulation arena',
     )
