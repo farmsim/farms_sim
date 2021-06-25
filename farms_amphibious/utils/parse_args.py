@@ -47,8 +47,7 @@ def argument_parser():
     parser.add_argument(
         '--arena',
         type=str,
-        choices=('flat', 'ramp', 'water', 'aletsch'),  # 'rough', 'pool'
-        default='flat',
+        default='',
         help='Simulation arena',
     )
     parser.add_argument(
@@ -60,7 +59,7 @@ def argument_parser():
     parser.add_argument(
         '--water',
         type=float,
-        default=0.0,
+        default=None,
         help='Water surface height',
     )
     parser.add_argument(

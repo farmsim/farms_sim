@@ -160,7 +160,7 @@ def amphibious_options(animat_options, arena='flat', **kwargs):
 
     # Kwargs
     viscosity = kwargs.pop('viscosity', 1)
-    water_surface = kwargs.pop('water_surface', 0)
+    water_surface = kwargs.pop('water_surface', None)
     ground_height = kwargs.pop('ground_height', None)
     arena_sdf = kwargs.pop('arena_sdf', '')
     water_sdf = kwargs.pop('water_sdf', '')
@@ -178,6 +178,8 @@ def amphibious_options(animat_options, arena='flat', **kwargs):
         )
         set_no_swimming_options(animat_options)
     elif arena == 'ramp':
+        if water_surface is None:
+            water_surface = 0
         arena = get_ramp_arena(
             arena_sdf=arena_sdf,
             water_sdf=water_sdf,
@@ -191,6 +193,8 @@ def amphibious_options(animat_options, arena='flat', **kwargs):
             viscosity=viscosity,
         )
     elif arena == 'water':
+        if water_surface is None:
+            water_surface = 0
         arena = get_water_arena(
             arena_sdf=arena_sdf,
             water_sdf=water_sdf,
@@ -203,11 +207,19 @@ def amphibious_options(animat_options, arena='flat', **kwargs):
             water_surface=water_surface,
             viscosity=viscosity,
         )
-    elif arena == 'aletsch':
+    elif arena_sdf:
         arena = DescriptionFormatModel(
             path=arena_sdf,
             load_options={'units': simulation_options.units},
         )
+        if water_surface is not None:
+            set_swimming_options(
+                animat_options,
+                water_surface=water_surface,
+                viscosity=viscosity,
+            )
+        else:
+            set_no_swimming_options(animat_options)
     else:
         raise Exception('Unknown arena: "{}"'.format(arena))
     return (simulation_options, arena)
