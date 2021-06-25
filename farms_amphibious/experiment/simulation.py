@@ -37,12 +37,6 @@ def setup_from_clargs(clargs=None):
         if clargs.sdf
         else get_sdf_path(name=clargs.animat, version=clargs.version)
     )
-    options = {
-        'drives_init': clargs.drives,
-        'spawn_position': clargs.position,
-        'spawn_orientation': clargs.orientation,
-        'default_control_type': ControlType.POSITION,
-    }
     animat_options = get_animat_options_from_model(
         animat=clargs.animat,
         version=clargs.version,
@@ -52,15 +46,19 @@ def setup_from_clargs(clargs=None):
             'FARMS': SpawnLoader.FARMS,
             'PYBULLET': SpawnLoader.PYBULLET,
         }[clargs.spawn_loader],
-        **options,
+        drives_init=clargs.drives,
+        spawn_position=clargs.position,
+        spawn_orientation=clargs.orientation,
+        default_control_type=ControlType.POSITION,
     )
     simulation_options, arena = amphibious_options(
         animat_options=animat_options,
         arena=clargs.arena,
         arena_sdf=clargs.arena_sdf,
-        viscosity=clargs.viscosity,
-        water_surface=clargs.water,
         water_sdf=clargs.water_sdf,
+        water_surface=clargs.water,
+        water_velocity=clargs.water_velocity,
+        viscosity=clargs.viscosity,
         ground_height=clargs.ground,
     )
 

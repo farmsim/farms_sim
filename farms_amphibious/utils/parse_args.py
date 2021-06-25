@@ -69,6 +69,14 @@ def argument_parser():
         help='Water SDF file',
     )
     parser.add_argument(
+        '--water_velocity',
+        nargs=3,
+        type=float,
+        metavar=('x', 'y', 'z'),
+        default=(0, 0, 0),
+        help='Water velocity',
+    )
+    parser.add_argument(
         '--ground',
         type=float,
         default=None,
