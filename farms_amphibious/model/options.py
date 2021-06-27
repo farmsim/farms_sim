@@ -295,8 +295,8 @@ class AmphibiousPhysicsOptions(Options):
             options['drag'] or options['sph']
         )
         options['viscosity'] = kwargs.pop('viscosity', 1.0)
-        options['water_density'] = kwargs.pop('water_density', 1000)
-        options['water_velocity'] = kwargs.pop('water_velocity', [0, 0, 0])
+        options['water_density'] = kwargs.pop('water_density', 1000.0)
+        options['water_velocity'] = kwargs.pop('water_velocity', [0.0, 0.0, 0.0])
         return cls(**options)
 
 
