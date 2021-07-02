@@ -101,7 +101,7 @@ def argument_parser():
     parser.add_argument(
         '--profile',
         type=str,
-        default='simulation.profile',
+        default='',
         help='Save simulation profile to given filename',
     )
     parser.add_argument(
