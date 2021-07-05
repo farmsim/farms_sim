@@ -61,24 +61,24 @@ def main():
     simulation_options = SimulationOptions.load(clargs.simulation)
     sim_data = AnimatData.from_file(clargs.data)
 
-    # Plots data
+    # Plot simulation data
     times = np.arange(
         start=0,
         stop=simulation_options.timestep*simulation_options.n_iterations,
         step=simulation_options.timestep,
     )
     assert len(times) == simulation_options.n_iterations
-    sim_data.plot(times)
-    # plt.show()
+    plots = sim_data.plot(times)
+
+    # Plot connectivity
+    morph = animat_options.morphology
+    if morph.n_legs == 4 and morph.n_dof_legs == 4:
+        plot_networks_maps(animat_options.morphology, sim_data, show_all=True)
 
     # Save plots
     extension = 'jpg'
-    for fig in [plt.figure(num) for num in plt.get_fignums()]:
-        filename = '{}.{}'.format(
-            os.path.join(clargs.output, fig.canvas.get_window_title()),
-            extension,
-        )
-        filename = filename.replace(' ', '_')
+    for name, fig in plots.items():
+        filename = os.path.join(clargs.output, '{}.{}'.format(name, extension))
         pylog.debug('Saving to {}'.format(filename))
         fig.savefig(filename, format=extension)
 
