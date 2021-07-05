@@ -63,7 +63,7 @@ def main(use_moviepy=True):
     animat_options = AmphibiousOptions.load(args.animat)
     simulation_options = SimulationOptions.load(args.simulation)
     data = AnimatData.from_file(args.data)
-    network_anim = plot_networks_maps(animat_options.morphology, data)
+    network_anim = plot_networks_maps(animat_options.morphology, data)[0]
     fig = plt.gcf()
     ax = plt.gca()
     fig.tight_layout()

@@ -68,16 +68,23 @@ def main():
         step=simulation_options.timestep,
     )
     assert len(times) == simulation_options.n_iterations
-    plots = sim_data.plot(times)
+    plots_sim = sim_data.plot(times)
 
     # Plot connectivity
     morph = animat_options.morphology
-    if morph.n_legs == 4 and morph.n_dof_legs == 4:
-        plot_networks_maps(animat_options.morphology, sim_data, show_all=True)
+    plots_network = (
+        plot_networks_maps(
+            morphology=animat_options.morphology,
+            data=sim_data,
+            show_all=True,
+        )[1]
+        if morph.n_legs == 4 and morph.n_dof_legs == 4
+        else {}
+    )
 
     # Save plots
     extension = 'jpg'
-    for name, fig in plots.items():
+    for name, fig in {**plots_sim, **plots_network}.items():
         filename = os.path.join(clargs.output, '{}.{}'.format(name, extension))
         pylog.debug('Saving to {}'.format(filename))
         fig.savefig(filename, format=extension)

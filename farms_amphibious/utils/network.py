@@ -567,15 +567,23 @@ class NetworkFigure:
             pylog.debug('{}: {}, {}'.format(title, vmin, vmax))
             create_colorbar(self.axes, cmap, vmin, vmax)
 
+        return self.figure
+
 
 def plot_networks_maps(morphology, data, show_all=False):
     """Plot network maps"""
+    # Plots
+    plots = {}
+
     # Plot tools
     convention = AmphibiousConvention(**morphology)
 
     # Plot network
     network_anim = NetworkFigure(morphology, data)
-    network_anim.plot(title='Complete network', show_title=False)
+    plots['network_complete'] = network_anim.plot(
+        title='Complete network',
+        show_title=False,
+    )
     network_anim.animate()
 
     if show_all:
@@ -618,14 +626,14 @@ def plot_networks_maps(morphology, data, show_all=False):
 
         # Plot network oscillator weights connectivity
         network = NetworkFigure(morphology, data)
-        network.plot(
+        plots['network_oscillators'] = network.plot(
             title='Oscillators complete connectivity',
             show_contacts_connectivity=False,
             show_hydrodynamics_connectivity=False,
             use_colorbar=True,
             oscillator_weights=True,
         )
-        network.plot(
+        plots['network_oscillators_body2body'] = network.plot(
             title='Oscillators body2body connectivity',
             show_contacts_connectivity=False,
             show_hydrodynamics_connectivity=False,
@@ -633,7 +641,7 @@ def plot_networks_maps(morphology, data, show_all=False):
             use_colorbar=True,
             oscillator_weights=True,
         )
-        network.plot(
+        plots['network_oscillators_body2limb'] = network.plot(
             title='Oscillators body2limb connectivity',
             show_contacts_connectivity=False,
             show_hydrodynamics_connectivity=False,
@@ -641,7 +649,7 @@ def plot_networks_maps(morphology, data, show_all=False):
             use_colorbar=True,
             oscillator_weights=True,
         )
-        network.plot(
+        plots['network_oscillators_limb2body'] = network.plot(
             title='Oscillators limb2body connectivity',
             show_contacts_connectivity=False,
             show_hydrodynamics_connectivity=False,
@@ -650,7 +658,7 @@ def plot_networks_maps(morphology, data, show_all=False):
             use_colorbar=True,
             oscillator_weights=True,
         )
-        network.plot(
+        plots['network_oscillators_limb2limb'] = network.plot(
             title='Oscillators limb2limb connectivity',
             show_contacts_connectivity=False,
             show_hydrodynamics_connectivity=False,
@@ -659,7 +667,7 @@ def plot_networks_maps(morphology, data, show_all=False):
             use_colorbar=True,
             oscillator_weights=True,
         )
-        network.plot(
+        plots['network_oscillators_intralimb'] = network.plot(
             title='Oscillators intralimb connectivity',
             show_contacts_connectivity=False,
             show_hydrodynamics_connectivity=False,
@@ -668,7 +676,7 @@ def plot_networks_maps(morphology, data, show_all=False):
             use_colorbar=True,
             oscillator_weights=True,
         )
-        network.plot(
+        plots['network_oscillators_interlimb'] = network.plot(
             title='Oscillators interlimb connectivity',
             show_contacts_connectivity=False,
             show_hydrodynamics_connectivity=False,
@@ -679,14 +687,14 @@ def plot_networks_maps(morphology, data, show_all=False):
         )
 
         # Plot network oscillator phases connectivity
-        network.plot(
+        plots['network_phases'] = network.plot(
             title='Oscillators complete phases',
             show_contacts_connectivity=False,
             show_hydrodynamics_connectivity=False,
             use_colorbar=True,
             oscillator_phases=True,
         )
-        network.plot(
+        plots['network_phases_body2body'] = network.plot(
             title='Oscillators body2body phases',
             show_contacts_connectivity=False,
             show_hydrodynamics_connectivity=False,
@@ -694,7 +702,7 @@ def plot_networks_maps(morphology, data, show_all=False):
             use_colorbar=True,
             oscillator_phases=True,
         )
-        network.plot(
+        plots['network_phases_body2limb'] = network.plot(
             title='Oscillators body2limb phases',
             show_contacts_connectivity=False,
             show_hydrodynamics_connectivity=False,
@@ -702,7 +710,7 @@ def plot_networks_maps(morphology, data, show_all=False):
             use_colorbar=True,
             oscillator_phases=True,
         )
-        network.plot(
+        plots['network_phases_limb2body'] = network.plot(
             title='Oscillators limb2body phases',
             show_contacts_connectivity=False,
             show_hydrodynamics_connectivity=False,
@@ -711,7 +719,7 @@ def plot_networks_maps(morphology, data, show_all=False):
             use_colorbar=True,
             oscillator_phases=True,
         )
-        network.plot(
+        plots['network_phases_limb2limb'] = network.plot(
             title='Oscillators limb2limb phases',
             show_contacts_connectivity=False,
             show_hydrodynamics_connectivity=False,
@@ -720,7 +728,7 @@ def plot_networks_maps(morphology, data, show_all=False):
             use_colorbar=True,
             oscillator_phases=True,
         )
-        network.plot(
+        plots['network_phases_intralimb'] = network.plot(
             title='Oscillators intralimb phases',
             show_contacts_connectivity=False,
             show_hydrodynamics_connectivity=False,
@@ -729,7 +737,7 @@ def plot_networks_maps(morphology, data, show_all=False):
             use_colorbar=True,
             oscillator_phases=True,
         )
-        network.plot(
+        plots['network_phases_interlimb'] = network.plot(
             title='Oscillators interlimb phases',
             show_contacts_connectivity=False,
             show_hydrodynamics_connectivity=False,
@@ -740,14 +748,14 @@ def plot_networks_maps(morphology, data, show_all=False):
         )
 
         # Plot contacts connectivity
-        network.plot(
+        plots['network_contacts'] = network.plot(
             title='Contacts complete connectivity',
             show_oscillators_connectivity=False,
             show_hydrodynamics_connectivity=False,
             use_colorbar=True,
             contacts_weights=True,
         )
-        network.plot(
+        plots['network_contacts_intralimb'] = network.plot(
             title='Contacts intralimb connectivity',
             show_oscillators_connectivity=False,
             show_hydrodynamics_connectivity=False,
@@ -755,7 +763,7 @@ def plot_networks_maps(morphology, data, show_all=False):
             use_colorbar=True,
             contacts_weights=True,
         )
-        network.plot(
+        plots['network_contacts_interlimb'] = network.plot(
             title='Contacts interlimb connectivity',
             show_oscillators_connectivity=False,
             show_hydrodynamics_connectivity=False,
@@ -765,19 +773,19 @@ def plot_networks_maps(morphology, data, show_all=False):
         )
 
         # Plot hydrodynamics connectivity
-        network.plot(
+        plots['network_hydro'] = network.plot(
             title='Hydrodynamics complete connectivity',
             show_oscillators_connectivity=False,
             show_contacts_connectivity=False,
         )
-        network.plot(
+        plots['network_hydro_frequency'] = network.plot(
             title='Hydrodynamics frequency connectivity',
             show_oscillators_connectivity=False,
             show_contacts_connectivity=False,
             use_colorbar=True,
             hydro_frequency_weights=True,
         )
-        network.plot(
+        plots['network_hydro_amplitude'] = network.plot(
             title='Hydrodynamics amplitude connectivity',
             show_oscillators_connectivity=False,
             show_contacts_connectivity=False,
@@ -785,4 +793,4 @@ def plot_networks_maps(morphology, data, show_all=False):
             hydro_amplitude_weights=True,
         )
 
-    return network_anim
+    return network_anim, plots
