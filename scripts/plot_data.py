@@ -78,7 +78,7 @@ def main():
             data=sim_data,
             show_all=True,
         )[1]
-        if morph.n_legs == 4 and morph.n_dof_legs == 4
+        if morph.n_legs in (2, 4) and morph.n_dof_legs == 4
         else {}
     )
 
