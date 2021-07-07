@@ -23,19 +23,19 @@ def quaternion_to_euler(w, x, y, z):
     Z = np.arctan2(t3, t4)
 
     return X, Y, Z
-    
+
 def euler_to_quaternion(phi, theta, psi):
-    
+
     q0 = np.cos(phi/2)*np.cos(theta/2)*np.cos(psi/2)+\
     np.sin(phi/2)*np.sin(theta/2)*np.sin(psi/2)
-    
+
     q1 = np.sin(phi/2)*np.cos(theta/2)*np.cos(psi/2)-\
     np.cos(phi/2)*np.sin(theta/2)*np.sin(psi/2)
-    
+
     q2 = np.cos(phi/2)*np.sin(theta/2)*np.cos(psi/2)+\
     np.sin(phi/2)*np.cos(theta/2)*np.sin(psi/2)
-    
+
     q3 = np.cos(phi/2)*np.cos(theta/2)*np.sin(psi/2)+\
     np.sin(phi/2)*np.sin(theta/2)*np.cos(psi/2)
-    
+
     return q0, q1, q2, q3
