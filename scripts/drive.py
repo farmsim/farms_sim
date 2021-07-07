@@ -8,14 +8,12 @@ import matplotlib.pyplot as plt
 import farms_pylog as pylog
 from scipy.interpolate import splprep, splev
 from scipy.spatial import KDTree
+from scipy.spatial.transform import Rotation
 from farms_bullet.model.control import ControlType
 from farms_amphibious.experiment.simulation import (
     setup_from_clargs,
     simulation_setup,
     postprocessing_from_clargs,
-)
-from angle import (
-    quaternion_to_euler,
 )
 from Vector_fields2 import (
     orientation_to_reach,
@@ -104,14 +102,11 @@ def main():
 
         # Get orientation as radian
         for joint_idx in np.arange(0, max_joint, 1):
-
             ori = np.array(links.urdf_orientation(
                 iteration=iteration,
                 link_i=joint_idx,
             ))
-            phi, _, _ = quaternion_to_euler(ori[0], ori[1],
-                                                  ori[2], ori[3])
-
+            phi = Rotation.from_quat(ori).as_euler('xyz')[2]
             joint_orientation[joint_idx] = phi
 
         # Mean orientation of the joints
