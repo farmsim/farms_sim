@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Run salamander simulation with bullet"""
 
+import os
 import time
 
 import numpy as np
@@ -135,7 +136,6 @@ def main():
         # Set turn drive
         drives.array[min(iteration+1, n_iterations-1), 1] = control
 
-
         # Print information
         if not iteration % 100:
             pylog.info(
@@ -190,7 +190,13 @@ def main():
     _, _, score = assess_traj(pos1, traj1)
     print('Trajectory error is:', score)
 
-    plotting(x, pos1, control_t, mean_t, set_t, traj1, X, Y, U, V, MIXED)
+    figs = plotting(x, pos1, control_t, mean_t, set_t, traj1, X, Y, U, V, MIXED)
+
+    if clargs.save:
+        for fig_i, fig in enumerate(figs):
+            fig.savefig(os.path.join(clargs.save, '{}.png'.format(fig_i)))
+    if not clargs.headless:
+        plt.show()
 
 def plotting(t, pos, control, phi, phi_c, traj, X, Y, U, V, MIXED):
 
@@ -226,7 +232,8 @@ def plotting(t, pos, control, phi, phi_c, traj, X, Y, U, V, MIXED):
     ax3.legend()
 
     plt.gca().set_aspect('equal')
-    plt.show()
+
+    return fig, fig2, fig3
 
 
 def assess_traj(traj, t_traj):
