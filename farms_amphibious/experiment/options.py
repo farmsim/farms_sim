@@ -3,6 +3,7 @@
 import numpy as np
 import farms_pylog as pylog
 from farms_models.utils import get_sdf_path
+from farms_data.units import SimulationUnitScaling
 from farms_bullet.simulation.options import SimulationOptions
 from farms_bullet.model.model import SimulationModels, DescriptionFormatModel
 from farms_bullet.model.options import SpawnLoader
@@ -10,31 +11,30 @@ from farms_bullet.model.control import ControlType
 from ..model.options import AmphibiousOptions
 
 
-def get_animat_options_from_model(animat, version, **options):
+def get_animat_options_from_model(animat, version, kwargs_only=False, **options):
     """Get animat options from model"""
-    if animat == 'salamander':
-        animat_options = get_salamander_options(**options)
-    elif animat == 'polypterus':
-        animat_options = get_polypterus_options(**options)
-    elif animat == 'centipede':
-        animat_options = get_centipede_options(**options)
-    elif animat == 'pleurobot':
-        _sdf, animat_options = get_pleurobot_options(**options)
-    elif animat == 'krock':
-        _sdf, animat_options = get_krock_options(**options)
-    elif animat == 'orobot':
-        _sdf, animat_options = get_orobot_options(**options)
-    elif animat == 'hfsp_robot' and version == 'salamander_0':
-        _sdf, animat_options = get_hfsp_robot_options(**options)
-    elif animat == 'hfsp_robot' and version == 'polypterus_0':
+    options_function = (
+        {
+            'salamander': get_salamander_kwargs_options,
+            'polypterus': get_polypterus_kwargs_options,
+            'centipede': get_centipede_kwargs_options,
+            'pleurobot': get_pleurobot_kwargs_options,
+            'krock': get_krock_kwargs_options,
+            'orobot': get_orobot_kwargs_options,
+            'hfsp_robot': get_hfsp_robot_kwargs_options,
+        } if kwargs_only else {
+            'salamander': get_salamander_options,
+            'polypterus': get_polypterus_options,
+            'centipede': get_centipede_options,
+            'pleurobot': get_pleurobot_options,
+            'krock': get_krock_options,
+            'orobot': get_orobot_options,
+            'hfsp_robot': get_hfsp_robot_options,
+        }
+    )[animat]
+    if animat == 'hfsp_robot' and version == 'polypterus_0':
         options['hindlimbs'] = False
-        _sdf, animat_options = get_hfsp_robot_options(**options)
-    else:
-        raise Exception('Unknown animat {animat} {version}'.format(
-            animat=animat,
-            version=version,
-        ))
-    return animat_options
+    return options_function(**options)
 
 
 def set_no_swimming_options(animat_options):
@@ -45,21 +45,22 @@ def set_no_swimming_options(animat_options):
     animat_options.physics.water_surface = None
 
 
-def set_swimming_options(animat_options, water_surface, viscosity):
+def set_swimming_options(animat_options, water_surface, water_velocity, viscosity):
     """Set swimming options"""
     animat_options.physics.sph = False
     animat_options.physics.drag = True
     animat_options.physics.buoyancy = True
     animat_options.physics.viscosity = viscosity
     animat_options.physics.water_surface = water_surface
+    animat_options.physics.water_velocity = water_velocity
 
 
-def get_flat_arena(ground_height, meters=1):
+def get_flat_arena(ground_height, arena_sdf='', meters=1):
     """Flat arena"""
     if ground_height is None:
         ground_height = 0.0
     return DescriptionFormatModel(
-        path=get_sdf_path(
+        path=arena_sdf if arena_sdf else get_sdf_path(
             name='arena_flat',
             version='v0',
         ),
@@ -72,17 +73,20 @@ def get_flat_arena(ground_height, meters=1):
             'posObj': [0, 0, ground_height*meters],
             'ornObj': [0, 0, 0, 1],
         },
-        load_options={'globalScaling': meters},
+        # load_options={'globalScaling': meters},
+        load_options={'units': SimulationUnitScaling(meters=meters)},
     )
 
 
-def get_ramp_arena(water_surface, ground_height=None, meters=1):
+def get_ramp_arena(water_surface, arena_sdf='', water_sdf='', **kwargs):
     """Water arena"""
+    meters = kwargs.pop('meters', 1)
+    ground_height = kwargs.pop('ground_height', None)
     if ground_height is None:
-        ground_height = 0.0
+        ground_height = 0
     return SimulationModels([
         DescriptionFormatModel(
-            path=get_sdf_path(
+            path=arena_sdf if arena_sdf else get_sdf_path(
                 name='arena_ramp',
                 version='angle_-10_texture',
             ),
@@ -93,12 +97,13 @@ def get_ramp_arena(water_surface, ground_height=None, meters=1):
             },
             spawn_options={
                 'posObj': [0, 0, ground_height*meters],
-                'ornObj': [0.5, 0, 0, 0.5],
+                'ornObj': [0, 0, 0, 1],  # [0.5, 0, 0, 0.5],
             },
-            load_options={'globalScaling': meters},
+            # load_options={'globalScaling': meters},
+            load_options={'units': SimulationUnitScaling(meters=meters)},
         ),
         DescriptionFormatModel(
-            path=get_sdf_path(
+            path=water_sdf if water_sdf else get_sdf_path(
                 name='arena_water',
                 version='v0',
             ),
@@ -106,18 +111,21 @@ def get_ramp_arena(water_surface, ground_height=None, meters=1):
                 'posObj': [0, 0, water_surface*meters],
                 'ornObj': [0, 0, 0, 1],
             },
-            load_options={'globalScaling': meters},
+            # load_options={'globalScaling': meters},
+            load_options={'units': SimulationUnitScaling(meters=meters)},
         ),
     ])
 
 
-def get_water_arena(water_surface, ground_height=None, meters=1):
+def get_water_arena(water_surface, arena_sdf='', water_sdf='', **kwargs):
     """Water arena"""
+    meters = kwargs.pop('meters', 1)
+    ground_height = kwargs.pop('ground_height', None)
     if ground_height is None:
         ground_height = water_surface - 1
     return SimulationModels([
         DescriptionFormatModel(
-            path=get_sdf_path(
+            path=arena_sdf if arena_sdf else get_sdf_path(
                 name='arena_flat',
                 version='v0',
             ),
@@ -130,10 +138,11 @@ def get_water_arena(water_surface, ground_height=None, meters=1):
                 'rgbaColor': [1, 1, 1, 1],
                 'specularColor': [1, 1, 1],
             },
-            load_options={'globalScaling': meters},
+            # load_options={'globalScaling': meters},
+            load_options={'units': SimulationUnitScaling(meters=meters)},
         ),
         DescriptionFormatModel(
-            path=get_sdf_path(
+            path=water_sdf if water_sdf else get_sdf_path(
                 name='arena_water',
                 version='v0',
             ),
@@ -141,7 +150,8 @@ def get_water_arena(water_surface, ground_height=None, meters=1):
                 'posObj': [0, 0, water_surface*meters],
                 'ornObj': [0, 0, 0, 1],
             },
-            load_options={'globalScaling': meters},
+            # load_options={'globalScaling': meters},
+            load_options={'units': SimulationUnitScaling(meters=meters)},
         ),
     ])
 
@@ -149,10 +159,13 @@ def get_water_arena(water_surface, ground_height=None, meters=1):
 def amphibious_options(animat_options, arena='flat', **kwargs):
     """Amphibious simulation"""
 
-    # Water
+    # Kwargs
     viscosity = kwargs.pop('viscosity', 1)
-    water_surface = kwargs.pop('water_surface', 0)
+    water_surface = kwargs.pop('water_surface', None)
+    water_velocity = kwargs.pop('water_velocity', None)
     ground_height = kwargs.pop('ground_height', None)
+    arena_sdf = kwargs.pop('arena_sdf', '')
+    water_sdf = kwargs.pop('water_sdf', '')
 
     # Simulation
     simulation_options = SimulationOptions.with_clargs(**kwargs)
@@ -161,12 +174,17 @@ def amphibious_options(animat_options, arena='flat', **kwargs):
     # Arena
     if arena == 'flat':
         arena = get_flat_arena(
+            arena_sdf=arena_sdf,
             ground_height=ground_height,
             meters=simulation_options.units.meters,
         )
         set_no_swimming_options(animat_options)
     elif arena == 'ramp':
+        if water_surface is None:
+            water_surface = 0
         arena = get_ramp_arena(
+            arena_sdf=arena_sdf,
+            water_sdf=water_sdf,
             water_surface=water_surface,
             ground_height=ground_height,
             meters=simulation_options.units.meters,
@@ -174,10 +192,15 @@ def amphibious_options(animat_options, arena='flat', **kwargs):
         set_swimming_options(
             animat_options,
             water_surface=water_surface,
+            water_velocity=water_velocity,
             viscosity=viscosity,
         )
     elif arena == 'water':
+        if water_surface is None:
+            water_surface = 0
         arena = get_water_arena(
+            arena_sdf=arena_sdf,
+            water_sdf=water_sdf,
             water_surface=water_surface,
             ground_height=ground_height,
             meters=simulation_options.units.meters,
@@ -185,8 +208,23 @@ def amphibious_options(animat_options, arena='flat', **kwargs):
         set_swimming_options(
             animat_options,
             water_surface=water_surface,
+            water_velocity=water_velocity,
             viscosity=viscosity,
         )
+    elif arena_sdf:
+        arena = DescriptionFormatModel(
+            path=arena_sdf,
+            load_options={'units': simulation_options.units},
+        )
+        if water_surface is not None:
+            set_swimming_options(
+                animat_options,
+                water_surface=water_surface,
+                water_velocity=water_velocity,
+                viscosity=viscosity,
+            )
+        else:
+            set_no_swimming_options(animat_options)
     else:
         raise Exception('Unknown arena: "{}"'.format(arena))
     return (simulation_options, arena)
@@ -231,8 +269,14 @@ def get_salamander_kwargs_options(**kwargs):
         'weight_sens_hydro_amp': 0,
         'body_stand_amplitude': 0.2,
         'body_stand_shift': np.pi/2,
-        'legs_amplitudes': [np.pi/4, np.pi/32, np.pi/4, np.pi/8],
-        'legs_offsets_walking': [0, np.pi/32, 0, np.pi/3],
+        'legs_amplitudes': [
+            [np.pi/4, np.pi/16, np.pi/8, 0],
+            [np.pi/4, np.pi/16, np.pi/8, 0],
+        ],
+        'legs_offsets_walking': [
+            [0, 0, np.pi/4, np.pi/3],
+            [0, 0, 0, np.pi/3],
+        ],
         'modular_phases': (
             np.array([3*np.pi/2, 0, 3*np.pi/2, 0]) - np.pi/4
         ).tolist(),
@@ -270,12 +314,17 @@ def get_salamander_options(**kwargs):
     """Salamander options"""
     kwargs_options = get_salamander_kwargs_options(**kwargs)
     options = AmphibiousOptions.from_options(kwargs_options)
-    for link in options['morphology']['links']:
-        link['pybullet_dynamics']['lateralFriction'] = (
-            1 if link['name'] in ('link_leg_0_L_3', 'link_leg_0_R_3')
-            else 0.3 if link['name'] in ('link_leg_1_L_3', 'link_leg_1_R_3')
-            else 0.1
-        )
+    # for link in options['morphology']['links']:
+    #     link['pybullet_dynamics']['lateralFriction'] = 1
+    #     # link['pybullet_dynamics']['lateralFriction'] = (
+    #     #     1 if link['name'] in (
+    #     #         'link_leg_0_L_3',
+    #     #         'link_leg_0_R_3',
+    #     #         'link_leg_1_L_3',
+    #     #         'link_leg_1_R_3',
+    #     #     )
+    #     #     else 0.1
+    #     # )
     # for joint_i, joint in enumerate(options['morphology']['joints']):
     #     joint['pybullet_dynamics']['jointDamping'] = 0
     #     joint['pybullet_dynamics']['maxJointVelocity'] = np.inf  # 0.1
@@ -319,18 +368,24 @@ def get_centipede_kwargs_options(**kwargs):
         'weight_osc_legs_internal': 3e1,
         'weight_osc_legs_opposite': 1e0,  # 1e1,
         'weight_osc_legs_following': 0,  # 1e1,
-        'weight_osc_legs2body': 0,  # 3e1
+        'weight_osc_legs2body': 1e-8,  # 3e1
         'weight_osc_body2legs': 3e2,
-        'weight_sens_contact_intralimb': -1e-6,
-        'weight_sens_contact_opposite': +1e-6,
+        'weight_sens_contact_intralimb': 0,
+        'weight_sens_contact_opposite': 0,
         'weight_sens_contact_following': 0,
         'weight_sens_contact_diagonal': 0,
         'weight_sens_hydro_freq': 0,
         'weight_sens_hydro_amp': 0,
         'body_stand_amplitude': 0.2,
         'body_stand_shift': np.pi/2,
-        'legs_amplitudes': [np.pi/4, np.pi/32, np.pi/4, np.pi/8],
-        'legs_offsets_walking': [0, np.pi/32, 0, np.pi/8],
+        'legs_amplitudes': [
+            [np.pi/4, np.pi/32, np.pi/4, np.pi/8]
+            for _ in range(19)
+        ],
+        'legs_offsets_walking': [
+            [0, np.pi/32, 0, np.pi/8]
+            for _ in range(19)
+        ],
         'modular_phases': (
             np.array([3*np.pi/2, 0, 3*np.pi/2, 0]) - np.pi/4
         ).tolist(),
@@ -388,16 +443,16 @@ def get_polypterus_kwargs_options(**kwargs):
         'weight_osc_legs_following': 0,  # 1e1,
         'weight_osc_legs2body': 3e1,
         'weight_osc_body2legs': 0,
-        'weight_sens_contact_intralimb': -1e-6,
-        'weight_sens_contact_opposite': +1e-6,
+        'weight_sens_contact_intralimb': 0,
+        'weight_sens_contact_opposite': 0,
         'weight_sens_contact_following': 0,
         'weight_sens_contact_diagonal': 0,
         'weight_sens_hydro_freq': 0,
         'weight_sens_hydro_amp': 0,
         'body_stand_amplitude': 0.1,
         'body_stand_shift': np.pi,  # np.pi/2,
-        'legs_amplitudes': [np.pi/4, np.pi/8, np.pi/4, np.pi/8],
-        'legs_offsets_walking': [0, np.pi/8, 0, np.pi/8],
+        'legs_amplitudes': [[np.pi/4, np.pi/8, np.pi/4, np.pi/8]],
+        'legs_offsets_walking': [[0, np.pi/8, 0, np.pi/8]],
         'modular_phases': (
             np.array([3*np.pi/2, 0, 3*np.pi/2, 0]) - np.pi/4
         ).tolist(),
@@ -528,7 +583,7 @@ def get_pleurobot_kwargs_options(**kwargs):
     drag = -1e-1
     kwargs_options = dict(
         spawn_loader=SpawnLoader.PYBULLET,  # SpawnLoader.FARMS,
-        density=700.0,
+        density=600.0,
         default_control_type=ControlType.POSITION,
         scale_hydrodynamics=1e-1,
         n_legs=4,
@@ -557,9 +612,16 @@ def get_pleurobot_kwargs_options(**kwargs):
     if 'kinematics_file' not in kwargs:
         kwargs_options.update(dict(
             body_stand_amplitude=0.2,
-            legs_amplitudes=[np.pi/8, np.pi/16, np.pi/8, np.pi/8],
-            legs_offsets_walking=[0, -np.pi/32, -np.pi/16, 0],
+            legs_amplitudes=[
+                [np.pi/8, np.pi/16, np.pi/8, np.pi/8],
+                [np.pi/8, np.pi/16, np.pi/8, np.pi/8],
+            ],
+            legs_offsets_walking=[
+                [0, -np.pi/32, -np.pi/16, 0],
+                [0, -np.pi/32, -np.pi/16, 0],
+            ],
             legs_offsets_swimming=[-2*np.pi/5, 0, 0, -np.pi/4],
+            body_stand_shift=np.pi/2,
             gain_amplitude=gain_amplitude,
             offsets_bias=joints_offsets,
             weight_osc_body=1e0,
@@ -587,25 +649,36 @@ def get_pleurobot_kwargs_options(**kwargs):
     return kwargs_options
 
 
-def get_pleurobot_options(slow=2, **kwargs):
+def get_pleurobot_options(slow=2, passive=True, **kwargs):
     """Pleurobot default options"""
-
-    # Animat
-    sdf = get_sdf_path(name='pleurobot', version='1')
-    pylog.info('Model SDF: {}'.format(sdf))
-
     kwargs_options = get_pleurobot_kwargs_options(**kwargs)
     animat_options = AmphibiousOptions.from_options(kwargs_options)
-    for link in animat_options['morphology']['links']:
-        link['pybullet_dynamics']['lateralFriction'] = (
-            1 if link['name'] in ('link15', 'link19')
-            else 0.3 if link['name'] in ('link23', 'link27')
-            else 0.1
-        )
+    # for link in animat_options['morphology']['links']:
+    #     link['pybullet_dynamics']['lateralFriction'] = (
+    #         1 if link['name'] in ('link15', 'link19')
+    #         else 0.3 if link['name'] in ('link23', 'link27')
+    #         else 0.1
+    #     )
+    if passive:
+        joints = {
+            joint['joint']: joint
+            for joint in animat_options['control']['joints']
+        }
+        muscles = {
+            muscle['joint']: muscle
+            for muscle in animat_options['control']['muscles']
+        }
+        for name in ('j_tailBone', 'j_tail'):
+            assert name in joints, '{} not in joints'.format(name)
+            joints[name]['control_type'] = ControlType.TORQUE
+            muscles[name]['alpha'] = 0
+            muscles[name]['beta'] = 0
+            muscles[name]['gamma'] = 0  # Spring stiffness
+            muscles[name]['delta'] = 0  # Damping coeffiecient
     for oscillator in animat_options.control.network.oscillators:
         oscillator['frequency_gain'] /= slow
         oscillator['frequency_bias'] /= slow
-    return sdf, animat_options
+    return animat_options
 
 
 def get_krock_kwargs_options(**kwargs):
@@ -646,7 +719,7 @@ def get_krock_kwargs_options(**kwargs):
         'links_names',
         [
             # Body
-            'base_link',
+            # 'base_link',
             'Girdle',
             'solid_spine1_endpoint',
             'Tail1MX',
@@ -756,7 +829,7 @@ def get_krock_kwargs_options(**kwargs):
     fri = -3e-1
     swi = -1e1
     kwargs_options = dict(
-        spawn_loader=SpawnLoader.PYBULLET,  # SpawnLoader.FARMS,
+        spawn_loader=SpawnLoader.FARMS,  # SpawnLoader.PYBULLET,
         density=550.0,
         # mass_multiplier=0.7,
         spawn_position=[0, 0, 0.5],
@@ -775,15 +848,21 @@ def get_krock_kwargs_options(**kwargs):
                 # else [-1e-1, -1e-1, -1e0]
                 # if i < 4
                 else [fri, fri, swi]
-                if i < 7
+                if i < 6
                 else [fri, fri, fri],
                 [-1e-3]*3,
             ]
-            for i in range(7+4*4)
+            for i in range(6+4*4)
         ],
         body_stand_amplitude=0.25,
-        legs_amplitudes=[np.pi/16, np.pi/8, np.pi/8, np.pi/8],
-        legs_offsets_walking=[0, -np.pi/32, -np.pi/16, 0],
+        legs_amplitudes=[
+            [np.pi/16, np.pi/8, np.pi/8, np.pi/8],
+            [np.pi/16, np.pi/8, np.pi/8, np.pi/8],
+        ],
+        legs_offsets_walking=[
+            [0, -np.pi/32, -np.pi/16, 0],
+            [0, -np.pi/32, -np.pi/16, 0],
+        ],
         legs_offsets_swimming=[0, 0.25*np.pi, 0.5*np.pi, 0, np.pi/2],
         gain_amplitude=gain_amplitude,
         offsets_bias=joints_offsets,
@@ -824,17 +903,12 @@ def get_krock_kwargs_options(**kwargs):
 
 def get_krock_options(slow=2, **kwargs):
     """Krock default options"""
-
-    # Animat
-    sdf = get_sdf_path(name='krock', version='0')
-    pylog.info('Model SDF: {}'.format(sdf))
-
     kwargs_options = get_krock_kwargs_options(**kwargs)
     animat_options = AmphibiousOptions.from_options(kwargs_options)
     for oscillator in animat_options.control.network.oscillators:
         oscillator['frequency_gain'] /= slow
         oscillator['frequency_bias'] /= slow
-    return sdf, animat_options
+    return animat_options
 
 
 def get_orobot_kwargs_options(**kwargs):
@@ -1181,8 +1255,14 @@ def get_orobot_kwargs_options(**kwargs):
         use_self_collisions=False,
         density=600.0,
         body_stand_amplitude=0.2,
-        legs_amplitudes=[np.pi/6, np.pi/16, np.pi/16, np.pi/8, np.pi/8],
-        legs_offsets_walking=[0, -np.pi/32, -np.pi/16, 0, 0],
+        legs_amplitudes=[
+            [np.pi/6, np.pi/16, np.pi/16, np.pi/8, np.pi/8],
+            [np.pi/6, np.pi/16, np.pi/16, np.pi/8, np.pi/8],
+        ],
+        legs_offsets_walking=[
+            [0, -np.pi/32, -np.pi/16, 0, 0],
+            [0, -np.pi/32, -np.pi/16, 0, 0],
+        ],
         legs_offsets_swimming=[2*np.pi/5, 0, 0, np.pi/2, 0],
         gain_amplitude=gain_amplitude,
         offsets_bias=joints_offsets,
@@ -1201,7 +1281,7 @@ def get_orobot_kwargs_options(**kwargs):
             np.array([3*np.pi/2, 0, 3*np.pi/2, 0, 0]) - np.pi/4
         ).tolist(),
         # modular_amplitudes=np.full(5, 0.5).tolist(),
-        modular_amplitudes=np.full(4, 0).tolist(),
+        modular_amplitudes=np.full(5, 0).tolist(),
         links_names=links_names,
         drag_coefficients=drag_coefficients,
         links_swimming=links_swimming,
@@ -1222,14 +1302,9 @@ def get_orobot_kwargs_options(**kwargs):
 
 def get_orobot_options(**kwargs):
     """Orobot default options"""
-
-    # Animat
-    sdf = get_sdf_path(name='orobot', version='0')
-    pylog.info('Model SDF: {}'.format(sdf))
-
     kwargs_options = get_orobot_kwargs_options(**kwargs)
     animat_options = AmphibiousOptions.from_options(kwargs_options)
-    return sdf, animat_options
+    return animat_options
 
 
 def get_hfsp_robot_kwargs_options(hindlimbs=True, **kwargs):
@@ -1392,14 +1467,9 @@ def get_hfsp_robot_kwargs_options(hindlimbs=True, **kwargs):
 
 def get_hfsp_robot_options(slow=2, **kwargs):
     """HFSP robot default options"""
-
-    # Animat
-    sdf = get_sdf_path(name='hfsp_robot', version='0')
-    pylog.info('Model SDF: {}'.format(sdf))
-
     kwargs_options = get_hfsp_robot_kwargs_options(**kwargs)
     animat_options = AmphibiousOptions.from_options(kwargs_options)
     for oscillator in animat_options.control.network.oscillators:
         oscillator['frequency_gain'] /= slow
         oscillator['frequency_bias'] /= slow
-    return sdf, animat_options
+    return animat_options

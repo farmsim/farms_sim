@@ -16,10 +16,8 @@ from ..control.controller import AmphibiousController
 from ..control.manta_control import MantaController
 from ..model.options import AmphibiousOptions
 from ..model.animat import Amphibious
-from ..utils.prompt import (
-    parse_args,
-    prompt_postprocessing,
-)
+from ..utils.parse_args import parse_args
+from ..utils.prompt import prompt_postprocessing
 from .options import (
     amphibious_options,
     get_animat_options_from_model,
@@ -34,26 +32,33 @@ def setup_from_clargs(clargs=None):
         clargs = parse_args()
 
     # Options
-    sdf = get_sdf_path(name=clargs.animat, version=clargs.version)
-    options = {
-        'drives_init': clargs.drives,
-        'spawn_position': clargs.position,
-        'spawn_orientation': clargs.orientation,
-        'spawn_loader': SpawnLoader.PYBULLET,
-        'default_control_type': ControlType.POSITION,
-    }
+    sdf = (
+        clargs.sdf
+        if clargs.sdf
+        else get_sdf_path(name=clargs.animat, version=clargs.version)
+    )
     animat_options = get_animat_options_from_model(
         animat=clargs.animat,
         version=clargs.version,
         default_lateral_friction=clargs.lateral_friction,
         use_self_collisions=clargs.self_collisions,
-        **options,
+        spawn_loader={
+            'FARMS': SpawnLoader.FARMS,
+            'PYBULLET': SpawnLoader.PYBULLET,
+        }[clargs.spawn_loader],
+        drives_init=clargs.drives,
+        spawn_position=clargs.position,
+        spawn_orientation=clargs.orientation,
+        default_control_type=ControlType.POSITION,
     )
     simulation_options, arena = amphibious_options(
         animat_options=animat_options,
         arena=clargs.arena,
-        viscosity=clargs.viscosity,
+        arena_sdf=clargs.arena_sdf,
+        water_sdf=clargs.water_sdf,
         water_surface=clargs.water,
+        water_velocity=clargs.water_velocity,
+        viscosity=clargs.viscosity,
         ground_height=clargs.ground,
     )
 
@@ -80,18 +85,23 @@ def simulation_setup(animat_sdf, animat_options, arena, **kwargs):
     )
 
     # Animat data
-    animat_data = AmphibiousData.from_options(
-        animat_options.control,
-        simulation_options.n_iterations,
-        simulation_options.timestep,
+    animat_data = kwargs.pop(
+        'animat_data',
+        AmphibiousData.from_options(
+            animat_options.control,
+            simulation_options.n_iterations,
+            simulation_options.timestep,
+        ),
     )
 
     # Animat controller
-    if kwargs.pop('use_controller', False):
+    if kwargs.pop('use_controller', False) or 'animat_controller' in kwargs:
         animat_controller = (
-            KinematicsController(
+            kwargs.pop('animat_controller')
+            if 'animat_controller' in kwargs
+            else KinematicsController(
                 joints=animat_options.morphology.joints_names(),
-                kinematics=np.loadtxt(animat_options.control.kinematics_file),
+                kinematics=np.genfromtxt(animat_options.control.kinematics_file),
                 sampling=animat_options.control.kinematics_sampling,
                 timestep=simulation_options.timestep,
                 n_iterations=simulation_options.n_iterations,
@@ -180,4 +190,5 @@ def postprocessing_from_clargs(sim, animat_options, clargs=None):
         query=clargs.prompt,
         save=clargs.save,
         save_to_models=clargs.save_to_models,
+        verify=clargs.verify_save,
     )

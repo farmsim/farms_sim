@@ -3,17 +3,19 @@
 import os
 import argparse
 
+import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+
+from PIL import Image
+from moviepy.editor import VideoClip
 
 import farms_pylog as pylog
 from farms_data.amphibious.animat_data import AnimatData
 from farms_bullet.simulation.options import SimulationOptions
 from farms_amphibious.model.options import AmphibiousOptions
 from farms_amphibious.utils.network import plot_networks_maps
-
-from moviepy.editor import VideoClip
-from moviepy.video.io.bindings import mplfig_to_npimage
 
 
 def parse_args():
@@ -52,88 +54,45 @@ def parse_args():
     return parser.parse_args()
 
 
-# class FasterFFMpegWriter(animation.FFMpegWriter):
-#     """FFMpeg-pipe writer bypassing figure.savefig"""
-
-#     def __init__(self, anim, **kwargs):
-#         super(FasterFFMpegWriter, self).__init__(**kwargs)
-#         self.frame_format = 'argb'
-#         # self.anim = anim
-#         # self.anim.animation_init()
-#         # self.frame = 0
-
-#     def grab_frame(self, **kwargs):
-#         """Grab frame"""
-#         self.fig.set_size_inches(self._w, self._h)
-#         self.fig.set_dpi(self.dpi)
-#         # if self.frame == 0:
-#         self.fig.canvas.draw()
-#         # self.anim.animation_update(self.frame)
-#         self._frame_sink().write(self.fig.canvas.tostring_argb())
-#         # self.frame += 1
-
-
 def main(use_moviepy=True):
     """Main"""
+    matplotlib.use('Agg')
+    # Clargs
     args = parse_args()
+    # Setup
     animat_options = AmphibiousOptions.load(args.animat)
     simulation_options = SimulationOptions.load(args.simulation)
     data = AnimatData.from_file(args.data)
-    network_anim = plot_networks_maps(animat_options.morphology, data)
+    network_anim = plot_networks_maps(animat_options.morphology, data)[0]
     fig = plt.gcf()
+    ax = plt.gca()
     fig.tight_layout()
     fig.set_size_inches(14, 7)
-    # plt.show()
-
-    # writer = FasterFFMpegWriter(  # ffmpegwriter
-    #     anim=network_anim,
-    #     fps=1/(1e-3*network_anim.interval),
-    #     # codec="libx264",
-    #     metadata = dict(
-    #         title='FARMS network',
-    #         artist='FARMS',
-    #         comment='FARMS network',
-    #     ),
-    #     extra_args=['-vcodec', 'libx264'],
-    # )
-    # network_anim.animation_init()
-    # with writer.saving(fig, args.output, dpi=200):
-    #     for frame in range(400):
-    #         print(frame)
-    #         network_anim.animation_update(frame)
-    #         writer.grab_frame()
-
-    # pylog.info('Saving to {}'.format(args.output))
-    # ffmpegwriter = animation.writers['ffmpeg']
-    # network_anim.animation.save(
-    #     args.output,
-    #     writer=ffmpegwriter(  # ffmpegwriter FasterFFMpegWriter
-    #         # width=20, height=10,
-    #         # anim=network_anim,
-    #         fps=1/(1e-3*network_anim.interval),
-    #         # codec="libx264",
-    #         metadata = dict(
-    #             title='FARMS network',
-    #             artist='FARMS',
-    #             comment='FARMS network',
-    #         ),
-    #         extra_args=['-vcodec', 'libx264'],
-    #         # bitrate=1800,
-    #     ),
-    #     dpi=200,
-    #     # writer='pillow',
-    #     progress_callback=lambda i, n: print(i),
-    # )
-
+    # Draw to save background
+    fig.canvas.draw()
+    background = fig.canvas.copy_from_bbox(fig.bbox)
+    # Animation elements
+    elements = network_anim.animation_elements()
+    # Extension
     _, extension = os.path.splitext(args.output)
     if extension == '.png':
+        # Save every frame
         for frame in range(network_anim.n_frames):
             pylog.debug('Saving frame {}'.format(frame))
+            # Restore
+            fig.canvas.restore_region(background)
+            # Update
             network_anim.animation_update(frame)
-            fig.canvas.print_figure(
-                args.output.format(frame=frame),
-                dpi=100,
+            # Draw
+            for element in elements:
+                ax.draw_artist(element)
+            # Save
+            img = Image.frombytes(
+                'RGB',
+                fig.canvas.get_width_height(),
+                fig.canvas.tostring_rgb(),
             )
+            img.save(args.output.format(frame=frame))
     elif extension == '.mp4':
         if use_moviepy:
             # Use Moviepy
@@ -147,8 +106,14 @@ def main(use_moviepy=True):
                     frame=frame,
                     total=n_frames,
                 ))
+                # Restore
+                fig.canvas.restore_region(background)
+                # Update
                 network_anim.animation_update(frame)
-                return mplfig_to_npimage(fig)
+                # Draw
+                for element in elements:
+                    ax.draw_artist(element)
+                return np.array(fig.canvas.renderer.buffer_rgba())[:,:,:3]
             anim = VideoClip(make_frame, duration=duration)
             anim.write_videofile(
                 filename=args.output,

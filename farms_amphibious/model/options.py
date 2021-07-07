@@ -1,5 +1,6 @@
 """Animat options"""
 
+from functools import partial
 import numpy as np
 from farms_data.options import Options
 from farms_bullet.model.control import ControlType
@@ -222,7 +223,7 @@ class AmphibiousMorphologyOptions(MorphologyOptions):
                 for body0 in range(0, options['n_joints_body']+1)
                 for leg_i in range(options['n_legs']//2)
                 for side_i in range(2)
-                for joint_i in [options['n_dof_legs']-1]
+                for joint_i in [options['n_dof_legs']-1]  # End-effector
             ] + [
                 # Leg-leg collisions
                 [
@@ -274,6 +275,8 @@ class AmphibiousPhysicsOptions(Options):
         self.buoyancy = kwargs.pop('buoyancy')
         self.viscosity = kwargs.pop('viscosity')
         self.water_surface = kwargs.pop('water_surface')
+        self.water_density = kwargs.pop('water_density')
+        self.water_velocity = kwargs.pop('water_velocity')
         if kwargs:
             raise Exception('Unknown kwargs: {}'.format(kwargs))
 
@@ -292,6 +295,8 @@ class AmphibiousPhysicsOptions(Options):
             options['drag'] or options['sph']
         )
         options['viscosity'] = kwargs.pop('viscosity', 1.0)
+        options['water_density'] = kwargs.pop('water_density', 1000.0)
+        options['water_velocity'] = kwargs.pop('water_velocity', [0.0, 0.0, 0.0])
         return cls(**options)
 
 
@@ -354,6 +359,7 @@ class AmphibiousControlOptions(ControlOptions):
         # Joints
         n_joints = convention.n_joints()
         offsets = [None]*n_joints
+
         # Turning body
         for joint_i in range(convention.n_joints_body):
             for side_i in range(2):
@@ -364,6 +370,7 @@ class AmphibiousControlOptions(ControlOptions):
                     'high': 5,
                     'saturation': 0,
                 }
+
         # Turning legs
         legs_offsets_walking = kwargs.pop(
             'legs_offsets_walking',
@@ -387,6 +394,13 @@ class AmphibiousControlOptions(ControlOptions):
             'leg_joint_turn_gain',
             [1, 0, 0, 0, 0]
         )
+
+        # Augment parameters
+        repeat = partial(np.repeat, repeats=convention.n_legs//2, axis=0)
+        if np.ndim(legs_offsets_walking) == 1:
+            legs_offsets_walking = repeat([legs_offsets_walking]).tolist()
+
+        # Offsets
         for leg_i in range(convention.n_legs//2):
             for side_i in range(2):
                 for joint_i in range(convention.n_dof_legs):
@@ -400,11 +414,13 @@ class AmphibiousControlOptions(ControlOptions):
                             *leg_side_turn_gain[side_i]
                             *leg_joint_turn_gain[joint_i]
                         ),
-                        'bias': legs_offsets_walking[joint_i],
+                        'bias': legs_offsets_walking[leg_i][joint_i],
                         'low': 1,
                         'high': 3,
                         'saturation': legs_offsets_swimming[joint_i],
                     }
+
+        # Amphibious joints control
         if not self.joints:
             self.joints = [
                 AmphibiousJointControlOptions(
@@ -645,6 +661,18 @@ class AmphibiousNetworkOptions(Options):
 
     def defaults_from_convention(self, convention, kwargs):
         """Defaults from convention"""
+
+        # Parameters
+        legs_amplitudes = kwargs.pop(
+            'legs_amplitudes',
+            [np.pi/4, np.pi/32, np.pi/4, np.pi/8]
+        )
+
+        # Augment parameters
+        repeat = partial(np.repeat, repeats=convention.n_legs//2, axis=0)
+        if np.ndim(legs_amplitudes) == 1:
+            legs_amplitudes = repeat([legs_amplitudes]).tolist()
+
         # Drives
         if not self.drives:
             self.drives = [
@@ -699,10 +727,7 @@ class AmphibiousNetworkOptions(Options):
             self.default_osc_amplitudes(
                 convention,
                 body_amplitude=kwargs.pop('body_stand_amplitude', 0.3),
-                legs_amplitudes=kwargs.pop(
-                    'legs_amplitudes',
-                    [np.pi/4, np.pi/32, np.pi/4, np.pi/8]
-                ),
+                legs_amplitudes=legs_amplitudes,
             )
         )
         osc_rates = kwargs.pop(
@@ -1002,9 +1027,9 @@ class AmphibiousNetworkOptions(Options):
                     'saturation': 0,
                 }
         # Legs ampltidudes
-        for joint_i in range(convention.n_dof_legs):
-            amplitude = legs_amplitudes[joint_i]
-            for leg_i in range(convention.n_legs//2):
+        for leg_i in range(convention.n_legs//2):
+            for joint_i in range(convention.n_dof_legs):
+                amplitude = legs_amplitudes[leg_i][joint_i]
                 for side_i in range(2):
                     for side in range(2):
                         amplitudes[convention.legosc2index(
@@ -1032,7 +1057,7 @@ class AmphibiousNetworkOptions(Options):
     def default_osc_modular_phases(convention, phases):
         """Default"""
         n_oscillators = 2*(convention.n_joints())
-        values = 0*np.ones(n_oscillators)
+        values = np.zeros(n_oscillators)
         for joint_i in range(convention.n_dof_legs):
             phase = phases[joint_i]
             for leg_i in range(convention.n_legs//2):
@@ -1055,7 +1080,7 @@ class AmphibiousNetworkOptions(Options):
     def default_osc_modular_amplitudes(convention, amplitudes):
         """Default"""
         n_oscillators = 2*(convention.n_joints())
-        values = 0*np.ones(n_oscillators)
+        values = np.zeros(n_oscillators)
         for joint_i in range(convention.n_dof_legs):
             amplitude = amplitudes[joint_i]
             for leg_i in range(convention.n_legs//2):

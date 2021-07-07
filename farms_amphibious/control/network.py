@@ -21,7 +21,7 @@ class NetworkODE:
         # Adaptive timestep parameters
         initial_state = self.data.state.array[0, :]
         self.solver = integrate.ode(f=self.ode)
-        self.solver.set_integrator('dopri5')
+        self.solver.set_integrator('dopri5', nsteps=10)
         self.solver.set_initial_value(y=initial_state, t=0.0)
         self.dstate = np.zeros_like(initial_state)
 

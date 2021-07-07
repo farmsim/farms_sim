@@ -2,6 +2,7 @@
 
 import os
 import shutil
+from functools import partial
 import numpy as np
 from farms_sdf.sdf import ModelSDF, Link, Joint, Visual
 from farms_models.utils import (
@@ -29,7 +30,15 @@ def generate_sdf(model_name, model_version, **kwargs):
     leg_length = kwargs.pop('leg_length')
     leg_radius = kwargs.pop('leg_radius')
     legs_parents = kwargs.pop('legs_parents')
+    sdf_path = kwargs.pop('sdf_path', '')
+    model_path = kwargs.pop('model_path', '')
+    body_sdf_path = kwargs.pop('body_sdf_path', '')
     assert not kwargs, kwargs
+
+    # Augment parameters
+    repeat = partial(np.repeat, repeats=convention.n_legs//2, axis=0)
+    if np.ndim(leg_offset) == 1:
+        leg_offset = repeat([leg_offset])
 
     # Links and joints
     links = [None for _ in range(options.morphology.n_links())]
@@ -43,7 +52,8 @@ def generate_sdf(model_name, model_version, **kwargs):
     leg_offset = scale*np.array(leg_offset)
 
     # Original
-    body_sdf_path = get_sdf_path(name=model_name, version='body')
+    if not body_sdf_path:
+        body_sdf_path = get_sdf_path(name=model_name, version='body')
     original_model = ModelSDF.read(body_sdf_path)[0]
 
     # Body
@@ -99,9 +109,9 @@ def generate_sdf(model_name, model_version, **kwargs):
             # Shoulder 0
             pose = np.concatenate([
                 body_position +  [
-                    leg_offset[0],
-                    sign*leg_offset[1],
-                    leg_offset[2]
+                    leg_offset[leg_i][0],
+                    sign*leg_offset[leg_i][1],
+                    leg_offset[leg_i][2]
                 ],
                 [0, 0, 0]
             ])
@@ -268,6 +278,8 @@ def generate_sdf(model_name, model_version, **kwargs):
         name=model_name,
         version=model_version,
         sdf=sdf,
+        sdf_path=sdf_path,
+        model_path=model_path,
         options={
             'author': 'Jonathan Arreguit',
             'email': 'jonathan.arreguitoneill@epfl.ch',
@@ -296,6 +308,7 @@ def generate_amphibious(model_name, model_version, **kwargs):
     leg_offset = kwargs.pop('leg_offset', [0, 0.04, -0.02])
     leg_length = kwargs.pop('leg_length', 0.04)
     leg_radius = kwargs.pop('leg_radius', 0.01)
+    body_sdf_path = kwargs.pop('body_sdf_path', '')
 
     # Animat options
     animat_options = AmphibiousOptions.from_options({
@@ -305,10 +318,7 @@ def generate_amphibious(model_name, model_version, **kwargs):
     })
     animat_options.morphology.mesh_directory = 'meshes_{}'.format(model_name)
     convention = AmphibiousConvention(**animat_options.morphology)
-    # print(convention)
-    # print(convention.n_joints_body)
-    # print(convention.n_dof_legs)
-    # print(convention.n_legs)
+
     # Generate SDF
     filepath = generate_sdf(
         model_name=model_name,
@@ -319,15 +329,23 @@ def generate_amphibious(model_name, model_version, **kwargs):
         legs_parents=legs_parents,
         options=animat_options,
         convention=convention,
+        body_sdf_path=body_sdf_path,
         # scale=1,
-        **kwargs
+        **kwargs,
     )
 
     # Setup meshes
-    original_meshes_path = os.path.join(
-        get_model_path(name=model_name, version='body'),
-        'sdf',
-        'meshes_{}'.format(model_name),
+    original_meshes_path = (
+        os.path.join(
+            os.path.dirname(body_sdf_path),
+            'meshes_{}'.format(model_name),
+        )
+        if body_sdf_path
+        else os.path.join(
+            get_model_path(name=model_name, version='body'),
+            'sdf',
+            'meshes_{}'.format(model_name),
+        )
     )
     meshes_output_path = os.path.join(
         os.path.dirname(filepath),
@@ -335,7 +353,4 @@ def generate_amphibious(model_name, model_version, **kwargs):
     )
     if os.path.isdir(meshes_output_path):
         shutil.rmtree(meshes_output_path, ignore_errors=True)
-    shutil.copytree(
-        original_meshes_path,
-        meshes_output_path,
-    )
+    shutil.copytree(original_meshes_path, meshes_output_path)
