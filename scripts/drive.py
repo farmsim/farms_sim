@@ -21,7 +21,7 @@ from Vector_fields2 import (
     orientation_to_reach,
     theoritic_traj,
 )
-from PID_model import PID
+from simple_pid import PID
 
 def main():
     """Main"""
@@ -67,8 +67,7 @@ def main():
     P = 1.3
     I = 0.1
     D = 0.5
-    pid = PID(P,I,D)
-    pid.setSampleTime(0.01)
+    pid = PID(P, I, D, sample_time=clargs.timestep, output_limits=(-0.2, 0.2))
     
     # flag to enable trajectory with obstacle
     MIXED = False
@@ -113,19 +112,19 @@ def main():
             phi, _, _ = quaternion_to_euler(ori[0], ori[1], 
                                                   ori[2], ori[3])
             
-            joint_orientation[joint_idx]=phi
+            joint_orientation[joint_idx] = phi
             
         # Mean orientation of the joints  
         mean_ori = np.mean(joint_orientation)
 
         # set the orientation command for the PID
-        pid.SetPoint = orientation_to_reach(head_pos[0], head_pos[1], MIXED)
-        pid.update(mean_ori)
-        control = pid.output
+        pid.setpoint = orientation_to_reach(head_pos[0], head_pos[1], MIXED)
+        error = ((pid.setpoint - mean_ori + np.pi) % (2*np.pi)) - np.pi
+        control = -pid(pid.setpoint-error, dt=clargs.timestep)
 
         # fill logfile
         mean_ori_t.append(mean_ori)
-        set_t.append(pid.SetPoint)
+        set_t.append(pid.setpoint)
         control_t.append(control)
 
         # Set forward drive
@@ -156,7 +155,7 @@ def main():
                 ).format(
                     iteration,
                     head_pos,
-                    np.degrees(pid.SetPoint),
+                    np.degrees(pid.setpoint),
                     np.degrees(mean_ori),
                     drives.array[iteration+1, 0],
                     drives.array[iteration+1, 1],
