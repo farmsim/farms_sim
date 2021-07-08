@@ -33,7 +33,7 @@ def main():
     pylog.info('Creating simulation')
     clargs, sdf, animat_options, simulation_options, arena = setup_from_clargs()
 
-    # Setup
+    # Setup model
     joints = {
         joint['joint']: joint
         for joint in animat_options['control']['joints']
@@ -76,22 +76,18 @@ def main():
     D = 0.5
     pid = PID(P, I, D, sample_time=clargs.timestep, output_limits=(-0.2, 0.2))
 
-    # flag to enable trajectory with obstacle
+    # Flag to enable trajectory with obstacle
     MIXED = False
 
-    # Initial position
-    traj, X, Y, U, V = theoritic_traj(
-        clargs.position[0], clargs.position[1], MIXED)
-
-    # logfile init
-    mean_ori_t = []
-    pos = []
-    set_t = []
-    control_t = []
+    # Logfile init
+    n_iterations = sim.options['n_iterations']
+    mean_ori = np.zeros(n_iterations)
+    head_pos = np.zeros([n_iterations, 3])
+    setpoints = np.zeros(n_iterations)
+    control = np.zeros(n_iterations)
 
     # Run simulation
     pylog.info('Running simulation')
-    n_iterations = sim.options['n_iterations']
     max_joint = 5
     # init storage of joint orientation
     joint_orientation = np.zeros((max_joint, 1))
@@ -104,39 +100,37 @@ def main():
         ])
 
         # Get 1st joint position in world coordinates
-        head_pos = np.array(links.urdf_position(
+        head_pos[iteration, :] = np.array(links.urdf_position(
             iteration=iteration,
             link_i=0,
         ))
 
-        pos.append(head_pos)
-
         # Get orientation as radian
         for joint_idx in np.arange(0, max_joint, 1):
-            ori = np.array(links.urdf_orientation(
-                iteration=iteration,
-                link_i=joint_idx,
-            ))
-            phi = Rotation.from_quat(ori).as_euler('xyz')[2]
-            joint_orientation[joint_idx] = phi
+            joint_orientation[joint_idx] = Rotation.from_quat(
+                links.urdf_orientation(
+                    iteration=iteration,
+                    link_i=joint_idx,
+                )
+            ).as_euler('xyz')[2]
 
         # Mean orientation of the joints
-        mean_ori = np.mean(joint_orientation)
+        mean_ori[iteration] = np.mean(joint_orientation)
 
-        # set the orientation command for the PID
-        pid.setpoint = orientation_to_reach(head_pos[0], head_pos[1], MIXED)
-        error = ((pid.setpoint - mean_ori + np.pi) % (2*np.pi)) - np.pi
-        control = -pid(pid.setpoint-error, dt=clargs.timestep)
-
-        # fill logfile
-        mean_ori_t.append(mean_ori)
-        set_t.append(pid.setpoint)
-        control_t.append(control)
+        # Set the orientation command for the PID
+        setpoints[iteration] = orientation_to_reach(
+            x=head_pos[iteration, 0],
+            y=head_pos[iteration, 1],
+            MIX=MIXED,
+        )
+        pid.setpoint = setpoints[iteration]
+        error = ((pid.setpoint - mean_ori[iteration] + np.pi)%(2*np.pi)) - np.pi
+        control[iteration] = -pid(pid.setpoint-error, dt=clargs.timestep)
 
         # Set forward drive
-        if arena_type in ['water']:
+        if clargs.arena == 'water':
             drives.array[min(iteration+1, n_iterations-1), 0] = 4.5
-        elif arena_type in ['flat']:
+        elif clargs.arena == 'flat':
             drives.array[min(iteration+1, n_iterations-1), 0] = 1.5
         elif np.count_nonzero(hydro[0]) < 3:
             drives.array[min(iteration+1, n_iterations-1), 0] = 1.5
@@ -144,10 +138,10 @@ def main():
             drives.array[min(iteration+1, n_iterations-1), 0] = 4.5
 
         # Set turn drive
-        drives.array[min(iteration+1, n_iterations-1), 1] = control
+        drives.array[min(iteration+1, n_iterations-1), 1] = control[iteration]
 
         # Print information
-        if not iteration % 100:
+        if not iteration % int(n_iterations/10):
             pylog.info(
                 (
                     'State at iteration {}:'
@@ -159,9 +153,9 @@ def main():
                     '\n  - count hydro: {}'
                 ).format(
                     iteration,
-                    head_pos,
+                    head_pos[iteration],
                     np.degrees(pid.setpoint),
-                    np.degrees(mean_ori),
+                    np.degrees(mean_ori[iteration]),
                     drives.array[iteration+1, 0],
                     drives.array[iteration+1, 1],
                     hydro[0:8],
@@ -180,15 +174,15 @@ def main():
         clargs=clargs,
     )
 
-    #   logfile generation
-    mean_t = np.array(mean_ori_t)
-    pos = np.array(pos)
-    set_t = np.array(set_t)
-    control_t = np.array(control_t)
-    x = np.arange(0, clargs.duration, clargs.timestep)
+    # Theoretical trajectory
+    traj, X, Y, U, V = theoritic_traj(
+        x1=clargs.position[0],
+        x2=clargs.position[1],
+        MIX=MIXED,
+    )
 
     # interpolate the robot's trajectory
-    tck, u = splprep([pos[:, 0], pos[:, 1]], s=0)
+    tck, u = splprep([head_pos[:, 0], head_pos[:, 1]], s=0)
     pos1 = splev(u, tck)
     pos1 = np.array(pos1)
 
@@ -201,10 +195,10 @@ def main():
 
     # Plotting
     figs = plotting(
-        t=x,
+        t=np.arange(0, clargs.duration, clargs.timestep),
         pos=pos1,
-        control=control_t,
-        phi=mean_t, phi_c=set_t,
+        control=control,
+        phi=mean_ori, phi_c=setpoints,
         traj=traj1,
         X=X, Y=Y, U=U, V=V,
         MIXED=MIXED,
