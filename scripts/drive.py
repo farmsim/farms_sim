@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from simple_pid import PID
+from scipy.stats import circmean
 from scipy.spatial import KDTree
 from scipy.spatial.transform import Rotation
 from scipy.interpolate import splprep, splev
@@ -114,11 +115,11 @@ def main():
                 )
             ).as_euler('xyz')[2]
 
-        # Mean orientation of the joints
-        mean_ori[iteration] = np.mean(joint_orientation)
-        mean_ori[iteration] = np.arctan2(
-            np.sum(np.sin(joint_orientation)),
-            np.sum(np.cos(joint_orientation)),
+        # Circular mean orientation of the joints
+        mean_ori[iteration] = circmean(
+            samples=joint_orientation,
+            low=-np.pi,
+            high=np.pi,
         )
 
         # Set the orientation command for the PID
