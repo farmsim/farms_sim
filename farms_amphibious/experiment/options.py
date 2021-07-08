@@ -1426,8 +1426,14 @@ def get_hfsp_robot_kwargs_options(hindlimbs=True, **kwargs):
         density=500.0,
         use_self_collisions=False,
         body_stand_amplitude=0.3,
-        legs_amplitudes=[np.pi/6, np.pi/16, np.pi/16, np.pi/8, np.pi/8],
-        legs_offsets_walking=[0, -np.pi/32, -np.pi/16, 0, 0],
+        legs_amplitudes=[
+            [np.pi/6, np.pi/16, np.pi/16, np.pi/8, np.pi/8],
+            [np.pi/6, np.pi/16, np.pi/16, np.pi/8, np.pi/8],
+        ],
+        legs_offsets_walking=[
+            [0, -np.pi/32, -np.pi/16, 0, 0],
+            [0, -np.pi/32, -np.pi/16, 0, 0],
+        ],
         legs_offsets_swimming=[-0.5*np.pi, -0.25*np.pi],
         gain_amplitude=gain_amplitude,
         offsets_bias=joints_offsets,
