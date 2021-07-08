@@ -106,7 +106,7 @@ def main():
         ))
 
         # Get orientation as radian
-        for joint_idx in np.arange(0, max_joint, 1):
+        for joint_idx in np.arange(max_joint):
             joint_orientation[joint_idx] = Rotation.from_quat(
                 links.urdf_orientation(
                     iteration=iteration,
@@ -116,6 +116,10 @@ def main():
 
         # Mean orientation of the joints
         mean_ori[iteration] = np.mean(joint_orientation)
+        mean_ori[iteration] = np.arctan2(
+            np.sum(np.sin(joint_orientation)),
+            np.sum(np.cos(joint_orientation)),
+        )
 
         # Set the orientation command for the PID
         setpoints[iteration] = orientation_to_reach(
