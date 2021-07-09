@@ -312,104 +312,111 @@ def draw_line(xlim, ylim, yinit, integration_t, k1, k2, theta, p1, p2):
 
     return y, X, Y, U, V
 
-def orientation_to_reach(x, y, MIX):
+
+def orientation_to_reach(x, y, MIX, method='line'):
     # # code here the way of moving, could be a combination of differential
     # # equation or only a simple one as limit cycle or line following
 
-    ### LINE #####
-    k1 = 2
-    k2 = 0.7
-    theta = np.pi/4
-    p1 = 0
-    p2 = 0
-    pos = [x,y]
+    if method == 'line':
+        ### LINE #####
+        k1 = 2
+        k2 = 0.7
+        theta = np.pi/4
+        p1 = 0
+        p2 = 0
+        pos = [x,y]
 
+        dx1, dx2 = vf_line(pos, 0, k1, k2, theta, p1, p2)
 
-    dx1, dx2 = vf_line(pos, 0, k1, k2, theta, p1, p2)
+        N = np.sqrt(dx1 ** 2 + dx1 ** 2)
+        dx1 = (dx1 / N)
+        dx2 = (dx2 / N)
 
-    N = np.sqrt(dx1 ** 2 + dx1 ** 2)
-    dx1 = (dx1 / N)
-    dx2 = (dx2 / N)
+        return np.arctan2(dx2,dx1)
 
-    psi = np.arctan2(dx2,dx1)
+    #### OBSTACLE ####
+    if MIX:
+        K1 = 0.01 # Trajectory aggressiveness
+        r_obstacle = 1.5 # Obstacle radius
+        po = [3.8,0] # Obstacle's center (x,y) coordinates
+        pos = [x,y]
 
+        dxo = vf_obstacle(pos, 0, K1, r_obstacle, po)
 
-    # #### OBSTACLE ####
-    # if MIX:
-    #     K1 = 0.01 # Trajectory aggressiveness
-    #     r_obstacle = 1.5 # Obstacle radius
-    #     po = [3.8,0] # Obstacle's center (x,y) coordinates
-    #     pos = [x,y]
+        # Normalize arrows
+        No = np.sqrt(dxo[0]** 2 + dxo[1]** 2)
+        Uo = np.nan_to_num(dxo[0]/ No)
+        Vo = np.nan_to_num(dxo[1] / No)
+    else:
+        Uo = 0
+        Vo = 0
 
-    #     dxo = vf_obstacle(pos, 0, K1, r_obstacle, po)
+    if method == 'circle':
 
-    #     # Normalize arrows
-    #     No = np.sqrt(dxo[0]** 2 + dxo[1]** 2)
-    #     Uo = np.nan_to_num(dxo[0]/ No)
-    #     Vo = np.nan_to_num(dxo[1] / No)
-    # else:
-    #     Uo = 0
-    #     Vo = 0
+        #### CIRCLE ####
+        K2 = 5 # Trajectory aggressiveness
+        rotation = 0 # Set to 0 for CW, 1 for ACW
+        r = 4 # radius of circle
+        pc = [0,0] # Circle's center (x,y) coordinates
 
-    # #### CIRCLE ####
-    # K2 = 5 # Trajectory aggressiveness
-    # rotation = 0 # Set to 0 for CW, 1 for ACW
-    # r = 4 # radius of circle
-    # pc = [0,0] # Circle's center (x,y) coordinates
+        # cartesian position to polar position
+        R = np.sqrt((x-pc[0])**2+(y-pc[1])**2)
+        T = np.nan_to_num(np.arctan2(y-pc[1],x-pc[0]))
+        pos=(R,T)
 
-    # # cartesian position to polar position
-    # R = np.sqrt((x-pc[0])**2+(y-pc[1])**2)
-    # T = np.nan_to_num(np.arctan2(y-pc[1],x-pc[0]))
-    # pos=(R,T)
+        # polar derivatives in function of position
+        dx1, dx2 = vf_circle(pos, 0, K2, rotation, r)
 
-    # # polar derivatives in function of position
-    # dx1, dx2 = vf_circle(pos, 0, K2, rotation, r)
+        # polar derivatives to cartesian derivatives
+        dx = dx1*np.cos(T)+R*dx2*-np.sin(T)
+        dy = dx1*np.sin(T)+R*dx2*np.cos(T)
 
-    # # polar derivatives to cartesian derivatives
-    # dx = dx1*np.cos(T)+R*dx2*-np.sin(T)
-    # dy = dx1*np.sin(T)+R*dx2*np.cos(T)
+        # Normalize arrows
+        Nc = np.sqrt(dx** 2 + dy** 2)
+        Uc = np.nan_to_num(dx / Nc)
+        Vc = np.nan_to_num(dy / Nc)
 
-    # # Normalize arrows
-    # Nc = np.sqrt(dx** 2 + dy** 2)
-    # Uc = np.nan_to_num(dx / Nc)
-    # Vc = np.nan_to_num(dy / Nc)
-
-    # psi = np.arctan2(Vc+Vo,Uc+Uo)
+        psi = np.arctan2(Vc+Vo, Uc+Uo)
 
     return psi
 
-def theoritic_traj(x1,x2, MIX):
+
+def theoretical_traj(x1, x2, MIX, method='line'):
+
     # Integration time
     integration_t = 100
 
     # vector field param
-    xlim=(-10,10)
-    ylim=(-10,10)
+    xlim=(-10, 10)
+    ylim=(-10, 10)
+    y_init = [x1, x2]
 
-    ## LINE ##
-    k1 = 2
-    k2 = 0.7
-    theta = np.pi/4
-    p1 = 0
-    p2 = 0
-    yinit = [x1,x2]
-    y, X, Y, U, V = draw_line(xlim, ylim, yinit, integration_t, k1, k2, theta, p1, p2)
+    if method == 'line':
 
+        ## LINE ##
+        k1 = 2
+        k2 = 0.7
+        theta = np.pi/4
+        p1 = 0
+        p2 = 0
+        y, X, Y, U, V = draw_line(xlim, ylim, y_init, integration_t, k1, k2, theta, p1, p2)
 
-    # ## CIRCLE ##
-    # k2 = 1 # Trajectory aggressiveness
-    # rotation = 0 # Set to 0 for CW, 1 for ACW
-    # r = 4 # diameter of circle
-    # pc = [0,0] # Circle's center (x,y) coordinates
+    elif method == 'circle':
 
-    # if MIX:
-    #     ## OBSTACLE ##
-    #     k1 = 0.01 # Trajectory aggressiveness
-    #     r_obstacle = 1.5 # Obstacle radius
-    #     po = [3.8,0] # Obstacle's center (x,y) coordinates
-    #     y_init = [x1,x2]
-    #     y, X, Y, U, V = draw_mixed(xlim, ylim, y_init, integration_t, k1, k2, po, pc, r_obstacle, rotation, r)
-    # else:
-    #     y, X, Y, U, V = draw_circle(xlim, ylim, y_init, integration_t, k2, rotation, r, pc[0], pc[1])
+        ## CIRCLE ##
+        k2 = 5 # Trajectory aggressiveness
+        rotation = 0 # Set to 0 for CW, 1 for ACW
+        r = 4 # diameter of circle
+        pc = [0,0] # Circle's center (x,y) coordinates
+
+        if MIX:
+            ## OBSTACLE ##
+            k1 = 0.01 # Trajectory aggressiveness
+            r_obstacle = 1.5 # Obstacle radius
+            po = [3.8,0] # Obstacle's center (x,y) coordinates
+            y_init = [x1, x2]
+            y, X, Y, U, V = draw_mixed(xlim, ylim, y_init, integration_t, k1, k2, po, pc, r_obstacle, rotation, r)
+        else:
+            y, X, Y, U, V = draw_circle(xlim, ylim, y_init, integration_t, k2, rotation, r, pc[0], pc[1])
 
     return y, X, Y, U, V
