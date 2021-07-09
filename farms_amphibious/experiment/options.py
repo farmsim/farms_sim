@@ -22,6 +22,7 @@ def get_animat_options_from_model(animat, version, kwargs_only=False, **options)
             'krock': get_krock_kwargs_options,
             'orobot': get_orobot_kwargs_options,
             'hfsp_robot': get_hfsp_robot_kwargs_options,
+            'agnathax': get_agnathax_kwargs_options,
         } if kwargs_only else {
             'salamander': get_salamander_options,
             'polypterus': get_polypterus_options,
@@ -30,6 +31,7 @@ def get_animat_options_from_model(animat, version, kwargs_only=False, **options)
             'krock': get_krock_options,
             'orobot': get_orobot_options,
             'hfsp_robot': get_hfsp_robot_options,
+            'agnathax': get_agnathax_options,
         }
     )[animat]
     if animat == 'hfsp_robot' and version == 'polypterus_0':
@@ -1479,3 +1481,65 @@ def get_hfsp_robot_options(slow=2, **kwargs):
         oscillator['frequency_gain'] /= slow
         oscillator['frequency_bias'] /= slow
     return animat_options
+
+
+def get_agnathax_kwargs_options(**kwargs):
+    """Agnathax options"""
+    n_joints_body = kwargs.pop('n_joints_body', 11)
+    links_names = kwargs.pop(
+        'links_names',
+        ['head']
+        + ['body_{}'.format(i) for i in range(n_joints_body-1)]
+        + ['tail'],
+    )
+    joints_names = kwargs.pop(
+        'joints_names',
+        ['joint_{}'.format(i) for i in range(n_joints_body)]
+    )
+    kwargs_options = {
+        'spawn_loader': SpawnLoader.PYBULLET,  # SpawnLoader.FARMS,
+        'spawn_position': [0, 0, 0.2*0.07],
+        'spawn_orientation': [0, 0, 0],
+        'use_self_collisions': False,
+        'default_control_type': ControlType.POSITION,  # ControlType.TORQUE,
+        'scale_hydrodynamics': 10,
+        'n_legs': 0,
+        'n_dof_legs': 0,
+        'n_joints_body': n_joints_body,
+        'links_names': links_names,
+        'joints_names': joints_names,
+        'drag_coefficients': [
+            [
+                [-1e-1, -1e0, -1e0]
+                if i < 13
+                else [-1e-4, -1e-4, -1e-4]
+                if (i - 12) % 4 > 1
+                else [0, 0, 0],
+                [-1e-8, -1e-8, -1e-8],
+            ]
+            for i in range((n_joints_body+1))
+        ],
+        'drives_init': [2, 0],
+        'weight_osc_body': 1e1,
+        'weight_sens_contact_intralimb': 0,
+        'weight_sens_contact_opposite': 0,
+        'weight_sens_contact_following': 0,
+        'weight_sens_contact_diagonal': 0,
+        'weight_sens_hydro_freq': 0,
+        'weight_sens_hydro_amp': 0,
+        'body_stand_amplitude': 0.2,
+        'body_stand_shift': np.pi/2,
+        'muscle_alpha': 1e-3,
+        'muscle_beta': -1e-6,
+        'muscle_gamma': 2e3,
+        'muscle_delta': -1e-8,
+    }
+    kwargs_options.update(kwargs)
+    return kwargs_options
+
+
+def get_agnathax_options(**kwargs):
+    """Agnathax options"""
+    kwargs_options = get_agnathax_kwargs_options(**kwargs)
+    options = AmphibiousOptions.from_options(kwargs_options)
+    return options
