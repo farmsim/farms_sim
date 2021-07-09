@@ -134,6 +134,11 @@ class AmphibiousMorphologyOptions(MorphologyOptions):
             == len(links_friction_rolling)
             == len(drag_coefficients)
         ), (
+            'links_name,'
+            ' links_friction_lateral,'
+            ' links_friction_spinning,'
+            ' links_friction_rolling,'
+            ' drag_coefficients',
             np.shape(links_names),
             np.shape(links_friction_lateral),
             np.shape(links_friction_spinning),
