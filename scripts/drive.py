@@ -23,8 +23,36 @@ from farms_amphibious.experiment.simulation import (
 
 from Vector_fields2 import (
     orientation_to_reach,
-    theoritic_traj,
+    theoretical_traj,
 )
+
+
+class DescendingDrive(object):
+    """Descending drive"""
+
+    def __init__(self, drives):
+        super(DescendingDrive, self).__init__()
+        self._drives = drives
+
+
+class OrientationFollower(DescendingDrive):
+    """Descending drive to follow orientation"""
+
+    def __init__(self, drives, timestep, **kwargs):
+        super(OrientationFollower, self).__init__(drives=drives)
+        self.timestep = timestep
+        self.pid = PID(
+            Kp=1.3, Ki=0.1, Kd=0.5,
+            sample_time=timestep,
+            output_limits=(-0.2, 0.2),
+        )
+
+    def update(self, iteration, goal, current):
+        """Update drive"""
+        self.pid.setpoint = goal
+        error = ((goal - current + np.pi)%(2*np.pi)) - np.pi
+        self._drives.array[iteration, 1] = -self.pid(goal-error, dt=self.timestep)
+        return self._drives.array[iteration, :]
 
 
 def main():
@@ -33,6 +61,8 @@ def main():
     # Setup simulation
     pylog.info('Creating simulation')
     clargs, sdf, animat_options, simulation_options, arena = setup_from_clargs()
+
+    assert clargs.drive in ('line', 'circle')
 
     # Setup model
     joints = {
@@ -71,11 +101,8 @@ def main():
     # Arena data
     arena_type = clargs.arena
 
-    # PID parameters
-    P = 1.3
-    I = 0.1
-    D = 0.5
-    pid = PID(P, I, D, sample_time=clargs.timestep, output_limits=(-0.2, 0.2))
+    # Descending drive
+    drive = OrientationFollower(drives=drives, timestep=clargs.timestep)
 
     # Flag to enable trajectory with obstacle
     MIXED = False
@@ -127,10 +154,13 @@ def main():
             x=head_pos[iteration, 0],
             y=head_pos[iteration, 1],
             MIX=MIXED,
+            method=clargs.drive,
         )
-        pid.setpoint = setpoints[iteration]
-        error = ((pid.setpoint - mean_ori[iteration] + np.pi)%(2*np.pi)) - np.pi
-        control[iteration] = -pid(pid.setpoint-error, dt=clargs.timestep)
+        control[iteration] = drive.update(
+            iteration=iteration,
+            goal=setpoints[iteration],
+            current=mean_ori[iteration],
+        )[1]
 
         # Set forward drive
         if clargs.arena == 'water':
@@ -159,7 +189,7 @@ def main():
                 ).format(
                     iteration,
                     head_pos[iteration],
-                    np.degrees(pid.setpoint),
+                    np.degrees(drive.pid.setpoint),
                     np.degrees(mean_ori[iteration]),
                     drives.array[iteration+1, 0],
                     drives.array[iteration+1, 1],
@@ -180,18 +210,19 @@ def main():
     )
 
     # Theoretical trajectory
-    traj, X, Y, U, V = theoritic_traj(
+    traj, X, Y, U, V = theoretical_traj(
         x1=clargs.position[0],
         x2=clargs.position[1],
         MIX=MIXED,
+        method=clargs.drive,
     )
 
-    # interpolate the robot's trajectory
+    # Interpolate the robot's trajectory
     tck, u = splprep([head_pos[:, 0], head_pos[:, 1]], s=0)
     pos1 = splev(u, tck)
     pos1 = np.array(pos1)
 
-    # interpolate the robot's theoritic trajectory
+    # Interpolate the robot's theoritic trajectory
     tck1, u1 = splprep([traj[:, 0], traj[:, 1]], s=0)
     traj1 = splev(u1, tck1)
     traj1 = np.array(traj1)
@@ -240,9 +271,9 @@ def plotting(t, pos, control, phi, phi_c, traj, X, Y, U, V, MIXED):
     # Orientation plot
     fig3, ax3 = plt.subplots()
     plt.quiver(X, Y, U, V, angles="xy")
+    ax3.plot(traj[0, :], traj[1, :], label='theoritic trajectory')
     ax3.plot(pos[0, :], pos[1, :], label='robot position')
     ax3.plot(pos[0, 0], pos[1, 0], 'x', label='Pleurobot initial position')
-    ax3.plot(traj[0, :], traj[1, :], label='theoritic trajectory')
     if MIXED:
         circle1 = plt.Circle(
             [3.8, 0],
@@ -265,10 +296,8 @@ def plotting(t, pos, control, phi, phi_c, traj, X, Y, U, V, MIXED):
 
 def assess_traj(traj, t_traj):
     """Assess trajectory"""
-
     tree = KDTree(np.transpose(t_traj))
     dd, ii = tree.query(np.transpose(traj), k=1)
-
     return dd, ii, np.sum(dd)
 
 
