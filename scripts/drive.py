@@ -38,9 +38,11 @@ class DescendingDrive(object):
 class OrientationFollower(DescendingDrive):
     """Descending drive to follow orientation"""
 
-    def __init__(self, drives, timestep, **kwargs):
+    def __init__(self, drives, hydrodynamics, timestep, **kwargs):
         super(OrientationFollower, self).__init__(drives=drives)
+        self.hydrodynamics = hydrodynamics
         self.timestep = timestep
+        self.n_iterations = np.shape(drives.array)[0]
         self.pid = PID(
             Kp=kwargs.pop('Kp', 1.3),
             Ki=kwargs.pop('Ki', 0.1),
@@ -49,7 +51,7 @@ class OrientationFollower(DescendingDrive):
             output_limits=(-0.2, 0.2),
         )
 
-    def update_command(self, pos, drive, mix):
+    def update_turn_command(self, pos, drive, mix):
         """Update command"""
         self.pid.setpoint = orientation_to_reach(
             x=pos[0],
@@ -59,26 +61,46 @@ class OrientationFollower(DescendingDrive):
         )
         return self.pid.setpoint
 
-    def update_control(self, iteration, command, heading):
+    def update_turn_control(self, iteration, command, heading):
         """Update drive"""
         error = ((command - heading + np.pi)%(2*np.pi)) - np.pi
-        self._drives.array[iteration, 1] = -self.pid(
+        self._drives.array[min(iteration+1, self.n_iterations-1), 1] = -self.pid(
             command-error,
             dt=self.timestep,
         )
-        return self._drives.array[iteration, :]
+        return self._drives.array[iteration, 1]
 
-    def update(self, iteration, pos, heading, drive, mix):
+    def update_foward_control(self, iteration, arena):
         """Update drive"""
-        command = self.update_command(
+        hydro = self.hydrodynamics.force(iteration=iteration, sensor_i=0)
+        # Set forward drive
+        if arena == 'water':
+            self._drives.array[min(iteration+1, self.n_iterations-1), 0] = 4.5
+        elif arena == 'flat':
+            self._drives.array[min(iteration+1, self.n_iterations-1), 0] = 1.5
+        elif np.count_nonzero(hydro) < 3:
+            self._drives.array[min(iteration+1, self.n_iterations-1), 0] = 1.5
+        else:
+            self._drives.array[min(iteration+1, self.n_iterations-1), 0] = 4.5
+
+        # # Set turn drive
+        # drives.array[min(iteration+1, n_iterations-1), 1] = control[iteration]
+
+    def update(self, iteration, pos, heading, drive, arena, mix):
+        """Update drive"""
+        command = self.update_turn_command(
             pos=pos,
             drive=drive,
             mix=mix,
         )
-        control = self.update_control(
+        control = self.update_turn_control(
             iteration=iteration,
             command=command,
             heading=heading,
+        )
+        self.update_foward_control(
+            iteration=iteration,
+            arena=arena,
         )
         return command, control
 
@@ -123,14 +145,21 @@ def main():
     data = sim.animat().data
     links = data.sensors.links
     # contact = data.sensors.contacts
-    hydrodynamic = data.sensors.hydrodynamics
+    hydrodynamics = data.sensors.hydrodynamics
     drives = data.network.drives
 
     # Arena data
     arena_type = clargs.arena
 
     # Descending drive
-    drive = OrientationFollower(drives=drives, timestep=clargs.timestep)
+    drive = OrientationFollower(
+        Kp=0.2,
+        Ki=0,
+        Kd=0,
+        drives=drives,
+        hydrodynamics=hydrodynamics,
+        timestep=clargs.timestep,
+    )
 
     # Flag to enable trajectory with obstacle
     MIXED = False
@@ -151,7 +180,7 @@ def main():
 
         # Get hydrodynamics forces
         hydro = np.array([
-            hydrodynamic.force(iteration=iteration, sensor_i=sensor_i)
+            hydrodynamics.force(iteration=iteration, sensor_i=sensor_i)
             for sensor_i in range(14)
         ])
 
@@ -178,27 +207,14 @@ def main():
         )
 
         # Set the orientation command for the PID
-        setpoints[iteration], _control = drive.update(
+        setpoints[iteration], control[iteration] = drive.update(
             iteration=iteration,
             pos=head_pos[iteration, :],
             heading=mean_ori[iteration],
             drive=clargs.drive,
+            arena=clargs.arena,
             mix=MIXED,
         )
-        control[iteration] = _control[1]
-
-        # Set forward drive
-        if clargs.arena == 'water':
-            drives.array[min(iteration+1, n_iterations-1), 0] = 4.5
-        elif clargs.arena == 'flat':
-            drives.array[min(iteration+1, n_iterations-1), 0] = 1.5
-        elif np.count_nonzero(hydro[0]) < 3:
-            drives.array[min(iteration+1, n_iterations-1), 0] = 1.5
-        else:
-            drives.array[min(iteration+1, n_iterations-1), 0] = 4.5
-
-        # Set turn drive
-        drives.array[min(iteration+1, n_iterations-1), 1] = control[iteration]
 
         # Print information
         if not iteration % int(n_iterations/10):
@@ -208,7 +224,7 @@ def main():
                     '\n  - Mid position: {}'
                     '\n  - Orientation set point: {}'
                     '\n  - Mean z orientation: {}'
-                    '\n  - Drives : [{}, {}]'
+                    '\n  - Drives: [{}, {}]'
                     '\n  - hydro forces: {}'
                     '\n  - count hydro: {}'
                 ).format(
