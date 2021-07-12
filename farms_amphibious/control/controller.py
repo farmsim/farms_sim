@@ -18,7 +18,7 @@ class AmphibiousController(ModelController):
             max_torques={
                 joint.joint: joint.max_torque
                 for joint in animat_options.control.joints
-            }
+            },
         )
         self.network = NetworkODE(animat_data)
         self.animat_data = animat_data

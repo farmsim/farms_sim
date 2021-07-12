@@ -106,6 +106,10 @@ def simulation_setup(animat_sdf, animat_options, arena, **kwargs):
                 timestep=simulation_options.timestep,
                 n_iterations=simulation_options.n_iterations,
                 animat_data=animat_data,
+                max_torques={
+                    joint.joint: joint.max_torque
+                    for joint in animat_options.control.joints
+                },
             )
             if animat_options.control.kinematics_file
             else MantaController(
