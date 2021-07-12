@@ -7,7 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import farms_pylog as pylog
-from farms_models.utils import get_model_path
+from farms_models.utils import get_model_path, get_sdf_path
 from farms_bullet.utils.profile import profile
 from farms_bullet.simulation.options import SimulationOptions
 from farms_amphibious.utils.prompt import prompt
@@ -34,12 +34,17 @@ def main():
         ),
         kinematics_sampling=5e-2,  # [s]
     )
-    sdf, animat_options = get_pleurobot_options(**kwargs)
+    animat_options = get_pleurobot_options(**kwargs, passive=False)
+    sdf = get_sdf_path('pleurobot', '1')
+
+    # Torque limits
+    for joint in animat_options.control.joints:
+        joint.max_torque = 20
 
     (
         simulation_options,
         arena,
-    ) = amphibious_options(animat_options, use_water_arena=False)
+    ) = amphibious_options(animat_options)
 
     # Save options
     animat_options_filename = 'pleurobot_animat_options.yaml'
