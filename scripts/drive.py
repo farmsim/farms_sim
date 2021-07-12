@@ -42,17 +42,45 @@ class OrientationFollower(DescendingDrive):
         super(OrientationFollower, self).__init__(drives=drives)
         self.timestep = timestep
         self.pid = PID(
-            Kp=1.3, Ki=0.1, Kd=0.5,
+            Kp=kwargs.pop('Kp', 1.3),
+            Ki=kwargs.pop('Ki', 0.1),
+            Kd=kwargs.pop('Kd', 0.5),
             sample_time=timestep,
             output_limits=(-0.2, 0.2),
         )
 
-    def update(self, iteration, goal, current):
+    def update_command(self, pos, drive, mix):
+        """Update command"""
+        self.pid.setpoint = orientation_to_reach(
+            x=pos[0],
+            y=pos[1],
+            MIX=mix,
+            method=drive,
+        )
+        return self.pid.setpoint
+
+    def update_control(self, iteration, command, heading):
         """Update drive"""
-        self.pid.setpoint = goal
-        error = ((goal - current + np.pi)%(2*np.pi)) - np.pi
-        self._drives.array[iteration, 1] = -self.pid(goal-error, dt=self.timestep)
+        error = ((command - heading + np.pi)%(2*np.pi)) - np.pi
+        self._drives.array[iteration, 1] = -self.pid(
+            command-error,
+            dt=self.timestep,
+        )
         return self._drives.array[iteration, :]
+
+    def update(self, iteration, pos, heading, drive, mix):
+        """Update drive"""
+        command = self.update_command(
+            pos=pos,
+            drive=drive,
+            mix=mix,
+        )
+        control = self.update_control(
+            iteration=iteration,
+            command=command,
+            heading=heading,
+        )
+        return command, control
 
 
 def main():
@@ -150,17 +178,14 @@ def main():
         )
 
         # Set the orientation command for the PID
-        setpoints[iteration] = orientation_to_reach(
-            x=head_pos[iteration, 0],
-            y=head_pos[iteration, 1],
-            MIX=MIXED,
-            method=clargs.drive,
-        )
-        control[iteration] = drive.update(
+        setpoints[iteration], _control = drive.update(
             iteration=iteration,
-            goal=setpoints[iteration],
-            current=mean_ori[iteration],
-        )[1]
+            pos=head_pos[iteration, :],
+            heading=mean_ori[iteration],
+            drive=clargs.drive,
+            mix=MIXED,
+        )
+        control[iteration] = _control[1]
 
         # Set forward drive
         if clargs.arena == 'water':
