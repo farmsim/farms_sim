@@ -3,6 +3,7 @@
 
 import os
 import time
+from abc import ABC, abstractmethod
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -11,7 +12,6 @@ from simple_pid import PID
 from scipy.stats import circmean
 from scipy.spatial import KDTree
 from scipy.spatial.transform import Rotation
-from scipy.interpolate import splprep, splev
 
 import farms_pylog as pylog
 from farms_bullet.model.control import ControlType
@@ -22,12 +22,18 @@ from farms_amphibious.experiment.simulation import (
 )
 
 
-class PotentialMap:
+class PotentialMap(ABC):
     """Potential map"""
 
+    @abstractmethod
     def heading(self, pos):
         """Heading"""
         raise NotImplementedError
+
+    @staticmethod
+    def limit_cycle():
+        """Limit cycle"""
+        return None
 
     def heading_cartesian(self, pos, radius=1):
         """Heading cartesian"""
@@ -37,27 +43,25 @@ class PotentialMap:
     def mesh(self, lin_x, lin_y, radius=1):
         """Mesh"""
         dimensions = (len(lin_x), len(lin_y))
-        X, Y = np.meshgrid(lin_x, lin_y, indexing='ij')
-        U, V = np.zeros(dimensions), np.zeros(dimensions)
-        for test in X, Y, U, V:
-            assert test.shape == dimensions, '{} != {}'.format(test.shape, dimensions)
+        vec_x, vec_y = np.meshgrid(lin_x, lin_y, indexing='ij')
+        vec_u, vec_v = np.zeros(dimensions), np.zeros(dimensions)
         for i in range(dimensions[0]):
             for j in range(dimensions[1]):
-                U[i, j], V[i, j] = self.heading_cartesian(
-                    pos=np.array([X[i, j], Y[i, j]]),
+                vec_u[i, j], vec_v[i, j] = self.heading_cartesian(
+                    pos=np.array([vec_x[i, j], vec_y[i, j]]),
                     radius=radius,
                 )
-        return X, Y, U, V
+        return vec_x, vec_y, vec_u, vec_v
 
 
 class StraightLinePotentialMap(PotentialMap):
     """Straight line potential map"""
 
     def __init__(self, **kwargs):
-        super(StraightLinePotentialMap, self).__init__()
-        self.gain = 1
-        self.origin = np.zeros(2)
-        self.theta = np.pi/8
+        super().__init__()
+        self.gain = kwargs.pop('gain', 1)
+        self.origin = kwargs.pop('origin', np.zeros(2))
+        self.theta = kwargs.pop('theta', np.pi/8)
 
     def heading(self, pos):
         """Heading"""
@@ -71,8 +75,8 @@ class StraightLinePotentialMap(PotentialMap):
 
     def limit_cycle(self):
         """Limit cycle"""
-        complex = np.exp(1j*self.theta)
-        vector = np.array([complex.real, complex.imag])
+        vector_complex = np.exp(1j*self.theta)
+        vector = np.array([vector_complex.real, vector_complex.imag])
         return np.array([self.origin + 1e3*vector, self.origin - 1e3*vector])
 
 
@@ -80,11 +84,11 @@ class CirclePotentialMap(PotentialMap):
     """Circle potential map"""
 
     def __init__(self, **kwargs):
-        super(CirclePotentialMap, self).__init__()
-        self.gain = 1
-        self.radius = 4
-        self.origin = np.zeros(2)
-        self.direction = -1
+        super().__init__()
+        self.gain = kwargs.pop('gain', 1)
+        self.origin = kwargs.pop('origin', np.zeros(2))
+        self.radius = kwargs.pop('radius', 4)
+        self.direction = kwargs.pop('direction', -1)
 
     def heading(self, pos):
         """Heading"""
@@ -106,32 +110,42 @@ class CirclePotentialMap(PotentialMap):
         return self.origin + vectors
 
 
-class DescendingDrive(object):
+class DescendingDrive:
     """Descending drive"""
 
     def __init__(self, drives):
-        super(DescendingDrive, self).__init__()
+        super().__init__()
         self._drives = drives
+        self.n_iterations = np.shape(drives.array)[0]
+        self.setpoints = np.zeros(self.n_iterations)
+        self.control = np.zeros(self.n_iterations)
+
+    def set_forward_drive(self, iteration, value):
+        """Set forward drive"""
+        self._drives.array[min(iteration+1, self.n_iterations-1), 0] = value
+
+    def set_turn_drive(self, iteration, value):
+        """Set turn drive"""
+        self._drives.array[min(iteration+1, self.n_iterations-1), 1] = value
 
 
 class OrientationFollower(DescendingDrive):
     """Descending drive to follow orientation"""
 
     def __init__(self, strategy, drives, hydrodynamics, timestep, **kwargs):
-        super(OrientationFollower, self).__init__(drives=drives)
+        super().__init__(drives=drives)
         self.strategy = strategy
         self.hydrodynamics = hydrodynamics
         self.timestep = timestep
-        self.n_iterations = np.shape(drives.array)[0]
         self.pid = PID(
             Kp=kwargs.pop('Kp', 1.3),
             Ki=kwargs.pop('Ki', 0.1),
             Kd=kwargs.pop('Kd', 0.5),
             sample_time=timestep,
-            output_limits=(-0.2, 0.2),
+            output_limits=kwargs.pop('output_limits', (-0.2, 0.2)),
         )
 
-    def update_turn_command(self, pos, method, mix):
+    def update_turn_command(self, pos):
         """Update command"""
         self.pid.setpoint = self.strategy.heading(pos)
         return self.pid.setpoint
@@ -139,32 +153,28 @@ class OrientationFollower(DescendingDrive):
     def update_turn_control(self, iteration, command, heading):
         """Update drive"""
         error = ((command - heading + np.pi)%(2*np.pi)) - np.pi
-        self._drives.array[min(iteration+1, self.n_iterations-1), 1] = -self.pid(
-            command-error,
-            dt=self.timestep,
+        self.set_turn_drive(
+            iteration=iteration,
+            value=-self.pid(command-error, dt=self.timestep),
         )
         return self._drives.array[iteration, 1]
 
     def update_foward_control(self, iteration, arena):
         """Update drive"""
         hydro = self.hydrodynamics.force(iteration=iteration, sensor_i=0)
-        # Set forward drive
-        if arena == 'water':
-            self._drives.array[min(iteration+1, self.n_iterations-1), 0] = 4.5
-        elif arena == 'flat':
-            self._drives.array[min(iteration+1, self.n_iterations-1), 0] = 1.5
-        elif np.count_nonzero(hydro) < 3:
-            self._drives.array[min(iteration+1, self.n_iterations-1), 0] = 1.5
-        else:
-            self._drives.array[min(iteration+1, self.n_iterations-1), 0] = 4.5
-
-    def update(self, iteration, pos, heading, method, arena, mix):
-        """Update drive"""
-        command = self.update_turn_command(
-            pos=pos,
-            method=method,
-            mix=mix,
+        self.set_forward_drive(
+            iteration=iteration,
+            value=(
+                4.5 if arena == 'water'
+                else 1.5 if arena == 'flat'
+                else 1.5 if np.count_nonzero(hydro) < 3
+                else 4.5
+            ),
         )
+
+    def update(self, iteration, pos, heading, arena):
+        """Update drive"""
+        command = self.update_turn_command(pos=pos)
         control = self.update_turn_control(
             iteration=iteration,
             command=command,
@@ -174,6 +184,8 @@ class OrientationFollower(DescendingDrive):
             iteration=iteration,
             arena=arena,
         )
+        self.setpoints[iteration] = command
+        self.control[iteration] = control
         return command, control
 
 
@@ -183,7 +195,6 @@ def main():
     # Setup simulation
     pylog.info('Creating simulation')
     clargs, sdf, animat_options, simulation_options, arena = setup_from_clargs()
-
     assert clargs.drive in ('line', 'circle')
 
     # Setup model
@@ -220,9 +231,6 @@ def main():
     hydrodynamics = data.sensors.hydrodynamics
     drives = data.network.drives
 
-    # Arena data
-    arena_type = clargs.arena
-
     # Descending drive
     drive = OrientationFollower(
         strategy={
@@ -237,15 +245,10 @@ def main():
         Kd=0,
     )
 
-    # Flag to enable trajectory with obstacle
-    MIXED = False
-
     # Logfile init
     n_iterations = sim.options['n_iterations']
     mean_ori = np.zeros(n_iterations)
     head_pos = np.zeros([n_iterations, 3])
-    setpoints = np.zeros(n_iterations)
-    control = np.zeros(n_iterations)
 
     # Run simulation
     pylog.info('Running simulation')
@@ -283,13 +286,11 @@ def main():
         )
 
         # Set the orientation command for the PID
-        setpoints[iteration], control[iteration] = drive.update(
+        drive.update(
             iteration=iteration,
             pos=head_pos[iteration, :],
             heading=mean_ori[iteration],
-            method=clargs.drive,
             arena=clargs.arena,
-            mix=MIXED,
         )
 
         # Print information
@@ -327,28 +328,11 @@ def main():
     )
 
     # Plotting
-    arrow_res = 0.5
-    X, Y, U, V = drive.strategy.mesh(
-        lin_x=np.arange(
-            start=np.floor(np.min(head_pos[:, 0])),
-            stop=np.ceil(np.max(head_pos[:, 0]))+1,
-            step=arrow_res,
-        ),
-        lin_y=np.arange(
-            start=np.floor(np.min(head_pos[:, 1])),
-            stop=np.ceil(np.max(head_pos[:, 1]))+1,
-            step=arrow_res,
-        ),
-        radius=1.5*arrow_res,
-    )
     figs = plotting(
-        t=np.arange(0, clargs.duration, clargs.timestep),
+        times=np.arange(0, clargs.duration, clargs.timestep),
         pos=head_pos.T,
-        control=control,
-        phi=mean_ori, phi_c=setpoints,
-        limit_cycle=drive.strategy.limit_cycle(),
-        X=X, Y=Y, U=U, V=V,
-        MIXED=MIXED,
+        drive=drive,
+        phi=mean_ori,
     )
 
     if clargs.save:
@@ -361,22 +345,22 @@ def main():
         plt.show()
 
 
-def plotting(t, pos, control, phi, phi_c, limit_cycle, X, Y, U, V, MIXED):
+def plotting(times, pos, drive, phi):
     """Plotting"""
 
     # Gain plot
-    fig, ax = plt.subplots()
-    ax.plot(t, control, label='Control output')
-    ax.set_xlabel('Time [s]')
-    ax.set_ylabel('Drive')
-    ax.set_title('PID output')
-    ax.legend()
+    fig, ax1 = plt.subplots()
+    ax1.plot(times, drive.control, label='Control output')
+    ax1.set_xlabel('Time [s]')
+    ax1.set_ylabel('Drive')
+    ax1.set_title('PID output')
+    ax1.legend()
     plt.grid(True)
 
     # Orientation plot
     fig2, ax2 = plt.subplots()
-    ax2.plot(t, np.degrees(phi_c), label='Orientation setpoint')
-    ax2.plot(t, np.degrees(phi), label='Mean orientation')
+    ax2.plot(times, np.degrees(drive.setpoints), label='Orientation setpoint')
+    ax2.plot(times, np.degrees(phi), label='Mean orientation')
     ax2.set_xlabel('Time [s]')
     ax2.set_ylabel('Angle [deg]')
     ax2.set_title('Orientation')
@@ -384,31 +368,46 @@ def plotting(t, pos, control, phi, phi_c, limit_cycle, X, Y, U, V, MIXED):
     plt.grid(True)
 
     # Position plot
+    arrow_res = 0.5
     fig3, ax3 = plt.subplots()
-    plt.quiver(X, Y, U, V, angles='xy')
+    vec_x, vec_y, vec_u, vec_v = drive.strategy.mesh(
+        lin_x=np.arange(
+            start=np.floor(np.min(pos[:, 0])),
+            stop=np.ceil(np.max(pos[:, 0]))+1,
+            step=arrow_res,
+        ),
+        lin_y=np.arange(
+            start=np.floor(np.min(pos[:, 1])),
+            stop=np.ceil(np.max(pos[:, 1]))+1,
+            step=arrow_res,
+        ),
+        radius=1.5*arrow_res,
+    )
+    plt.quiver(vec_x, vec_y, vec_u, vec_v, angles='xy')
     x_lim, y_lim = ax3.get_xlim(), ax3.get_ylim()
+    limit_cycle = drive.strategy.limit_cycle()
     if limit_cycle is not None:
         ax3.plot(limit_cycle[:, 0], limit_cycle[:, 1], label='Limit trajectory')
     if pos is not None:
         ax3.plot(pos[0, :], pos[1, :], label='Robot trajectory')
         ax3.plot(pos[0, 0], pos[1, 0], 'x', label='Pleurobot initial position')
-    ax3.set_xlim(x_lim), ax3.set_ylim(y_lim)
-    if MIXED:
-        circle1 = plt.Circle(
-            [3.8, 0],
-            0.3,
-            color='r',
-            fill=False,
-            label='obstacle',
-        )
-        ax3.add_patch(circle1)
+    ax3.set_xlim(x_lim)
+    ax3.set_ylim(y_lim)
+    # if MIXED:
+    #     circle1 = plt.Circle(
+    #         [3.8, 0],
+    #         0.3,
+    #         color='r',
+    #         fill=False,
+    #         label='obstacle',
+    #     )
+    #     ax3.add_patch(circle1)
 
     ax3.set_xlabel('X coordinate [m]')
     ax3.set_ylabel('Y coordinate [m]')
     ax3.set_title('Robot trajectory')
     ax3.legend()
     plt.grid(True)
-
     plt.gca().set_aspect('equal')
 
     return fig, fig2, fig3
@@ -417,8 +416,8 @@ def plotting(t, pos, control, phi, phi_c, limit_cycle, X, Y, U, V, MIXED):
 def assess_traj(traj, t_traj):
     """Assess trajectory"""
     tree = KDTree(np.transpose(t_traj))
-    dd, ii = tree.query(np.transpose(traj), k=1)
-    return dd, ii, np.sum(dd)
+    distances, indices = tree.query(np.transpose(traj), k=1)
+    return distances, indices, np.sum(distances)
 
 
 if __name__ == '__main__':
