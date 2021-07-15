@@ -16,6 +16,11 @@ from farms_data.amphibious.animat_data import AnimatData
 from farms_bullet.simulation.options import SimulationOptions
 from farms_amphibious.model.options import AmphibiousOptions
 from farms_amphibious.utils.network import plot_networks_maps
+from farms_amphibious.control.drive import (
+    StraightLinePotentialMap,
+    CirclePotentialMap,
+    plot_trajectory,
+)
 
 
 def parse_args():
@@ -46,6 +51,13 @@ def parse_args():
         '--output',
         type=str,
         help='Output path',
+    )
+    parser.add_argument(
+        '--drive',
+        type=str,
+        default='',
+        choices=('line', 'circle'),
+        help='Descending drive method',
     )
     return parser.parse_args()
 
@@ -82,9 +94,21 @@ def main():
         else {}
     )
 
+    # Plot descending drive
+    if clargs.drive:
+        pos = np.array(sim_data.sensors.links.urdf_positions()[:, 0])
+        strategy = {
+            'line': StraightLinePotentialMap,
+            'circle': CirclePotentialMap,
+        }[clargs.drive]()
+        fig3 = plot_trajectory(strategy, pos)
+        plots_drive = {'trajectory': fig3}
+    else:
+        plots_drive = {}
+
     # Save plots
-    extension = 'jpg'
-    for name, fig in {**plots_sim, **plots_network}.items():
+    extension = 'pdf'
+    for name, fig in {**plots_sim, **plots_network, **plots_drive}.items():
         filename = os.path.join(clargs.output, '{}.{}'.format(name, extension))
         pylog.debug('Saving to {}'.format(filename))
         fig.savefig(filename, format=extension)

@@ -3,12 +3,13 @@
 import numpy as np
 from farms_bullet.model.control import ModelController, ControlType
 from .network import NetworkODE
+from .drive import OrientationFollower
 
 
 class AmphibiousController(ModelController):
     """Amphibious network"""
 
-    def __init__(self, joints, animat_options, animat_data):
+    def __init__(self, joints, animat_options, animat_data, drive=None):
         super().__init__(
             joints=joints,
             control_types={
@@ -22,6 +23,7 @@ class AmphibiousController(ModelController):
         )
         self.network = NetworkODE(animat_data)
         self.animat_data = animat_data
+        self.drive = drive
 
         # joints
         self.joints_map = JointsMap(
@@ -47,6 +49,8 @@ class AmphibiousController(ModelController):
 
     def step(self, iteration, time, timestep):
         """Control step"""
+        if self.drive is not None:
+            self.drive.step(iteration, time, timestep)
         self.network.step(iteration, time, timestep)
 
     def positions(self, iteration, time, timestep):

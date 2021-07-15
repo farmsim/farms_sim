@@ -86,6 +86,7 @@ def argument_parser():
         '--drive',
         type=str,
         default='',
+        choices=('line', 'circle'),
         help='Descending drive method',
     )
     parser.add_argument(

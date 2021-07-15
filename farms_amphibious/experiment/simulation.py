@@ -11,13 +11,18 @@ from farms_bullet.model.control import ControlType
 from farms_bullet.simulation.options import SimulationOptions
 from farms_bullet.control.kinematics import KinematicsController
 
-from ..simulation.simulation import AmphibiousSimulation
-from ..control.controller import AmphibiousController
-from ..control.manta_control import MantaController
-from ..model.options import AmphibiousOptions
 from ..model.animat import Amphibious
+from ..model.options import AmphibiousOptions
+from ..simulation.simulation import AmphibiousSimulation
 from ..utils.parse_args import parse_args
 from ..utils.prompt import prompt_postprocessing
+from ..control.controller import AmphibiousController
+from ..control.manta_control import MantaController
+from ..control.drive import (
+    OrientationFollower,
+    StraightLinePotentialMap,
+    CirclePotentialMap,
+)
 from .options import (
     amphibious_options,
     get_animat_options_from_model,
@@ -96,6 +101,7 @@ def simulation_setup(animat_sdf, animat_options, arena, **kwargs):
 
     # Animat controller
     if kwargs.pop('use_controller', False) or 'animat_controller' in kwargs:
+        drive_strategy = kwargs.pop('drive_strategy', None)
         animat_controller = (
             kwargs.pop('animat_controller')
             if 'animat_controller' in kwargs
@@ -122,6 +128,17 @@ def simulation_setup(animat_sdf, animat_options, arena, **kwargs):
                 joints=animat_options.morphology.joints_names(),
                 animat_options=animat_options,
                 animat_data=animat_data,
+                drive=OrientationFollower(
+                    strategy={
+                        'line': StraightLinePotentialMap,
+                        'circle': CirclePotentialMap,
+                    }[drive_strategy](),
+                    animat_data=animat_data,
+                    timestep=simulation_options.timestep,
+                    Kp=0.2,
+                    Ki=0,
+                    Kd=0,
+                ) if drive_strategy else None,
             )
         )
     else:
