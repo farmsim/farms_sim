@@ -270,7 +270,7 @@ def get_salamander_kwargs_options(**kwargs):
         'weight_sens_hydro_freq': 0,
         'weight_sens_hydro_amp': 0,
         'body_stand_amplitude': 0.2,
-        'body_stand_shift': np.pi/2,
+        # 'body_stand_shift': np.pi,
         'legs_amplitudes': [
             [np.pi/4, np.pi/16, np.pi/8, 0],
             [np.pi/4, np.pi/16, np.pi/8, 0],
@@ -379,7 +379,7 @@ def get_centipede_kwargs_options(**kwargs):
         'weight_sens_hydro_freq': 0,
         'weight_sens_hydro_amp': 0,
         'body_stand_amplitude': 0.2,
-        'body_stand_shift': np.pi/2,
+        # 'body_stand_shift': np.pi/2,
         'legs_amplitudes': [
             [np.pi/4, np.pi/32, np.pi/4, np.pi/8]
             for _ in range(19)
@@ -452,7 +452,7 @@ def get_polypterus_kwargs_options(**kwargs):
         'weight_sens_hydro_freq': 0,
         'weight_sens_hydro_amp': 0,
         'body_stand_amplitude': 0.1,
-        'body_stand_shift': np.pi,  # np.pi/2,
+        # 'body_stand_shift': np.pi,  # np.pi/2,
         'legs_amplitudes': [[np.pi/4, np.pi/8, np.pi/4, np.pi/8]],
         'legs_offsets_walking': [[0, np.pi/8, 0, np.pi/8]],
         'modular_phases': (
@@ -623,7 +623,7 @@ def get_pleurobot_kwargs_options(**kwargs):
                 [0, -np.pi/32, -np.pi/16, 0],
             ],
             legs_offsets_swimming=[-2*np.pi/5, 0, 0, -np.pi/4],
-            body_stand_shift=np.pi/2,
+            # body_stand_shift=np.pi/2,
             gain_amplitude=gain_amplitude,
             offsets_bias=joints_offsets,
             weight_osc_body=1e0,
@@ -1528,7 +1528,7 @@ def get_agnathax_kwargs_options(**kwargs):
         'weight_sens_hydro_freq': 0,
         'weight_sens_hydro_amp': 0,
         'body_stand_amplitude': 0.2,
-        'body_stand_shift': np.pi/2,
+        # 'body_stand_shift': np.pi/2,
         'muscle_alpha': 1e-3,
         'muscle_beta': -1e-6,
         'muscle_gamma': 2e3,
