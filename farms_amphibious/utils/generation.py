@@ -30,6 +30,7 @@ def generate_sdf(model_name, model_version, **kwargs):
     leg_length = kwargs.pop('leg_length')
     leg_radius = kwargs.pop('leg_radius')
     legs_parents = kwargs.pop('legs_parents')
+    passive = kwargs.pop('passive', [])
     sdf_path = kwargs.pop('sdf_path', '')
     model_path = kwargs.pop('model_path', '')
     body_sdf_path = kwargs.pop('body_sdf_path', '')
@@ -56,7 +57,7 @@ def generate_sdf(model_name, model_version, **kwargs):
         body_sdf_path = get_sdf_path(name=model_name, version='body')
     original_model = ModelSDF.read(body_sdf_path)[0]
 
-    # Body
+    # Body links
     for i, link in enumerate(original_model.links):
         link.name = convention.bodylink2name(i)
         links[i] = link
@@ -87,6 +88,7 @@ def generate_sdf(model_name, model_version, **kwargs):
         for j in range(6):
             link.inertial.inertias[j] *= scale**5
 
+    # Body joints
     angle_max = 2*np.pi/len(original_model.joints)
     for i, joint in enumerate(original_model.joints):
         joint.name = convention.bodyjoint2name(i)
@@ -232,6 +234,26 @@ def generate_sdf(model_name, model_version, **kwargs):
                     ],
                 )
 
+    # Passive links and joints
+    n_passive = len(passive)
+    links_passive = [None for _ in range(n_passive)]
+    joints_passive = [None for _ in range(n_passive)]
+    for passive_i, joint_index in enumerate(passive):
+        links_passive[passive_i] = Link.empty(
+            name='link_passive_{}'.format(passive_i),
+            pose=links[joint_index+1].pose,
+        )
+        joints_passive[passive_i] = Joint(
+            name='joint_passive_{}'.format(passive_i),
+            joint_type='revolute',
+            parent=links[joint_index],
+            child=links_passive[passive_i],
+            pose=[0, 0, 0, 0, 0, 0],
+            xyz=[0, 1, 0],
+            limits=[-1e-2*np.pi, 1e-2*np.pi, max_torque, max_velocity],
+        )
+        joints[joint_index].parent = links_passive[passive_i].name
+
     # Use 2D
     constraint_links = [
         Link.empty(
@@ -271,8 +293,8 @@ def generate_sdf(model_name, model_version, **kwargs):
             np.asarray([0, 0, 0.1])*scale,
             [0, 0, 0]
         ]),
-        links=constraint_links+links,
-        joints=constraint_joints+joints,
+        links=constraint_links+links+links_passive,
+        joints=constraint_joints+joints+joints_passive,
     )
     filename = create_new_model_from_farms_sdf(
         name=model_name,
@@ -305,9 +327,9 @@ def generate_amphibious(model_name, model_version, **kwargs):
     n_joints_body = kwargs.pop('n_joints_body')
     legs_parents = kwargs.pop('legs_parents')
     n_legs = 2*len(legs_parents)
-    leg_offset = kwargs.pop('leg_offset', [0, 0.04, -0.02])
-    leg_length = kwargs.pop('leg_length', 0.04)
-    leg_radius = kwargs.pop('leg_radius', 0.01)
+    # leg_offset = kwargs.pop('leg_offset', [0, 0.04, -0.02])
+    # leg_length = kwargs.pop('leg_length', 0.04)
+    # leg_radius = kwargs.pop('leg_radius', 0.01)
     body_sdf_path = kwargs.pop('body_sdf_path', '')
 
     # Animat options
@@ -323,9 +345,9 @@ def generate_amphibious(model_name, model_version, **kwargs):
     filepath = generate_sdf(
         model_name=model_name,
         model_version=model_version,
-        leg_offset=leg_offset,
-        leg_length=leg_length,
-        leg_radius=leg_radius,
+        # leg_offset=leg_offset,
+        # leg_length=leg_length,
+        # leg_radius=leg_radius,
         legs_parents=legs_parents,
         options=animat_options,
         convention=convention,
