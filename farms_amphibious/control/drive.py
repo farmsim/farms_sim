@@ -4,12 +4,10 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 import matplotlib.pyplot as plt
-
+from scipy.spatial import KDTree
 from simple_pid import PID
 
-from scipy.stats import circmean
-from scipy.spatial import KDTree
-from scipy.spatial.transform import Rotation
+from farms_data.io.yaml import yaml2pyobject
 
 
 class PotentialMap(ABC):
@@ -51,7 +49,8 @@ class StraightLinePotentialMap(PotentialMap):
         super().__init__()
         self.gain = kwargs.pop('gain', 1)
         self.origin = kwargs.pop('origin', np.zeros(2))
-        self.theta = kwargs.pop('theta', np.pi/8)
+        self.theta = kwargs.pop('theta', 0)
+        assert not kwargs, kwargs
 
     def heading(self, pos):
         """Heading"""
@@ -79,6 +78,7 @@ class CirclePotentialMap(PotentialMap):
         self.origin = kwargs.pop('origin', np.zeros(2))
         self.radius = kwargs.pop('radius', 4)
         self.direction = kwargs.pop('direction', -1)
+        assert not kwargs, kwargs
 
     def heading(self, pos):
         """Heading"""
@@ -131,13 +131,16 @@ class OrientationFollower(DescendingDrive):
         self.strategy = strategy
         self.animat_data = animat_data
         super().__init__(drives=animat_data.network.drives)
+        self.indices = kwargs.pop('links_indices', None)
+        self.heading_offset = kwargs.pop('heading_offset', 0)
         self.pid = PID(
-            Kp=kwargs.pop('Kp', 1.3),
-            Ki=kwargs.pop('Ki', 0.1),
-            Kd=kwargs.pop('Kd', 0.5),
+            Kp=kwargs.pop('pid_p', 0.2),
+            Ki=kwargs.pop('pid_i', 0.0),
+            Kd=kwargs.pop('pid_d', 0.0),
             sample_time=timestep,
             output_limits=kwargs.pop('output_limits', (-0.2, 0.2)),
         )
+        assert not kwargs, kwargs
 
     def update_turn_command(self, pos):
         """Update command"""
@@ -180,19 +183,6 @@ class OrientationFollower(DescendingDrive):
 
     def step(self, iteration, time, timestep):
         """Step"""
-
-        # Get orientation as radian
-        max_joint = 5
-        joint_orientation = np.zeros(max_joint)
-        for joint_idx in np.arange(max_joint):
-            joint_orientation[joint_idx] = Rotation.from_quat(
-                self.animat_data.sensors.links.urdf_orientation(
-                    iteration=iteration,
-                    link_i=joint_idx,
-                )
-            ).as_euler('xyz')[2]
-
-        # Set the orientation command for the PID
         self.update(
             iteration=iteration,
             timestep=timestep,
@@ -200,11 +190,10 @@ class OrientationFollower(DescendingDrive):
                 iteration=iteration,
                 link_i=0,
             )),
-            heading=circmean(
-                samples=joint_orientation,
-                low=-np.pi,
-                high=np.pi,
-            ),
+            heading=self.animat_data.sensors.links.heading(
+                iteration=iteration,
+                indices=self.indices,
+            )+self.heading_offset,
         )
 
 
@@ -254,7 +243,7 @@ def plotting(times, pos, drive, phi):
         ax3.plot(limit_cycle[:, 0], limit_cycle[:, 1], label='Limit trajectory')
     if pos is not None:
         ax3.plot(pos[0, :], pos[1, :], label='Robot trajectory')
-        ax3.plot(pos[0, 0], pos[1, 0], 'x', label='Pleurobot initial position')
+        ax3.plot(pos[0, 0], pos[1, 0], 'x', label='Animat initial position')
     ax3.set_xlim(x_lim)
     ax3.set_ylim(y_lim)
     # if MIXED:
@@ -277,21 +266,29 @@ def plotting(times, pos, drive, phi):
     return fig, fig2, fig3
 
 
-def plot_trajectory(strategy, pos, arrow_res = 0.5):
+def plot_trajectory(strategy, pos, arrow_res=None):
     """Plot trajectory"""
     fig3, ax3 = plt.subplots()
+    min_x, max_x, min_y, max_y = (
+        np.min(pos[:, 0]),
+        np.max(pos[:, 0]),
+        np.min(pos[:, 1]),
+        np.max(pos[:, 1]),
+    )
+    if arrow_res is None:
+        arrow_res = max(max_x-min_x, max_x-min_x)/30
     vec_x, vec_y, vec_u, vec_v = strategy.mesh(
         lin_x=np.arange(
-            start=np.floor(np.min(pos[:, 0])),
-            stop=np.ceil(np.max(pos[:, 0]))+1,
+            start=np.floor(min_x/arrow_res)*arrow_res,
+            stop=np.ceil(max_x/arrow_res+1)*arrow_res,
             step=arrow_res,
         ),
         lin_y=np.arange(
-            start=np.floor(np.min(pos[:, 1])),
-            stop=np.ceil(np.max(pos[:, 1]))+1,
+            start=np.floor(min_y/arrow_res)*arrow_res,
+            stop=np.ceil(max_y/arrow_res+1)*arrow_res,
             step=arrow_res,
         ),
-        radius=1.5*arrow_res,
+        radius=arrow_res,
     )
     plt.quiver(vec_x, vec_y, vec_u, vec_v, angles='xy')
     x_lim, y_lim = ax3.get_xlim(), ax3.get_ylim()
@@ -300,7 +297,7 @@ def plot_trajectory(strategy, pos, arrow_res = 0.5):
         ax3.plot(limit_cycle[:, 0], limit_cycle[:, 1], label='Limit trajectory')
     if pos is not None:
         ax3.plot(pos[:, 0], pos[:, 1], label='Robot trajectory')
-        ax3.plot(pos[0, 0], pos[0, 1], 'x', label='Pleurobot initial position')
+        ax3.plot(pos[0, 0], pos[0, 1], 'x', label='Animat initial position')
     ax3.set_xlim(x_lim)
     ax3.set_ylim(y_lim)
     ax3.set_xlabel('X coordinate [m]')
@@ -317,3 +314,19 @@ def assess_traj(traj, t_traj):
     tree = KDTree(np.transpose(t_traj))
     distances, indices = tree.query(np.transpose(traj), k=1)
     return distances, indices, np.sum(distances)
+
+
+def drive_from_config(filename, animat_data, simulation_options):
+    """Drive from config"""
+    drive_config = yaml2pyobject(filename)
+    potential_config = drive_config.pop('potential_map')
+    potential_type = potential_config.pop('type')
+    return OrientationFollower(
+        strategy={
+            'line': StraightLinePotentialMap,
+            'circle': CirclePotentialMap,
+        }[potential_type](**potential_config),
+        animat_data=animat_data,
+        timestep=simulation_options.timestep,
+        **drive_config,
+    )

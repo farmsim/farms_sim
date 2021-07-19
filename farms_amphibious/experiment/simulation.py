@@ -18,11 +18,7 @@ from ..utils.parse_args import parse_args
 from ..utils.prompt import prompt_postprocessing
 from ..control.controller import AmphibiousController
 from ..control.manta_control import MantaController
-from ..control.drive import (
-    OrientationFollower,
-    StraightLinePotentialMap,
-    CirclePotentialMap,
-)
+from ..control.drive import drive_from_config
 from .options import (
     amphibious_options,
     get_animat_options_from_model,
@@ -101,7 +97,7 @@ def simulation_setup(animat_sdf, animat_options, arena, **kwargs):
 
     # Animat controller
     if kwargs.pop('use_controller', False) or 'animat_controller' in kwargs:
-        drive_strategy = kwargs.pop('drive_strategy', None)
+        drive_config = kwargs.pop('drive_config', None)
         animat_controller = (
             kwargs.pop('animat_controller')
             if 'animat_controller' in kwargs
@@ -128,17 +124,15 @@ def simulation_setup(animat_sdf, animat_options, arena, **kwargs):
                 joints=animat_options.morphology.joints_names(),
                 animat_options=animat_options,
                 animat_data=animat_data,
-                drive=OrientationFollower(
-                    strategy={
-                        'line': StraightLinePotentialMap,
-                        'circle': CirclePotentialMap,
-                    }[drive_strategy](),
-                    animat_data=animat_data,
-                    timestep=simulation_options.timestep,
-                    Kp=0.2,
-                    Ki=0,
-                    Kd=0,
-                ) if drive_strategy else None,
+                drive=(
+                    drive_from_config(
+                        filename=drive_config,
+                        animat_data=animat_data,
+                        simulation_options=simulation_options,
+                    )
+                    if drive_config
+                    else None
+                ),
             )
         )
     else:

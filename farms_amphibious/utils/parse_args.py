@@ -83,10 +83,9 @@ def argument_parser():
         help='Ground height',
     )
     parser.add_argument(
-        '--drive',
+        '--drive_config',
         type=str,
         default='',
-        choices=('line', 'circle'),
         help='Descending drive method',
     )
     parser.add_argument(

@@ -16,11 +16,7 @@ from farms_data.amphibious.animat_data import AnimatData
 from farms_bullet.simulation.options import SimulationOptions
 from farms_amphibious.model.options import AmphibiousOptions
 from farms_amphibious.utils.network import plot_networks_maps
-from farms_amphibious.control.drive import (
-    StraightLinePotentialMap,
-    CirclePotentialMap,
-    plot_trajectory,
-)
+from farms_amphibious.control.drive import drive_from_config, plot_trajectory
 
 
 def parse_args():
@@ -53,10 +49,9 @@ def parse_args():
         help='Output path',
     )
     parser.add_argument(
-        '--drive',
+        '--drive_config',
         type=str,
         default='',
-        choices=('line', 'circle'),
         help='Descending drive method',
     )
     return parser.parse_args()
@@ -71,7 +66,7 @@ def main():
     # Load data
     animat_options = AmphibiousOptions.load(clargs.animat)
     simulation_options = SimulationOptions.load(clargs.simulation)
-    sim_data = AnimatData.from_file(clargs.data)
+    animat_data = AnimatData.from_file(clargs.data)
 
     # Plot simulation data
     times = np.arange(
@@ -80,14 +75,14 @@ def main():
         step=simulation_options.timestep,
     )
     assert len(times) == simulation_options.n_iterations
-    plots_sim = sim_data.plot(times)
+    plots_sim = animat_data.plot(times)
 
     # Plot connectivity
     morph = animat_options.morphology
     plots_network = (
         plot_networks_maps(
             morphology=animat_options.morphology,
-            data=sim_data,
+            data=animat_data,
             show_all=True,
         )[1]
         if morph.n_legs in (2, 4) and morph.n_dof_legs == 4
@@ -95,13 +90,14 @@ def main():
     )
 
     # Plot descending drive
-    if clargs.drive:
-        pos = np.array(sim_data.sensors.links.urdf_positions()[:, 0])
-        strategy = {
-            'line': StraightLinePotentialMap,
-            'circle': CirclePotentialMap,
-        }[clargs.drive]()
-        fig3 = plot_trajectory(strategy, pos)
+    if clargs.drive_config:
+        pos = np.array(animat_data.sensors.links.urdf_positions()[:, 0])
+        drive = drive_from_config(
+            filename=clargs.drive_config,
+            animat_data=animat_data,
+            simulation_options=simulation_options,
+        )
+        fig3 = plot_trajectory(drive.strategy, pos)
         plots_drive = {'trajectory': fig3}
     else:
         plots_drive = {}

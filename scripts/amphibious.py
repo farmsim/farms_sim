@@ -26,7 +26,7 @@ def main():
         simulation_options=simulation_options,
         arena=arena,
         use_controller=True,
-        drive_strategy=clargs.drive,
+        drive_config=clargs.drive_config,
     )
 
     # Post-processing
