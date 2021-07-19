@@ -218,14 +218,14 @@ class AmphibiousMorphologyOptions(MorphologyOptions):
                 ]
                 for body0 in range(0, options['n_joints_body']+1)
                 for body1 in range(0, options['n_joints_body']+1)
-                if abs(body1 - body0) > 1
+                if abs(body1 - body0) > 1 # Avoid neighbouring collisions
             ] + [
                 # Body-leg collisions
                 [
                     convention.bodylink2name(body0),
                     convention.leglink2name(leg_i, side_i, joint_i),
                 ]
-                for body0 in range(0, options['n_joints_body']+1)
+                for body0 in range(options['n_joints_body']+1)
                 for leg_i in range(options['n_legs']//2)
                 for side_i in range(2)
                 for joint_i in [options['n_dof_legs']-1]  # End-effector
@@ -241,7 +241,10 @@ class AmphibiousMorphologyOptions(MorphologyOptions):
                 for side1 in range(2)
                 for joint0 in [options['n_dof_legs']-1]
                 for joint1 in [options['n_dof_legs']-1]
+                if leg0!=leg1 or side0!=side1 or joint0!=joint1
             ]
+            for links in morphology.self_collisions:
+                assert links[0]!=links[1], 'Collision to self: {}'.format(links)
         return morphology
 
     def n_joints_legs(self):
