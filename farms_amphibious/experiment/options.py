@@ -342,14 +342,18 @@ def get_centipede_kwargs_options(**kwargs):
         'n_joints_body': n_joints_body,
         'drag_coefficients': [
             [
-                [-1e-2, -1e-1, -1e-2]
+                [-1e-3, -1e-1, -1e-1]
                 if i < 21
                 # else [-1e-4, -1e-4, -1e-4]
                 # if (i - 12) % 4 > 1
                 else [0, 0, 0],
                 [-1e-8, -1e-8, -1e-8],
             ]
-            for i in range((n_joints_body+1)+2*4*19)
+            for i in range(n_joints_body+1+2*4*19)
+        ],
+        'links_swimming': [
+            'link_body_{}'.format(i)
+            for i in range(n_joints_body+1)
         ],
         'drives_init': [2, 0],
         'weight_osc_body': 1e1,
