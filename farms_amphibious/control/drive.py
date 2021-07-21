@@ -131,7 +131,7 @@ class OrientationFollower(DescendingDrive):
         self.strategy = strategy
         self.animat_data = animat_data
         super().__init__(drives=animat_data.network.drives)
-        self.indices = kwargs.pop('links_indices', None)
+        self.indices = np.array(kwargs.pop('links_indices', [0]))
         self.heading_offset = kwargs.pop('heading_offset', 0)
         self.pid = PID(
             Kp=kwargs.pop('pid_p', 0.2),
@@ -196,7 +196,7 @@ class OrientationFollower(DescendingDrive):
             timestep=timestep,
             pos=np.array(self.animat_data.sensors.links.urdf_position(
                 iteration=iteration,
-                link_i=0,
+                link_i=self.indices[0],
             )),
             heading=self.animat_data.sensors.links.heading(
                 iteration=iteration,
