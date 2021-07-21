@@ -43,6 +43,7 @@ def setup_from_clargs(clargs=None):
         version=clargs.version,
         default_max_torque=clargs.max_torque,
         default_lateral_friction=clargs.lateral_friction,
+        feet_friction=clargs.feet_friction,
         use_self_collisions=clargs.self_collisions,
         spawn_loader={
             'FARMS': SpawnLoader.FARMS,

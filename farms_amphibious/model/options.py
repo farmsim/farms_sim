@@ -97,9 +97,18 @@ class AmphibiousMorphologyOptions(MorphologyOptions):
         convention = AmphibiousConvention(**options)
         links_names = kwargs.pop('links_names', convention.links_names)
         default_lateral_friction = kwargs.pop('default_lateral_friction', 1)
+        feet_friction = kwargs.pop('feet_friction', None)
+        if feet_friction is None:
+            feet_friction = default_lateral_friction
+        feet_links = convention.feet_links_names()
         links_friction_lateral = kwargs.pop(
             'links_friction_lateral',
-            [default_lateral_friction for link in links_names],
+            [
+                feet_friction
+                if link in feet_links
+                else default_lateral_friction
+                for link in links_names
+            ],
         )
         links_friction_spinning = kwargs.pop(
             'links_friction_spinning',

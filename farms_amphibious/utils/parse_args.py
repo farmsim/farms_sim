@@ -137,6 +137,12 @@ def argument_parser():
         help='Lateral friction',
     )
     parser.add_argument(
+        '--feet_friction',
+        type=float,
+        default=None,
+        help='Feet friction',
+    )
+    parser.add_argument(
         '--viscosity',
         type=float,
         default=1.0,
