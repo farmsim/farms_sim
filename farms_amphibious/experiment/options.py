@@ -403,7 +403,7 @@ def get_centipede_options(**kwargs):
 
 def get_polypterus_kwargs_options(**kwargs):
     """Polypterus options"""
-    n_joints_body = kwargs.pop('n_joints_body', 20)
+    n_joints_body = kwargs.pop('n_joints_body', 11)
     kwargs_options = {
         'spawn_loader': SpawnLoader.FARMS,  # SpawnLoader.PYBULLET,
         'spawn_position': [0, 0, 0.2*0.07],
@@ -417,8 +417,8 @@ def get_polypterus_kwargs_options(**kwargs):
         'n_joints_body': n_joints_body,
         'drag_coefficients': [
             [
-                [-1e-2, -3e-1, -1e-2]
-                if i < 21
+                [-1e-3, -1e-1, -1e-1]
+                if i < 12
                 else [-1e-3, -1e-3, -1e-3],
                 [-1e-8, -1e-8, -1e-8],
             ]
@@ -437,7 +437,7 @@ def get_polypterus_kwargs_options(**kwargs):
         'weight_sens_contact_diagonal': 0,
         'weight_sens_hydro_freq': 0,
         'weight_sens_hydro_amp': 0,
-        'body_stand_amplitude': 0.1,
+        'body_stand_amplitude': 0.2,
         # 'body_stand_shift': np.pi,  # np.pi/2,
         'legs_amplitudes': [[np.pi/4, np.pi/8, np.pi/4, np.pi/8]],
         'legs_offsets_walking': [[0, np.pi/8, 0, np.pi/8]],
@@ -455,16 +455,12 @@ def get_polypterus_options(multiplier=1.7, **kwargs):
     """Polypterus options"""
     kwargs_options = get_polypterus_kwargs_options(**kwargs)
     options = AmphibiousOptions.from_options(kwargs_options)
-    for joint_i, joint in enumerate(options['morphology']['joints']):
-        joint['pybullet_dynamics']['jointDamping'] = 0
-        joint['pybullet_dynamics']['maxJointVelocity'] = np.inf  # 0.1
-        # joint['pybullet_dynamics']['jointLowerLimit'] = -1e8  # -0.1
-        # joint['pybullet_dynamics']['jointUpperLimit'] = +1e8  # +0.1
-        joint['pybullet_dynamics']['jointLimitForce'] = np.inf
-        joint_control = options['control']['joints'][joint_i]
-        assert joint['name'] == joint_control['joint']
-        joint['initial_position'] = joint_control['bias']
-        # print('{}: {} [rad]'.format(joint['name'], joint_control['bias']))
+    options.control.sensors.joints += [
+        'joint_passive_{}'.format(i)
+        for i in range(4)
+    ]
+    convention = AmphibiousConvention(**options.morphology)
+    options.control.sensors.contacts += convention.body_links_names()
     for oscillator in options.control.network.oscillators:
         oscillator['amplitude_gain'] *= multiplier
     return options
