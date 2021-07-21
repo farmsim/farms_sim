@@ -236,7 +236,7 @@ def get_salamander_kwargs_options(**kwargs):
     """Salamander options"""
     n_joints_body = kwargs.pop('n_joints_body', 11)
     kwargs_options = {
-        'spawn_loader': SpawnLoader.PYBULLET,  # SpawnLoader.FARMS,
+        'spawn_loader': SpawnLoader.FARMS,  # SpawnLoader.PYBULLET,
         'spawn_position': [0, 0, 0.2*0.07],
         'spawn_orientation': [0, 0, 0],
         'use_self_collisions': False,
@@ -344,7 +344,7 @@ def get_centipede_kwargs_options(**kwargs):
     """Centipede options"""
     n_joints_body = kwargs.pop('n_joints_body', 20)
     kwargs_options = {
-        'spawn_loader': SpawnLoader.PYBULLET,  # SpawnLoader.FARMS,
+        'spawn_loader': SpawnLoader.FARMS,  # SpawnLoader.PYBULLET,
         'spawn_position': [0, 0, 0.2*0.07],
         'spawn_orientation': [0, 0, 0],
         'use_self_collisions': False,
@@ -419,7 +419,7 @@ def get_polypterus_kwargs_options(**kwargs):
     """Polypterus options"""
     n_joints_body = kwargs.pop('n_joints_body', 20)
     kwargs_options = {
-        'spawn_loader': SpawnLoader.PYBULLET,  # SpawnLoader.FARMS,
+        'spawn_loader': SpawnLoader.FARMS,  # SpawnLoader.PYBULLET,
         'spawn_position': [0, 0, 0.2*0.07],
         'spawn_orientation': [0, 0, 0],
         'use_self_collisions': False,
@@ -584,7 +584,7 @@ def get_pleurobot_kwargs_options(**kwargs):
     # Animat options
     drag = -1e-1
     kwargs_options = dict(
-        spawn_loader=SpawnLoader.PYBULLET,  # SpawnLoader.FARMS,
+        spawn_loader=SpawnLoader.FARMS,  # SpawnLoader.PYBULLET,
         density=600.0,
         default_control_type=ControlType.POSITION,
         scale_hydrodynamics=1e-1,
@@ -1247,7 +1247,7 @@ def get_orobot_kwargs_options(**kwargs):
 
     # Animat options
     kwargs_options = dict(
-        spawn_loader=SpawnLoader.PYBULLET,  # SpawnLoader.FARMS,
+        spawn_loader=SpawnLoader.FARMS,  # SpawnLoader.PYBULLET,
         spawn_position=[0, 0, 0],
         spawn_orientation=[0.5*np.pi, 0, 0],
         default_control_type=ControlType.POSITION,
@@ -1418,7 +1418,7 @@ def get_hfsp_robot_kwargs_options(hindlimbs=True, **kwargs):
 
     # Animat options
     kwargs_options = dict(
-        spawn_loader=SpawnLoader.PYBULLET,  # SpawnLoader.FARMS,
+        spawn_loader=SpawnLoader.FARMS,  # SpawnLoader.PYBULLET,
         spawn_position=[0, 0, 0],
         spawn_orientation=[0.5*np.pi, 0, 0],
         default_control_type=ControlType.POSITION,
@@ -1497,7 +1497,7 @@ def get_agnathax_kwargs_options(**kwargs):
         ['joint_{}'.format(i) for i in range(n_joints_body)]
     )
     kwargs_options = {
-        'spawn_loader': SpawnLoader.PYBULLET,  # SpawnLoader.FARMS,
+        'spawn_loader': SpawnLoader.FARMS,  # SpawnLoader.PYBULLET,
         'spawn_position': [0, 0, 0.2*0.07],
         'spawn_orientation': [0, 0, 0],
         'use_self_collisions': False,
