@@ -9,6 +9,7 @@ from farms_bullet.model.model import SimulationModels, DescriptionFormatModel
 from farms_bullet.model.options import SpawnLoader
 from farms_bullet.model.control import ControlType
 from ..model.options import AmphibiousOptions
+from ..model.convention import AmphibiousConvention
 
 
 def get_animat_options_from_model(animat, version, kwargs_only=False, **options):
@@ -247,8 +248,8 @@ def get_salamander_kwargs_options(**kwargs):
         'n_joints_body': n_joints_body,
         'drag_coefficients': [
             [
-                [-1e-1, -1e0, -1e0]
-                if i < 13
+                [-1e-2, -1e0, -1e0]
+                if i < 12
                 else [-1e-4, -1e-4, -1e-4]
                 if (i - 12) % 4 > 1
                 else [0, 0, 0],
@@ -316,27 +317,12 @@ def get_salamander_options(**kwargs):
     """Salamander options"""
     kwargs_options = get_salamander_kwargs_options(**kwargs)
     options = AmphibiousOptions.from_options(kwargs_options)
-    # for link in options['morphology']['links']:
-    #     link['pybullet_dynamics']['lateralFriction'] = 1
-    #     # link['pybullet_dynamics']['lateralFriction'] = (
-    #     #     1 if link['name'] in (
-    #     #         'link_leg_0_L_3',
-    #     #         'link_leg_0_R_3',
-    #     #         'link_leg_1_L_3',
-    #     #         'link_leg_1_R_3',
-    #     #     )
-    #     #     else 0.1
-    #     # )
-    # for joint_i, joint in enumerate(options['morphology']['joints']):
-    #     joint['pybullet_dynamics']['jointDamping'] = 0
-    #     joint['pybullet_dynamics']['maxJointVelocity'] = np.inf  # 0.1
-    #     joint['pybullet_dynamics']['jointLowerLimit'] = -np.inf  # -0.1
-    #     joint['pybullet_dynamics']['jointUpperLimit'] = +np.inf # +0.1
-    #     joint['pybullet_dynamics']['jointLimitForce'] = np.inf
-    #     joint_control = options['control']['joints'][joint_i]
-    #     assert joint['name'] == joint_control['joint']
-    #     joint['initial_position'] = joint_control['bias']
-    #     # print('{}: {} [rad]'.format(joint['name'], joint_control['bias']))
+    options.control.sensors.joints += [
+        'joint_passive_{}'.format(i)
+        for i in range(3)
+    ]
+    convention = AmphibiousConvention(**options.morphology)
+    options.control.sensors.contacts += convention.body_links_names()
     return options
 
 
