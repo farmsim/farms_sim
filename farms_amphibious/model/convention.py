@@ -1,10 +1,11 @@
 """Oscillator naming convention"""
 
+
 class AmphibiousConvention:
     """Amphibious convention"""
 
     def __init__(self, **kwargs):
-        super(AmphibiousConvention, self).__init__()
+        super().__init__()
         self.n_joints_body = kwargs.pop('n_joints_body')
         self.n_dof_legs = kwargs.pop('n_dof_legs')
         self.n_legs = kwargs.pop('n_legs')

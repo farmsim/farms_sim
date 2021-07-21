@@ -29,8 +29,7 @@ class AmphibiousOptions(ModelOptions):
         self.physics = AmphibiousPhysicsOptions(**kwargs.pop('physics'))
         self.show_hydrodynamics = kwargs.pop('show_hydrodynamics')
         self.scale_hydrodynamics = kwargs.pop('scale_hydrodynamics')
-        if kwargs:
-            raise Exception('Unknown kwargs: {}'.format(kwargs))
+        assert not kwargs, 'Unknown kwargs: {}'.format(kwargs)
 
     @classmethod
     def default(cls):
@@ -61,8 +60,7 @@ class AmphibiousOptions(ModelOptions):
             options['control'].defaults_from_convention(convention, kwargs)
         options['show_hydrodynamics'] = kwargs.pop('show_hydrodynamics', False)
         options['scale_hydrodynamics'] = kwargs.pop('scale_hydrodynamics', 1)
-        if kwargs:
-            raise Exception('Unknown kwargs: {}'.format(kwargs))
+        assert not kwargs, 'Unknown kwargs: {}'.format(kwargs)
         return cls(**options)
 
 
@@ -84,8 +82,7 @@ class AmphibiousMorphologyOptions(MorphologyOptions):
         self.n_joints_body = kwargs.pop('n_joints_body')
         self.n_dof_legs = kwargs.pop('n_dof_legs')
         self.n_legs = kwargs.pop('n_legs')
-        if kwargs:
-            raise Exception('Unknown kwargs: {}'.format(kwargs))
+        assert not kwargs, 'Unknown kwargs: {}'.format(kwargs)
 
     @classmethod
     def from_options(cls, kwargs):
@@ -278,8 +275,7 @@ class AmphibiousLinkOptions(LinkOptions):
         self.density = kwargs.pop('density')
         self.swimming = kwargs.pop('swimming')
         self.drag_coefficients = kwargs.pop('drag_coefficients')
-        if kwargs:
-            raise Exception('Unknown kwargs: {}'.format(kwargs))
+        assert not kwargs, 'Unknown kwargs: {}'.format(kwargs)
 
 
 class AmphibiousPhysicsOptions(Options):
@@ -294,8 +290,7 @@ class AmphibiousPhysicsOptions(Options):
         self.water_surface = kwargs.pop('water_surface')
         self.water_density = kwargs.pop('water_density')
         self.water_velocity = kwargs.pop('water_velocity')
-        if kwargs:
-            raise Exception('Unknown kwargs: {}'.format(kwargs))
+        assert not kwargs, 'Unknown kwargs: {}'.format(kwargs)
 
     @classmethod
     def from_options(cls, kwargs):
@@ -345,8 +340,7 @@ class AmphibiousControlOptions(ControlOptions):
             ]
         else:
             self.muscles = kwargs.pop('muscles', None)
-        if kwargs:
-            raise Exception('Unknown kwargs: {}'.format(kwargs))
+        assert not kwargs, 'Unknown kwargs: {}'.format(kwargs)
 
     @classmethod
     def options_from_kwargs(cls, kwargs):
@@ -587,8 +581,7 @@ class AmphibiousJointControlOptions(JointControlOptions):
         self.rate = kwargs.pop('rate')
         self.gain_amplitude = kwargs.pop('gain_amplitude')
         self.bias = kwargs.pop('bias')
-        if kwargs:
-            raise Exception('Unknown kwargs: {}'.format(kwargs))
+        assert not kwargs, 'Unknown kwargs: {}'.format(kwargs)
 
 
 class AmphibiousSensorsOptions(SensorsOptions):
@@ -601,8 +594,7 @@ class AmphibiousSensorsOptions(SensorsOptions):
             contacts=kwargs.pop('contacts'),
         )
         self.hydrodynamics = kwargs.pop('hydrodynamics')
-        if kwargs:
-            raise Exception('Unknown kwargs: {}'.format(kwargs))
+        assert not kwargs, 'Unknown kwargs: {}'.format(kwargs)
 
     @classmethod
     def options_from_kwargs(cls, kwargs):
@@ -656,8 +648,8 @@ class AmphibiousNetworkOptions(Options):
         self.contact2osc = kwargs.pop('contact2osc', None)
         self.hydro2osc = kwargs.pop('hydro2osc', None)
 
-        if kwargs:
-            raise Exception('Unknown kwargs: {}'.format(kwargs))
+        # Kwargs
+        assert not kwargs, 'Unknown kwargs: {}'.format(kwargs)
 
     @classmethod
     def from_options(cls, kwargs):
@@ -1503,8 +1495,7 @@ class AmphibiousOscillatorOptions(Options):
         self.rate = kwargs.pop('rate')
         self.modular_phase = kwargs.pop('modular_phase')
         self.modular_amplitude = kwargs.pop('modular_amplitude')
-        if kwargs:
-            raise Exception('Unknown kwargs: {}'.format(kwargs))
+        assert not kwargs, 'Unknown kwargs: {}'.format(kwargs)
 
 
 class AmphibiousDriveOptions(Options):
@@ -1514,8 +1505,7 @@ class AmphibiousDriveOptions(Options):
         super(AmphibiousDriveOptions, self).__init__()
         self.name = kwargs.pop('name')
         self.initial_value = kwargs.pop('initial_value')
-        if kwargs:
-            raise Exception('Unknown kwargs: {}'.format(kwargs))
+        assert not kwargs, 'Unknown kwargs: {}'.format(kwargs)
 
 
 class AmphibiousMuscleSetOptions(Options):
@@ -1530,5 +1520,4 @@ class AmphibiousMuscleSetOptions(Options):
         self.beta = kwargs.pop('beta')  # Stiffness gain
         self.gamma = kwargs.pop('gamma')  # Tonic gain
         self.delta = kwargs.pop('delta')  # Damping coefficient
-        if kwargs:
-            raise Exception('Unknown kwargs: {}'.format(kwargs))
+        assert not kwargs, 'Unknown kwargs: {}'.format(kwargs)
