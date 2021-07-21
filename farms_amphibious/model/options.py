@@ -216,9 +216,9 @@ class AmphibiousMorphologyOptions(MorphologyOptions):
                     convention.bodylink2name(body0),
                     convention.bodylink2name(body1),
                 ]
-                for body0 in range(0, options['n_joints_body']+1)
-                for body1 in range(0, options['n_joints_body']+1)
-                if abs(body1 - body0) > 1 # Avoid neighbouring collisions
+                for body0 in range(options['n_joints_body']+1)
+                for body1 in range(options['n_joints_body']+1)
+                if abs(body1 - body0) > 3  # Avoid neighbouring collisions
             ] + [
                 # Body-leg collisions
                 [
