@@ -1,5 +1,6 @@
 """Parse command line arguments"""
 
+import numpy as np
 import argparse
 from farms_bullet.simulation.parse_args import (
     argument_parser as bullet_argument_parser,
@@ -122,6 +123,12 @@ def argument_parser():
         metavar=('forward', 'turn'),
         default=(2, 0),
         help='Animat descending drives',
+    )
+    parser.add_argument(
+        '--max_torque',
+        type=float,
+        default=np.inf,
+        help='Max torque',
     )
     parser.add_argument(
         '--lateral_friction',
