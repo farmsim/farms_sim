@@ -568,7 +568,7 @@ def get_pleurobot_kwargs_options(**kwargs):
         joints_offsets = dict(zip(joints_names, joints_offsets))
 
     # Animat options
-    drag = -1e-1
+    drag = -1e-3
     kwargs_options = dict(
         spawn_loader=SpawnLoader.FARMS,  # SpawnLoader.PYBULLET,
         density=600.0,
@@ -580,11 +580,11 @@ def get_pleurobot_kwargs_options(**kwargs):
         use_self_collisions=False,
         drag_coefficients=[
             [
-                [drag, -1e1, drag]
+                [drag, -1e2, -1e2]
                 if link in links_swimming
                 and links_swimming.index(link) < 13
                 else [drag, drag, drag],
-                [-1e-2]*3,
+                [-1e-3]*3,
             ]
             for link in links_names
         ],
@@ -612,7 +612,7 @@ def get_pleurobot_kwargs_options(**kwargs):
             # body_stand_shift=np.pi/2,
             gain_amplitude=gain_amplitude,
             offsets_bias=joints_offsets,
-            weight_osc_body=1e0,
+            weight_osc_body=1e1,
             weight_osc_legs_internal=3e1,
             weight_osc_legs_opposite=1e0,
             weight_osc_legs_following=5e-1,
