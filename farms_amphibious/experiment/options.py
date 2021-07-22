@@ -421,9 +421,9 @@ def get_polypterus_kwargs_options(**kwargs):
         'n_joints_body': n_joints_body,
         'drag_coefficients': [
             [
-                [-1e-3, -1e-1, -1e-1]
+                [-1e-3, -5e-2, -5e-2]
                 if i < 12
-                else [-1e-3, -1e-3, -1e-3],
+                else [-1e-4, -1e-4, -1e-4],
                 [-1e-8, -1e-8, -1e-8],
             ]
             for i in range((n_joints_body+1)+2*4)
