@@ -84,6 +84,12 @@ def argument_parser():
         help='Ground height',
     )
     parser.add_argument(
+        '--control_type',
+        type=str,
+        default='position',
+        help='Control type',
+    )
+    parser.add_argument(
         '--drive_config',
         type=str,
         default='',

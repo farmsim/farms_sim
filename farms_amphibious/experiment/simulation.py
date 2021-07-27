@@ -52,7 +52,10 @@ def setup_from_clargs(clargs=None):
         drives_init=clargs.drives,
         spawn_position=clargs.position,
         spawn_orientation=clargs.orientation,
-        default_control_type=ControlType.POSITION,
+        default_control_type={
+            'position': ControlType.POSITION,
+            'muscle': ControlType.TORQUE,
+        }[clargs.control_type],
     )
     simulation_options, arena = amphibious_options(
         animat_options=animat_options,
