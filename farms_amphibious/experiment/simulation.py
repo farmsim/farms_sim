@@ -69,7 +69,7 @@ def setup_from_clargs(clargs=None):
     )
 
     # Test options saving and loading
-    if clargs.test:
+    if clargs.test_configs:
         # Save options
         animat_options_filename = 'animat_options.yaml'
         animat_options.save(animat_options_filename)

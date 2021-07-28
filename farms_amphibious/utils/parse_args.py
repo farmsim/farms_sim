@@ -118,9 +118,9 @@ def argument_parser():
         help='Save simulation profile to given filename',
     )
     parser.add_argument(
-        '--test',
+        '--test_configs',
         action='store_true',
-        help='Test simulation configuratioin files',
+        help='Test simulation configuration files',
     )
     parser.add_argument(
         '--drives',
