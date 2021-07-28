@@ -356,6 +356,14 @@ class NetworkFigure:
             cmap = plt.get_cmap(kwargs.pop('cmap', 'viridis'))
 
         # Oscillators
+        # leg_pos = [1, 11][:min(2, self.morphology.n_legs//2)]
+        leg_pos = [
+            1+2*split[0]
+            for split in np.array_split(
+                np.arange(self.morphology.n_joints_body),
+                self.morphology.n_legs//2+1,
+            )[:-1]
+        ]
         oscillator_positions = np.array(
             [
                 [2*osc_x, side_y]
@@ -363,7 +371,7 @@ class NetworkFigure:
                 for side_y in [-offset, offset]
             ] + [
                 [leg_x+osc_side_x+joint_y, joint_y*side_x]
-                for leg_x in [1, 11]
+                for leg_x in leg_pos
                 for side_x in [-1, 1]
                 for joint_y in [3, 4, 5, 6]
                 for osc_side_x in [-1, 1]
@@ -416,9 +424,16 @@ class NetworkFigure:
         )
 
         # Contacts
+        leg_pos = [
+            1+6+2*split[0]
+            for split in np.array_split(
+                np.arange(self.morphology.n_joints_body),
+                self.morphology.n_legs//2+1,
+            )[:-1]
+        ]
         contacts_positions = np.array([
             [leg_x, side_y]
-            for leg_x in [1+6, 11+6]
+            for leg_x in leg_pos
             for side_y in [-7, 7]
         ])
         contact_conn_cond = kwargs.pop(
