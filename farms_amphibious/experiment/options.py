@@ -258,20 +258,19 @@ def get_salamander_kwargs_options(**kwargs):
             for i in range((n_joints_body+1)+4*4)
         ],
         'drives_init': [2, 0],
-        'weight_osc_body': 1e1,
-        'weight_osc_legs_internal': 1e1,
-        'weight_osc_legs_opposite': 1e1,  # 1e1,
-        'weight_osc_legs_following': 1e1,  # 1e1,
-        'weight_osc_legs2body': 3e1,
-        'weight_osc_body2legs': 1e0,
-        'weight_sens_contact_intralimb': -1e-8,
+        'weight_osc_body': 3e1,
+        'weight_osc_legs_internal': 3e1,
+        'weight_osc_legs_opposite': 0,
+        'weight_osc_legs_following': 0,
+        'weight_osc_legs2body': 1e1,
+        'weight_osc_body2legs': 1e1,
+        'weight_sens_contact_intralimb': -1e1,
         'weight_sens_contact_opposite': 0,
         'weight_sens_contact_following': 0,
         'weight_sens_contact_diagonal': 0,
         'weight_sens_hydro_freq': 0,
         'weight_sens_hydro_amp': 0,
-        'body_stand_amplitude': 0.2,
-        # 'body_stand_shift': np.pi,
+        'body_walk_amplitude': 0.2,
         'legs_amplitudes': [
             [np.pi/4, np.pi/16, np.pi/8, 0],
             [np.pi/4, np.pi/16, np.pi/8, 0],
@@ -285,29 +284,10 @@ def get_salamander_kwargs_options(**kwargs):
         ).tolist(),
         # 'modular_amplitudes': np.full(4, 1.0),
         'modular_amplitudes': np.full(4, 0).tolist(),
-        # Timestep: 1e-3 [s]
-        # 'muscle_alpha': 3e-3,
-        # 'muscle_beta': -1e-6,
-        # 'muscle_gamma': 5e3,
-        # 'muscle_delta': -1e-8,
-        # 'muscle_alpha': 2e-3,
-        # 'muscle_beta': -1e-6,
-        # 'muscle_gamma': 2e3,
-        # 'muscle_delta': -1e-8,
         'muscle_alpha': 1e-3,
         'muscle_beta': -1e-6,
         'muscle_gamma': 2e3,
         'muscle_delta': -1e-8,
-        # # Timestep: 1e-3 [s] (Full scale)
-        # 'muscle_alpha': 2e0,
-        # 'muscle_beta': -1e0,
-        # 'muscle_gamma': 3e0,
-        # 'muscle_delta': -1e-3,
-        # # Timestep: 1e-2 [s] NOT WORKING
-        # 'muscle_alpha': 1e-1,
-        # 'muscle_beta': -1e-2,
-        # 'muscle_gamma': 3e0,
-        # 'muscle_delta': -1e-6,
     }
     kwargs_options.update(kwargs)
     return kwargs_options
@@ -329,6 +309,7 @@ def get_salamander_options(**kwargs):
 def get_centipede_kwargs_options(**kwargs):
     """Centipede options"""
     n_joints_body = kwargs.pop('n_joints_body', 20)
+    n_legs_pairs = n_joints_body-1
     kwargs_options = {
         'spawn_loader': SpawnLoader.FARMS,  # SpawnLoader.PYBULLET,
         'spawn_position': [0, 0, 0.2*0.07],
@@ -337,46 +318,47 @@ def get_centipede_kwargs_options(**kwargs):
         'default_control_type': ControlType.POSITION,  # ControlType.TORQUE,
         'scale_hydrodynamics': 1,
         'density': 800.0,
-        'n_legs': 2*19,
+        'n_legs': 2*n_legs_pairs,
         'n_dof_legs': 4,
         'n_joints_body': n_joints_body,
         'drag_coefficients': [
             [
                 [-1e-3, -1e-1, -1e-1]
-                if i < 21
-                # else [-1e-4, -1e-4, -1e-4]
-                # if (i - 12) % 4 > 1
+                if i < (n_joints_body+1)
                 else [0, 0, 0],
                 [-1e-8, -1e-8, -1e-8],
             ]
-            for i in range(n_joints_body+1+2*4*19)
+            for i in range(n_joints_body+1+2*4*n_legs_pairs)
         ],
         'links_swimming': [
             'link_body_{}'.format(i)
             for i in range(n_joints_body+1)
         ],
         'drives_init': [2, 0],
-        'weight_osc_body': 1e1,
-        'weight_osc_legs_internal': 3e1,
-        'weight_osc_legs_opposite': 1e0,  # 1e1,
-        'weight_osc_legs_following': 0,  # 1e1,
-        'weight_osc_legs2body': 1e-8,  # 3e1
-        'weight_osc_body2legs': 3e2,
-        'weight_sens_contact_intralimb': 0,
+        'standing_wave': False,
+        'body_phase_bias': 3*np.pi/n_joints_body,
+        'weight_osc_body': 1e2,
+        'weight_osc_legs_internal': 1e1,
+        'weight_osc_legs_opposite': 0,
+        'weight_osc_legs_following': 0,
+        'weight_osc_legs2body': 1e0,
+        'weight_osc_body2legs': 1e2,
+        'weight_sens_contact_intralimb': -1e1,
         'weight_sens_contact_opposite': 0,
         'weight_sens_contact_following': 0,
         'weight_sens_contact_diagonal': 0,
         'weight_sens_hydro_freq': 0,
         'weight_sens_hydro_amp': 0,
-        'body_stand_amplitude': 0.2,
-        # 'body_stand_shift': np.pi/2,
+        'body_walk_amplitude': 1,
+        'body_osc_gain': 0.1,
+        'body_osc_bias': 0,
         'legs_amplitudes': [
-            [np.pi/4, np.pi/32, np.pi/4, np.pi/8]
-            for _ in range(19)
+            [np.pi/4, np.pi/32, np.pi/32, np.pi/64]
+            for _ in range(n_legs_pairs)
         ],
         'legs_offsets_walking': [
-            [0, np.pi/32, 0, np.pi/8]
-            for _ in range(19)
+            [0, 0, 0, np.pi/6]
+            for _ in range(n_legs_pairs)
         ],
         'modular_phases': (
             np.array([3*np.pi/2, 0, 3*np.pi/2, 0]) - np.pi/4
@@ -392,16 +374,22 @@ def get_centipede_options(**kwargs):
     """Centipede options"""
     kwargs_options = get_centipede_kwargs_options(**kwargs)
     options = AmphibiousOptions.from_options(kwargs_options)
-    for joint_i, joint in enumerate(options['morphology']['joints']):
-        joint['pybullet_dynamics']['jointDamping'] = 0
-        joint['pybullet_dynamics']['maxJointVelocity'] = np.inf  # 0.1
-        # joint['pybullet_dynamics']['jointLowerLimit'] = -1e8  # -0.1
-        # joint['pybullet_dynamics']['jointUpperLimit'] = +1e8  # +0.1
-        joint['pybullet_dynamics']['jointLimitForce'] = np.inf
-        joint_control = options['control']['joints'][joint_i]
-        assert joint['name'] == joint_control['joint']
-        joint['initial_position'] = joint_control['bias']
-        # print('{}: {} [rad]'.format(joint['name'], joint_control['bias']))
+    options.control.sensors.joints += [
+        'joint_passive_{}'.format(i)
+        for i in range(4)
+    ]
+    convention = AmphibiousConvention(**options.morphology)
+    options.control.sensors.contacts += convention.body_links_names()
+    # for joint_i, joint in enumerate(options['morphology']['joints']):
+    #     joint['pybullet_dynamics']['jointDamping'] = 0
+    #     joint['pybullet_dynamics']['maxJointVelocity'] = np.inf  # 0.1
+    #     # joint['pybullet_dynamics']['jointLowerLimit'] = -1e8  # -0.1
+    #     # joint['pybullet_dynamics']['jointUpperLimit'] = +1e8  # +0.1
+    #     joint['pybullet_dynamics']['jointLimitForce'] = np.inf
+    #     joint_control = options['control']['joints'][joint_i]
+    #     assert joint['name'] == joint_control['joint']
+    #     joint['initial_position'] = joint_control['bias']
+    #     # print('{}: {} [rad]'.format(joint['name'], joint_control['bias']))
     return options
 
 
@@ -429,20 +417,21 @@ def get_polypterus_kwargs_options(**kwargs):
             for i in range((n_joints_body+1)+2*4)
         ],
         'drives_init': [2, 0],
-        'weight_osc_body': 3e1,
-        'weight_osc_legs_internal': 3e1,
-        'weight_osc_legs_opposite': 1e0,  # 1e1,
-        'weight_osc_legs_following': 0,  # 1e1,
-        'weight_osc_legs2body': 3e1,
-        'weight_osc_body2legs': 0,
-        'weight_sens_contact_intralimb': 0,
+        'weight_osc_body': 1e2,
+        'weight_osc_legs_internal': 1e2,
+        'weight_osc_legs_opposite': 0,
+        'weight_osc_legs_following': 0,
+        'weight_osc_legs2body': 1e1,
+        'weight_osc_body2legs': 1e1,
+        'weight_sens_contact_intralimb': -1e-1,
         'weight_sens_contact_opposite': 0,
         'weight_sens_contact_following': 0,
         'weight_sens_contact_diagonal': 0,
         'weight_sens_hydro_freq': 0,
         'weight_sens_hydro_amp': 0,
-        'body_stand_amplitude': 0.2,
-        # 'body_stand_shift': np.pi,  # np.pi/2,
+        'body_walk_amplitude': 1,
+        'body_osc_gain': 0.05,
+        'body_osc_bias': 0.3,
         'legs_amplitudes': [[np.pi/4, np.pi/8, np.pi/4, np.pi/8]],
         'legs_offsets_walking': [[0, np.pi/8, 0, np.pi/8]],
         'modular_phases': (
@@ -455,7 +444,7 @@ def get_polypterus_kwargs_options(**kwargs):
     return kwargs_options
 
 
-def get_polypterus_options(multiplier=1.7, **kwargs):
+def get_polypterus_options(**kwargs):
     """Polypterus options"""
     kwargs_options = get_polypterus_kwargs_options(**kwargs)
     options = AmphibiousOptions.from_options(kwargs_options)
@@ -465,8 +454,6 @@ def get_polypterus_options(multiplier=1.7, **kwargs):
     ]
     convention = AmphibiousConvention(**options.morphology)
     options.control.sensors.contacts += convention.body_links_names()
-    for oscillator in options.control.network.oscillators:
-        oscillator['amplitude_gain'] *= multiplier
     return options
 
 
@@ -599,7 +586,7 @@ def get_pleurobot_kwargs_options(**kwargs):
     )
     if 'kinematics_file' not in kwargs:
         kwargs_options.update(dict(
-            body_stand_amplitude=0.2,
+            body_walk_amplitude=0.2,
             legs_amplitudes=[
                 [np.pi/8, np.pi/16, np.pi/8, np.pi/8],
                 [np.pi/8, np.pi/16, np.pi/8, np.pi/8],
@@ -609,7 +596,6 @@ def get_pleurobot_kwargs_options(**kwargs):
                 [0, -np.pi/32, -np.pi/16, 0],
             ],
             legs_offsets_swimming=[-2*np.pi/5, 0, 0, -np.pi/4],
-            # body_stand_shift=np.pi/2,
             gain_amplitude=gain_amplitude,
             offsets_bias=joints_offsets,
             weight_osc_body=1e1,
@@ -842,7 +828,7 @@ def get_krock_kwargs_options(**kwargs):
             ]
             for i in range(6+4*4)
         ],
-        body_stand_amplitude=0.25,
+        body_walk_amplitude=0.25,
         legs_amplitudes=[
             [np.pi/16, np.pi/8, np.pi/8, np.pi/8],
             [np.pi/16, np.pi/8, np.pi/8, np.pi/8],
@@ -1242,7 +1228,7 @@ def get_orobot_kwargs_options(**kwargs):
         n_joints_body=8,
         use_self_collisions=False,
         density=600.0,
-        body_stand_amplitude=0.2,
+        body_walk_amplitude=0.2,
         legs_amplitudes=[
             [np.pi/6, np.pi/16, np.pi/16, np.pi/8, np.pi/8],
             [np.pi/6, np.pi/16, np.pi/16, np.pi/8, np.pi/8],
@@ -1413,7 +1399,7 @@ def get_hfsp_robot_kwargs_options(hindlimbs=True, **kwargs):
         n_joints_body=8,
         density=500.0,
         use_self_collisions=False,
-        body_stand_amplitude=0.3,
+        body_walk_amplitude=0.3,
         legs_amplitudes=[
             [np.pi/6, np.pi/16, np.pi/16, np.pi/8, np.pi/8],
             [np.pi/6, np.pi/16, np.pi/16, np.pi/8, np.pi/8],
@@ -1513,8 +1499,7 @@ def get_agnathax_kwargs_options(**kwargs):
         'weight_sens_contact_diagonal': 0,
         'weight_sens_hydro_freq': 0,
         'weight_sens_hydro_amp': 0,
-        'body_stand_amplitude': 0.2,
-        # 'body_stand_shift': np.pi/2,
+        'body_walk_amplitude': 0.2,
         'muscle_alpha': 1e-3,
         'muscle_beta': -1e-6,
         'muscle_gamma': 2e3,
