@@ -56,8 +56,9 @@ class AmphibiousController(ModelController):
     def positions(self, iteration, time, timestep):
         """Postions"""
         outputs = self.network.outputs(iteration)
+        indices = self.joints_map.indices[ControlType.POSITION]
         positions = (
-            self.joints_map.gain_amplitude[ControlType.POSITION]*(
+            self.joints_map.gain_amplitude[indices]*(
                 0.5*(
                     outputs[self.muscles_map.groups[ControlType.POSITION][0]]
                     - outputs[self.muscles_map.groups[ControlType.POSITION][1]]
@@ -65,16 +66,32 @@ class AmphibiousController(ModelController):
                 + np.array(self.network.offsets(iteration))[
                     self.joints_map.indices[ControlType.POSITION]
                 ]
-            ) + self.joints_map.bias[ControlType.POSITION]
+            ) + self.joints_map.bias[indices]
         )
         return dict(zip(self.joints[ControlType.POSITION], positions))
+
+    def velocities(self, iteration, time, timestep):
+        """Postions"""
+        joints = self.animat_data.sensors.joints
+        indices = self.joints_map.indices[ControlType.VELOCITY]
+        velocities = np.array(joints.velocities(iteration))[indices]
+        vel_joints = self.joints[ControlType.VELOCITY]
+        n_joints = len(vel_joints)
+        zeros = np.zeros(n_joints)
+        self.max_torques[ControlType.VELOCITY] = np.where(
+            abs(velocities) <= 100,
+            zeros,
+            np.full(n_joints, np.inf),
+        )
+        assert False
+        return dict(zip(vel_joints, zeros))
 
     def ekeberg_muscle(self, iteration, time, timestep):
         """Ekeberg muscle"""
 
         # Sensors
-        indices = self.joints_map.indices[ControlType.TORQUE]
         joints = self.animat_data.sensors.joints
+        indices = self.joints_map.indices[ControlType.TORQUE]
         positions = np.array(joints.positions(iteration))[indices]
         velocities = np.array(joints.velocities(iteration))[indices]
 
@@ -93,11 +110,7 @@ class AmphibiousController(ModelController):
         group1 = self.muscles_map.groups[ControlType.TORQUE][1]
         neural_diff = neural_activity[group0] - neural_activity[group1]
         neural_sum = neural_activity[group0] + neural_activity[group1]
-        active_torques = (
-            self.joints_map.gain_amplitude[ControlType.TORQUE]
-            *self.muscles_map.alphas[ControlType.TORQUE]
-            *neural_diff
-        )
+        active_torques = neural_diff*self.muscles_map.alphas[ControlType.TORQUE]
         betas = self.muscles_map.betas[ControlType.TORQUE]
         gammas = self.muscles_map.gammas[ControlType.TORQUE]
         delta_phi = positions - joints_offsets
@@ -108,8 +121,8 @@ class AmphibiousController(ModelController):
         # Final torques
         torques = np.clip(
             active_torques + active_stiffness + passive_stiffness + damping,
-            -self.max_torques[ControlType.TORQUE],
-            self.max_torques[ControlType.TORQUE],
+            a_min=-self.max_torques[ControlType.TORQUE],
+            a_max=self.max_torques[ControlType.TORQUE],
         )
         for i, idx in enumerate(indices):
             joints.array[iteration, idx, 8] = torques[i]
@@ -146,6 +159,7 @@ class JointsMap:
 
     def __init__(self, joints, joints_names, animat_options, control_types):
         super().__init__()
+        self.names = np.array(joints_names)
         self.indices = [
             np.array([
                 joint_i
@@ -165,17 +179,18 @@ class JointsMap:
             ])
             for control_type in control_types
         ]
+        self.gain_amplitude = np.array([
+            gain_amplitudes[joint]
+            for joint in joints_names
+        ])
         offsets_bias = {
             joint.joint: joint.bias
             for joint in animat_options.control.joints
         }
-        self.bias = [
-            np.array([
-                offsets_bias[joint]
-                for joint in joints[control_type]
-            ])
-            for control_type in control_types
-        ]
+        self.bias = np.array([
+            offsets_bias[joint]
+            for joint in joints_names
+        ])
 
 
 class MusclesMap:
