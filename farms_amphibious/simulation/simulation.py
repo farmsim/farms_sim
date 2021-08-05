@@ -10,33 +10,6 @@ from farms_bullet.swimming.drag import SwimmingHandler
 from .interface import AmphibiousUserParameters
 
 
-def time_based_drive(iteration, n_iterations, interface):
-    """Switch drive based on time"""
-    drive_speed = interface.user_params.drive_speed()
-    drive_speed.value = 1 + 4*iteration/n_iterations
-    drive_speed.changed = True
-
-
-def gps_based_drive(iteration, animat, interface):
-    """Switch drive based on position"""
-    distance = animat.data.sensors.gps.com_position(
-        iteration=iteration-1 if iteration else 0,
-        link_i=0
-    )[0]
-    swim_distance = 3
-    value = interface.user_params.drive_speed().value
-    if distance < -swim_distance:
-        interface.user_params.drive_speed().value = 4 - (
-            0.05*(swim_distance+distance)
-        )
-        if interface.user_params.drive_speed().value != value:
-            interface.user_params.drive_speed().changed = True
-    else:
-        if interface.user_params.drive_speed().value != value:
-            interface.user_params.drive_speed().changed = True
-
-
-
 class AmphibiousSimulation(AnimatSimulation):
     """Amphibious simulation"""
 
@@ -80,19 +53,6 @@ class AmphibiousSimulation(AnimatSimulation):
 
         # Interface
         if not self.options.headless:
-
-            # # Drive changes depending on simulation time
-            # if animat.options.transition:
-            #     time_based_drive(
-            #         iteration,
-            #         self.options.n_iterations,
-            #         self.interface
-            #     )
-
-            # GPS based drive
-            # gps_based_drive(iteration, self.animat, self.interface)
-
-            # Update interface
             self.animat_interface(iteration)
 
         # Animat sensors
