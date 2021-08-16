@@ -724,7 +724,7 @@ class AmphibiousNetworkOptions(Options):
                 )
                 for osc_i in range(n_oscillators)
             ]
-        state_init_smart = kwargs.pop('state_init_smart', False)
+        state_init_smart = kwargs.pop('state_init_smart', True)
         state_init = kwargs.pop(
             'state_init',
             self.default_state_init(convention).tolist()
