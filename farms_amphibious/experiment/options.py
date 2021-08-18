@@ -432,7 +432,7 @@ def get_polypterus_kwargs_options(**kwargs):
         'body_walk_amplitude': 1,
         'body_osc_gain': 0.05,
         'body_osc_bias': 0.3,
-        'legs_amplitudes': [[np.pi/4, np.pi/8, np.pi/4, np.pi/8]],
+        'legs_amplitudes': [[np.pi/4, np.pi/4, np.pi/4, np.pi/8]],
         'legs_offsets_walking': [[0, np.pi/8, 0, np.pi/8]],
         'modular_phases': (
             np.array([3*np.pi/2, 0, 3*np.pi/2, 0]) - np.pi/4
