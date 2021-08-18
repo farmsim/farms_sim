@@ -299,7 +299,7 @@ def get_salamander_options(**kwargs):
     options = AmphibiousOptions.from_options(kwargs_options)
     options.control.sensors.joints += [
         'joint_passive_{}'.format(i)
-        for i in range(3)
+        for i in range(7)
     ]
     convention = AmphibiousConvention(**options.morphology)
     options.control.sensors.contacts += convention.body_links_names()
