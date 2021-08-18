@@ -34,6 +34,7 @@ def generate_sdf(model_name, model_version, **kwargs):
     sdf_path = kwargs.pop('sdf_path', '')
     model_path = kwargs.pop('model_path', '')
     body_sdf_path = kwargs.pop('body_sdf_path', '')
+    passive_angle = kwargs.pop('passive_angle', np.pi)
     assert not kwargs, kwargs
 
     # Augment parameters
@@ -44,8 +45,8 @@ def generate_sdf(model_name, model_version, **kwargs):
     # Links and joints
     links = [None for _ in range(options.morphology.n_links())]
     joints = [None for _ in range(options.morphology.n_joints())]
-    max_velocity = 1e6
-    max_torque = 1e6
+    max_velocity = np.inf
+    max_torque = np.inf
 
     # Scale
     leg_radius *= scale
@@ -98,6 +99,7 @@ def generate_sdf(model_name, model_version, **kwargs):
         joints[i] = joint
         for j in range(3):
             joint.pose[j] = scale*joint.pose[j]
+        # joint.axis.limits = None
         joint.axis.limits[0] = -angle_max
         joint.axis.limits[1] = +angle_max
         joint.axis.limits[2] = max_torque
@@ -250,7 +252,7 @@ def generate_sdf(model_name, model_version, **kwargs):
             child=links_passive[passive_i],
             pose=[0, 0, 0, 0, 0, 0],
             xyz=[0, 1, 0],
-            limits=[-1e-2*np.pi, 1e-2*np.pi, max_torque, max_velocity],
+            limits=[-passive_angle, passive_angle, max_torque, max_velocity],
         )
         joints[joint_index].parent = links_passive[passive_i].name
 
