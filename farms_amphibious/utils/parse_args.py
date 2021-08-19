@@ -137,6 +137,12 @@ def argument_parser():
         help='Max torque',
     )
     parser.add_argument(
+        '--max_velocity',
+        type=float,
+        default=np.inf,
+        help='Max velocity',
+    )
+    parser.add_argument(
         '--lateral_friction',
         type=float,
         default=1.0,

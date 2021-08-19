@@ -206,6 +206,8 @@ class AmphibiousMorphologyOptions(MorphologyOptions):
             'joints_damping',
             [0 for name in joints_names]
         )
+        max_torque = kwargs.pop('max_torque', np.inf)
+        max_velocity = kwargs.pop('max_velocity', np.inf)
         options['joints'] = kwargs.pop(
             'joints',
             [
@@ -215,8 +217,8 @@ class AmphibiousMorphologyOptions(MorphologyOptions):
                     initial_velocity=velocity,
                     pybullet_dynamics={
                         'jointDamping': damping,
-                        'maxJointVelocity': np.inf,
-                        'jointLimitForce': np.inf,
+                        'maxJointVelocity': max_velocity,
+                        'jointLimitForce': max_torque,
                     },
                 )
                 for name, position, velocity, damping in zip(
