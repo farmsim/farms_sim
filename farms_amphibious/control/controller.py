@@ -47,6 +47,17 @@ class AmphibiousController(ModelController):
             control_types=self.control_types,
         )
 
+        # Velocity
+        if self.joints[ControlType.TORQUE]:
+            self.joints[ControlType.VELOCITY] = self.joints[ControlType.TORQUE]
+            self.joints_map.indices[ControlType.VELOCITY] = (
+                self.joints_map.indices[ControlType.TORQUE]
+            )
+            self.max_torques[ControlType.VELOCITY] = np.full(
+                len(self.max_torques[ControlType.TORQUE]),
+                np.inf,
+            )
+
     def step(self, iteration, time, timestep):
         """Control step"""
         if self.drive is not None:
@@ -75,16 +86,12 @@ class AmphibiousController(ModelController):
         joints = self.animat_data.sensors.joints
         indices = self.joints_map.indices[ControlType.VELOCITY]
         velocities = np.array(joints.velocities(iteration))[indices]
-        vel_joints = self.joints[ControlType.VELOCITY]
-        n_joints = len(vel_joints)
-        zeros = np.zeros(n_joints)
-        self.max_torques[ControlType.VELOCITY] = np.where(
-            abs(velocities) <= 100,
-            zeros,
-            np.full(n_joints, np.inf),
-        )
-        assert False
-        return dict(zip(vel_joints, zeros))
+        n_joints = len(indices)
+        max_torques = -self.muscles_map.deltas[ControlType.TORQUE]
+        self.max_torques[ControlType.VELOCITY][:] = max_torques
+        for i, idx in enumerate(indices):
+            joints.array[iteration, idx, 11] = max_torques[i]
+        return dict(zip(self.joints[ControlType.VELOCITY], np.zeros(n_joints)))
 
     def ekeberg_muscle(self, iteration, time, timestep):
         """Ekeberg muscle"""
@@ -120,7 +127,7 @@ class AmphibiousController(ModelController):
 
         # Final torques
         torques = np.clip(
-            active_torques + active_stiffness + passive_stiffness + damping,
+            active_torques + active_stiffness + passive_stiffness,  # + damping,
             a_min=-self.max_torques[ControlType.TORQUE],
             a_max=self.max_torques[ControlType.TORQUE],
         )
@@ -128,7 +135,7 @@ class AmphibiousController(ModelController):
             joints.array[iteration, idx, 8] = torques[i]
             joints.array[iteration, idx, 9] = active_torques[i] + active_stiffness[i]
             joints.array[iteration, idx, 10] = passive_stiffness[i]
-            joints.array[iteration, idx, 11] = damping[i]
+            # joints.array[iteration, idx, 11] = damping[i]
         return dict(zip(self.joints[ControlType.TORQUE], torques))
 
     def passive(self, iteration, time, timestep):
