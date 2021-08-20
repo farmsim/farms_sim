@@ -284,10 +284,10 @@ def get_salamander_kwargs_options(**kwargs):
         ).tolist(),
         # 'modular_amplitudes': np.full(4, 1.0),
         'modular_amplitudes': np.full(4, 0).tolist(),
-        'muscle_alpha': 1.2e-3,
+        'muscle_alpha': 2e-3,
         'muscle_beta': -1e-8,
-        'muscle_gamma': 2e5,
-        'muscle_delta': -1e-8,
+        'muscle_gamma': 5e5,
+        'muscle_delta': -5e-5,
     }
     kwargs_options.update(kwargs)
     return kwargs_options
