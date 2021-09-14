@@ -291,10 +291,7 @@ def generate_sdf(model_name, model_version, **kwargs):
     # Create SDF
     sdf = ModelSDF(
         name=model_name,
-        pose=np.concatenate([
-            np.asarray([0, 0, 0.1])*scale,
-            [0, 0, 0]
-        ]),
+        pose=np.zeros(6),
         links=constraint_links+links+links_passive,
         joints=constraint_joints+joints+joints_passive,
     )
