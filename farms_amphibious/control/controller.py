@@ -37,6 +37,7 @@ class AmphibiousController(ModelController):
         self.torque_equation = {
             'passive': self.passive,
             'ekeberg_muscle': self.ekeberg_muscle,
+            'ekeberg_muscle_explicit': self.ekeberg_muscle_explicit,
         }[animat_options.control.torque_equation]
 
         # Muscles
@@ -48,35 +49,38 @@ class AmphibiousController(ModelController):
         )
 
         # Muscle constraints handling
-        if self.joints[ControlType.TORQUE]:
+        if (
+                self.joints[ControlType.TORQUE]
+                and self.torque_equation == self.ekeberg_muscle
+        ):
 
-            # # Position
-            # self.joints[ControlType.POSITION] = self.joints[ControlType.TORQUE]
-            # self.joints_map.indices[ControlType.POSITION] = (
-            #     self.joints_map.indices[ControlType.TORQUE]
-            # )
-            # self.max_torques[ControlType.POSITION] = np.full(
-            #     len(self.max_torques[ControlType.TORQUE]),
-            #     np.inf,
-            # )
-            # self.positions, self._positions = (
-            #     self.positions_spring,
-            #     self.positions,
-            # )
-
-            # Velocity
-            self.joints[ControlType.VELOCITY] = self.joints[ControlType.TORQUE]
-            self.joints_map.indices[ControlType.VELOCITY] = (
+            # Position
+            self.joints[ControlType.POSITION] = self.joints[ControlType.TORQUE]
+            self.joints_map.indices[ControlType.POSITION] = (
                 self.joints_map.indices[ControlType.TORQUE]
             )
-            self.max_torques[ControlType.VELOCITY] = np.full(
+            self.max_torques[ControlType.POSITION] = np.full(
                 len(self.max_torques[ControlType.TORQUE]),
                 np.inf,
             )
-            self.velocities, self._velocities = (
-                self.velocities_friction,
-                self.velocities,
+            self.positions, self._positions = (
+                self.positions_spring_damper,
+                self.positions,
             )
+
+            # # Velocity
+            # self.joints[ControlType.VELOCITY] = self.joints[ControlType.TORQUE]
+            # self.joints_map.indices[ControlType.VELOCITY] = (
+            #     self.joints_map.indices[ControlType.TORQUE]
+            # )
+            # self.max_torques[ControlType.VELOCITY] = np.full(
+            #     len(self.max_torques[ControlType.TORQUE]),
+            #     np.inf,
+            # )
+            # self.velocities, self._velocities = (
+            #     self.velocities_friction,
+            #     self.velocities,
+            # )
 
     def step(self, iteration, time, timestep):
         """Control step"""
@@ -101,6 +105,37 @@ class AmphibiousController(ModelController):
         )
         return dict(zip(self.joints[ControlType.POSITION], positions))
 
+    def positions_spring_damper(self, iteration, time, timestep):
+        """Postions"""
+        joints = self.data.sensors.joints
+        indices = self.joints_map.indices[ControlType.POSITION]
+        joints_offsets = (
+            self.joints_map.gain_amplitude[ControlType.TORQUE]
+            *np.array(self.network.offsets(iteration))[indices]
+            + self.joints_map.bias[ControlType.TORQUE]
+        )
+        positions = np.array(joints.positions(iteration))[indices]
+        velocities = np.array(joints.velocities(iteration))[indices]
+        betas = self.muscles_map.betas[ControlType.TORQUE]
+        gammas = self.muscles_map.gammas[ControlType.TORQUE]
+        deltas = self.muscles_map.deltas[ControlType.TORQUE]
+        stiffness_coefficients = betas*gammas
+        passive_stiffness = stiffness_coefficients*(joints_offsets - positions)
+        damping = -deltas*velocities
+        self.max_torques[ControlType.POSITION][:] = (
+            np.abs(passive_stiffness + damping)
+        )
+        for i, idx in enumerate(indices):
+            # joints.array[iteration, idx, 8] = torques[i]
+            # joints.array[iteration, idx, 9] = active_torques[i] + active_stiffness[i]
+            joints.array[iteration, idx, 10] = passive_stiffness[i]
+            joints.array[iteration, idx, 11] = damping[i]
+        return (
+            dict(zip(self.joints[ControlType.POSITION], joints_offsets)),
+            stiffness_coefficients*timestep,
+            1+deltas,
+        )
+
     def positions_spring(self, iteration, time, timestep):
         """Postions"""
         joints = self.animat_data.sensors.joints
@@ -113,7 +148,7 @@ class AmphibiousController(ModelController):
         positions = np.array(joints.positions(iteration))[indices]
         betas = self.muscles_map.betas[ControlType.TORQUE]
         gammas = self.muscles_map.gammas[ControlType.TORQUE]
-        delta_phi = positions - joints_offsets
+        delta_phi = joints_offsets - positions
         passive_stiffness = np.abs(betas*gammas*delta_phi)
         n_joints = len(indices)
         self.max_torques[ControlType.POSITION][:] = passive_stiffness
@@ -133,7 +168,7 @@ class AmphibiousController(ModelController):
             joints.array[iteration, idx, 11] = max_torques[i]
         return dict(zip(self.joints[ControlType.VELOCITY], np.zeros(n_joints)))
 
-    def ekeberg_muscle(self, iteration, time, timestep):
+    def ekeberg_muscle_explicit(self, iteration, time, timestep):
         """Ekeberg muscle"""
 
         # Sensors
@@ -153,21 +188,23 @@ class AmphibiousController(ModelController):
         )
 
         # Torques
+        alphas = self.muscles_map.alphas[ControlType.TORQUE]
+        betas = self.muscles_map.betas[ControlType.TORQUE]
+        gammas = self.muscles_map.gammas[ControlType.TORQUE]
+        deltas = self.muscles_map.deltas[ControlType.TORQUE]
         group0 = self.muscles_map.groups[ControlType.TORQUE][0]
         group1 = self.muscles_map.groups[ControlType.TORQUE][1]
         neural_diff = neural_activity[group0] - neural_activity[group1]
         neural_sum = neural_activity[group0] + neural_activity[group1]
-        active_torques = neural_diff*self.muscles_map.alphas[ControlType.TORQUE]
-        betas = self.muscles_map.betas[ControlType.TORQUE]
-        gammas = self.muscles_map.gammas[ControlType.TORQUE]
-        delta_phi = positions - joints_offsets
+        active_torques = neural_diff*alphas
+        delta_phi = joints_offsets - positions
         active_stiffness = betas*neural_sum*delta_phi
         passive_stiffness = betas*gammas*delta_phi
-        damping = self.muscles_map.deltas[ControlType.TORQUE]*velocities
+        damping = -deltas*velocities
 
         # Final torques
         torques = np.clip(
-            active_torques + active_stiffness + passive_stiffness,  # + damping,
+            active_torques + active_stiffness + passive_stiffness + damping,
             a_min=-self.max_torques[ControlType.TORQUE],
             a_max=self.max_torques[ControlType.TORQUE],
         )
@@ -175,7 +212,56 @@ class AmphibiousController(ModelController):
             joints.array[iteration, idx, 8] = torques[i]
             joints.array[iteration, idx, 9] = active_torques[i] + active_stiffness[i]
             joints.array[iteration, idx, 10] = passive_stiffness[i]
-            # joints.array[iteration, idx, 11] = damping[i]
+            joints.array[iteration, idx, 11] = damping[i]
+        return dict(zip(self.joints[ControlType.TORQUE], torques))
+
+    def ekeberg_muscle(self, iteration, time, timestep):
+        """Ekeberg muscle"""
+
+        # Sensors
+        joints = self.data.sensors.joints
+        indices = self.joints_map.indices[ControlType.TORQUE]
+        positions = np.array(joints.positions(iteration))[indices]
+        velocities = np.array(joints.velocities(iteration))[indices]
+
+        # Neural activity
+        neural_activity = self.network.outputs(iteration)
+
+        # Joints offsets
+        joints_offsets = (
+            self.joints_map.gain_amplitude[ControlType.TORQUE]
+            *np.array(self.network.offsets(iteration))[indices]
+            + self.joints_map.bias[ControlType.TORQUE]
+        )
+
+        # Data
+        alphas = self.muscles_map.alphas[ControlType.TORQUE]
+        betas = self.muscles_map.betas[ControlType.TORQUE]
+        gammas = self.muscles_map.gammas[ControlType.TORQUE]
+        deltas = self.muscles_map.deltas[ControlType.TORQUE]
+        group0 = self.muscles_map.groups[ControlType.TORQUE][0]
+        group1 = self.muscles_map.groups[ControlType.TORQUE][1]
+        neural_diff = neural_activity[group0] - neural_activity[group1]
+        neural_sum = neural_activity[group0] + neural_activity[group1]
+        delta_phi = joints_offsets - positions
+
+        # Torques
+        active_torques = neural_diff*alphas
+        active_stiffness = betas*neural_sum*delta_phi
+        passive_stiffness = betas*gammas*delta_phi
+        damping = -deltas*velocities
+
+        # Final torques
+        torques = np.clip(
+            active_torques + active_stiffness + passive_stiffness + damping,
+            a_min=-self.max_torques[ControlType.TORQUE],
+            a_max=self.max_torques[ControlType.TORQUE],
+        )
+        for i, idx in enumerate(indices):
+            joints.array[iteration, idx, 8] = torques[i]
+            joints.array[iteration, idx, 9] = active_torques[i] + active_stiffness[i]
+            joints.array[iteration, idx, 10] = passive_stiffness[i]
+            joints.array[iteration, idx, 11] = damping[i]
         return dict(zip(self.joints[ControlType.TORQUE], torques))
 
     def passive(self, iteration, time, timestep):
