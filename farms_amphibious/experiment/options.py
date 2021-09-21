@@ -172,7 +172,8 @@ def amphibious_options(animat_options, arena='flat', **kwargs):
 
     # Simulation
     simulation_options = SimulationOptions.with_clargs(**kwargs)
-    animat_options.show_hydrodynamics = not simulation_options.headless
+    if simulation_options.headless:
+        animat_options.show_hydrodynamics = False
 
     # Arena
     if arena == 'flat':
