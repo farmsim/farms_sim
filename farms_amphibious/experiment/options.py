@@ -24,6 +24,7 @@ def get_animat_options_from_model(animat, version, kwargs_only=False, **options)
             'orobot': get_orobot_kwargs_options,
             'hfsp_robot': get_hfsp_robot_kwargs_options,
             'agnathax': get_agnathax_kwargs_options,
+            'amphibot': get_amphibot_kwargs_options,
         } if kwargs_only else {
             'salamander': get_salamander_options,
             'polypterus': get_polypterus_options,
@@ -33,6 +34,7 @@ def get_animat_options_from_model(animat, version, kwargs_only=False, **options)
             'orobot': get_orobot_options,
             'hfsp_robot': get_hfsp_robot_options,
             'agnathax': get_agnathax_options,
+            'amphibot': get_amphibot_options,
         }
     )[animat]
     if animat == 'hfsp_robot' and version == 'polypterus_0':
@@ -1513,5 +1515,65 @@ def get_agnathax_kwargs_options(**kwargs):
 def get_agnathax_options(**kwargs):
     """Agnathax options"""
     kwargs_options = get_agnathax_kwargs_options(**kwargs)
+    options = AmphibiousOptions.from_options(kwargs_options)
+    return options
+
+
+def get_amphibot_kwargs_options(**kwargs):
+    """Amphibot options"""
+    n_joints_body = kwargs.pop('n_joints_body', 6)
+    links_names = kwargs.pop(
+        'links_names',
+        ['body_module_{}'.format(i) for i in range(n_joints_body+1)]
+        + ['tail'],
+    )
+    joints_names = kwargs.pop(
+        'joints_names',
+        ['joint_c2m_{}'.format(i) for i in range(n_joints_body)]
+    )
+    kwargs_options = {
+        # 'spawn_loader': SpawnLoader.FARMS,  # SpawnLoader.PYBULLET,
+        'spawn_loader': SpawnLoader.PYBULLET,
+        'spawn_position': [0, 0, 0.2*0.07],
+        'spawn_orientation': [0, 0, 0],
+        'use_self_collisions': False,
+        'default_control_type': ControlType.POSITION,  # ControlType.TORQUE,
+        'show_hydrodynamics': False,
+        'scale_hydrodynamics': 10,
+        'n_legs': 0,
+        'n_dof_legs': 0,
+        'n_joints_body': n_joints_body,
+        'links_names': links_names,
+        'joints_names': joints_names,
+        'drag_coefficients': [
+            [
+                [-1e-2, -4e0, -1e1],
+                [-1e-7, -1e-7, -1e-7],
+            ]
+            for i in range((n_joints_body+2))
+        ],
+        'drives_init': [2, 0],
+        'body_freq_gain': 2*np.pi*0.25,
+        'body_freq_bias': 2*np.pi*0.0,
+        'weight_osc_body': 1e1,
+        'weight_sens_contact_intralimb': 0,
+        'weight_sens_contact_opposite': 0,
+        'weight_sens_contact_following': 0,
+        'weight_sens_contact_diagonal': 0,
+        'weight_sens_hydro_freq': 0,
+        'weight_sens_hydro_amp': 0,
+        'body_walk_amplitude': 0.2,
+        'muscle_alpha': 1e-3,
+        'muscle_beta': -1e-6,
+        'muscle_gamma': 2e3,
+        'muscle_delta': -1e-8,
+    }
+    kwargs_options.update(kwargs)
+    return kwargs_options
+
+
+def get_amphibot_options(**kwargs):
+    """Amphibot options"""
+    kwargs_options = get_amphibot_kwargs_options(**kwargs)
     options = AmphibiousOptions.from_options(kwargs_options)
     return options
