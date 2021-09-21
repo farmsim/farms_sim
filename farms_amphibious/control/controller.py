@@ -107,7 +107,7 @@ class AmphibiousController(ModelController):
 
     def positions_spring_damper(self, iteration, time, timestep):
         """Postions"""
-        joints = self.data.sensors.joints
+        joints = self.animat_data.sensors.joints
         indices = self.joints_map.indices[ControlType.POSITION]
         joints_offsets = (
             self.joints_map.gain_amplitude[ControlType.TORQUE]
@@ -219,7 +219,7 @@ class AmphibiousController(ModelController):
         """Ekeberg muscle"""
 
         # Sensors
-        joints = self.data.sensors.joints
+        joints = self.animat_data.sensors.joints
         indices = self.joints_map.indices[ControlType.TORQUE]
         positions = np.array(joints.positions(iteration))[indices]
         velocities = np.array(joints.velocities(iteration))[indices]
