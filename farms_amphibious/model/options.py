@@ -368,6 +368,9 @@ class AmphibiousControlOptions(ControlOptions):
             ),
             'joints': kwargs.pop('joints', {}),
         })
+        options['torque_equation'] = (
+            kwargs.pop('torque_equation', 'ekeberg_muscle')
+        )
         options['kinematics_file'] = kwargs.pop('kinematics_file', '')
         options['kinematics_sampling'] = kwargs.pop('kinematics_sampling', 0)
         options['network'] = kwargs.pop(
@@ -748,7 +751,7 @@ class AmphibiousNetworkOptions(Options):
         )
         osc_frequencies = kwargs.pop(
             'osc_frequencies',
-            self.default_osc_frequencies(convention),
+            self.default_osc_frequencies(convention, kwargs),
         )
         osc_amplitudes = kwargs.pop(
             'osc_amplitudes',
@@ -1014,23 +1017,31 @@ class AmphibiousNetworkOptions(Options):
         return state
 
     @staticmethod
-    def default_osc_frequencies(convention):
+    def default_osc_frequencies(convention, kwargs):
         """Walking parameters"""
         n_oscillators = 2*(convention.n_joints())
         frequencies = [None]*n_oscillators
+
         # Body
+        body_freq_gain = kwargs.pop('body_freq_gain', 2*np.pi*0.55)
+        body_freq_bias = kwargs.pop('body_freq_bias', 2*np.pi*0.0)
         for joint_i in range(convention.n_joints_body):
             for side in range(2):
                 frequencies[convention.bodyosc2index(joint_i, side=side)] = {
                     # 'gain': 2*np.pi*0.2,
                     # 'bias': 2*np.pi*0.3,
-                    'gain': 2*np.pi*0.55, # 1.65 - 2.75 [Hz]
-                    'bias': 2*np.pi*0.0,
+                    # 'gain': 2*np.pi*0.55, # 1.65 - 2.75 [Hz]
+                    # 'bias': 2*np.pi*0.0,
+                    'gain': body_freq_gain,
+                    'bias': body_freq_bias,
                     'low': 1,
                     'high': 5,
                     'saturation': 0,
                 }
+
         # legs
+        legs_freq_gain = kwargs.pop('legs_freq_gain', 2*np.pi*0.3)
+        legs_freq_bias = kwargs.pop('legs_freq_bias', 2*np.pi*0.3)
         for joint_i in range(convention.n_dof_legs):
             for leg_i in range(convention.n_legs//2):
                 for side_i in range(2):
@@ -1043,12 +1054,15 @@ class AmphibiousNetworkOptions(Options):
                         )] = {
                             # 'gain': 2*np.pi*0.2,
                             # 'bias': 2*np.pi*0.0,
-                            'gain': 2*np.pi*0.3, # 0.6 - 1.2 [Hz]
-                            'bias': 2*np.pi*0.3,
+                            # 'gain': 2*np.pi*0.3, # 0.6 - 1.2 [Hz]
+                            # 'bias': 2*np.pi*0.3,
+                            'gain': legs_freq_gain,
+                            'bias': legs_freq_bias,
                             'low': 1,
                             'high': 3,
                             'saturation': 0,
                         }
+
         return frequencies
 
     @staticmethod
