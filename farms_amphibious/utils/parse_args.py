@@ -177,6 +177,27 @@ def argument_parser():
         action='store_true',
         help='Prompt at end of simulation',
     )
+    for weight in [
+            'weight_osc_body',
+            'weight_osc_legs_internal',
+            'weight_osc_legs_opposite',
+            'weight_osc_legs_following',
+            'weight_osc_legs2body',
+            'weight_osc_body2legs',
+            'weight_sens_stretch_freq',
+            'weight_sens_contact_intralimb',
+            'weight_sens_contact_opposite',
+            'weight_sens_contact_following',
+            'weight_sens_contact_diagonal',
+            'weight_sens_hydro_freq',
+            'weight_sens_hydro_amp',
+    ]:
+        parser.add_argument(
+            f'--{weight}',
+            type=float,
+            default=None,
+            help=f'{weight}',
+        )
     return parser
 
 
