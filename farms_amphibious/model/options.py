@@ -2,6 +2,7 @@
 
 from functools import partial
 import numpy as np
+from numpy.random import MT19937, RandomState, SeedSequence
 from farms_data.options import Options
 from farms_bullet.model.control import ControlType
 from farms_bullet.model.options import (
@@ -743,11 +744,13 @@ class AmphibiousNetworkOptions(Options):
                 for osc_i in range(n_oscillators)
             ]
         state_init_smart = kwargs.pop('state_init_smart', False)
+        random_state = RandomState(MT19937(SeedSequence(123456789)))
         state_init = kwargs.pop(
             'state_init',
             self.default_state_init(convention).tolist()
             if state_init_smart
-            else 1e-3*np.pi*np.linspace(0, 1, 5*convention.n_joints()),
+            # else 1e-1*np.pi*np.linspace(0, 1, 5*convention.n_joints()),
+            else 1e-1*random_state.rand(5*convention.n_joints()),
         )
         osc_frequencies = kwargs.pop(
             'osc_frequencies',
