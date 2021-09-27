@@ -389,7 +389,7 @@ class NetworkFigure:
                 self.data.network.osc_connectivity.desired_phases.array,
             )
             if osc_conn_cond(connection[0], connection[1])
-        ])
+        ]) if self.data.network.osc_connectivity.connections.array else np.empty(0)
         options = {}
         use_weights = use_colorbar and kwargs.pop('oscillator_weights', False)
         if use_weights:
