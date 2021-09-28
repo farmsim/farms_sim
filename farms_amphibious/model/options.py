@@ -431,7 +431,7 @@ class AmphibiousControlOptions(ControlOptions):
         if np.ndim(legs_offsets_walking) == 1:
             legs_offsets_walking = repeat([legs_offsets_walking]).tolist()
 
-        # Offsets
+        # Joints offsets for walking and swimming
         for leg_i in range(convention.n_legs//2):
             for side_i in range(2):
                 for joint_i in range(convention.n_dof_legs):
@@ -457,15 +457,20 @@ class AmphibiousControlOptions(ControlOptions):
                 AmphibiousJointControlOptions(
                     joint=None,
                     control_type=None,
-                    offset_gain=None,
-                    offset_bias=None,
-                    offset_low=None,
-                    offset_high=None,
-                    offset_saturation=None,
-                    rate=None,
-                    gain_amplitude=None,
-                    bias=None,
                     max_torque=None,
+                    equation=None,
+                    transform=AmphibiousJointControlTransformOptions(
+                        gain=None,
+                        bias=None,
+                    ),
+                    offsets=AmphibiousJointControlOffsetOptions(
+                        gain=None,
+                        bias=None,
+                        low=None,
+                        high=None,
+                        saturation=None,
+                        rate=None,
+                    ),
                 )
                 for joint in range(n_joints)
             ]
@@ -499,28 +504,31 @@ class AmphibiousControlOptions(ControlOptions):
             {joint_name: default_max_torque for joint_name in joints_names},
         )
         for joint_i, joint in enumerate(self.joints):
+            # Control
             if joint.joint is None:
                 joint.joint = joints_names[joint_i]
             if joint.control_type is None:
                 joint.control_type = joints_control_types[joint.joint]
-            if joint.offset_gain is None:
-                joint.offset_gain = offsets[joint_i]['gain']
-            if joint.offset_bias is None:
-                joint.offset_bias = offsets[joint_i]['bias']
-            if joint.offset_low is None:
-                joint.offset_low = offsets[joint_i]['low']
-            if joint.offset_high is None:
-                joint.offset_high = offsets[joint_i]['high']
-            if joint.offset_saturation is None:
-                joint.offset_saturation = offsets[joint_i]['saturation']
-            if joint.rate is None:
-                joint.rate = joints_rates[joint.joint]
-            if joint.gain_amplitude is None:
-                joint.gain_amplitude = gain_amplitude[joint.joint]
-            if joint.bias is None:
-                joint.bias = offsets_bias[joint.joint]
             if joint.max_torque is None:
                 joint.max_torque = max_torques[joint.joint]
+            # Transform
+            if joint.transform.gain is None:
+                joint.transform.gain = gain_amplitude[joint.joint]
+            if joint.transform.bias is None:
+                joint.transform.bias = offsets_bias[joint.joint]
+            # Offset
+            if joint.offsets.gain is None:
+                joint.offsets.gain = offsets[joint_i]['gain']
+            if joint.offsets.bias is None:
+                joint.offsets.bias = offsets[joint_i]['bias']
+            if joint.offsets.low is None:
+                joint.offsets.low = offsets[joint_i]['low']
+            if joint.offsets.high is None:
+                joint.offsets.high = offsets[joint_i]['high']
+            if joint.offsets.saturation is None:
+                joint.offsets.saturation = offsets[joint_i]['saturation']
+            if joint.offsets.rate is None:
+                joint.offsets.rate = joints_rates[joint.joint]
 
         if not self.kinematics_file:
 
@@ -562,26 +570,26 @@ class AmphibiousControlOptions(ControlOptions):
         """Joints offsets"""
         return [
             {
-                'gain': joint.offset_gain,
-                'bias': joint.offset_bias,
-                'low': joint.offset_low,
-                'high': joint.offset_high,
-                'saturation': joint.offset_saturation,
+                'gain': joint.offsets.gain,
+                'bias': joint.offsets.bias,
+                'low': joint.offsets.low,
+                'high': joint.offsets.high,
+                'saturation': joint.offsets.saturation,
             }
             for joint in self.joints
         ]
 
-    def joints_rates(self):
+    def joints_offset_rates(self):
         """Joints rates"""
-        return [joint.rate for joint in self.joints]
+        return [joint.offsets.rate for joint in self.joints]
 
-    def joints_gain_amplitudes(self):
+    def joints_transform_gain(self):
         """Joints gain amplitudes"""
-        return [joint.gain_amplitude for joint in self.joints]
+        return [joint.transform.gain for joint in self.joints]
 
-    def joints_offset_bias(self):
+    def joints_transform_bias(self):
         """Joints offset bias"""
-        return [joint.offset_bias for joint in self.joints]
+        return [joint.transform.bias for joint in self.joints]
 
 
 class AmphibiousJointControlOptions(JointControlOptions):
@@ -593,14 +601,33 @@ class AmphibiousJointControlOptions(JointControlOptions):
             control_type=kwargs.pop('control_type'),
             max_torque=kwargs.pop('max_torque'),
         )
-        self.offset_gain = kwargs.pop('offset_gain')
-        self.offset_bias = kwargs.pop('offset_bias')
-        self.offset_low = kwargs.pop('offset_low')
-        self.offset_high = kwargs.pop('offset_high')
-        self.offset_saturation = kwargs.pop('offset_saturation')
-        self.rate = kwargs.pop('rate')
-        self.gain_amplitude = kwargs.pop('gain_amplitude')
+        self.equation = kwargs.pop('equation')
+        self.transform = kwargs.pop('transform')
+        self.offsets = kwargs.pop('offsets')
+        assert not kwargs, 'Unknown kwargs: {}'.format(kwargs)
+
+
+class AmphibiousJointControlTransformOptions(Options):
+    """Amphibious joint options"""
+
+    def __init__(self, **kwargs):
+        super(AmphibiousJointControlTransformOptions, self).__init__()
+        self.gain = kwargs.pop('gain')
         self.bias = kwargs.pop('bias')
+        assert not kwargs, 'Unknown kwargs: {}'.format(kwargs)
+
+
+class AmphibiousJointControlOffsetOptions(Options):
+    """Amphibious joint options"""
+
+    def __init__(self, **kwargs):
+        super(AmphibiousJointControlOffsetOptions, self).__init__()
+        self.gain = kwargs.pop('gain')
+        self.bias = kwargs.pop('bias')
+        self.low = kwargs.pop('low')
+        self.high = kwargs.pop('high')
+        self.saturation = kwargs.pop('saturation')
+        self.rate = kwargs.pop('rate')
         assert not kwargs, 'Unknown kwargs: {}'.format(kwargs)
 
 
