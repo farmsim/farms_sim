@@ -38,6 +38,15 @@ def setup_from_clargs(clargs=None):
         if clargs.sdf
         else get_sdf_path(name=clargs.animat, version=clargs.version)
     )
+    kwargs = {}
+    if clargs.weight_osc_body is not None:
+        kwargs['weight_osc_body'] = clargs.weight_osc_body
+    if clargs.weight_osc_body2legs is not None:
+        kwargs['weight_osc_body2legs'] = clargs.weight_osc_body2legs
+    if clargs.weight_osc_legs2body is not None:
+        kwargs['weight_osc_legs2body'] = clargs.weight_osc_legs2body
+    if clargs.weight_sens_stretch_freq is not None:
+        kwargs['weight_sens_stretch_freq'] = clargs.weight_sens_stretch_freq
     animat_options = get_animat_options_from_model(
         animat=clargs.animat,
         version=clargs.version,
@@ -58,6 +67,7 @@ def setup_from_clargs(clargs=None):
             'position': ControlType.POSITION,
             'muscle': ControlType.TORQUE,
         }[clargs.control_type],
+        **kwargs,
     )
     simulation_options, arena = amphibious_options(
         animat_options=animat_options,
