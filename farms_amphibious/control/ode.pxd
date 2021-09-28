@@ -2,6 +2,7 @@
 
 include 'types.pxd'
 from farms_data.sensors.data_cy cimport (
+    JointSensorArrayCy,
     ContactsArrayCy,
     HydrodynamicsArrayCy,
 )
@@ -11,6 +12,7 @@ from farms_data.amphibious.animat_data_cy cimport (
     DriveArrayCy,
     OscillatorsCy,
     OscillatorsConnectivityCy,
+    JointsConnectivityCy,
     ContactsConnectivityCy,
     HydroConnectivityCy,
     JointsControlArrayCy,
@@ -33,6 +35,15 @@ cpdef void ode_damplitude(
     DTYPEv1 dstate,
     DriveArrayCy drives,
     OscillatorsCy oscillators,
+) nogil
+
+
+cpdef inline void ode_stretch(
+    unsigned int iteration,
+    DTYPEv1 state,
+    DTYPEv1 dstate,
+    JointSensorArrayCy joints,
+    JointsConnectivityCy joints_connectivity,
 ) nogil
 
 

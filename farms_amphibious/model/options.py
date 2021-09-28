@@ -939,24 +939,23 @@ class AmphibiousNetworkOptions(Options):
                 )
             )
         if self.joint2osc is None:
-            self.joint2osc = []
+            self.joint2osc = self.default_joint2osc(
+                convention,
+                kwargs.pop('weight_sens_stretch_freq', 0),
+            )
         if self.contact2osc is None:
-            self.contact2osc = (
-                self.default_contact2osc(
-                    convention,
-                    kwargs.pop('weight_sens_contact_intralimb', 0),
-                    kwargs.pop('weight_sens_contact_opposite', 0),
-                    kwargs.pop('weight_sens_contact_following', 0),
-                    kwargs.pop('weight_sens_contact_diagonal', 0),
-                )
+            self.contact2osc = self.default_contact2osc(
+                convention,
+                kwargs.pop('weight_sens_contact_intralimb', 0),
+                kwargs.pop('weight_sens_contact_opposite', 0),
+                kwargs.pop('weight_sens_contact_following', 0),
+                kwargs.pop('weight_sens_contact_diagonal', 0),
             )
         if self.hydro2osc is None:
-            self.hydro2osc = (
-                self.default_hydro2osc(
-                    convention,
-                    kwargs.pop('weight_sens_hydro_freq', 0),
-                    kwargs.pop('weight_sens_hydro_amp', 0),
-                )
+            self.hydro2osc = self.default_hydro2osc(
+                convention,
+                kwargs.pop('weight_sens_hydro_freq', 0),
+                kwargs.pop('weight_sens_hydro_amp', 0),
             )
 
     def drives_init(self):
@@ -1420,6 +1419,24 @@ class AmphibiousNetworkOptions(Options):
                                             - intralimb_phases[joint_i]
                                         )) % (2*np.pi),
                                     })
+        return connectivity
+
+    @staticmethod
+    def default_joint2osc(convention, weight_frequency):
+        """Default joint sensors to oscillators connectivity"""
+        connectivity = []
+        for joint_i in range(1, convention.n_joints_body):
+            for side_osc in range(2):
+                if weight_frequency:
+                    connectivity.append({
+                        'in': convention.bodyosc2name(
+                            joint_i=joint_i,
+                            side=side_osc
+                        ),
+                        'out': convention.bodyjoint2name(joint_i-1),
+                        'type': 'STRETCH2FREQ',
+                        'weight': (1 if side_osc else -1)*weight_frequency,
+                    })
         return connectivity
 
     @staticmethod

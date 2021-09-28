@@ -102,6 +102,40 @@ cpdef inline void ode_damplitude(
         )
 
 
+cpdef inline void ode_stretch(
+    unsigned int iteration,
+    DTYPEv1 state,
+    DTYPEv1 dstate,
+    JointSensorArrayCy joints,
+    JointsConnectivityCy joints_connectivity,
+) nogil:
+    """Sensory feedback - Stretch
+
+    Can affect d_phase
+
+    """
+    cdef unsigned int i, i0, i1, connection_type
+    for i in range(joints_connectivity.c_n_connections()):
+        i0 = joints_connectivity.connections.array[i, 0]
+        i1 = joints_connectivity.connections.array[i, 1]
+        connection_type = joints_connectivity.connections.array[i, 2]
+        if connection_type == ConnectionType.STRETCH2FREQ:
+            # stretch_weight*joint_position*sin(phase)
+            dstate[i0] += (
+                joints_connectivity.c_weight(i)
+                *joints.position_cy(iteration, i1)
+                *sin(state[i0])  # For Tegotae
+            )
+        else:
+            printf(
+                'Joint connection %i of type %i is incorrect'
+                ', should be %i\n',
+                i,
+                connection_type,
+                ConnectionType.STRETCH2FREQ,
+            )
+
+
 cpdef inline void ode_contacts(
     unsigned int iteration,
     DTYPEv1 state,
@@ -256,6 +290,13 @@ cpdef inline DTYPEv1 ode_oscillators_sparse(
         dstate=dstate,
         drives=data.network.drives,
         oscillators=data.network.oscillators,
+    )
+    ode_stretch(
+        iteration=iteration,
+        state=state,
+        dstate=dstate,
+        joints=data.sensors.joints,
+        joints_connectivity=data.network.joints_connectivity,
     )
     ode_contacts(
         iteration=iteration,
