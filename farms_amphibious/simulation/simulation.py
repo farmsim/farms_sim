@@ -58,15 +58,13 @@ class AmphibiousSimulation(AnimatSimulation):
         # Animat sensors
         animat.sensors.update(iteration)
 
-        # Physics step
-        if iteration < self.options.n_iterations-1:
-            # Swimming
-            if self.swimming_handler is not None:
-                self.swimming_handler.step(iteration)
+        # Swimming
+        if self.swimming_handler is not None:
+            self.swimming_handler.step(iteration)
 
-            # Update animat controller
-            if animat.controller is not None:
-                self.update_controller(iteration, animat)
+        # Update animat controller
+        if animat.controller is not None:
+            self.update_controller(iteration, animat)
 
     def animat_interface(self, iteration):
         """Animat interface"""
