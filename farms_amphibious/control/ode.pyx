@@ -267,7 +267,6 @@ cpdef inline void ode_joints(
 
 ## ODEs
 
-
 cpdef inline DTYPEv1 ode_oscillators_sparse(
     DTYPE time,
     DTYPEv1 state,
@@ -321,7 +320,7 @@ cpdef inline DTYPEv1 ode_oscillators_sparse(
         joints=data.joints,
         n_oscillators=data.network.oscillators.c_n_oscillators(),
     )
-    data.network.drives.array[iteration+1] = data.network.drives.array[iteration]
+    # data.network.drives.array[iteration+1] = data.network.drives.array[iteration]
     return dstate
 
 
@@ -356,7 +355,7 @@ cpdef inline DTYPEv1 ode_oscillators_sparse_no_sensors(
         joints=data.joints,
         n_oscillators=data.network.oscillators.c_n_oscillators(),
     )
-    data.network.drives.array[iteration+1] = data.network.drives.array[iteration]
+    # data.network.drives.array[iteration+1] = data.network.drives.array[iteration]
     return dstate
 
 
@@ -398,5 +397,5 @@ cpdef inline DTYPEv1 ode_oscillators_sparse_tegotae(
         joints=data.joints,
         n_oscillators=data.network.oscillators.c_n_oscillators(),
     )
-    data.network.drives.array[iteration+1] = data.network.drives.array[iteration]
+    # data.network.drives.array[iteration+1] = data.network.drives.array[iteration]
     return dstate

@@ -19,7 +19,10 @@ class NetworkODE:
         self.n_oscillators = data.state.n_oscillators
 
         # Adaptive timestep parameters
-        initial_state = self.data.state.array[0, :]
+        self.state_array = self.data.state.array
+        self.drives_array = self.data.network.drives.array
+        self.n_iterations = np.shape(self.state_array)[0]
+        initial_state = self.state_array[0, :]
         self.solver = integrate.ode(f=self.ode)
         self.solver.set_integrator('dopri5', nsteps=10)
         self.solver.set_initial_value(y=initial_state, t=0.0)
@@ -27,15 +30,20 @@ class NetworkODE:
 
     def step(self, iteration, time, timestep, checks=False):
         """Control step"""
+        if iteration == 0:
+            self.drives_array[1] = self.drives_array[0]
+            return
         if checks:
             assert np.array_equal(
                 self.solver.y,
-                self.data.state.array[iteration, :]
+                self.state_array[iteration, :]
             )
         self.solver.set_f_params(self.dstate, iteration, self.data)
-        self.data.state.array[iteration+1, :] = (
+        self.state_array[iteration, :] = (
             self.solver.integrate(time+timestep)
         )
+        if iteration < self.n_iterations-1:
+            self.drives_array[iteration+1] = self.drives_array[iteration]
         if checks:
             assert self.solver.successful()
             assert abs(time+timestep-self.solver.t) < 1e-6*timestep, (
@@ -48,28 +56,28 @@ class NetworkODE:
     def phases(self, iteration=None):
         """Oscillators phases"""
         return (
-            self.data.state.array[iteration, :self.n_oscillators]
+            self.state_array[iteration, :self.n_oscillators]
             if iteration is not None else
-            self.data.state.array[:, :self.n_oscillators]
+            self.state_array[:, :self.n_oscillators]
         )
 
     def amplitudes(self, iteration=None):
         """Amplitudes"""
         return (
-            self.data.state.array[
+            self.state_array[
                 iteration,
                 self.n_oscillators:2*self.n_oscillators
             ]
             if iteration is not None else
-            self.data.state.array[:, self.n_oscillators:2*self.n_oscillators]
+            self.state_array[:, self.n_oscillators:2*self.n_oscillators]
         )
 
     def offsets(self, iteration=None):
         """Offset"""
         return (
-            self.data.state.array[iteration, 2*self.n_oscillators:]
+            self.state_array[iteration, 2*self.n_oscillators:]
             if iteration is not None
-            else self.data.state.array[:, 2*self.n_oscillators:]
+            else self.state_array[:, 2*self.n_oscillators:]
         )
 
     def outputs(self, iteration=None):
