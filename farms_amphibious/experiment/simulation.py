@@ -74,10 +74,10 @@ def setup_from_clargs(clargs=None):
         arena=clargs.arena,
         arena_sdf=clargs.arena_sdf,
         water_sdf=clargs.water_sdf,
-        water_surface=clargs.water,
+        water_height=clargs.water_height,
         water_velocity=clargs.water_velocity,
         viscosity=clargs.viscosity,
-        ground_height=clargs.ground,
+        ground_height=clargs.ground_height,
     )
 
     # Test options saving and loading

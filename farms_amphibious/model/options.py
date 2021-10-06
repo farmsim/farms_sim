@@ -304,7 +304,7 @@ class AmphibiousPhysicsOptions(Options):
         self.sph = kwargs.pop('sph')
         self.buoyancy = kwargs.pop('buoyancy')
         self.viscosity = kwargs.pop('viscosity')
-        self.water_surface = kwargs.pop('water_surface')
+        self.water_height = kwargs.pop('water_height')
         self.water_density = kwargs.pop('water_density')
         self.water_velocity = kwargs.pop('water_velocity')
         assert not kwargs, 'Unknown kwargs: {}'.format(kwargs)
@@ -319,8 +319,8 @@ class AmphibiousPhysicsOptions(Options):
             'buoyancy',
             options['drag'] and not options['sph']
         )
-        options['water_surface'] = kwargs.pop(
-            'water_surface',
+        options['water_height'] = kwargs.pop(
+            'water_height',
             options['drag'] or options['sph']
         )
         options['viscosity'] = kwargs.pop('viscosity', 1.0)
