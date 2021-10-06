@@ -58,7 +58,7 @@ def argument_parser():
         help='Arena SDF file',
     )
     parser.add_argument(
-        '--water',
+        '--water_height',
         type=float,
         default=None,
         help='Water surface height',
@@ -78,7 +78,7 @@ def argument_parser():
         help='Water velocity',
     )
     parser.add_argument(
-        '--ground',
+        '--ground_height',
         type=float,
         default=None,
         help='Ground height',
