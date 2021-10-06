@@ -39,6 +39,8 @@ def setup_from_clargs(clargs=None):
         else get_sdf_path(name=clargs.animat, version=clargs.version)
     )
     kwargs = {}
+    if clargs.torque_equation is not None:
+        kwargs['torque_equation'] = clargs.torque_equation
     if clargs.weight_osc_body is not None:
         kwargs['weight_osc_body'] = clargs.weight_osc_body
     if clargs.weight_osc_body2legs is not None:

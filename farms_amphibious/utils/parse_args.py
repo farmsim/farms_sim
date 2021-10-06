@@ -90,6 +90,12 @@ def argument_parser():
         help='Control type',
     )
     parser.add_argument(
+        '--torque_equation',
+        type=str,
+        default=None,
+        help='Torque equation',
+    )
+    parser.add_argument(
         '--drive_config',
         type=str,
         default='',
