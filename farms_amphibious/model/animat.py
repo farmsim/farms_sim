@@ -39,16 +39,21 @@ class Amphibious(Animat):
             link.name: link.mass_multiplier
             for link in self.options.morphology.links
         }
-        for link in self.links_map:
+        for link, index in self.links_map.items():
             if link in link_mass_multiplier:
-                mass, *_ = pybullet.getDynamicsInfo(
+                mass, _, torque, *_ = pybullet.getDynamicsInfo(
                     bodyUniqueId=self.identity(),
-                    linkIndex=self.links_map[link],
+                    linkIndex=index,
                 )
                 pybullet.changeDynamics(
                     bodyUniqueId=self.identity(),
-                    linkIndex=self.links_map[link],
+                    linkIndex=index,
                     mass=link_mass_multiplier[link]*mass,
+                )
+                pybullet.changeDynamics(
+                    bodyUniqueId=self.identity(),
+                    linkIndex=index,
+                    localInertiaDiagonal=link_mass_multiplier[link]*torque,
                 )
 
         # Debug
