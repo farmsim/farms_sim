@@ -155,6 +155,12 @@ def argument_parser():
         help='Feet friction',
     )
     parser.add_argument(
+        '--default_restitution',
+        type=float,
+        default=0.0,
+        help='Default restitution',
+    )
+    parser.add_argument(
         '--viscosity',
         type=float,
         default=1.0,

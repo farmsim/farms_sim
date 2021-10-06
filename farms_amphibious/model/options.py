@@ -135,6 +135,11 @@ class AmphibiousMorphologyOptions(MorphologyOptions):
             'links_angular_damping',
             [0 for link in links_names],
         )
+        default_restitution = kwargs.pop('default_restitution', 0)
+        links_restitution = kwargs.pop(
+            'links_restitution',
+            [default_restitution for link in links_names],
+        )
         links_swimming = kwargs.pop('links_swimming', links_names)
         links_density = kwargs.pop('density', 800.0)
         links_mass_multiplier = kwargs.pop('mass_multiplier', 1)
@@ -174,7 +179,7 @@ class AmphibiousMorphologyOptions(MorphologyOptions):
                     pybullet_dynamics={
                         'linearDamping': linear,
                         'angularDamping': angular,
-                        'restitution': 0,
+                        'restitution': restitution,
                         'lateralFriction': lateral,
                         'spinningFriction': spin,
                         'rollingFriction': roll,
@@ -182,7 +187,10 @@ class AmphibiousMorphologyOptions(MorphologyOptions):
                         # 'contactDamping': 1e-3,
                     },
                 )
-                for name, lateral, spin, roll, drag, linear, angular in zip(
+                for (
+                        name, lateral, spin, roll,
+                        drag, linear, angular, restitution
+                ) in zip(
                     links_names,
                     links_friction_lateral,
                     links_friction_spinning,
@@ -190,6 +198,7 @@ class AmphibiousMorphologyOptions(MorphologyOptions):
                     drag_coefficients,
                     links_linear_damping,
                     links_angular_damping,
+                    links_restitution,
                 )
             ]
         )

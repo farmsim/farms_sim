@@ -55,6 +55,7 @@ def setup_from_clargs(clargs=None):
         max_velocity=clargs.max_velocity,
         default_lateral_friction=clargs.lateral_friction,
         feet_friction=clargs.feet_friction,
+        default_restitution=clargs.default_restitution,
         use_self_collisions=clargs.self_collisions,
         spawn_loader={
             'FARMS': SpawnLoader.FARMS,
