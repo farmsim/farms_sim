@@ -22,7 +22,7 @@ class AmphibiousOptions(ModelOptions):
     """Simulation options"""
 
     def __init__(self, **kwargs):
-        super(AmphibiousOptions, self).__init__(
+        super().__init__(
             spawn=SpawnOptions(**kwargs.pop('spawn')),
             morphology=AmphibiousMorphologyOptions(**kwargs.pop('morphology')),
             control=AmphibiousControlOptions(**kwargs.pop('control')),
@@ -69,7 +69,7 @@ class AmphibiousMorphologyOptions(MorphologyOptions):
     """Amphibious morphology options"""
 
     def __init__(self, **kwargs):
-        super(AmphibiousMorphologyOptions, self).__init__(
+        super().__init__(
             links=[
                 AmphibiousLinkOptions(**link)
                 for link in kwargs.pop('links')
@@ -292,7 +292,7 @@ class AmphibiousLinkOptions(LinkOptions):
     """
 
     def __init__(self, **kwargs):
-        super(AmphibiousLinkOptions, self).__init__(
+        super().__init__(
             name=kwargs.pop('name'),
             collisions=kwargs.pop('collisions'),
             mass_multiplier=kwargs.pop('mass_multiplier'),
@@ -308,7 +308,7 @@ class AmphibiousPhysicsOptions(Options):
     """Amphibious physics options"""
 
     def __init__(self, **kwargs):
-        super(AmphibiousPhysicsOptions, self).__init__()
+        super().__init__()
         self.drag = kwargs.pop('drag')
         self.sph = kwargs.pop('sph')
         self.buoyancy = kwargs.pop('buoyancy')
@@ -342,7 +342,7 @@ class AmphibiousControlOptions(ControlOptions):
     """Amphibious control options"""
 
     def __init__(self, **kwargs):
-        super(AmphibiousControlOptions, self).__init__(
+        super().__init__(
             sensors=(AmphibiousSensorsOptions(**kwargs.pop('sensors'))),
             joints=[
                 AmphibiousJointControlOptions(**joint)
@@ -605,7 +605,7 @@ class AmphibiousJointControlOptions(JointControlOptions):
     """Amphibious joint options"""
 
     def __init__(self, **kwargs):
-        super(AmphibiousJointControlOptions, self).__init__(
+        super().__init__(
             joint=kwargs.pop('joint'),
             control_type=kwargs.pop('control_type'),
             max_torque=kwargs.pop('max_torque'),
@@ -620,7 +620,7 @@ class AmphibiousJointControlTransformOptions(Options):
     """Amphibious joint options"""
 
     def __init__(self, **kwargs):
-        super(AmphibiousJointControlTransformOptions, self).__init__()
+        super().__init__()
         self.gain = kwargs.pop('gain')
         self.bias = kwargs.pop('bias')
         assert not kwargs, 'Unknown kwargs: {}'.format(kwargs)
@@ -630,7 +630,7 @@ class AmphibiousJointControlOffsetOptions(Options):
     """Amphibious joint options"""
 
     def __init__(self, **kwargs):
-        super(AmphibiousJointControlOffsetOptions, self).__init__()
+        super().__init__()
         self.gain = kwargs.pop('gain')
         self.bias = kwargs.pop('bias')
         self.low = kwargs.pop('low')
@@ -644,7 +644,7 @@ class AmphibiousSensorsOptions(SensorsOptions):
     """Amphibious sensors options"""
 
     def __init__(self, **kwargs):
-        super(AmphibiousSensorsOptions, self).__init__(
+        super().__init__(
             links=kwargs.pop('links'),
             joints=kwargs.pop('joints'),
             contacts=kwargs.pop('contacts'),
@@ -683,7 +683,7 @@ class AmphibiousNetworkOptions(Options):
     """Amphibious network options"""
 
     def __init__(self, **kwargs):
-        super(AmphibiousNetworkOptions, self).__init__()
+        super().__init__()
 
         # Drives
         self.drives = [
@@ -1616,7 +1616,7 @@ class AmphibiousOscillatorOptions(Options):
     """Amphibious oscillator options"""
 
     def __init__(self, **kwargs):
-        super(AmphibiousOscillatorOptions, self).__init__()
+        super().__init__()
         self.name = kwargs.pop('name')
         self.initial_phase = kwargs.pop('initial_phase')
         self.initial_amplitude = kwargs.pop('initial_amplitude')
@@ -1641,9 +1641,9 @@ class AmphibiousDriveOptions(Options):
     """Amphibious drive options"""
 
     def __init__(self, **kwargs):
-        super(AmphibiousDriveOptions, self).__init__()
-        self.name = kwargs.pop('name')
-        self.initial_value = kwargs.pop('initial_value')
+        super().__init__()
+        self.name: str = kwargs.pop('name')
+        self.initial_value: float = kwargs.pop('initial_value')
         assert not kwargs, 'Unknown kwargs: {}'.format(kwargs)
 
 
@@ -1651,12 +1651,12 @@ class AmphibiousMuscleSetOptions(Options):
     """Amphibious muscle options"""
 
     def __init__(self, **kwargs):
-        super(AmphibiousMuscleSetOptions, self).__init__()
-        self.joint = kwargs.pop('joint')
-        self.osc1 = kwargs.pop('osc1')
-        self.osc2 = kwargs.pop('osc2')
-        self.alpha = kwargs.pop('alpha')  # Gain
-        self.beta = kwargs.pop('beta')  # Stiffness gain
-        self.gamma = kwargs.pop('gamma')  # Tonic gain
-        self.delta = kwargs.pop('delta')  # Damping coefficient
+        super().__init__()
+        self.joint: str = kwargs.pop('joint')
+        self.osc1: str = kwargs.pop('osc1')
+        self.osc2: str = kwargs.pop('osc2')
+        self.alpha: float = kwargs.pop('alpha')  # Gain
+        self.beta: float = kwargs.pop('beta')  # Stiffness gain
+        self.gamma: float = kwargs.pop('gamma')  # Tonic gain
+        self.delta: float = kwargs.pop('delta')  # Damping coefficient
         assert not kwargs, 'Unknown kwargs: {}'.format(kwargs)
