@@ -1,5 +1,7 @@
 """Network"""
 
+import numpy as np
+
 
 cdef class NetworkCy:
     """Network Cython"""
@@ -37,3 +39,7 @@ cdef class NetworkCy:
     cpdef DTYPEv2 offsets_all(self):
         """Offset"""
         return self.state_array[:, 2*self.n_oscillators:]
+
+    cpdef np.ndarray outputs(self, unsigned int iteration):
+        """Outputs"""
+        return self.amplitudes(iteration)*(1 + np.cos(self.phases(iteration)))

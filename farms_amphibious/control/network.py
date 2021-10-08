@@ -56,7 +56,3 @@ class NetworkODE(NetworkCy):
                     time+timestep,
                 )
             )
-
-    def outputs(self, iteration: int):
-        """Outputs"""
-        return self.amplitudes(iteration)*(1 + np.cos(self.phases(iteration)))
