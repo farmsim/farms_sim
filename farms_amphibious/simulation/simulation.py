@@ -1,9 +1,9 @@
 """Amphibious simulation"""
 
-import numpy as np
-
+from farms_bullet.model.animat import Animat
+from farms_bullet.simulation.options import SimulationOptions
 from farms_bullet.simulation.simulation import AnimatSimulation
-from farms_bullet.model.model import SimulationModels
+from farms_bullet.model.model import SimulationModel, SimulationModels
 from farms_bullet.interface.interface import Interfaces
 from farms_bullet.swimming.drag import SwimmingHandler
 
@@ -13,8 +13,13 @@ from .interface import AmphibiousUserParameters
 class AmphibiousSimulation(AnimatSimulation):
     """Amphibious simulation"""
 
-    def __init__(self, simulation_options, animat, arena=None):
-        super(AmphibiousSimulation, self).__init__(
+    def __init__(
+            self,
+            simulation_options: SimulationOptions,
+            animat: Animat,
+            arena: SimulationModel = None,
+    ):
+        super().__init__(
             models=SimulationModels(
                 [animat, arena]
                 if arena is not None
@@ -39,15 +44,15 @@ class AmphibiousSimulation(AnimatSimulation):
                 animat.options.scale_hydrodynamics
             )
 
-    def update_controller(self, iteration, animat):
+    def update_controller(self, iteration: int):
         """Update controller"""
-        animat.controller.step(
+        self.animat().controller.step(
             iteration=iteration,
             time=iteration*self.options.timestep,
             timestep=self.options.timestep,
         )
 
-    def step(self, iteration):
+    def step(self, iteration: int):
         """Simulation step"""
         animat = self.animat()
 
@@ -64,9 +69,9 @@ class AmphibiousSimulation(AnimatSimulation):
 
         # Update animat controller
         if animat.controller is not None:
-            self.update_controller(iteration, animat)
+            self.update_controller(iteration)
 
-    def animat_interface(self, iteration):
+    def animat_interface(self, iteration: int):
         """Animat interface"""
         animat = self.animat()
 

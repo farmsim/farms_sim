@@ -19,7 +19,7 @@ class Amphibious(Animat):
     """Amphibious animat"""
 
     def __init__(self, sdf, options, controller, timestep, iterations, units):
-        super(Amphibious, self).__init__(
+        super().__init__(
             options=options,
             data=controller.animat_data if controller is not None else None,
             units=units,

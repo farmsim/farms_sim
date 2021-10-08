@@ -7,7 +7,7 @@ from farms_bullet.simulation.parse_args import (
 )
 
 
-def argument_parser():
+def argument_parser() -> argparse.ArgumentParser:
     """Parse args"""
     parser = bullet_argument_parser()
     parser.description = 'Amphibious simulation'
