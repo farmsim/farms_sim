@@ -1,5 +1,7 @@
 """Network controller"""
 
+
+from typing import Dict, List, Tuple, Callable, Union
 import numpy as np
 from farms_data.amphibious.data import AmphibiousData
 from farms_bullet.model.control import ModelController, ControlType
