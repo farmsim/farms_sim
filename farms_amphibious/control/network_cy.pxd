@@ -4,7 +4,6 @@ include 'types.pxd'
 include 'sensor_convention.pxd'
 
 cimport numpy as np
-import numpy as np
 
 
 cdef class NetworkCy:
