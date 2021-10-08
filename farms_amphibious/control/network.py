@@ -1,34 +1,38 @@
 """Network"""
 
+from typing import Callable
 import numpy as np
+from farms_data.amphibious.data import AmphibiousData
 from scipy import integrate
+from .network_cy import NetworkCy
 from .ode import (
     ode_oscillators_sparse,
-    ode_oscillators_sparse_no_sensors,
-    ode_oscillators_sparse_tegotae,
+    # ode_oscillators_sparse_no_sensors,
+    # ode_oscillators_sparse_tegotae,
 )
 
 
-class NetworkODE:
+class NetworkODE(NetworkCy):
     """NetworkODE"""
 
     def __init__(self, data):
-        super(NetworkODE, self).__init__()
-        self.ode = ode_oscillators_sparse
-        self.data = data
-        self.n_oscillators = data.state.n_oscillators
+        super().__init__(data=data, dstate=np.zeros_like(data.state.array[0, :]))
+        self.ode: Callable = ode_oscillators_sparse
+        self.data: AmphibiousData = data
 
         # Adaptive timestep parameters
-        self.state_array = self.data.state.array
-        self.drives_array = self.data.network.drives.array
-        self.n_iterations = np.shape(self.state_array)[0]
-        initial_state = self.state_array[0, :]
+        self.n_iterations: int = np.shape(self.state_array)[0]
         self.solver = integrate.ode(f=self.ode)
-        self.solver.set_integrator('dopri5', nsteps=10)
-        self.solver.set_initial_value(y=initial_state, t=0.0)
-        self.dstate = np.zeros_like(initial_state)
+        self.solver.set_integrator('dopri5', nsteps=100)
+        self.solver.set_initial_value(y=self.state_array[0, :], t=0.0)
 
-    def step(self, iteration, time, timestep, checks=False):
+    def step(
+            self,
+            iteration: int,
+            time: float,
+            timestep: float,
+            checks: bool = False,
+    ):
         """Control step"""
         if iteration == 0:
             self.drives_array[1] = self.drives_array[0]
@@ -40,7 +44,7 @@ class NetworkODE:
             )
         self.solver.set_f_params(self.dstate, iteration, self.data)
         self.state_array[iteration, :] = (
-            self.solver.integrate(time+timestep)
+            self.solver.integrate(time+timestep, step=True)
         )
         if iteration < self.n_iterations-1:
             self.drives_array[iteration+1] = self.drives_array[iteration]
@@ -53,33 +57,6 @@ class NetworkODE:
                 )
             )
 
-    def phases(self, iteration=None):
-        """Oscillators phases"""
-        return (
-            self.state_array[iteration, :self.n_oscillators]
-            if iteration is not None else
-            self.state_array[:, :self.n_oscillators]
-        )
-
-    def amplitudes(self, iteration=None):
-        """Amplitudes"""
-        return (
-            self.state_array[
-                iteration,
-                self.n_oscillators:2*self.n_oscillators
-            ]
-            if iteration is not None else
-            self.state_array[:, self.n_oscillators:2*self.n_oscillators]
-        )
-
-    def offsets(self, iteration=None):
-        """Offset"""
-        return (
-            self.state_array[iteration, 2*self.n_oscillators:]
-            if iteration is not None
-            else self.state_array[:, 2*self.n_oscillators:]
-        )
-
-    def outputs(self, iteration=None):
+    def outputs(self, iteration: int):
         """Outputs"""
         return self.amplitudes(iteration)*(1 + np.cos(self.phases(iteration)))
