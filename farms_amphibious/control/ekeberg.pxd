@@ -9,7 +9,7 @@ from .network_cy cimport NetworkCy
 
 
 cdef class EkebergMuscleCy:
-    """Ekeberg"""
+    """Ekeberg muscle model"""
 
     cdef public NetworkCy network
     cdef public JointSensorArrayCy joints

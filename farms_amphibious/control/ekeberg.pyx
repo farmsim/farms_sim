@@ -35,7 +35,7 @@ cdef np.ndarray torques(
 
 
 cdef class EkebergMuscleCy:
-    """SensorsData"""
+    """Ekeberg muscle model"""
 
     def __init__(
             self,
