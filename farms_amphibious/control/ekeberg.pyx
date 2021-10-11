@@ -1,8 +1,8 @@
 """Ekeberg muscle model"""
 
+include 'types.pxd'
 cimport numpy as np
 import numpy as np
-
 from .network_cy cimport NetworkCy
 
 
