@@ -4,12 +4,6 @@ import os
 import argparse
 
 import numpy as np
-import matplotlib
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
-
-from PIL import Image
-from moviepy.editor import VideoClip
 
 import farms_pylog as pylog
 from farms_data.amphibious.animat_data import AnimatData
@@ -78,14 +72,13 @@ def main():
     plots_sim = animat_data.plot(times)
 
     # Plot connectivity
-    morph = animat_options.morphology
     plots_network = (
         plot_networks_maps(
             morphology=animat_options.morphology,
             data=animat_data,
             show_all=True,
         )[1]
-        if morph.n_dof_legs == 4
+        if animat_options.morphology.n_dof_legs == 4
         else {}
     )
 
@@ -106,8 +99,8 @@ def main():
     extension = 'pdf'
     for name, fig in {**plots_sim, **plots_network, **plots_drive}.items():
         filename = os.path.join(clargs.output, '{}.{}'.format(name, extension))
-        pylog.debug('Saving to {}'.format(filename))
         fig.savefig(filename, format=extension)
+        pylog.debug('Saving to %s', filename)
 
 
 if __name__ == '__main__':
