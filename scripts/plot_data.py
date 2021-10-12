@@ -99,8 +99,8 @@ def main():
     extension = 'pdf'
     for name, fig in {**plots_sim, **plots_network, **plots_drive}.items():
         filename = os.path.join(clargs.output, '{}.{}'.format(name, extension))
-        fig.savefig(filename, format=extension)
         pylog.debug('Saving to %s', filename)
+        fig.savefig(filename, format=extension, bbox_inches='tight')
 
 
 if __name__ == '__main__':
