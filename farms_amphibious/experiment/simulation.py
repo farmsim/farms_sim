@@ -66,10 +66,7 @@ def setup_from_clargs(clargs=None):
         drives_init=clargs.drives,
         spawn_position=clargs.position,
         spawn_orientation=clargs.orientation,
-        default_control_type={
-            'position': ControlType.POSITION,
-            'muscle': ControlType.TORQUE,
-        }[clargs.control_type],
+        default_equation=clargs.control_type,
         **kwargs,
     )
     simulation_options, arena = amphibious_options(
@@ -122,7 +119,7 @@ def simulation_setup(animat_sdf, animat_options, arena, **kwargs):
             kwargs.pop('animat_controller')
             if 'animat_controller' in kwargs
             else KinematicsController(
-                joints=animat_options.morphology.joints_names(),
+                joints_names=animat_options.morphology.joints_names(),
                 kinematics=np.genfromtxt(animat_options.control.kinematics_file),
                 sampling=animat_options.control.kinematics_sampling,
                 timestep=simulation_options.timestep,
@@ -135,13 +132,13 @@ def simulation_setup(animat_sdf, animat_options, arena, **kwargs):
             )
             if animat_options.control.kinematics_file
             else MantaController(
-                joints=animat_options.morphology.joints_names(),
+                joints_names=animat_options.morphology.joints_names(),
                 animat_options=animat_options,
                 animat_data=animat_data,
             )
             if animat_options.control.manta_controller
             else AmphibiousController(
-                joints=animat_options.morphology.joints_names(),
+                joints_names=animat_options.control.joints_names(),
                 animat_options=animat_options,
                 animat_data=animat_data,
                 drive=(

@@ -1,136 +1,89 @@
-"""Muscle model"""
+"""Joints muscles"""
 
+include 'sensor_convention.pxd'
 cimport numpy as np
 import numpy as np
+from .joints_control_cy cimport get_joints_data, set_joints_data
 
 
-cdef void log_torque(
-    unsigned int iteration,
-    JointSensorArrayCy joints,
-    UITYPEv1 indices,
-    DTYPEv1 torques,
-    unsigned int n_muscles,
-    unsigned int log_index,
-) nogil:
-    """Log torque"""
-    cdef unsigned int i
-    for i in range(n_muscles):
-        joints.array[iteration, indices[i], log_index] = torques[i]
-
-
-cdef np.ndarray torques(
-    unsigned int iteration,
-    JointSensorArrayCy joints,
-    unsigned int n_muscles,
-    UITYPEv1 indices,
-    unsigned int index,
-):
-    """Torques"""
-    cdef unsigned int muscle_i, joint_i
-    cdef np.ndarray torques = np.zeros(n_muscles, dtype=np.double)
-    for muscle_i in range(n_muscles):
-        joint_i = indices[muscle_i]
-        torques[muscle_i] = joints.array[iteration, joint_i, index]
-    return torques
-
-
-cdef class MuscleCy:
-    """Muscle model"""
+cdef class JointsMusclesCy(JointsControlCy):
+    """Joints muscles"""
 
     def __init__(
             self,
             NetworkCy network,
-            JointSensorArrayCy joints,
-            unsigned int n_muscles,
-            UITYPEv1 indices,
             DTYPEv2 parameters,
-            UITYPEv2 groups,
-            DTYPEv1 gain,
-            DTYPEv1 bias,
+            UITYPEv2 osc_indices,
+            **kwargs,
     ):
-        super().__init__()
+        super().__init__(**kwargs)
         self.network = network
-        self.joints = joints
-        self.n_muscles = n_muscles
-        self.indices = indices
         self.parameters = parameters
-        self.groups = groups
-        self.transform_gain = gain
-        self.transform_bias = bias
-
-    cpdef np.ndarray torques(self, unsigned int iteration):
-        """Torques"""
-        return torques(
-            iteration=iteration,
-            joints=self.joints,
-            n_muscles=self.n_muscles,
-            indices=self.indices,
-            index=8,
-        )
+        self.osc_indices = osc_indices
 
     cpdef np.ndarray torques_implicit(self, unsigned int iteration):
         """Torques"""
         cdef unsigned int muscle_i, joint_i
-        cdef np.ndarray torques = np.zeros(self.n_muscles, dtype=np.double)
-        for muscle_i in range(self.n_muscles):
+        cdef np.ndarray torques = np.zeros(self.n_joints, dtype=np.double)
+        for muscle_i in range(self.n_joints):
             joint_i = self.indices[muscle_i]
             torques[muscle_i] = (
-                self.joints.array[iteration, joint_i, 9]
-                + self.joints.array[iteration, joint_i, 10]
+                self.joints_data.array[iteration, joint_i, JOINT_TORQUE_ACTIVE]
+                + self.joints_data.array[iteration, joint_i, JOINT_TORQUE_STIFFNESS]
             )
         return torques
 
     cpdef np.ndarray damping(self, unsigned int iteration):
         """Torques"""
-        return torques(
+        return get_joints_data(
             iteration=iteration,
-            joints=self.joints,
-            n_muscles=self.n_muscles,
+            joints_data=self.joints_data,
+            n_joints=self.n_joints,
             indices=self.indices,
-            index=11,
+            array_index=JOINT_TORQUE_DAMPING,
         )
 
-    cpdef void log_active(
+    cpdef void set_active(
         self,
         unsigned int iteration,
-        DTYPEv1 torques,
+        DTYPEv1 data,
     ):
-        """Log active torques"""
-        log_torque(
+        """Set active torques"""
+        set_joints_data(
             iteration=iteration,
-            joints=self.joints,
+            joints_data=self.joints_data,
+            n_joints=self.n_joints,
             indices=self.indices,
-            torques=torques,
-            n_muscles=self.n_muscles,
-            log_index=9,
+            array_index=JOINT_TORQUE_ACTIVE,
+            data=data,
         )
 
-    cpdef void log_passive_stiffness(
+    cpdef void set_passive_stiffness(
         self,
         unsigned int iteration,
-        DTYPEv1 torques,
+        DTYPEv1 data,
     ):
-        """Log passive stiffness"""
-        log_torque(
+        """Set passive stiffness"""
+        set_joints_data(
             iteration=iteration,
-            joints=self.joints,
+            joints_data=self.joints_data,
+            n_joints=self.n_joints,
             indices=self.indices,
-            torques=torques,
-            n_muscles=self.n_muscles,
-            log_index=10,
+            array_index=JOINT_TORQUE_STIFFNESS,
+            data=data,
         )
 
-    cpdef void log_damping(
+    cpdef void set_damping(
         self,
         unsigned int iteration,
-        DTYPEv1 torques,
+        DTYPEv1 data,
     ):
-        """Log damping"""
-        log_torque(
+        """Set damping"""
+        set_joints_data(
             iteration=iteration,
-            joints=self.joints,
+            joints_data=self.joints_data,
             indices=self.indices,
-            torques=torques,
-            n_muscles=self.n_muscles,
-            log_index=11,
+            n_joints=self.n_joints,
+            array_index=JOINT_TORQUE_DAMPING,
+            data=data,
         )

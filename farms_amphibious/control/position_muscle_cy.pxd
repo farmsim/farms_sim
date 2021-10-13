@@ -1,10 +1,10 @@
-"""Ekeberg muscle model"""
+"""Position muscle model"""
 
 cimport numpy as np
 import numpy as np
 from .muscle_cy cimport JointsMusclesCy
 
 
-cdef class EkebergMuscleCy(JointsMusclesCy):
-    """Ekeberg muscle model"""
+cdef class PositionMuscleCy(JointsMusclesCy):
+    """Position muscle model"""
     cpdef void step(self, unsigned int iteration)

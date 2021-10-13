@@ -8,6 +8,8 @@ from farms_bullet.model.control import ModelController, ControlType
 from ..model.options import AmphibiousOptions
 from .drive import DescendingDrive
 from .network import NetworkODE
+from .position_muscle_cy import PositionMuscleCy
+from .passive_cy import PassiveJointCy
 from .ekeberg import EkebergMuscleCy
 
 
@@ -16,24 +18,24 @@ class AmphibiousController(ModelController):
 
     def __init__(
             self,
-            joints: List[str],
+            joints_names: List[str],
             animat_options: AmphibiousOptions,
             animat_data: AmphibiousData,
             drive: DescendingDrive = None,
     ):
-        joints_control_types: Dict[str, ControlType] = {
-            joint.joint: joint.control_type
+        joints_control_types: Dict[str, List[ControlType]] = {
+            joint.joint_name: joint.control_types
             for joint in animat_options.control.joints
         }
         super().__init__(
-            joints=ModelController.joints_from_control_types(
-                joints_names=joints,
+            joints_names=ModelController.joints_from_control_types(
+                joints_names=joints_names,
                 joints_control_types=joints_control_types,
             ),
             max_torques=ModelController.max_torques_from_control_types(
-                joints_names=joints,
+                joints_names=joints_names,
                 max_torques={
-                    joint.joint: joint.max_torque
+                    joint.joint_name: joint.max_torque
                     for joint in animat_options.control.joints
                 },
                 joints_control_types=joints_control_types,
@@ -44,67 +46,149 @@ class AmphibiousController(ModelController):
         self.drive: Union[DescendingDrive, None] = drive
 
         # joints
-        self.joints_map: JointsMap = JointsMap(
-            joints=self.joints,
-            joints_names=joints,
+        joints_map: JointsMap = JointsMap(
+            joints=self.joints_names,
+            joints_names=joints_names,
             animat_options=animat_options,
         )
 
         # Equations
-        self.equations: List[List[Callable]] = [[], [], []]
+        equations = {
+            joint.joint_name: joint.equation
+            for joint in animat_options.control.joints
+        }
+        self.equations: Tuple[List[Callable]] = [[], [], []]
 
         # Muscles
-        self.ekeberg_muscles = None
-        self.muscles_map: MusclesMap = MusclesMap(
-            joints=self.joints,
+        muscle_map: MusclesMap = MusclesMap(
+            joints=self.joints_names,
             animat_options=animat_options,
             animat_data=animat_data,
         )
 
-        ## Equations handling
+        # Network to joints interface
+        self.network2joints = {}
 
         # Position control
-        if self.joints[ControlType.POSITION]:
-            self.equations[ControlType.POSITION] = [self.positions_network]
+        if 'position' in equations.values():
+            self.equations[ControlType.POSITION] += [self.positions_network]
+            # indices = np.array(joints_map.indices[ControlType.POSITION], dtype=np.uintc)
+            # names = np.array(self.animat_data.sensors.joints.names, dtype=object)[indices].tolist()
+            joints_indices = np.array([
+                joint_i
+                for joint_i, joint in enumerate(animat_options.control.joints)
+                if joint.equation == 'position'
+            ], dtype=np.uintc)
+            joints_names = np.array(
+                self.animat_data.sensors.joints.names,
+                dtype=object,
+            )[joints_indices].tolist()
+            self.network2joints['position'] = PositionMuscleCy(
+                joints_names=joints_names,
+                joints_data=self.animat_data.sensors.joints,
+                indices=joints_indices,
+                network=self.network,
+                parameters=np.array(muscle_map.arrays[ControlType.POSITION], dtype=np.double),
+                osc_indices=np.array(muscle_map.osc_indices[ControlType.POSITION], dtype=np.uintc),
+                gain=np.array(joints_map.transform_gain, dtype=np.double),
+                bias=np.array(joints_map.transform_bias, dtype=np.double),
+            )
 
-        # Torque control
-        if self.joints[ControlType.TORQUE]:
+        # Ekeberg muscle model control
+        for torque_equation in ['ekeberg_muscle', 'ekeberg_muscle_explicit']:
 
-            torque_equation = animat_options.control.torque_equation
-            self.equations[ControlType.TORQUE] = [{
+            if torque_equation not in equations.values():
+                continue
+
+            joints_indices = np.array([
+                joint_i
+                for joint_i, joint in enumerate(animat_options.control.joints)
+                if joint.equation == torque_equation
+            ], dtype=np.uintc)
+            joints_names = np.array(
+                self.animat_data.sensors.joints.names,
+                dtype=object,
+            )[joints_indices].tolist()
+
+            self.equations[ControlType.TORQUE] += [{
                 'ekeberg_muscle': self.ekeberg_muscle,
                 'ekeberg_muscle_explicit': self.ekeberg_muscle_explicit,
             }[torque_equation]]
 
-            if torque_equation in (
-                    'ekeberg_muscle',
-                    'ekeberg_muscle_explicit',
-            ):
-
-                if torque_equation == 'ekeberg_muscle':
-                    # Velocity (damper)
-                    self.joints[ControlType.VELOCITY] = self.joints[ControlType.TORQUE]
-                    self.equations[ControlType.VELOCITY] = [
-                        self.velocities_ekeberg_damper,
-                    ]
-                    self.max_torques[ControlType.VELOCITY] = np.full(
-                        len(self.max_torques[ControlType.TORQUE]),
-                        np.inf,
-                    )
-                    self.dtv = np.zeros_like(self.joints_map.indices[ControlType.TORQUE])
-                    self.dpg = np.zeros_like(self.joints_map.indices[ControlType.TORQUE])
-                    self.dvg = np.ones_like(self.joints_map.indices[ControlType.TORQUE])
-                indices = np.array(self.joints_map.indices[ControlType.TORQUE], dtype=np.uintc)
-                self.ekeberg_muscles = EkebergMuscleCy(
-                    network=self.network,
-                    joints=self.animat_data.sensors.joints,
-                    n_muscles=len(indices),
-                    indices=indices,
-                    parameters=np.array(self.muscles_map.arrays[ControlType.TORQUE], dtype=np.double),
-                    groups=np.array(self.muscles_map.groups[ControlType.TORQUE], dtype=np.uintc),
-                    gain=np.array(self.joints_map.transform_gain, dtype=np.double),
-                    bias=np.array(self.joints_map.transform_bias, dtype=np.double),
+            if torque_equation == 'ekeberg_muscle':
+                # Velocity (damper)
+                self.equations[ControlType.VELOCITY] += [
+                    self.velocities_ekeberg_damper,
+                ]
+                self.velocity_indices_ekeberg = np.array([
+                    joint_i
+                    for joint_i, joint
+                    in enumerate(self.joints_names[ControlType.VELOCITY])
+                    if joint in equations
+                    and equations[joint] == 'ekeberg_muscle'
+                ], dtype=np.uintc)
+                self.velocity_targets_ekeberg = np.zeros_like(
+                    self.velocity_indices_ekeberg,
+                    dtype=np.double,
                 )
+
+            self.network2joints[torque_equation] = EkebergMuscleCy(
+                joints_names=joints_names,
+                joints_data=self.animat_data.sensors.joints,
+                indices=joints_indices,
+                network=self.network,
+                parameters=np.array(muscle_map.arrays[ControlType.TORQUE], dtype=np.double),
+                osc_indices=np.array(muscle_map.osc_indices[ControlType.TORQUE], dtype=np.uintc),
+                gain=np.array(joints_map.transform_gain, dtype=np.double),
+                bias=np.array(joints_map.transform_bias, dtype=np.double),
+            )
+
+        # Passive joint control
+        if 'passive' in equations.values():
+
+            joints_indices = np.array([
+                joint_i
+                for joint_i, joint in enumerate(animat_options.control.joints)
+                if joint.equation == 'passive'
+            ], dtype=np.uintc)
+            joints_names = np.array(
+                self.animat_data.sensors.joints.names,
+                dtype=object,
+            )[joints_indices].tolist()
+
+            self.equations[ControlType.TORQUE] += [self.passive]
+            self.equations[ControlType.VELOCITY] += [
+                self.velocities_passive_damper,
+            ]
+            self.velocity_indices_passive = np.array([
+                joint_i
+                for joint_i, joint
+                in enumerate(self.joints_names[ControlType.VELOCITY])
+                if joint in equations
+                and equations[joint] == 'passive'
+            ], dtype=np.uintc)
+            self.velocity_targets_passive = np.zeros_like(
+                self.velocity_indices_passive,
+                dtype=np.double,
+            )
+
+            self.network2joints['passive'] = PassiveJointCy(
+                stiffness_coefficients=np.array([
+                    joint.passive.stiffness_coefficient
+                    for joint in animat_options.control.joints
+                    if joint.equation == 'passive'
+                ], dtype=np.double),
+                damping_coefficients=np.array([
+                    joint.passive.damping_coefficient
+                    for joint in animat_options.control.joints
+                    if joint.equation == 'passive'
+                ], dtype=np.double),
+                joints_names=joints_names,
+                joints_data=self.animat_data.sensors.joints,
+                indices=joints_indices,
+                gain=np.array(joints_map.transform_gain, dtype=np.double),
+                bias=np.array(joints_map.transform_bias, dtype=np.double),
+            )
 
     def step(
             self,
@@ -116,8 +200,8 @@ class AmphibiousController(ModelController):
         if self.drive is not None:
             self.drive.step(iteration, time, timestep)
         self.network.step(iteration, time, timestep)
-        if self.ekeberg_muscles is not None:
-            self.ekeberg_muscles.step(iteration)
+        for net2joints in self.network2joints.values():
+            net2joints.step(iteration)
 
     def positions(
             self,
@@ -140,10 +224,7 @@ class AmphibiousController(ModelController):
         """Velocities"""
         output: Dict[str, float] = {}
         for equation in self.equations[ControlType.VELOCITY]:
-            result = equation(iteration, time, timestep)
-            if isinstance(result, tuple):
-                return result
-            output.update(result)
+            output.update(equation(iteration, time, timestep))
         return output
 
     def torques(
@@ -165,35 +246,25 @@ class AmphibiousController(ModelController):
             timestep: float,
     ) -> Dict[str, float]:
         """Positions network"""
-        outputs = self.network.outputs(iteration)
-        indices = self.joints_map.indices[ControlType.POSITION]
-        positions = (
-            self.joints_map.transform_gain[indices]*(
-                0.5*(
-                    outputs[self.muscles_map.groups[ControlType.POSITION][0]]
-                    - outputs[self.muscles_map.groups[ControlType.POSITION][1]]
-                )
-                + np.array(self.network.offsets(iteration))[
-                    self.joints_map.indices[ControlType.POSITION]
-                ]
-            ) + self.joints_map.transform_bias[indices]
-        )
-        return dict(zip(self.joints[ControlType.POSITION], positions))
+        return dict(zip(
+            self.network2joints['position'].joints_names,
+            self.network2joints['position'].position_cmds(iteration),
+        ))
 
     def velocities_ekeberg_damper(
             self,
             iteration: int,
             time: float,
             timestep: float,
-    ) -> Tuple:
+    ) -> Dict[str, float]:
         """Position control to simulate damper properties in Ekeberg muscle"""
-        damping = self.ekeberg_muscles.damping(iteration)
-        self.max_torques[ControlType.VELOCITY][:] = np.abs(damping)
-        return (
-            dict(zip(self.joints[ControlType.TORQUE], self.dtv)),
-            self.dpg,  # positionGains
-            self.dvg,  # velocityGains
+        self.max_torques[ControlType.VELOCITY][self.velocity_indices_ekeberg] = (
+            np.abs(self.network2joints['ekeberg_muscle'].damping(iteration))
         )
+        return dict(zip(
+            self.network2joints['ekeberg_muscle'].joints_names,
+            self.velocity_targets_ekeberg,
+        ))
 
     def ekeberg_muscle(
             self,
@@ -203,8 +274,8 @@ class AmphibiousController(ModelController):
     ) -> Dict[str, float]:
         """Ekeberg muscle"""
         return dict(zip(
-            self.joints[ControlType.TORQUE],
-            self.ekeberg_muscles.torques_implicit(iteration),
+            self.network2joints['ekeberg_muscle'].joints_names,
+            self.network2joints['ekeberg_muscle'].torques_implicit(iteration),
         ))
 
     def ekeberg_muscle_explicit(
@@ -215,8 +286,47 @@ class AmphibiousController(ModelController):
     ) -> Dict[str, float]:
         """Ekeberg muscle with explicit passive dynamics"""
         return dict(zip(
-            self.joints[ControlType.TORQUE],
-            self.ekeberg_muscles.torques(iteration),
+            self.network2joints['ekeberg_muscle_explicit'].joints_names,
+            self.network2joints['ekeberg_muscle_explicit'].torque_cmds(iteration),
+        ))
+
+    def velocities_passive_damper(
+            self,
+            iteration: int,
+            time: float,
+            timestep: float,
+    ) -> Dict[str, float]:
+        """Position control to simulate damper properties in Passive joint"""
+        self.max_torques[ControlType.VELOCITY][self.velocity_indices_passive] = (
+            np.abs(self.network2joints['passive'].damping(iteration))
+        )
+        return dict(zip(
+            self.network2joints['passive'].joints_names,
+            self.velocity_targets_passive,
+        ))
+
+    def passive(
+            self,
+            iteration: int,
+            time: float,
+            timestep: float,
+    ) -> Dict[str, float]:
+        """Passive joint"""
+        return dict(zip(
+            self.network2joints['passive'].joints_names,
+            self.network2joints['passive'].stiffness(iteration),
+        ))
+
+    def passive_explicit(
+            self,
+            iteration: int,
+            time: float,
+            timestep: float,
+    ) -> Dict[str, float]:
+        """Passive joint with explicit passive dynamics"""
+        return dict(zip(
+            self.network2joints['passive'].joints_names,
+            self.network2joints['passive'].torque_cmds(iteration),
         ))
 
 
@@ -225,7 +335,7 @@ class JointsMap:
 
     def __init__(
             self,
-            joints: List[List[str]],
+            joints: Tuple[List[str]],
             joints_names: List[str],
             animat_options: AmphibiousOptions,
     ):
@@ -241,7 +351,7 @@ class JointsMap:
             for control_type in control_types
         ]
         transform_gains = {
-            joint.joint: joint.transform.gain
+            joint.joint_name: joint.transform.gain
             for joint in animat_options.control.joints
         }
         self.transform_gain = np.array([
@@ -249,7 +359,7 @@ class JointsMap:
             for joint in joints_names
         ])
         transform_bias = {
-            joint.joint: joint.transform.bias
+            joint.joint_name: joint.transform.bias
             for joint in animat_options.control.joints
         }
         self.transform_bias = np.array([
@@ -263,20 +373,22 @@ class MusclesMap:
 
     def __init__(
             self,
-            joints: List[List[str]],
+            joints: Tuple[List[str]],
             animat_options: AmphibiousOptions,
             animat_data: AmphibiousData,
     ):
         super().__init__()
         control_types = list(ControlType)
-
-        # Muscles
         joint_muscle_map = {
-            muscle.joint: muscle
+            muscle.joint_name: muscle
             for muscle in animat_options.control.muscles
         }
         muscles = [
-            [joint_muscle_map[joint] for joint in joints[control_type]]
+            [
+                joint_muscle_map[joint]
+                for joint in joints[control_type]
+                if joint in joint_muscle_map
+            ]
             for control_type in control_types
         ]
         self.arrays = [
@@ -286,34 +398,11 @@ class MusclesMap:
             ])
             for control_type in control_types
         ]
-        self.alphas = [
-            np.array([muscle.alpha for muscle in muscles[control_type]])
-            for control_type in control_types
-        ]
-        self.betas = [
-            np.array([muscle.beta for muscle in muscles[control_type]])
-            for control_type in control_types
-        ]
-        self.gammas = [
-            np.array([muscle.gamma for muscle in muscles[control_type]])
-            for control_type in control_types
-        ]
-        self.deltas = [
-            np.array([muscle.delta for muscle in muscles[control_type]])
-            for control_type in control_types
-        ]
-        osc_map = {}
-        for muscle in animat_options.control.muscles:
-            osc_map[muscle.osc1] = (
-                animat_data.network.oscillators.names.index(muscle.osc1)
-            )
-            osc_map[muscle.osc2] = (
-                animat_data.network.oscillators.names.index(muscle.osc2)
-            )
-        self.groups = [
+        osc_names = animat_data.network.oscillators.names
+        self.osc_indices = [
             [
-                [osc_map[muscle.osc1] for muscle in muscles[control_type]],
-                [osc_map[muscle.osc2] for muscle in muscles[control_type]],
+                [osc_names.index(muscle.osc1) for muscle in muscles[control_type]],
+                [osc_names.index(muscle.osc2) for muscle in muscles[control_type]],
             ]
             for control_type in control_types
         ]

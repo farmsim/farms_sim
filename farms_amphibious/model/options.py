@@ -349,7 +349,6 @@ class AmphibiousControlOptions(ControlOptions):
                 for joint in kwargs.pop('joints')
             ],
         )
-        self.torque_equation = kwargs.pop('torque_equation', 'ekeberg_muscle')
         self.kinematics_file = kwargs.pop('kinematics_file')
         self.manta_controller = kwargs.pop('manta_controller', False)
         self.kinematics_sampling = kwargs.pop('kinematics_sampling')
@@ -378,9 +377,6 @@ class AmphibiousControlOptions(ControlOptions):
             ),
             'joints': kwargs.pop('joints', {}),
         })
-        options['torque_equation'] = (
-            kwargs.pop('torque_equation', 'ekeberg_muscle')
-        )
         options['kinematics_file'] = kwargs.pop('kinematics_file', '')
         options['kinematics_sampling'] = kwargs.pop('kinematics_sampling', 0)
         options['network'] = kwargs.pop(
@@ -464,8 +460,8 @@ class AmphibiousControlOptions(ControlOptions):
         if not self.joints:
             self.joints = [
                 AmphibiousJointControlOptions(
-                    joint=None,
-                    control_type=None,
+                    joint_name=None,
+                    control_types=[],
                     max_torque=None,
                     equation=None,
                     transform=AmphibiousJointControlTransformOptions(
@@ -480,6 +476,11 @@ class AmphibiousControlOptions(ControlOptions):
                         saturation=None,
                         rate=None,
                     ),
+                    passive=AmphibiousPassiveJointOptions(
+                        is_passive=False,
+                        stiffness_coefficient=0,
+                        damping_coefficient=0,
+                    )
                 )
                 for joint in range(n_joints)
             ]
@@ -487,24 +488,16 @@ class AmphibiousControlOptions(ControlOptions):
             'joints_control_names',
             convention.joints_names,
         )
-        default_control_type = kwargs.pop(
-            'default_control_type',
-            ControlType.POSITION
-        )
-        joints_control_types = kwargs.pop(
-            'joints_control_types',
-            {joint_name: default_control_type for joint_name in joints_names},
-        )
         joints_rates = kwargs.pop(
             'joints_rates',
             {joint_name: 2 for joint_name in joints_names},
         )
-        gain_amplitude = kwargs.pop(
-            'gain_amplitude',
+        transform_gain = kwargs.pop(
+            'transform_gain',
             {joint_name: 1 for joint_name in joints_names},
         )
-        offsets_bias = kwargs.pop(
-            'offsets_bias',
+        transform_bias = kwargs.pop(
+            'transform_bias',
             {joint_name: 0 for joint_name in joints_names},
         )
         default_max_torque = kwargs.pop('default_max_torque', np.inf)
@@ -512,19 +505,35 @@ class AmphibiousControlOptions(ControlOptions):
             'max_torques',
             {joint_name: default_max_torque for joint_name in joints_names},
         )
+        default_equation = kwargs.pop('default_equation', 'position')
+        equations = kwargs.pop(
+            'equations',
+            {joint_name: default_equation for joint_name in joints_names},
+        )
         for joint_i, joint in enumerate(self.joints):
+
             # Control
-            if joint.joint is None:
-                joint.joint = joints_names[joint_i]
-            if joint.control_type is None:
-                joint.control_type = joints_control_types[joint.joint]
+            if joint.joint_name is None:
+                joint.joint_name = joints_names[joint_i]
+            if joint.equation is None:
+                joint.equation = equations[joint.joint_name]
+            if not joint.control_types:
+                joint.control_types = {
+                    'position': [ControlType.POSITION],
+                    'ekeberg_muscle': [ControlType.VELOCITY, ControlType.TORQUE],
+                    'ekeberg_muscle_explicit': [ControlType.TORQUE],
+                    'passive': [ControlType.VELOCITY, ControlType.TORQUE],
+                    'passive_explicit': [ControlType.TORQUE],
+                }[joint.equation]
             if joint.max_torque is None:
-                joint.max_torque = max_torques[joint.joint]
+                joint.max_torque = max_torques[joint.joint_name]
+
             # Transform
             if joint.transform.gain is None:
-                joint.transform.gain = gain_amplitude[joint.joint]
+                joint.transform.gain = transform_gain[joint.joint_name]
             if joint.transform.bias is None:
-                joint.transform.bias = offsets_bias[joint.joint]
+                joint.transform.bias = transform_bias[joint.joint_name]
+
             # Offset
             if joint.offsets.gain is None:
                 joint.offsets.gain = offsets[joint_i]['gain']
@@ -537,15 +546,39 @@ class AmphibiousControlOptions(ControlOptions):
             if joint.offsets.saturation is None:
                 joint.offsets.saturation = offsets[joint_i]['saturation']
             if joint.offsets.rate is None:
-                joint.offsets.rate = joints_rates[joint.joint]
+                joint.offsets.rate = joints_rates[joint.joint_name]
 
+        # Passive
+        joints_passive = kwargs.pop('joints_passive', [])
+        self.sensors.joints += [name for name, _, _ in joints_passive]
+        self.joints += [
+            AmphibiousJointControlOptions(
+                joint_name=joint_name,
+                control_types=[ControlType.VELOCITY, ControlType.TORQUE],
+                max_torque=np.inf,
+                equation='passive',
+                transform=AmphibiousJointControlTransformOptions(
+                    gain=1,
+                    bias=0,
+                ),
+                offsets=None,
+                passive=AmphibiousPassiveJointOptions(
+                    is_passive=True,
+                    stiffness_coefficient=stiffness,
+                    damping_coefficient=damping,
+                ),
+            )
+            for joint_name, stiffness, damping in joints_passive
+        ]
+
+        # Muscles
         if not self.kinematics_file:
 
             # Muscles
             if not self.muscles:
                 self.muscles = [
                     AmphibiousMuscleSetOptions(
-                        joint=None,
+                        joint_name=None,
                         osc1=None,
                         osc2=None,
                         alpha=None,
@@ -560,8 +593,8 @@ class AmphibiousControlOptions(ControlOptions):
             default_gamma = kwargs.pop('muscle_gamma', 0)
             default_delta = kwargs.pop('muscle_delta', 0)
             for muscle_i, muscle in enumerate(self.muscles):
-                if muscle.joint is None:
-                    muscle.joint = joints_names[muscle_i]
+                if muscle.joint_name is None:
+                    muscle.joint_name = joints_names[muscle_i]
                 if muscle.osc1 is None:
                     muscle.osc1 = self.network.oscillators[2*muscle_i].name
                 if muscle.osc2 is None:
@@ -575,6 +608,10 @@ class AmphibiousControlOptions(ControlOptions):
                 if muscle.delta is None:
                     muscle.delta = default_delta
 
+    def joints_names(self):
+        """Joints names"""
+        return [joint.joint_name for joint in self.joints]
+
     def joints_offsets(self):
         """Joints offsets"""
         return [
@@ -586,11 +623,16 @@ class AmphibiousControlOptions(ControlOptions):
                 'saturation': joint.offsets.saturation,
             }
             for joint in self.joints
+            if joint.offsets is not None
         ]
 
     def joints_offset_rates(self):
         """Joints rates"""
-        return [joint.offsets.rate for joint in self.joints]
+        return [
+            joint.offsets.rate
+            for joint in self.joints
+            if joint.offsets is not None
+        ]
 
     def joints_transform_gain(self):
         """Joints gain amplitudes"""
@@ -606,13 +648,14 @@ class AmphibiousJointControlOptions(JointControlOptions):
 
     def __init__(self, **kwargs):
         super().__init__(
-            joint=kwargs.pop('joint'),
-            control_type=kwargs.pop('control_type'),
+            joint_name=kwargs.pop('joint_name'),
+            control_types=kwargs.pop('control_types'),
             max_torque=kwargs.pop('max_torque'),
         )
         self.equation = kwargs.pop('equation')
         self.transform = kwargs.pop('transform')
         self.offsets = kwargs.pop('offsets')
+        self.passive = kwargs.pop('passive')
         assert not kwargs, 'Unknown kwargs: {}'.format(kwargs)
 
 
@@ -1652,11 +1695,22 @@ class AmphibiousMuscleSetOptions(Options):
 
     def __init__(self, **kwargs):
         super().__init__()
-        self.joint: str = kwargs.pop('joint')
+        self.joint_name: str = kwargs.pop('joint_name')
         self.osc1: str = kwargs.pop('osc1')
         self.osc2: str = kwargs.pop('osc2')
         self.alpha: float = kwargs.pop('alpha')  # Gain
         self.beta: float = kwargs.pop('beta')  # Stiffness gain
         self.gamma: float = kwargs.pop('gamma')  # Tonic gain
         self.delta: float = kwargs.pop('delta')  # Damping coefficient
+        assert not kwargs, 'Unknown kwargs: {}'.format(kwargs)
+
+
+class AmphibiousPassiveJointOptions(Options):
+    """Amphibious passive joint options"""
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.is_passive: bool = kwargs.pop('is_passive')
+        self.stiffness_coefficient: float = kwargs.pop('stiffness_coefficient')
+        self.damping_coefficient: float = kwargs.pop('damping_coefficient')
         assert not kwargs, 'Unknown kwargs: {}'.format(kwargs)
