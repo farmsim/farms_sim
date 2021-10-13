@@ -8,8 +8,8 @@ from farms_bullet.simulation.options import SimulationOptions
 from farms_bullet.model.model import SimulationModels, DescriptionFormatModel
 from farms_bullet.model.options import SpawnLoader
 from farms_bullet.model.control import ControlType
-from ..model.options import AmphibiousOptions
 from ..model.convention import AmphibiousConvention
+from ..model.options import AmphibiousOptions
 
 
 def get_animat_options_from_model(animat, version, kwargs_only=False, **options):
@@ -244,7 +244,6 @@ def get_salamander_kwargs_options(**kwargs):
         'spawn_position': [0, 0, 0.2*0.07],
         'spawn_orientation': [0, 0, 0],
         'use_self_collisions': False,
-        'default_control_type': ControlType.POSITION,  # ControlType.TORQUE,
         'scale_hydrodynamics': 10,
         'n_legs': 4,
         'n_dof_legs': 4,
@@ -318,7 +317,6 @@ def get_centipede_kwargs_options(**kwargs):
         'spawn_position': [0, 0, 0.2*0.07],
         'spawn_orientation': [0, 0, 0],
         'use_self_collisions': False,
-        'default_control_type': ControlType.POSITION,  # ControlType.TORQUE,
         'scale_hydrodynamics': 1,
         'density': 800.0,
         'n_legs': 2*n_legs_pairs,
@@ -404,7 +402,6 @@ def get_polypterus_kwargs_options(**kwargs):
         'spawn_position': [0, 0, 0.2*0.07],
         'spawn_orientation': [0, 0, 0],
         'use_self_collisions': False,
-        'default_control_type': ControlType.POSITION,  # ControlType.TORQUE,
         'scale_hydrodynamics': 1e2,
         'density': 900.0,
         'n_legs': 2,
@@ -522,22 +519,22 @@ def get_pleurobot_kwargs_options(**kwargs):
     links_no_collisions = kwargs.pop('links_no_collisions', [])
 
     # Joint options
-    gain_amplitude = kwargs.pop('gain_amplitude', None)
+    transform_gain = kwargs.pop('transform_gain', None)
     joints_offsets = kwargs.pop('joints_offsets', None)
 
     # Amplitudes gains
-    if gain_amplitude is None:
-        gain_amplitude = [-1]*(13+4*4)  # np.ones(13+4*4)
-        gain_amplitude[6] = 0
-        gain_amplitude[12] = 0
+    if transform_gain is None:
+        transform_gain = [-1]*(13+4*4)  # np.ones(13+4*4)
+        transform_gain[6] = 1
+        transform_gain[12] = 1
         for leg_i in range(2):
             for side_i in range(2):
                 mirror = (-1 if side_i else 1)
-                gain_amplitude[13+2*leg_i*4+side_i*4+0] = mirror
-                gain_amplitude[13+2*leg_i*4+side_i*4+1] = mirror
-                gain_amplitude[13+2*leg_i*4+side_i*4+2] = -mirror
-                gain_amplitude[13+2*leg_i*4+side_i*4+3] = mirror
-        gain_amplitude = dict(zip(joints_names, gain_amplitude))
+                transform_gain[13+2*leg_i*4+side_i*4+0] = mirror
+                transform_gain[13+2*leg_i*4+side_i*4+1] = mirror
+                transform_gain[13+2*leg_i*4+side_i*4+2] = -mirror
+                transform_gain[13+2*leg_i*4+side_i*4+3] = mirror
+        transform_gain = dict(zip(joints_names, transform_gain))
 
     # Joints joints_offsets
     if joints_offsets is None:
@@ -562,7 +559,6 @@ def get_pleurobot_kwargs_options(**kwargs):
     kwargs_options = dict(
         spawn_loader=SpawnLoader.FARMS,  # SpawnLoader.PYBULLET,
         density=600.0,
-        default_control_type=ControlType.POSITION,
         scale_hydrodynamics=1e-1,
         n_legs=4,
         n_dof_legs=4,
@@ -599,9 +595,9 @@ def get_pleurobot_kwargs_options(**kwargs):
                 [0, -np.pi/32, -np.pi/16, 0],
             ],
             legs_offsets_swimming=[-2*np.pi/5, 0, 0, -np.pi/4],
-            gain_amplitude=gain_amplitude,
-            offsets_bias=joints_offsets,
             weight_osc_body=1e1,
+            transform_gain=transform_gain,
+            transform_bias=joints_offsets,
             weight_osc_legs_internal=3e1,
             weight_osc_legs_opposite=1e0,
             weight_osc_legs_following=5e-1,
@@ -766,22 +762,22 @@ def get_krock_kwargs_options(**kwargs):
     links_no_collisions = kwargs.pop('links_no_collisions', [])
 
     # Joint options
-    gain_amplitude = kwargs.pop('gain_amplitude', None)
+    transform_gain = kwargs.pop('transform_gain', None)
     joints_offsets = kwargs.pop('joints_offsets', None)
 
     # Amplitudes gains
-    if gain_amplitude is None:
-        gain_amplitude = [1]*(5+4*4)  # np.ones(5+4*4)
-        # gain_amplitude[5] = 0
+    if transform_gain is None:
+        transform_gain = [1]*(5+4*4)  # np.ones(5+4*4)
+        # transform_gain[5] = 0
         for leg_i in range(2):
             for side_i in range(2):
                 mirror = (1 if side_i else -1)
                 mirror2 = (-1 if leg_i else 1)
-                gain_amplitude[5+2*leg_i*4+side_i*4+0] = mirror
-                gain_amplitude[5+2*leg_i*4+side_i*4+1] = mirror  # mirror
-                gain_amplitude[5+2*leg_i*4+side_i*4+2] = 1  # -mirror
-                gain_amplitude[5+2*leg_i*4+side_i*4+3] = 0  # mirror
-        gain_amplitude = dict(zip(joints_names, gain_amplitude))
+                transform_gain[5+2*leg_i*4+side_i*4+0] = mirror
+                transform_gain[5+2*leg_i*4+side_i*4+1] = mirror  # mirror
+                transform_gain[5+2*leg_i*4+side_i*4+2] = 1  # -mirror
+                transform_gain[5+2*leg_i*4+side_i*4+3] = 0  # mirror
+        transform_gain = dict(zip(joints_names, transform_gain))
 
     # Joints joints_offsets
     if joints_offsets is None:
@@ -811,7 +807,6 @@ def get_krock_kwargs_options(**kwargs):
         # mass_multiplier=0.7,
         spawn_position=[0, 0, 0.5],
         spawn_orientation=[-0.5*np.pi, 0, np.pi],
-        default_control_type=ControlType.POSITION,
         scale_hydrodynamics=1e-1,
         n_legs=4,
         n_dof_legs=4,
@@ -841,8 +836,8 @@ def get_krock_kwargs_options(**kwargs):
             [0, -np.pi/32, -np.pi/16, 0],
         ],
         legs_offsets_swimming=[0, 0.25*np.pi, 0.5*np.pi, 0, np.pi/2],
-        gain_amplitude=gain_amplitude,
-        offsets_bias=joints_offsets,
+        transform_gain=transform_gain,
+        transform_bias=joints_offsets,
         intralimb_phases=[0, 0.5*np.pi, 0.5*np.pi, 0.5*np.pi, 0],
         body_phase_bias=0.5*np.pi/6,
         weight_osc_body=1e0,
@@ -1188,23 +1183,23 @@ def get_orobot_kwargs_options(**kwargs):
     links_no_collisions = kwargs.pop('links_no_collisions', [])
 
     # Joint options
-    gain_amplitude = kwargs.pop('gain_amplitude', None)
+    transform_gain = kwargs.pop('transform_gain', None)
     joints_offsets = kwargs.pop('joints_offsets', None)
 
     # Amplitudes gains
-    if gain_amplitude is None:
-        gain_amplitude = [-1]*(8+4*5)  # np.ones(8+4*5)
-        # gain_amplitude[8] = 0
+    if transform_gain is None:
+        transform_gain = [-1]*(8+4*5)  # np.ones(8+4*5)
+        # transform_gain[8] = 0
         for leg_i in range(2):
             for side_i in range(2):
                 mirror = (1 if side_i else -1)
                 # mirror2 = (-1 if leg_i else 1)
-                gain_amplitude[8+2*leg_i*5+side_i*5+0] = mirror
-                gain_amplitude[8+2*leg_i*5+side_i*5+1] = -mirror
-                gain_amplitude[8+2*leg_i*5+side_i*5+2] = -1
-                gain_amplitude[8+2*leg_i*5+side_i*5+3] = -0*mirror
-                gain_amplitude[8+2*leg_i*5+side_i*5+4] = 0*mirror
-        gain_amplitude = dict(zip(joints_names, gain_amplitude))
+                transform_gain[8+2*leg_i*5+side_i*5+0] = mirror
+                transform_gain[8+2*leg_i*5+side_i*5+1] = -mirror
+                transform_gain[8+2*leg_i*5+side_i*5+2] = -1
+                transform_gain[8+2*leg_i*5+side_i*5+3] = -0*mirror
+                transform_gain[8+2*leg_i*5+side_i*5+4] = 0*mirror
+        transform_gain = dict(zip(joints_names, transform_gain))
 
     # Joints joints_offsets
     if joints_offsets is None:
@@ -1225,7 +1220,6 @@ def get_orobot_kwargs_options(**kwargs):
         spawn_loader=SpawnLoader.FARMS,  # SpawnLoader.PYBULLET,
         spawn_position=[0, 0, 0],
         spawn_orientation=[0.5*np.pi, 0, 0],
-        default_control_type=ControlType.POSITION,
         n_legs=4,
         n_dof_legs=5,
         n_joints_body=8,
@@ -1241,8 +1235,8 @@ def get_orobot_kwargs_options(**kwargs):
             [0, -np.pi/32, -np.pi/16, 0, 0],
         ],
         legs_offsets_swimming=[2*np.pi/5, 0, 0, np.pi/2, 0],
-        gain_amplitude=gain_amplitude,
-        offsets_bias=joints_offsets,
+        transform_gain=transform_gain,
+        transform_bias=joints_offsets,
         weight_osc_body=1e0,
         weight_osc_legs_internal=3e1,
         weight_osc_legs_opposite=1e0,
@@ -1368,19 +1362,19 @@ def get_hfsp_robot_kwargs_options(hindlimbs=True, **kwargs):
     links_no_collisions = kwargs.pop('links_no_collisions', [])
 
     # Joint options
-    gain_amplitude = kwargs.pop('gain_amplitude', None)
+    transform_gain = kwargs.pop('transform_gain', None)
     joints_offsets = kwargs.pop('joints_offsets', None)
 
     # Amplitudes gains
-    if gain_amplitude is None:
-        gain_amplitude = [1]*(8+4*4)  # np.ones(8+4*5)
+    if transform_gain is None:
+        transform_gain = [1]*(8+4*4)  # np.ones(8+4*5)
         for i in [2, 3, 4, 6, 7]:
-            gain_amplitude[i] = -1
-        gain_amplitude[8+2*2*0+2*1+0] = -1
-        gain_amplitude[8+2*2*1+2*1+0] = -1
-        gain_amplitude[8+2*2*0+2*0+1] = -1
-        gain_amplitude[8+2*2*1+2*0+1] = -1
-        gain_amplitude = dict(zip(joints_names, gain_amplitude))
+            transform_gain[i] = -1
+        transform_gain[8+2*2*0+2*1+0] = -1
+        transform_gain[8+2*2*1+2*1+0] = -1
+        transform_gain[8+2*2*0+2*0+1] = -1
+        transform_gain[8+2*2*1+2*0+1] = -1
+        transform_gain = dict(zip(joints_names, transform_gain))
 
     # Joints joints_offsets
     if joints_offsets is None:
@@ -1396,7 +1390,6 @@ def get_hfsp_robot_kwargs_options(hindlimbs=True, **kwargs):
         spawn_loader=SpawnLoader.FARMS,  # SpawnLoader.PYBULLET,
         spawn_position=[0, 0, 0],
         spawn_orientation=[0.5*np.pi, 0, 0],
-        default_control_type=ControlType.POSITION,
         n_legs=4 if hindlimbs else 2,
         n_dof_legs=2,
         n_joints_body=8,
@@ -1412,8 +1405,8 @@ def get_hfsp_robot_kwargs_options(hindlimbs=True, **kwargs):
             [0, -np.pi/32, -np.pi/16, 0, 0],
         ],
         legs_offsets_swimming=[-0.5*np.pi, -0.25*np.pi],
-        gain_amplitude=gain_amplitude,
-        offsets_bias=joints_offsets,
+        transform_gain=transform_gain,
+        transform_bias=joints_offsets,
         weight_osc_body=1e0,
         weight_osc_legs_internal=3e1,
         weight_osc_legs_opposite=1e0,
@@ -1476,7 +1469,6 @@ def get_agnathax_kwargs_options(**kwargs):
         'spawn_position': [0, 0, 0.2*0.07],
         'spawn_orientation': [0, 0, 0],
         'use_self_collisions': False,
-        'default_control_type': ControlType.POSITION,  # ControlType.TORQUE,
         'scale_hydrodynamics': 10,
         'n_legs': 0,
         'n_dof_legs': 0,
@@ -1537,8 +1529,6 @@ def get_amphibot_kwargs_options(**kwargs):
         'spawn_position': [0, 0, 0.2*0.07],
         'spawn_orientation': [0, 0, 0],
         'use_self_collisions': False,
-        'default_control_type': ControlType.POSITION,  # ControlType.TORQUE,
-        'show_hydrodynamics': False,
         'scale_hydrodynamics': 10,
         'n_legs': 0,
         'n_dof_legs': 0,
