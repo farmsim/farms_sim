@@ -78,7 +78,7 @@ def main():
             data=animat_data,
             show_all=True,
         )[1]
-        if animat_options.morphology.n_dof_legs == 4
+        if animat_options.morphology.n_dof_legs <= 4
         else {}
     )
 
