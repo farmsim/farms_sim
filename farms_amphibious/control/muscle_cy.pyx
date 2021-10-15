@@ -43,6 +43,16 @@ cdef class JointsMusclesCy(JointsControlCy):
             array_index=JOINT_TORQUE_DAMPING,
         )
 
+    cpdef np.ndarray friction(self, unsigned int iteration):
+        """Torques"""
+        return get_joints_data(
+            iteration=iteration,
+            joints_data=self.joints_data,
+            n_joints=self.n_joints,
+            indices=self.indices,
+            array_index=JOINT_TORQUE_FRICTION,
+        )
+
     cpdef void set_active(
         self,
         unsigned int iteration,
@@ -85,5 +95,20 @@ cdef class JointsMusclesCy(JointsControlCy):
             indices=self.indices,
             n_joints=self.n_joints,
             array_index=JOINT_TORQUE_DAMPING,
+            data=data,
+        )
+
+    cpdef void set_friction(
+        self,
+        unsigned int iteration,
+        DTYPEv1 data,
+    ):
+        """Set friction"""
+        set_joints_data(
+            iteration=iteration,
+            joints_data=self.joints_data,
+            indices=self.indices,
+            n_joints=self.n_joints,
+            array_index=JOINT_TORQUE_FRICTION,
             data=data,
         )

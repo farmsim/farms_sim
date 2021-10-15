@@ -72,8 +72,6 @@ class AmphibiousController(ModelController):
         # Position control
         if 'position' in equations.values():
             self.equations[ControlType.POSITION] += [self.positions_network]
-            # indices = np.array(joints_map.indices[ControlType.POSITION], dtype=np.uintc)
-            # names = np.array(self.animat_data.sensors.joints.names, dtype=object)[indices].tolist()
             joints_indices = np.array([
                 joint_i
                 for joint_i, joint in enumerate(animat_options.control.joints)
@@ -183,6 +181,11 @@ class AmphibiousController(ModelController):
                     for joint in animat_options.control.joints
                     if joint.equation == 'passive'
                 ], dtype=np.double),
+                friction_coefficients=np.array([
+                    joint.passive.friction_coefficient
+                    for joint in animat_options.control.joints
+                    if joint.equation == 'passive'
+                ], dtype=np.double),
                 joints_names=joints_names,
                 joints_data=self.animat_data.sensors.joints,
                 indices=joints_indices,
@@ -260,6 +263,7 @@ class AmphibiousController(ModelController):
         """Position control to simulate damper properties in Ekeberg muscle"""
         self.max_torques[ControlType.VELOCITY][self.velocity_indices_ekeberg] = (
             np.abs(self.network2joints['ekeberg_muscle'].damping(iteration))
+            + np.abs(self.network2joints['ekeberg_muscle'].friction(iteration))
         )
         return dict(zip(
             self.network2joints['ekeberg_muscle'].joints_names,
@@ -299,6 +303,7 @@ class AmphibiousController(ModelController):
         """Position control to simulate damper properties in Passive joint"""
         self.max_torques[ControlType.VELOCITY][self.velocity_indices_passive] = (
             np.abs(self.network2joints['passive'].damping(iteration))
+            + np.abs(self.network2joints['passive'].friction(iteration))
         )
         return dict(zip(
             self.network2joints['passive'].joints_names,
@@ -393,7 +398,10 @@ class MusclesMap:
         ]
         self.arrays = [
             np.array([
-                [muscle.alpha, muscle.beta, muscle.gamma, muscle.delta]
+                [
+                    muscle.alpha, muscle.beta,
+                    muscle.gamma, muscle.delta, muscle.epsilon,
+                ]
                 for muscle in muscles[control_type]
             ])
             for control_type in control_types

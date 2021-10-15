@@ -480,6 +480,7 @@ class AmphibiousControlOptions(ControlOptions):
                         is_passive=False,
                         stiffness_coefficient=0,
                         damping_coefficient=0,
+                        friction_coefficient=0,
                     )
                 )
                 for joint in range(n_joints)
@@ -550,7 +551,7 @@ class AmphibiousControlOptions(ControlOptions):
 
         # Passive
         joints_passive = kwargs.pop('joints_passive', [])
-        self.sensors.joints += [name for name, _, _ in joints_passive]
+        self.sensors.joints += [name for name, *_ in joints_passive]
         self.joints += [
             AmphibiousJointControlOptions(
                 joint_name=joint_name,
@@ -566,9 +567,10 @@ class AmphibiousControlOptions(ControlOptions):
                     is_passive=True,
                     stiffness_coefficient=stiffness,
                     damping_coefficient=damping,
+                    friction_coefficient=friction,
                 ),
             )
-            for joint_name, stiffness, damping in joints_passive
+            for joint_name, stiffness, damping, friction in joints_passive
         ]
 
         # Muscles
@@ -585,6 +587,7 @@ class AmphibiousControlOptions(ControlOptions):
                         beta=None,
                         gamma=None,
                         delta=None,
+                        epsilon=None,
                     )
                     for muscle in range(n_joints)
                 ]
@@ -592,6 +595,7 @@ class AmphibiousControlOptions(ControlOptions):
             default_beta = kwargs.pop('muscle_beta', 0)
             default_gamma = kwargs.pop('muscle_gamma', 0)
             default_delta = kwargs.pop('muscle_delta', 0)
+            default_epsilon = kwargs.pop('muscle_epsilon', 0)
             for muscle_i, muscle in enumerate(self.muscles):
                 if muscle.joint_name is None:
                     muscle.joint_name = joints_names[muscle_i]
@@ -607,6 +611,8 @@ class AmphibiousControlOptions(ControlOptions):
                     muscle.gamma = default_gamma
                 if muscle.delta is None:
                     muscle.delta = default_delta
+                if muscle.epsilon is None:
+                    muscle.epsilon = default_epsilon
 
     def joints_names(self):
         """Joints names"""
@@ -1702,6 +1708,7 @@ class AmphibiousMuscleSetOptions(Options):
         self.beta: float = kwargs.pop('beta')  # Stiffness gain
         self.gamma: float = kwargs.pop('gamma')  # Tonic gain
         self.delta: float = kwargs.pop('delta')  # Damping coefficient
+        self.epsilon: float = kwargs.pop('epsilon')  # Friction coefficient
         assert not kwargs, 'Unknown kwargs: {}'.format(kwargs)
 
 
@@ -1713,4 +1720,5 @@ class AmphibiousPassiveJointOptions(Options):
         self.is_passive: bool = kwargs.pop('is_passive')
         self.stiffness_coefficient: float = kwargs.pop('stiffness_coefficient')
         self.damping_coefficient: float = kwargs.pop('damping_coefficient')
+        self.friction_coefficient: float = kwargs.pop('friction_coefficient')
         assert not kwargs, 'Unknown kwargs: {}'.format(kwargs)
