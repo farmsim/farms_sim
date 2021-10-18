@@ -483,6 +483,9 @@ def get_pleurobot_kwargs_options(**kwargs):
     """Pleurobot default options"""
 
     # Morphology information
+    n_joints_leg = 4
+    n_joints_body = 11  # 13
+    n_joints = n_joints_body + 4*n_joints_leg
     links_names = kwargs.pop(
         'links_names',
         ['base_link'] + [  # 'Head',
@@ -505,13 +508,13 @@ def get_pleurobot_kwargs_options(**kwargs):
         'j4',
         'j5',
         'j6',
-        'j_tailBone',
+        # 'j_tailBone',
         'j7',
         'j8',
         'j9',
         'j10',
         'j11',
-        'j_tail',
+        # 'j_tail',
         'ForearmLeft_Yaw',
         'ForearmLeft_Pitch',
         'ForearmLeft_Roll',
@@ -546,33 +549,28 @@ def get_pleurobot_kwargs_options(**kwargs):
 
     # Amplitudes gains
     if transform_gain is None:
-        transform_gain = [-1]*(13+4*4)  # np.ones(13+4*4)
-        transform_gain[6] = 1
-        transform_gain[12] = 1
+        transform_gain = [-1]*n_joints
         for leg_i in range(2):
             for side_i in range(2):
                 mirror = (-1 if side_i else 1)
-                transform_gain[13+2*leg_i*4+side_i*4+0] = mirror
-                transform_gain[13+2*leg_i*4+side_i*4+1] = mirror
-                transform_gain[13+2*leg_i*4+side_i*4+2] = -mirror
-                transform_gain[13+2*leg_i*4+side_i*4+3] = mirror
+                transform_gain[n_joints_body+2*leg_i*4+side_i*4+0] = mirror
+                transform_gain[n_joints_body+2*leg_i*4+side_i*4+1] = mirror
+                transform_gain[n_joints_body+2*leg_i*4+side_i*4+2] = -mirror
+                transform_gain[n_joints_body+2*leg_i*4+side_i*4+3] = mirror
         transform_gain = dict(zip(joints_names, transform_gain))
 
     # Joints joints_offsets
     if joints_offsets is None:
-        joints_offsets = [0]*(13+4*4)
+        joints_offsets = [0]*n_joints
         for leg_i in range(2):
             for side_i in range(2):
                 mirror = (1 if side_i else -1)
-                joints_offsets[13+2*leg_i*4+side_i*4+0] = 0
-                joints_offsets[13+2*leg_i*4+side_i*4+1] = (
-                    mirror*np.pi/16 if leg_i else mirror*np.pi/8
-                )
-                joints_offsets[13+2*leg_i*4+side_i*4+2] = (
+                joints_offsets[n_joints_body+2*leg_i*4+side_i*4+0] = 0
+                joints_offsets[n_joints_body+2*leg_i*4+side_i*4+2] = (
                     0 if leg_i else -mirror*np.pi/3
                 )
-                joints_offsets[13+2*leg_i*4+side_i*4+3] = (
-                    -mirror*np.pi/4 if leg_i else mirror*np.pi/16
+                joints_offsets[n_joints_body+2*leg_i*4+side_i*4+3] = (
+                    0 if leg_i else 0.5*np.pi*mirror
                 )
         joints_offsets = dict(zip(joints_names, joints_offsets))
 
@@ -584,13 +582,13 @@ def get_pleurobot_kwargs_options(**kwargs):
         scale_hydrodynamics=1e-1,
         n_legs=4,
         n_dof_legs=4,
-        n_joints_body=13,
+        n_joints_body=n_joints_body,
         use_self_collisions=False,
         drag_coefficients=[
             [
                 [drag, -1e2, -1e2]
                 if link in links_swimming
-                and links_swimming.index(link) < 13
+                and links_swimming.index(link) < n_joints_body
                 else [drag, drag, drag],
                 [-1e-3]*3,
             ]
@@ -604,37 +602,40 @@ def get_pleurobot_kwargs_options(**kwargs):
         sensors_joints=joints_names,
         sensors_contacts=feet,
         sensors_hydrodynamics=links_swimming,
+        feet_links=feet,
+        joints_passive=[
+            ['j_tailBone', 1e1, 1e-3, 0],
+            ['j_tail', 1e1, 1e-3, 0],
+        ],
     )
     if 'kinematics_file' not in kwargs:
         kwargs_options.update(dict(
             body_walk_amplitude=0.2,
             legs_amplitudes=[
-                [np.pi/8, np.pi/16, np.pi/8, np.pi/8],
-                [np.pi/8, np.pi/16, np.pi/8, np.pi/8],
+                [np.pi/10, np.pi/64, np.pi/4, np.pi/4],
+                [np.pi/5, np.pi/64, np.pi/4, np.pi/4],
             ],
             legs_offsets_walking=[
-                [0, -np.pi/32, -np.pi/16, 0],
-                [0, -np.pi/32, -np.pi/16, 0],
+                [0, 0, 0, 2*np.pi/5],
+                [0, 0, 0, 2*np.pi/5],
             ],
-            legs_offsets_swimming=[-2*np.pi/5, 0, 0, -np.pi/4],
-            weight_osc_body=1e1,
+            intralimb_phases=[0, 0.5*np.pi, 0, 0.5*np.pi],
+            legs_offsets_swimming=[-2*np.pi/5, 0, 0, 0],
             transform_gain=transform_gain,
             transform_bias=joints_offsets,
+            weight_osc_body=3e1,
             weight_osc_legs_internal=3e1,
-            weight_osc_legs_opposite=1e0,
-            weight_osc_legs_following=5e-1,
-            weight_osc_legs2body=3e1,
-            weight_sens_contact_intralimb=-2e-1,
-            weight_sens_contact_opposite=5e-1,
+            weight_osc_legs2body=1e1,
+            weight_osc_body2legs=1e1,
+            weight_osc_legs_opposite=0,
+            weight_osc_legs_following=0,
+            weight_sens_contact_intralimb=0,
+            weight_sens_contact_opposite=0,
             weight_sens_contact_following=0,
             weight_sens_contact_diagonal=0,
             weight_sens_hydro_freq=0,
             weight_sens_hydro_amp=0,
-            modular_phases=(
-                np.array([3*np.pi/2, 0, 3*np.pi/2, 0]) - np.pi/4
-            ).tolist(),
             # modular_amplitudes=np.full(4, 0.9).tolist(),
-            modular_amplitudes=np.full(4, 0).tolist(),
             muscle_alpha=5e1,
             muscle_beta=-1e1,
             muscle_gamma=1e1,
@@ -644,35 +645,13 @@ def get_pleurobot_kwargs_options(**kwargs):
     return kwargs_options
 
 
-def get_pleurobot_options(slow=2, passive=True, **kwargs):
+def get_pleurobot_options(osc_slow=2, **kwargs):
     """Pleurobot default options"""
     kwargs_options = get_pleurobot_kwargs_options(**kwargs)
     animat_options = AmphibiousOptions.from_options(kwargs_options)
-    # for link in animat_options['morphology']['links']:
-    #     link['pybullet_dynamics']['lateralFriction'] = (
-    #         1 if link['name'] in ('link15', 'link19')
-    #         else 0.3 if link['name'] in ('link23', 'link27')
-    #         else 0.1
-    #     )
-    if passive:
-        joints = {
-            joint['joint']: joint
-            for joint in animat_options['control']['joints']
-        }
-        muscles = {
-            muscle['joint']: muscle
-            for muscle in animat_options['control']['muscles']
-        }
-        for name in ('j_tailBone', 'j_tail'):
-            assert name in joints, '{} not in joints'.format(name)
-            joints[name]['control_type'] = ControlType.TORQUE
-            muscles[name]['alpha'] = 0
-            muscles[name]['beta'] = 0
-            muscles[name]['gamma'] = 0  # Spring stiffness
-            muscles[name]['delta'] = 0  # Damping coeffiecient
     for oscillator in animat_options.control.network.oscillators:
-        oscillator['frequency_gain'] /= slow
-        oscillator['frequency_bias'] /= slow
+        oscillator['frequency_gain'] /= osc_slow
+        oscillator['frequency_bias'] /= osc_slow
     return animat_options
 
 
