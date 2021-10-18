@@ -319,6 +319,75 @@ def get_salamander_options(**kwargs):
     return options
 
 
+def get_polypterus_kwargs_options(**kwargs):
+    """Polypterus options"""
+    n_joints_body = kwargs.pop('n_joints_body', 8)
+    default_equation = kwargs.pop('default_equation', 'position')
+    kwargs_options = {
+        'spawn_loader': SpawnLoader.FARMS,  # SpawnLoader.PYBULLET,
+        'default_equation': default_equation,
+        'spawn_position': [0, 0, 0.2*0.07],
+        'spawn_orientation': [0, 0, 0],
+        'use_self_collisions': False,
+        'scale_hydrodynamics': 1e2,
+        'density': 900.0,
+        'n_legs': 2,
+        'n_dof_legs': 4,
+        'n_joints_body': n_joints_body,
+        'drag_coefficients': [
+            [
+                [-1e-3, -5e-2, -5e-2]
+                if i < 12
+                else [-1e-4, -1e-4, -1e-4],
+                [-1e-8, -1e-8, -1e-8],
+            ]
+            for i in range((n_joints_body+1)+2*4)
+        ],
+        'drives_init': [2, 0],
+        'weight_osc_body': 1e2,
+        'weight_osc_legs_internal': 1e2,
+        'weight_osc_legs_opposite': 0,
+        'weight_osc_legs_following': 0,
+        'weight_osc_legs2body': 1e1,
+        'weight_osc_body2legs': 1e1,
+        'weight_sens_contact_intralimb': 0,  # -1e-1
+        'weight_sens_contact_opposite': 0,
+        'weight_sens_contact_following': 0,
+        'weight_sens_contact_diagonal': 0,
+        'weight_sens_hydro_freq': 0,
+        'weight_sens_hydro_amp': 0,
+        'body_walk_amplitude': 1,
+        'body_osc_gain': 0.05,
+        'body_osc_bias': 0.3,
+        'legs_amplitudes': [
+            [0.5]*4
+            if 'ekeberg' in default_equation
+            else [np.pi/4, np.pi/4, np.pi/4, np.pi/8]
+        ],
+        'legs_offsets_walking': [[0, np.pi/8, 0, np.pi/8]],
+        'muscle_alpha': 1e-5,
+        'muscle_beta': 1e-8,
+        'muscle_gamma': 1e3,
+        'muscle_delta': 1e-5,
+        'muscle_epsilon': 1e-6,
+        'joints_passive': [
+            ['joint_passive_{}'.format(i), 1e-10, 1e-6, 1e-6]
+            for i in range(3)
+        ],
+    }
+    kwargs_options.update(kwargs)
+    return kwargs_options
+
+
+def get_polypterus_options(**kwargs):
+    """Polypterus options"""
+    kwargs_options = get_polypterus_kwargs_options(**kwargs)
+    options = AmphibiousOptions.from_options(kwargs_options)
+    convention = AmphibiousConvention(**options.morphology)
+    options.control.sensors.contacts += convention.body_links_names()
+    return options
+
+
 def get_centipede_kwargs_options(**kwargs):
     """Centipede options"""
     n_joints_body = kwargs.pop('n_joints_body', 20)
@@ -402,69 +471,6 @@ def get_centipede_options(**kwargs):
     #     assert joint['name'] == joint_control['joint']
     #     joint['initial_position'] = joint_control['bias']
     #     # print('{}: {} [rad]'.format(joint['name'], joint_control['bias']))
-    return options
-
-
-def get_polypterus_kwargs_options(**kwargs):
-    """Polypterus options"""
-    n_joints_body = kwargs.pop('n_joints_body', 11)
-    kwargs_options = {
-        'spawn_loader': SpawnLoader.FARMS,  # SpawnLoader.PYBULLET,
-        'spawn_position': [0, 0, 0.2*0.07],
-        'spawn_orientation': [0, 0, 0],
-        'use_self_collisions': False,
-        'scale_hydrodynamics': 1e2,
-        'density': 900.0,
-        'n_legs': 2,
-        'n_dof_legs': 4,
-        'n_joints_body': n_joints_body,
-        'drag_coefficients': [
-            [
-                [-1e-3, -5e-2, -5e-2]
-                if i < 12
-                else [-1e-4, -1e-4, -1e-4],
-                [-1e-8, -1e-8, -1e-8],
-            ]
-            for i in range((n_joints_body+1)+2*4)
-        ],
-        'drives_init': [2, 0],
-        'weight_osc_body': 1e2,
-        'weight_osc_legs_internal': 1e2,
-        'weight_osc_legs_opposite': 0,
-        'weight_osc_legs_following': 0,
-        'weight_osc_legs2body': 1e1,
-        'weight_osc_body2legs': 1e1,
-        'weight_sens_contact_intralimb': -1e-1,
-        'weight_sens_contact_opposite': 0,
-        'weight_sens_contact_following': 0,
-        'weight_sens_contact_diagonal': 0,
-        'weight_sens_hydro_freq': 0,
-        'weight_sens_hydro_amp': 0,
-        'body_walk_amplitude': 1,
-        'body_osc_gain': 0.05,
-        'body_osc_bias': 0.3,
-        'legs_amplitudes': [[np.pi/4, np.pi/4, np.pi/4, np.pi/8]],
-        'legs_offsets_walking': [[0, np.pi/8, 0, np.pi/8]],
-        'modular_phases': (
-            np.array([3*np.pi/2, 0, 3*np.pi/2, 0]) - np.pi/4
-        ).tolist(),
-        # 'modular_amplitudes': np.full(4, 1.0),
-        'modular_amplitudes': np.full(4, 0).tolist(),
-    }
-    kwargs_options.update(kwargs)
-    return kwargs_options
-
-
-def get_polypterus_options(**kwargs):
-    """Polypterus options"""
-    kwargs_options = get_polypterus_kwargs_options(**kwargs)
-    options = AmphibiousOptions.from_options(kwargs_options)
-    options.control.sensors.joints += [
-        'joint_passive_{}'.format(i)
-        for i in range(4)
-    ]
-    convention = AmphibiousConvention(**options.morphology)
-    options.control.sensors.contacts += convention.body_links_names()
     return options
 
 
