@@ -6,6 +6,14 @@ import numpy as np
 from .joints_control_cy cimport get_joints_data, set_joints_data
 
 
+cdef inline double sign(double value):
+    """Sign"""
+    if value < 0:
+        return -1
+    else:
+        return 1
+
+
 cdef class PassiveJointCy(JointsControlCy):
     """Passive muscle model"""
 
@@ -45,7 +53,7 @@ cdef class PassiveJointCy(JointsControlCy):
             )
             friction = -(
                 self.friction_coefficients[joint_i]
-                *velocities[joint_data_i]
+                *sign(velocities[joint_data_i])
                 *self.transform_gain[joint_data_i]
             )
 

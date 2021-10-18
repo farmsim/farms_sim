@@ -261,9 +261,9 @@ class AmphibiousController(ModelController):
             timestep: float,
     ) -> Dict[str, float]:
         """Position control to simulate damper properties in Ekeberg muscle"""
-        self.max_torques[ControlType.VELOCITY][self.velocity_indices_ekeberg] = (
-            np.abs(self.network2joints['ekeberg_muscle'].damping(iteration))
-            + np.abs(self.network2joints['ekeberg_muscle'].friction(iteration))
+        self.max_torques[ControlType.VELOCITY][self.velocity_indices_ekeberg] = np.abs(
+            self.network2joints['ekeberg_muscle'].damping(iteration)
+            + self.network2joints['ekeberg_muscle'].friction(iteration)
         )
         return dict(zip(
             self.network2joints['ekeberg_muscle'].joints_names,
@@ -301,9 +301,9 @@ class AmphibiousController(ModelController):
             timestep: float,
     ) -> Dict[str, float]:
         """Position control to simulate damper properties in Passive joint"""
-        self.max_torques[ControlType.VELOCITY][self.velocity_indices_passive] = (
-            np.abs(self.network2joints['passive'].damping(iteration))
-            + np.abs(self.network2joints['passive'].friction(iteration))
+        self.max_torques[ControlType.VELOCITY][self.velocity_indices_passive] = np.abs(
+            self.network2joints['passive'].damping(iteration)
+            + self.network2joints['passive'].friction(iteration)
         )
         return dict(zip(
             self.network2joints['passive'].joints_names,

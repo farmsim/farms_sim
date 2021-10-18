@@ -77,6 +77,7 @@ cdef class EkebergMuscleCy(JointsMusclesCy):
             friction = -(
                 self.parameters[joint_i][EPSILON]
                 *sign(velocities[joint_data_i])
+                *self.transform_gain[joint_data_i]
             )
 
             # Log
