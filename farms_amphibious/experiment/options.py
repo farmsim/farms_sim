@@ -392,8 +392,10 @@ def get_centipede_kwargs_options(**kwargs):
     """Centipede options"""
     n_joints_body = kwargs.pop('n_joints_body', 20)
     n_legs_pairs = n_joints_body-1
+    default_equation = kwargs.pop('default_equation', 'position')
     kwargs_options = {
         'spawn_loader': SpawnLoader.FARMS,  # SpawnLoader.PYBULLET,
+        'default_equation': default_equation,
         'spawn_position': [0, 0, 0.2*0.07],
         'spawn_orientation': [0, 0, 0],
         'use_self_collisions': False,
@@ -434,18 +436,25 @@ def get_centipede_kwargs_options(**kwargs):
         'body_osc_gain': 0.1,
         'body_osc_bias': 0,
         'legs_amplitudes': [
-            [np.pi/4, np.pi/32, np.pi/32, np.pi/64]
+            [2]*4
+            if 'ekeberg' in default_equation
+            else [np.pi/4, np.pi/32, np.pi/32, np.pi/64]
             for _ in range(n_legs_pairs)
         ],
         'legs_offsets_walking': [
             [0, 0, 0, np.pi/6]
             for _ in range(n_legs_pairs)
         ],
-        'modular_phases': (
-            np.array([3*np.pi/2, 0, 3*np.pi/2, 0]) - np.pi/4
-        ).tolist(),
         # 'modular_amplitudes': np.full(4, 1.0),
-        'modular_amplitudes': np.full(4, 0).tolist(),
+        'muscle_alpha': 3e-6,
+        'muscle_beta': 1e-8,
+        'muscle_gamma': 2e3,
+        'muscle_delta': 1e-4,
+        'muscle_epsilon': 5e-6,
+        'joints_passive': [
+            ['joint_passive_{}'.format(i), 1e-6, 1e-6, 0]
+            for i in range(4)
+        ],
     }
     kwargs_options.update(kwargs)
     return kwargs_options
@@ -455,10 +464,6 @@ def get_centipede_options(**kwargs):
     """Centipede options"""
     kwargs_options = get_centipede_kwargs_options(**kwargs)
     options = AmphibiousOptions.from_options(kwargs_options)
-    options.control.sensors.joints += [
-        'joint_passive_{}'.format(i)
-        for i in range(4)
-    ]
     convention = AmphibiousConvention(**options.morphology)
     options.control.sensors.contacts += convention.body_links_names()
     # for joint_i, joint in enumerate(options['morphology']['joints']):
