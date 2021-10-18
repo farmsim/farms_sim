@@ -238,22 +238,26 @@ def amphibious_options(animat_options, arena='flat', **kwargs):
 
 def get_salamander_kwargs_options(**kwargs):
     """Salamander options"""
-    n_joints_body = kwargs.pop('n_joints_body', 11)
+    n_joints_body = kwargs.pop('n_joints_body', 8)
+    n_links_body = n_joints_body + 1
+    default_equation = kwargs.pop('default_equation', 'position')
     kwargs_options = {
         'spawn_loader': SpawnLoader.FARMS,  # SpawnLoader.PYBULLET,
+        'default_equation': default_equation,
         'spawn_position': [0, 0, 0.2*0.07],
         'spawn_orientation': [0, 0, 0],
         'use_self_collisions': False,
+        'show_hydrodynamics': False,
         'scale_hydrodynamics': 10,
         'n_legs': 4,
         'n_dof_legs': 4,
         'n_joints_body': n_joints_body,
         'drag_coefficients': [
             [
-                [-1e-2, -1e0, -1e0]
-                if i < 12
-                else [-1e-4, -1e-4, -1e-4]
-                if (i - 12) % 4 > 1
+                [-1e-2, -3e-1, -3e-1]
+                if i < n_links_body
+                else [-1e-3, -1e-3, -1e-3]
+                if (i - n_links_body) % 4 > 1
                 else [0, 0, 0],
                 [-1e-8, -1e-8, -1e-8],
             ]
@@ -266,30 +270,41 @@ def get_salamander_kwargs_options(**kwargs):
         'weight_osc_legs_following': 0,
         'weight_osc_legs2body': 1e1,
         'weight_osc_body2legs': 1e1,
-        'weight_sens_contact_intralimb': -1e1,
+        'weight_sens_stretch_freq': 0,
+        'weight_sens_contact_intralimb': -1e0,
         'weight_sens_contact_opposite': 0,
         'weight_sens_contact_following': 0,
         'weight_sens_contact_diagonal': 0,
         'weight_sens_hydro_freq': 0,
         'weight_sens_hydro_amp': 0,
-        'body_walk_amplitude': 0.2,
+        'body_walk_amplitude': 1.0,
+        'body_osc_gain': 0.1,
+        'body_osc_bias': 0.1,
         'legs_amplitudes': [
-            [np.pi/4, np.pi/16, np.pi/8, 0],
-            [np.pi/4, np.pi/16, np.pi/8, 0],
+            [np.pi/4, np.pi/8, np.pi/16, np.pi/8],
+            [np.pi/4, np.pi/8, np.pi/16, np.pi/8],
+        ] if 'ekeberg' in default_equation else [
+            [np.pi/4, np.pi/16, np.pi/16, np.pi/4],
+            [np.pi/5, np.pi/32, np.pi/4, np.pi/4],
         ],
         'legs_offsets_walking': [
-            [0, 0, np.pi/4, np.pi/3],
-            [0, 0, 0, np.pi/3],
+            [0, 0, np.pi/4, 2*np.pi/5],
+            [0, 0, 0, 2*np.pi/5],
         ],
-        'modular_phases': (
-            np.array([3*np.pi/2, 0, 3*np.pi/2, 0]) - np.pi/4
-        ).tolist(),
+        'intralimb_phases': [0, 0.5*np.pi, 0, 0],
         # 'modular_amplitudes': np.full(4, 1.0),
-        'modular_amplitudes': np.full(4, 0).tolist(),
-        'muscle_alpha': 2e-3,
-        'muscle_beta': -1e-8,
-        'muscle_gamma': 5e5,
-        'muscle_delta': -5e-5,
+        'muscle_alpha': 8e-4,
+        'muscle_beta': 1e-4,
+        'muscle_gamma': 1e1,
+        'muscle_delta': 1e-6,
+        'muscle_epsilon': 2e-4,
+        'joints_passive': [
+            ['joint_passive_{}'.format(i), 1e-3, 1e-2, 0]
+            # ['joint_passive_{}'.format(i), 1e-2, 1e-5]
+            # for i in range(7)
+            # for i in range(3)
+            for i in range(5)
+        ],
     }
     kwargs_options.update(kwargs)
     return kwargs_options
@@ -299,10 +314,6 @@ def get_salamander_options(**kwargs):
     """Salamander options"""
     kwargs_options = get_salamander_kwargs_options(**kwargs)
     options = AmphibiousOptions.from_options(kwargs_options)
-    options.control.sensors.joints += [
-        'joint_passive_{}'.format(i)
-        for i in range(7)
-    ]
     convention = AmphibiousConvention(**options.morphology)
     options.control.sensors.contacts += convention.body_links_names()
     return options
