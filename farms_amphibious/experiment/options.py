@@ -888,6 +888,10 @@ def get_orobot_kwargs_options(**kwargs):
     """Orobot default options"""
 
     # Morphology information
+    n_joints_leg = 5
+    n_joints_body = 8
+    n_links_body = n_joints_body + 1
+    n_joints = n_joints_body + 4*n_joints_leg
     links_names = kwargs.pop(
         'links_names',
         [
@@ -1088,8 +1092,8 @@ def get_orobot_kwargs_options(**kwargs):
     links_swimming = links_names[2:]
     drag_coefficients=[
         [
-            [-1e1, -1e1, -1e2]
-            if i < 8 and name in links_swimming
+            [-1e0, -1e1, -1e1]
+            if i < n_links_body and name in links_swimming
             else [0, 0, 0],
             [-1e-8, -1e-8, -1e-8],
         ]
@@ -1127,7 +1131,6 @@ def get_orobot_kwargs_options(**kwargs):
         # # 'RIGHT_HIND_MX28_to_RIGHT_HIND_KNEE_C',
         # 'RIGHT_HIND_KNEE_C_to_RIGHT_HIND_KNEET_RIGHT_HIND_KNEE',
 
-
         # Body
         'S_SPINE1_C_to_S_SPINE1T_S_SPINE1',
         'S_SPINE2_C_to_S_SPINE2T_S_SPINE2',
@@ -1142,14 +1145,14 @@ def get_orobot_kwargs_options(**kwargs):
         'LEFT_FRONT_YAW_C_to_LEFT_FRONT_YAWT_LEFT_FRONT_YAW',
         'LEFT_FRONT_PITCH_C_to_LEFT_FRONT_PITCHT_LEFT_FRONT_PITCH',
         'LEFT_FRONT_ROLL_C_to_LEFT_FRONT_ROLLT_LEFT_FRONT_ROLL',
-        'LEFT_FRONT_WRIST_C_to_LEFT_FRONT_WRISTT_LEFT_FRONT_WRIST',
         'LEFT_FRONT_ELBOW_C_to_LEFT_FRONT_ELBOWT_LEFT_FRONT_ELBOW',
+        'LEFT_FRONT_WRIST_C_to_LEFT_FRONT_WRISTT_LEFT_FRONT_WRIST',
         # Limb (FR)
         'RIGHT_FRONT_YAW_C_to_RIGHT_FRONT_YAWT_RIGHT_FRONT_YAW',
         'RIGHT_FRONT_PITCH_C_to_RIGHT_FRONT_PITCHT_RIGHT_FRONT_PITCH',
         'RIGHT_FRONT_ROLL_C_to_RIGHT_FRONT_ROLLT_RIGHT_FRONT_ROLL',
-        'RIGHT_FRONT_WRIST_C_to_RIGHT_FRONT_WRISTT_RIGHT_FRONT_WRIST',
         'RIGHT_FRONT_ELBOW_C_to_RIGHT_FRONT_ELBOWT_RIGHT_FRONT_ELBOW',
+        'RIGHT_FRONT_WRIST_C_to_RIGHT_FRONT_WRISTT_RIGHT_FRONT_WRIST',
         # Limb (HL)
         'LEFT_HIND_YAW_C_to_LEFT_HIND_YAWT_LEFT_HIND_YAW',
         'LEFT_HIND_PITCH_C_to_LEFT_HIND_PITCHT_LEFT_HIND_PITCH',
@@ -1189,31 +1192,26 @@ def get_orobot_kwargs_options(**kwargs):
 
     # Amplitudes gains
     if transform_gain is None:
-        transform_gain = [-1]*(8+4*5)  # np.ones(8+4*5)
+        transform_gain = [1]*n_joints
         # transform_gain[8] = 0
         for leg_i in range(2):
             for side_i in range(2):
                 mirror = (1 if side_i else -1)
-                # mirror2 = (-1 if leg_i else 1)
-                transform_gain[8+2*leg_i*5+side_i*5+0] = mirror
-                transform_gain[8+2*leg_i*5+side_i*5+1] = -mirror
-                transform_gain[8+2*leg_i*5+side_i*5+2] = -1
-                transform_gain[8+2*leg_i*5+side_i*5+3] = -0*mirror
-                transform_gain[8+2*leg_i*5+side_i*5+4] = 0*mirror
+                joint_i = n_joints_body+2*leg_i*n_joints_leg+side_i*n_joints_leg
+                transform_gain[joint_i+0] = -mirror
+                transform_gain[joint_i+1] = mirror
+                transform_gain[joint_i+2] = 1
+                transform_gain[joint_i+3] = mirror
         transform_gain = dict(zip(joints_names, transform_gain))
 
     # Joints joints_offsets
     if joints_offsets is None:
-        joints_offsets = [0]*(8+4*5)
+        joints_offsets = [0]*n_joints
         for leg_i in range(2):
             for side_i in range(2):
                 mirror = (1 if side_i else -1)
-                # mirror2 = (-1 if leg_i else 1)
-                joints_offsets[8+2*leg_i*5+side_i*5+0] = -0*mirror
-                joints_offsets[8+2*leg_i*5+side_i*5+1] = 0*mirror
-                joints_offsets[8+2*leg_i*5+side_i*5+2] = -0*np.pi
-                joints_offsets[8+2*leg_i*5+side_i*5+3] = -0.25*np.pi*mirror
-                joints_offsets[8+2*leg_i*5+side_i*5+4] = 0*mirror
+                joint_i = n_joints_body+2*leg_i*n_joints_leg+side_i*n_joints_leg
+                joints_offsets[joint_i+3] = -0.5*np.pi*mirror
         joints_offsets = dict(zip(joints_names, joints_offsets))
 
     # Animat options
@@ -1222,38 +1220,42 @@ def get_orobot_kwargs_options(**kwargs):
         spawn_position=[0, 0, 0],
         spawn_orientation=[0.5*np.pi, 0, 0],
         n_legs=4,
-        n_dof_legs=5,
-        n_joints_body=8,
+        n_dof_legs=n_joints_leg,
+        n_joints_body=n_joints_body,
         use_self_collisions=False,
-        density=600.0,
-        body_walk_amplitude=0.2,
+        density=300.0,
         legs_amplitudes=[
-            [np.pi/6, np.pi/16, np.pi/16, np.pi/8, np.pi/8],
-            [np.pi/6, np.pi/16, np.pi/16, np.pi/8, np.pi/8],
+            [np.pi/10, np.pi/32, np.pi/4, np.pi/4, 0],
+            [np.pi/4, np.pi/32, np.pi/4, np.pi/4, 0],
         ],
         legs_offsets_walking=[
-            [0, -np.pi/32, -np.pi/16, 0, 0],
-            [0, -np.pi/32, -np.pi/16, 0, 0],
+            [np.pi/16, -np.pi/32, 0, 2*np.pi/5, 0],
+            [-np.pi/16, -np.pi/32, 0, 2*np.pi/5, 0],
         ],
-        legs_offsets_swimming=[2*np.pi/5, 0, 0, np.pi/2, 0],
+        intralimb_phases=[0, 0.5*np.pi, 0, 0.5*np.pi, 0],
+        legs_offsets_swimming=[-2*np.pi/5, 0, 0, 0, 0],
+        body_walk_amplitude=1,
+        body_osc_gain=0.1,
+        body_osc_bias=0.0,
+        body_freq_gain=2*np.pi*0.2,
+        body_freq_bias=2*np.pi*0.0,
+        legs_freq_gain=2*np.pi*0.15,
+        legs_freq_bias=2*np.pi*0.15,
         transform_gain=transform_gain,
         transform_bias=joints_offsets,
-        weight_osc_body=1e0,
+        weight_osc_body=1e1,
         weight_osc_legs_internal=3e1,
-        weight_osc_legs_opposite=1e0,
-        weight_osc_legs_following=5e-1,
-        weight_osc_legs2body=3e1,
+        weight_osc_legs2body=1e1,
+        weight_osc_body2legs=1e1,
+        weight_osc_legs_opposite=0,
+        weight_osc_legs_following=0,
         weight_sens_contact_intralimb=0,
         weight_sens_contact_opposite=0,
         weight_sens_contact_following=0,
         weight_sens_contact_diagonal=0,
         weight_sens_hydro_freq=0,
         weight_sens_hydro_amp=0,
-        modular_phases=(
-            np.array([3*np.pi/2, 0, 3*np.pi/2, 0, 0]) - np.pi/4
-        ).tolist(),
         # modular_amplitudes=np.full(5, 0.5).tolist(),
-        modular_amplitudes=np.full(5, 0).tolist(),
         links_names=links_names,
         drag_coefficients=drag_coefficients,
         links_swimming=links_swimming,
@@ -1267,6 +1269,7 @@ def get_orobot_kwargs_options(**kwargs):
         muscle_beta=-1e1,
         muscle_gamma=1e1,
         muscle_delta=-3e-1,
+        joints_passive=[['PS_SPINE1_C_to_PS_SPINE1T_PS_SPINE1', 1e1, 1e-3, 0]],
     )
     kwargs_options.update(kwargs)
     return kwargs_options
