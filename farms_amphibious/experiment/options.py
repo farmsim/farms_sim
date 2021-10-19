@@ -659,6 +659,10 @@ def get_krock_kwargs_options(**kwargs):
     """Krock default options"""
 
     # Morphology information
+    n_joints_leg = 4
+    n_joints_body = 5
+    n_links_body = n_joints_body + 1
+    n_joints = n_joints_body + 4*n_joints_leg
     links_inertials = [
         'Girdle',
         'solid_head',
@@ -768,40 +772,36 @@ def get_krock_kwargs_options(**kwargs):
 
     # Amplitudes gains
     if transform_gain is None:
-        transform_gain = [1]*(5+4*4)  # np.ones(5+4*4)
-        # transform_gain[5] = 0
+        transform_gain = [1]*n_joints
         for leg_i in range(2):
             for side_i in range(2):
                 mirror = (1 if side_i else -1)
                 mirror2 = (-1 if leg_i else 1)
-                transform_gain[5+2*leg_i*4+side_i*4+0] = mirror
-                transform_gain[5+2*leg_i*4+side_i*4+1] = mirror  # mirror
-                transform_gain[5+2*leg_i*4+side_i*4+2] = 1  # -mirror
-                transform_gain[5+2*leg_i*4+side_i*4+3] = 0  # mirror
+                joint_i = n_joints_body+2*leg_i*4+side_i*4
+                transform_gain[joint_i+0] = mirror
+                transform_gain[joint_i+1] = -mirror
+                transform_gain[joint_i+2] = -1
+                transform_gain[joint_i+3] = -mirror*mirror2
         transform_gain = dict(zip(joints_names, transform_gain))
 
     # Joints joints_offsets
     if joints_offsets is None:
-        joints_offsets = [0]*(5+4*4)
+        joints_offsets = [0]*n_joints
         for leg_i in range(2):
             for side_i in range(2):
-                mirror = (1 if side_i else -1)
-                mirror2 = (-1 if leg_i else 1)
-                joints_offsets[5+2*leg_i*4+side_i*4+0] = -0.1*np.pi*mirror
-                joints_offsets[5+2*leg_i*4+side_i*4+1] = 0*np.pi*mirror  # (
-                #     mirror*np.pi/16 if leg_i else mirror*np.pi/8
-                # )
-                joints_offsets[5+2*leg_i*4+side_i*4+2] = 0.5*np.pi*mirror2
-                #     0 if leg_i else -mirror*np.pi/3
-                # )
-                joints_offsets[5+2*leg_i*4+side_i*4+3] = 0  # (
-                #     -mirror*np.pi/4 if leg_i else mirror*np.pi/16
-                # )
+                mirror = (-1 if leg_i else 1)
+                joint_i = n_joints_body+2*leg_i*4+side_i*4
+                joints_offsets[joint_i+2] = 0.5*np.pi*mirror
+                joints_offsets[joint_i+3] = (
+                    0.5*np.pi*mirror
+                    if side_i else
+                    -0.5*np.pi*mirror
+                )
         joints_offsets = dict(zip(joints_names, joints_offsets))
 
     # Animat options
     fri = -3e-1
-    swi = -1e1
+    swi = -1e2
     kwargs_options = dict(
         spawn_loader=SpawnLoader.FARMS,  # SpawnLoader.PYBULLET,
         density=550.0,
@@ -811,8 +811,7 @@ def get_krock_kwargs_options(**kwargs):
         scale_hydrodynamics=1e-1,
         n_legs=4,
         n_dof_legs=4,
-        # n_links_body=7,
-        n_joints_body=5,
+        n_joints_body=n_joints_body,
         use_self_collisions=False,
         drag_coefficients=[
             [
@@ -820,41 +819,40 @@ def get_krock_kwargs_options(**kwargs):
                 if i == 0
                 # else [-1e-1, -1e-1, -1e0]
                 # if i < 4
-                else [fri, fri, swi]
+                else [fri, swi, swi]
                 if i < 6
                 else [fri, fri, fri],
                 [-1e-3]*3,
             ]
-            for i in range(6+4*4)
+            for i in range(n_links_body+4*n_joints_leg)
         ],
-        body_walk_amplitude=0.25,
         legs_amplitudes=[
-            [np.pi/16, np.pi/8, np.pi/8, np.pi/8],
-            [np.pi/16, np.pi/8, np.pi/8, np.pi/8],
+            [np.pi/32, np.pi/10, np.pi/16, np.pi/4],
+            [np.pi/32, np.pi/5, np.pi/4, np.pi/4],
         ],
         legs_offsets_walking=[
-            [0, -np.pi/32, -np.pi/16, 0],
-            [0, -np.pi/32, -np.pi/16, 0],
+            [-np.pi/8, np.pi/8, np.pi/4, 2*np.pi/5],
+            [-np.pi/8, -np.pi/8, -np.pi/8, 2*np.pi/5],
         ],
-        legs_offsets_swimming=[0, 0.25*np.pi, 0.5*np.pi, 0, np.pi/2],
+        intralimb_phases=[-0.5*np.pi, np.pi, np.pi, -0.5*np.pi],
+        legs_offsets_swimming=[-np.pi/5, -np.pi/5, np.pi/3, -np.pi/2],
+        body_walk_amplitude=1,
+        body_osc_gain=0.2,
+        body_osc_bias=0.0,
         transform_gain=transform_gain,
         transform_bias=joints_offsets,
-        intralimb_phases=[0, 0.5*np.pi, 0.5*np.pi, 0.5*np.pi, 0],
-        body_phase_bias=0.5*np.pi/6,
-        weight_osc_body=1e0,
-        weight_osc_legs_internal=3e1,
-        weight_osc_legs_opposite=1e0,
-        weight_osc_legs_following=5e-1,
-        weight_osc_legs2body=3e1,
+        weight_osc_body=1e2,
+        weight_osc_legs_internal=3e2,
+        weight_osc_legs2body=3e2,
+        weight_osc_body2legs=1e2,
+        weight_osc_legs_opposite=0,
+        weight_osc_legs_following=0,
         weight_sens_contact_intralimb=0,
         weight_sens_contact_opposite=0,
         weight_sens_contact_following=0,
         weight_sens_contact_diagonal=0,
         weight_sens_hydro_freq=0,
         weight_sens_hydro_amp=0,
-        modular_phases=(
-            np.array([3*np.pi/2, 0, 3*np.pi/2, 0]) - np.pi/4
-        ).tolist(),
         # modular_amplitudes=np.full(4, 0.5).tolist(),
         modular_amplitudes=np.full(4, 0).tolist(),
         links_names=links_names,
