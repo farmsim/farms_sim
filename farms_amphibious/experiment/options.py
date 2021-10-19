@@ -610,17 +610,19 @@ def get_pleurobot_kwargs_options(**kwargs):
     )
     if 'kinematics_file' not in kwargs:
         kwargs_options.update(dict(
-            body_walk_amplitude=0.2,
             legs_amplitudes=[
-                [np.pi/10, np.pi/64, np.pi/4, np.pi/4],
-                [np.pi/5, np.pi/64, np.pi/4, np.pi/4],
+                [np.pi/32, np.pi/32, np.pi/8, np.pi/4],
+                [np.pi/32, np.pi/32, np.pi/8, np.pi/4],
             ],
             legs_offsets_walking=[
-                [0, 0, 0, 2*np.pi/5],
-                [0, 0, 0, 2*np.pi/5],
+                [np.pi/16, -np.pi/16, 0, 2*np.pi/5],
+                [-np.pi/16, -np.pi/16, 0, 2*np.pi/5],
             ],
             intralimb_phases=[0, 0.5*np.pi, 0, 0.5*np.pi],
             legs_offsets_swimming=[-2*np.pi/5, 0, 0, 0],
+            body_walk_amplitude=1,
+            body_osc_gain=0.1,
+            body_osc_bias=0.0,
             transform_gain=transform_gain,
             transform_bias=joints_offsets,
             weight_osc_body=3e1,
