@@ -1401,7 +1401,6 @@ def get_hfsp_robot_kwargs_options(hindlimbs=True, **kwargs):
         n_joints_body=8,
         density=500.0,
         use_self_collisions=False,
-        body_walk_amplitude=0.3,
         legs_amplitudes=[
             [np.pi/6, np.pi/16, np.pi/16, np.pi/8, np.pi/8],
             [np.pi/6, np.pi/16, np.pi/16, np.pi/8, np.pi/8],
@@ -1411,6 +1410,13 @@ def get_hfsp_robot_kwargs_options(hindlimbs=True, **kwargs):
             [0, -np.pi/32, -np.pi/16, 0, 0],
         ],
         legs_offsets_swimming=[-0.5*np.pi, -0.25*np.pi],
+        body_walk_amplitude=1,
+        body_osc_gain=0.1,
+        body_osc_bias=0.0,
+        body_freq_gain=2*np.pi*0.2,
+        body_freq_bias=2*np.pi*0.0,
+        legs_freq_gain=2*np.pi*0.15,
+        legs_freq_bias=2*np.pi*0.15,
         transform_gain=transform_gain,
         transform_bias=joints_offsets,
         weight_osc_body=1e0,
@@ -1424,11 +1430,7 @@ def get_hfsp_robot_kwargs_options(hindlimbs=True, **kwargs):
         weight_sens_contact_diagonal=0,
         weight_sens_hydro_freq=0,
         weight_sens_hydro_amp=0,
-        modular_phases=(
-            np.array([3*np.pi/2, 0, 3*np.pi/2, 0, 0]) - np.pi/4
-        ).tolist(),
         # modular_amplitudes=np.full(5, 0.5).tolist(),
-        modular_amplitudes=np.full(4, 0).tolist(),
         links_names=links_names,
         drag_coefficients=drag_coefficients,
         links_swimming=links_swimming,
@@ -1447,13 +1449,10 @@ def get_hfsp_robot_kwargs_options(hindlimbs=True, **kwargs):
     return kwargs_options
 
 
-def get_hfsp_robot_options(slow=2, **kwargs):
+def get_hfsp_robot_options(**kwargs):
     """HFSP robot default options"""
     kwargs_options = get_hfsp_robot_kwargs_options(**kwargs)
     animat_options = AmphibiousOptions.from_options(kwargs_options)
-    for oscillator in animat_options.control.network.oscillators:
-        oscillator['frequency_gain'] /= slow
-        oscillator['frequency_bias'] /= slow
     return animat_options
 
 
