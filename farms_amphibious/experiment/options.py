@@ -604,15 +604,15 @@ def get_pleurobot_kwargs_options(**kwargs):
         sensors_hydrodynamics=links_swimming,
         feet_links=feet,
         joints_passive=[
-            ['j_tailBone', 1e1, 1e-3, 0],
-            ['j_tail', 1e1, 1e-3, 0],
+            ['j_tailBone', 1e0, 1e-1, 0],
+            ['j_tail', 1e0, 1e-1, 0],
         ],
     )
     if 'kinematics_file' not in kwargs:
         kwargs_options.update(dict(
             legs_amplitudes=[
-                [np.pi/32, np.pi/32, np.pi/8, np.pi/4],
-                [np.pi/32, np.pi/32, np.pi/8, np.pi/4],
+                [np.pi/8, np.pi/64, np.pi/8, np.pi/4],
+                [np.pi/8, np.pi/64, np.pi/8, np.pi/4],
             ],
             legs_offsets_walking=[
                 [np.pi/16, -np.pi/16, 0, 2*np.pi/5],
@@ -623,12 +623,16 @@ def get_pleurobot_kwargs_options(**kwargs):
             body_walk_amplitude=1,
             body_osc_gain=0.1,
             body_osc_bias=0.0,
+            body_freq_gain=2*np.pi*0.2,
+            body_freq_bias=2*np.pi*0.0,
+            legs_freq_gain=2*np.pi*0.15,
+            legs_freq_bias=2*np.pi*0.15,
             transform_gain=transform_gain,
             transform_bias=joints_offsets,
-            weight_osc_body=3e1,
-            weight_osc_legs_internal=3e1,
-            weight_osc_legs2body=1e1,
-            weight_osc_body2legs=1e1,
+            weight_osc_body=3e2,
+            weight_osc_legs_internal=3e2,
+            weight_osc_legs2body=1e2,
+            weight_osc_body2legs=1e2,
             weight_osc_legs_opposite=0,
             weight_osc_legs_following=0,
             weight_sens_contact_intralimb=0,
@@ -647,13 +651,10 @@ def get_pleurobot_kwargs_options(**kwargs):
     return kwargs_options
 
 
-def get_pleurobot_options(osc_slow=2, **kwargs):
+def get_pleurobot_options(**kwargs):
     """Pleurobot default options"""
     kwargs_options = get_pleurobot_kwargs_options(**kwargs)
     animat_options = AmphibiousOptions.from_options(kwargs_options)
-    for oscillator in animat_options.control.network.oscillators:
-        oscillator['frequency_gain'] /= osc_slow
-        oscillator['frequency_bias'] /= osc_slow
     return animat_options
 
 
@@ -841,6 +842,10 @@ def get_krock_kwargs_options(**kwargs):
         body_walk_amplitude=1,
         body_osc_gain=0.2,
         body_osc_bias=0.0,
+        body_freq_gain=2*np.pi*0.2,
+        body_freq_bias=2*np.pi*0.0,
+        legs_freq_gain=2*np.pi*0.15,
+        legs_freq_bias=2*np.pi*0.15,
         transform_gain=transform_gain,
         transform_bias=joints_offsets,
         weight_osc_body=1e2,
@@ -874,13 +879,10 @@ def get_krock_kwargs_options(**kwargs):
     return kwargs_options
 
 
-def get_krock_options(slow=2, **kwargs):
+def get_krock_options(**kwargs):
     """Krock default options"""
     kwargs_options = get_krock_kwargs_options(**kwargs)
     animat_options = AmphibiousOptions.from_options(kwargs_options)
-    for oscillator in animat_options.control.network.oscillators:
-        oscillator['frequency_gain'] /= slow
-        oscillator['frequency_bias'] /= slow
     return animat_options
 
 
