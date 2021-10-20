@@ -2,8 +2,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.cm as cm
-import matplotlib.patches as patches
+from matplotlib import cm, patches
 from matplotlib.animation import FuncAnimation
 from matplotlib.colors import colorConverter, Normalize, ListedColormap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -330,7 +329,7 @@ class NetworkFigure:
         # Options
         offset = kwargs.pop('offset', 1)
         radius = kwargs.pop('radius', 0.3)
-        margin_x = kwargs.pop('margin_x', 2)
+        margin_x = kwargs.pop('margin_x', 4)
         margin_y = kwargs.pop('margin_y', 7)
         alpha = kwargs.pop('alpha', 0.3)
         title = kwargs.pop('title', 'Network')
