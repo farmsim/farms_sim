@@ -90,7 +90,7 @@ def generate_sdf(model_name, model_version, **kwargs):
             link.inertial.inertias[j] *= scale**5
 
     # Body joints
-    angle_max = 2*np.pi/len(original_model.joints)
+    angle_max = 2*2*np.pi/len(original_model.joints)
     for i, joint in enumerate(original_model.joints):
         joint.name = convention.bodyjoint2name(i)
         joint.pose = np.array(joint.pose, dtype=float).tolist()
@@ -229,8 +229,8 @@ def generate_sdf(model_name, model_version, **kwargs):
                     child=links[l_index],
                     xyz=axis[joint_i],
                     limits=[
-                        0 if joint_i == 3 else -0.5*np.pi,
-                        0.5*np.pi,
+                        -np.pi,
+                        +np.pi,
                         max_torque,
                         max_velocity,
                     ],
