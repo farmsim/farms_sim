@@ -1465,6 +1465,7 @@ def get_agnathax_kwargs_options(**kwargs):
         + ['body_{}'.format(i) for i in range(n_joints_body-1)]
         + ['tail'],
     )
+    n_links = len(links_names)
     joints_names = kwargs.pop(
         'joints_names',
         ['joint_{}'.format(i) for i in range(n_joints_body)]
@@ -1474,7 +1475,9 @@ def get_agnathax_kwargs_options(**kwargs):
         'spawn_position': [0, 0, 0.2*0.07],
         'spawn_orientation': [0, 0, 0],
         'use_self_collisions': False,
+        'show_hydrodynamics': False,
         'scale_hydrodynamics': 10,
+        'density': 900.,
         'n_legs': 0,
         'n_dof_legs': 0,
         'n_joints_body': n_joints_body,
@@ -1482,16 +1485,19 @@ def get_agnathax_kwargs_options(**kwargs):
         'joints_names': joints_names,
         'drag_coefficients': [
             [
-                [-1e-1, -1e0, -1e0]
-                if i < 13
-                else [-1e-4, -1e-4, -1e-4]
-                if (i - 12) % 4 > 1
-                else [0, 0, 0],
+                [-1e-2, -1e0, -1e0]
+                if i < n_links-1
+                else [-1e-2, -1e1, -1e1],
                 [-1e-8, -1e-8, -1e-8],
             ]
-            for i in range((n_joints_body+1))
+            for i in range(n_links)
         ],
         'drives_init': [2, 0],
+        'body_walk_amplitude': 1.0,
+        'body_osc_gain': 0.1,
+        'body_osc_bias': 0.0,
+        'body_freq_gain': 2*np.pi*0.15,
+        'body_freq_bias': 2*np.pi*0.0,
         'weight_osc_body': 1e1,
         'weight_sens_contact_intralimb': 0,
         'weight_sens_contact_opposite': 0,
@@ -1499,7 +1505,6 @@ def get_agnathax_kwargs_options(**kwargs):
         'weight_sens_contact_diagonal': 0,
         'weight_sens_hydro_freq': 0,
         'weight_sens_hydro_amp': 0,
-        'body_walk_amplitude': 0.2,
         'muscle_alpha': 1e-3,
         'muscle_beta': -1e-6,
         'muscle_gamma': 2e3,
