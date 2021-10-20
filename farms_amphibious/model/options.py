@@ -862,14 +862,14 @@ class AmphibiousNetworkOptions(Options):
             'osc_modular_phases',
             self.default_osc_modular_phases(
                 convention=convention,
-                phases=kwargs.pop('modular_phases', np.zeros(4)),
+                phases=kwargs.pop('modular_phases', np.zeros(5)),
             )
         )
         osc_modular_amplitudes = kwargs.pop(
             'osc_modular_amplitudes',
             self.default_osc_modular_amplitudes(
                 convention=convention,
-                amplitudes=kwargs.pop('modular_amplitudes', np.zeros(4)),
+                amplitudes=kwargs.pop('modular_amplitudes', np.zeros(5)),
             )
         )
         for osc_i, osc in enumerate(self.oscillators):
