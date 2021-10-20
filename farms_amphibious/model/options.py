@@ -143,8 +143,8 @@ class AmphibiousMorphologyOptions(MorphologyOptions):
             'links_restitution',
             [default_restitution for link in links_names],
         )
+        links_density = kwargs.pop('density', None)
         links_swimming = kwargs.pop('links_swimming', links_names)
-        links_density = kwargs.pop('density', 800.0)
         links_mass_multiplier = kwargs.pop('mass_multiplier', 1)
         drag_coefficients = kwargs.pop(
             'drag_coefficients',

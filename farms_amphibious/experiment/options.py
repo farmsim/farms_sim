@@ -252,6 +252,7 @@ def get_salamander_kwargs_options(**kwargs):
         'n_legs': 4,
         'n_dof_legs': 4,
         'n_joints_body': n_joints_body,
+        'density': 900.0,
         'drag_coefficients': [
             [
                 [-1e-2, -3e-1, -3e-1]
@@ -330,10 +331,10 @@ def get_polypterus_kwargs_options(**kwargs):
         'spawn_orientation': [0, 0, 0],
         'use_self_collisions': False,
         'scale_hydrodynamics': 1e2,
-        'density': 900.0,
         'n_legs': 2,
         'n_dof_legs': 4,
         'n_joints_body': n_joints_body,
+        'density': 900.0,
         'drag_coefficients': [
             [
                 [-1e-3, -5e-2, -5e-2]
@@ -400,7 +401,7 @@ def get_centipede_kwargs_options(**kwargs):
         'spawn_orientation': [0, 0, 0],
         'use_self_collisions': False,
         'scale_hydrodynamics': 1,
-        'density': 800.0,
+        'density': 900.0,
         'n_legs': 2*n_legs_pairs,
         'n_dof_legs': 4,
         'n_joints_body': n_joints_body,
@@ -1477,12 +1478,12 @@ def get_agnathax_kwargs_options(**kwargs):
         'use_self_collisions': False,
         'show_hydrodynamics': False,
         'scale_hydrodynamics': 10,
-        'density': 900.,
         'n_legs': 0,
         'n_dof_legs': 0,
         'n_joints_body': n_joints_body,
         'links_names': links_names,
         'joints_names': joints_names,
+        'density': 900.,
         'drag_coefficients': [
             [
                 [-1e-2, -1e0, -1e0]
@@ -1545,6 +1546,7 @@ def get_amphibot_kwargs_options(**kwargs):
         'n_joints_body': n_joints_body,
         'links_names': links_names,
         'joints_names': joints_names,
+        'density': 900.0,
         'drag_coefficients': [
             [
                 [-1e-2, -4e0, -1e1],
@@ -1555,7 +1557,8 @@ def get_amphibot_kwargs_options(**kwargs):
         'drives_init': [2, 0],
         'body_freq_gain': 2*np.pi*0.25,
         'body_freq_bias': 2*np.pi*0.0,
-        'weight_osc_body': 1e1,
+        'weight_osc_body': 3e1,
+        'weight_sens_stretch_freq': 0,
         'weight_sens_contact_intralimb': 0,
         'weight_sens_contact_opposite': 0,
         'weight_sens_contact_following': 0,
