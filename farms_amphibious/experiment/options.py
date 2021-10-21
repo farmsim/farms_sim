@@ -1,13 +1,15 @@
 """Experiments options"""
 
 import numpy as np
+from scipy.spatial.transform import Rotation
+
 import farms_pylog as pylog
 from farms_models.utils import get_sdf_path
 from farms_data.units import SimulationUnitScaling
 from farms_bullet.simulation.options import SimulationOptions
 from farms_bullet.model.model import SimulationModels, DescriptionFormatModel
 from farms_bullet.model.options import SpawnLoader
-from farms_bullet.model.control import ControlType
+
 from ..model.convention import AmphibiousConvention
 from ..model.options import AmphibiousOptions
 
@@ -86,6 +88,9 @@ def get_flat_arena(ground_height, arena_sdf='', meters=1):
 def get_ramp_arena(water_height, arena_sdf='', water_sdf='', **kwargs):
     """Water arena"""
     meters = kwargs.pop('meters', 1)
+    arena_position = kwargs.pop('arena_position', [0, 0, 0])
+    arena_position = [pos*meters for pos in arena_position]
+    arena_orientation = kwargs.pop('arena_orientation', [0, 0, 0, 1])
     ground_height = kwargs.pop('ground_height', None)
     if ground_height is None:
         ground_height = 0
@@ -101,8 +106,8 @@ def get_ramp_arena(water_height, arena_sdf='', water_sdf='', **kwargs):
                 'specularColor': [1, 1, 1],
             },
             spawn_options={
-                'posObj': [0, 0, ground_height*meters],
-                'ornObj': [0, 0, 0, 1],  # [0.5, 0, 0, 0.5],
+                'posObj': arena_position[:2] + [ground_height*meters],
+                'ornObj': arena_orientation,  # [0.5, 0, 0, 0.5],
             },
             # load_options={'globalScaling': meters},
             load_options={'units': SimulationUnitScaling(meters=meters)},
@@ -170,7 +175,20 @@ def amphibious_options(animat_options, arena='flat', **kwargs):
     water_velocity = kwargs.pop('water_velocity', None)
     ground_height = kwargs.pop('ground_height', None)
     arena_sdf = kwargs.pop('arena_sdf', '')
+    arena_position = kwargs.pop('arena_position', None)
+    arena_orientation = kwargs.pop('arena_orientation', None)
     water_sdf = kwargs.pop('water_sdf', '')
+
+    # Position and orientation handling
+    if arena_position is None:
+        arena_position = [0, 0, 0]
+    if arena_orientation is None:
+        arena_orientation = [0, 0, 0]
+    arena_orientation = Rotation.from_euler(
+        'xyz',
+        arena_orientation,
+        degrees=False,
+    ).as_quat()
 
     # Simulation
     simulation_options = SimulationOptions.with_clargs(**kwargs)
@@ -190,6 +208,8 @@ def amphibious_options(animat_options, arena='flat', **kwargs):
             water_height = 0
         arena = get_ramp_arena(
             arena_sdf=arena_sdf,
+            arena_position=arena_position,
+            arena_orientation=arena_orientation,
             water_sdf=water_sdf,
             water_height=water_height,
             ground_height=ground_height,
@@ -218,11 +238,30 @@ def amphibious_options(animat_options, arena='flat', **kwargs):
             viscosity=viscosity,
         )
     elif arena_sdf:
+        meters = simulation_options.units.meters
         arena = DescriptionFormatModel(
             path=arena_sdf,
+            spawn_options={
+                'posObj': [pos*meters for pos in arena_position],
+                'ornObj': arena_orientation,
+            },
             load_options={'units': simulation_options.units},
         )
         if water_height is not None:
+            arena = SimulationModels(models=[
+                arena,
+                DescriptionFormatModel(
+                    path=water_sdf if water_sdf else get_sdf_path(
+                        name='arena_water',
+                        version='v0',
+                    ),
+                    spawn_options={
+                        'posObj': [0, 0, water_height*meters],
+                        'ornObj': [0, 0, 0, 1],
+                    },
+                    load_options={'units': SimulationUnitScaling(meters=meters)},
+                ),
+            ])
             set_swimming_options(
                 animat_options,
                 water_height=water_height,

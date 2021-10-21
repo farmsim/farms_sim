@@ -2,12 +2,11 @@
 """Run salamander simulation with bullet"""
 
 import numpy as np
-import farms_pylog as pylog
 
+import farms_pylog as pylog
 from farms_data.amphibious.data import AmphibiousData
 from farms_models.utils import get_sdf_path
 from farms_bullet.model.options import SpawnLoader
-from farms_bullet.model.control import ControlType
 from farms_bullet.simulation.options import SimulationOptions
 from farms_bullet.control.kinematics import KinematicsController
 
@@ -73,6 +72,8 @@ def setup_from_clargs(clargs=None):
         animat_options=animat_options,
         arena=clargs.arena,
         arena_sdf=clargs.arena_sdf,
+        arena_position=clargs.arena_position,
+        arena_orientation=clargs.arena_orientation,
         water_sdf=clargs.water_sdf,
         water_height=clargs.water_height,
         water_velocity=clargs.water_velocity,

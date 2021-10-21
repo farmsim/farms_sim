@@ -58,6 +58,22 @@ def argument_parser() -> argparse.ArgumentParser:
         help='Arena SDF file',
     )
     parser.add_argument(
+        '--arena_position',
+        nargs=3,
+        type=float,
+        metavar=('x', 'y', 'z'),
+        default=None,
+        help='Arena position',
+    )
+    parser.add_argument(
+        '--arena_orientation',
+        nargs=3,
+        type=float,
+        metavar=('alpha', 'beta', 'gamma'),
+        default=None,
+        help='Arena orientation',
+    )
+    parser.add_argument(
         '--water_height',
         type=float,
         default=None,
