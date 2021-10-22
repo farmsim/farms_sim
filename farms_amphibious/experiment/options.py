@@ -171,13 +171,13 @@ def amphibious_options(animat_options, arena='flat', **kwargs):
 
     # Kwargs
     viscosity = kwargs.pop('viscosity', 1)
+    water_sdf = kwargs.pop('water_sdf', '')
     water_height = kwargs.pop('water_height', None)
     water_velocity = kwargs.pop('water_velocity', None)
     ground_height = kwargs.pop('ground_height', None)
     arena_sdf = kwargs.pop('arena_sdf', '')
     arena_position = kwargs.pop('arena_position', None)
     arena_orientation = kwargs.pop('arena_orientation', None)
-    water_sdf = kwargs.pop('water_sdf', '')
 
     # Position and orientation handling
     if arena_position is None:
@@ -321,13 +321,16 @@ def get_salamander_kwargs_options(**kwargs):
         'body_osc_gain': 0.1,
         'body_osc_bias': 0.1,
         'legs_amplitudes': [
-            [np.pi/4, np.pi/8, np.pi/16, np.pi/8],
-            [np.pi/4, np.pi/8, np.pi/16, np.pi/8],
+            [np.pi/4, np.pi/5, np.pi/16, np.pi/8],
+            [np.pi/4, np.pi/5, np.pi/16, np.pi/8],
         ] if 'ekeberg' in default_equation else [
             [np.pi/4, np.pi/16, np.pi/16, np.pi/4],
             [np.pi/5, np.pi/32, np.pi/4, np.pi/4],
         ],
         'legs_offsets_walking': [
+            [0, -np.pi/16, np.pi/4, 2*np.pi/7],
+            [0, -np.pi/16, 0, 2*np.pi/7],
+        ] if 'ekeberg' in default_equation else [
             [0, 0, np.pi/4, 2*np.pi/5],
             [0, 0, 0, 2*np.pi/5],
         ],
