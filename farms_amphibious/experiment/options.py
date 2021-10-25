@@ -702,6 +702,236 @@ def get_pleurobot_options(**kwargs):
 
 
 def get_krock_kwargs_options(**kwargs):
+    """Krock options overloaded"""
+
+    # Morphology information
+    n_joints_leg = 4
+    n_joints_body = 5
+    n_joints = n_joints_body + 4*n_joints_leg
+    links_swimming = [
+        # 'base_link',
+        'hanginigSupportFront1',
+        'Spine11',
+        'Spine21',
+        'Spine31',
+        'hanginigSupportHind1',
+        'bodyTailHolder1',
+        'tail_J11',
+        'tail_J21',
+        'tail_J31',
+        'magnet_tail1',
+        'FL_1_MX-106R1',
+        'FL_2_MX-64R1',
+        'FL_3_MX-64R1',
+        'FL_4_MX-64R1',
+        'FL_feet1',
+        'FR_1_MX-106R1',
+        'FR_2_MX-64R1',
+        'FR_3_MX-64R1',
+        'FR_4_MX-64R1',
+        'FR_feet1',
+        'HL_1_MX-106R1',
+        'HL_2_MX-64R1',
+        'HL_3_MX-64R1',
+        'HL_4_MX-64R1',
+        'HL_feet1',
+        'HR_1_MX-106R1',
+        'HR_2_MX-64R1',
+        'HR_3_MX-64R1',
+        'HR_4_MX-64R1',
+        'HR_feet1',
+    ]
+
+    links_names = kwargs.pop(
+        'links_names',
+        [
+            # 'base_link',
+            'hanginigSupportFront1',
+            'Spine11',
+            'Spine21',
+            'Spine31',
+            'hanginigSupportHind1',
+            'bodyTailHolder1',
+            'tail_J11',
+            'tail_J21',
+            'tail_J31',
+            'magnet_tail1',
+            'FL_1_MX-106R1',
+            'FL_2_MX-64R1',
+            'FL_3_MX-64R1',
+            'FL_4_MX-64R1',
+            'FL_feet1',
+            'FR_1_MX-106R1',
+            'FR_2_MX-64R1',
+            'FR_3_MX-64R1',
+            'FR_4_MX-64R1',
+            'FR_feet1',
+            'HL_1_MX-106R1',
+            'HL_2_MX-64R1',
+            'HL_3_MX-64R1',
+            'HL_4_MX-64R1',
+            'HL_feet1',
+            'HR_1_MX-106R1',
+            'HR_2_MX-64R1',
+            'HR_3_MX-64R1',
+            'HR_4_MX-64R1',
+            'HR_feet1',
+        ]
+    )
+    n_links = len(links_names)
+
+    joints_names = kwargs.pop('joints_names', [
+        'S1',
+        'S2',
+        'T1',
+        'T2',
+        'T3',
+        'FL_J1',
+        'FL_J2',
+        'FL_J3',
+        'FL_J4',
+        'FR_J1',
+        'FR_J2',
+        'FR_J3',
+        'FR_J4',
+        'HL_J1',
+        'HL_J2',
+        'HL_J3',
+        'HL_J4',
+        'HR_J1',
+        'HR_J2',
+        'HR_J3',
+        'HR_J4',
+    ])
+    assert len(joints_names) == n_joints
+    feet = kwargs.pop('feet', ['FR_feet1', 'FL_feet1', 'HL_feet1', 'HR_feet1'])
+    links_no_collisions = kwargs.pop('links_no_collisions', [])
+
+    # Joint options
+    transform_gain = kwargs.pop('transform_gain', None)
+    joints_offsets = kwargs.pop('joints_offsets', None)
+
+    # Amplitudes gains
+    if transform_gain is None:
+        transform_gain = [1]*n_joints
+        transform_gain[1] = -1
+        transform_gain[4] = -1
+        for leg_i in range(2):
+            for side_i in range(2):
+                mirror = (1 if side_i else -1)
+                mirror2 = (1 if leg_i else -1)
+                joint_i = n_joints_body+2*leg_i*4+side_i*4
+                transform_gain[joint_i+0] = mirror2
+                transform_gain[joint_i+1] = mirror2
+                transform_gain[joint_i+2] = 1 if not side_i or not leg_i else -1
+                transform_gain[joint_i+3] = 1
+        transform_gain = dict(zip(joints_names, transform_gain))
+
+    # Joints joints_offsets
+    if joints_offsets is None:
+        joints_offsets = [0]*n_joints
+        for leg_i in range(2):
+            for side_i in range(2):
+                mirror = (-1 if leg_i else 1)
+                joint_i = n_joints_body+2*leg_i*4+side_i*4
+                # joints_offsets[joint_i+2] = 0.5*np.pi*mirror
+                joints_offsets[joint_i+3] = 0.5*np.pi  # *mirror
+        joints_offsets = dict(zip(joints_names, joints_offsets))
+
+    # Animat options
+    fri = -1e-1
+    swi = -1e2
+    kwargs_options = dict(
+        spawn_loader=SpawnLoader.FARMS,  # SpawnLoader.PYBULLET,
+        density=550.0,
+        spawn_position=[0, 0, 0.5],
+        spawn_orientation=[-0.5*np.pi, 0, np.pi],
+        scale_hydrodynamics=1e-1,
+        n_legs=4,
+        n_dof_legs=4,
+        n_joints_body=n_joints_body,
+        use_self_collisions=False,
+        drag_coefficients=[
+            [
+                [swi, swi, fri]
+                if link_name in [
+                        'hanginigSupportFront1'
+                        'Spine21',
+                        'Spine31',
+                        'bodyTailHolder1',
+                        'tail_J11',
+                        'tail_J21',
+                        'tail_J31',
+                ]
+                else [2*swi, fri, fri]
+                if link_name in [
+                        'magnet_tail1',
+                ]
+                else [fri, fri, fri],
+                [-1e-3]*3,
+            ]
+            for link_name in links_swimming
+        ],
+        legs_amplitudes=[
+            [np.pi/16, np.pi/5, np.pi/5, np.pi/4],
+            [np.pi/16, np.pi/6, np.pi/5, np.pi/4],
+        ],
+        legs_offsets_walking=[
+            [-np.pi/8, np.pi/8, -np.pi/4, 2*np.pi/5],
+            [-np.pi/8, -np.pi/8, np.pi/8, 2*np.pi/5],
+        ],
+        intralimb_phases=[-0.5*np.pi, np.pi, 0, -0.5*np.pi],
+        legs_offsets_swimming=[
+            [-np.pi/7, +np.pi/5, -2*np.pi/3, -np.pi/2],
+            [-np.pi/7, -np.pi/5, -np.pi/2, -np.pi/2],
+        ],
+        body_walk_amplitude=1,
+        body_osc_gain=0.2,
+        body_osc_bias=0.0,
+        body_freq_gain=2*np.pi*0.2,
+        body_freq_bias=2*np.pi*0.0,
+        legs_freq_gain=2*np.pi*0.15,
+        legs_freq_bias=2*np.pi*0.15,
+        transform_gain=transform_gain,
+        transform_bias=joints_offsets,
+        weight_osc_body=1e2,
+        weight_osc_legs_internal=3e2,
+        weight_osc_legs2body=3e2,
+        weight_osc_body2legs=1e2,
+        weight_osc_legs_opposite=0,
+        weight_osc_legs_following=0,
+        weight_sens_contact_intralimb=0,
+        weight_sens_contact_opposite=0,
+        weight_sens_contact_following=0,
+        weight_sens_contact_diagonal=0,
+        weight_sens_hydro_freq=0,
+        weight_sens_hydro_amp=0,
+        links_names=links_names,
+        links_swimming=links_swimming,
+        links_no_collisions=links_no_collisions,
+        joints_names=joints_names,
+        sensors_links=['base_link'] + links_swimming,
+        sensors_joints=joints_names,
+        sensors_contacts=feet,
+        feet_links=feet,
+        sensors_hydrodynamics=links_swimming,
+        muscle_alpha=5e1,
+        muscle_beta=-1e1,
+        muscle_gamma=1e1,
+        muscle_delta=-3e-1,
+    )
+    kwargs_options.update(kwargs)
+    return kwargs_options
+
+
+def get_krock_options(**kwargs):
+    """Krock default options"""
+    kwargs_options = get_krock_kwargs_options(**kwargs)
+    animat_options = AmphibiousOptions.from_options(kwargs_options)
+    return animat_options
+
+
+def get_krock_0_kwargs_options(**kwargs):
     """Krock default options"""
 
     # Morphology information
@@ -922,9 +1152,9 @@ def get_krock_kwargs_options(**kwargs):
     return kwargs_options
 
 
-def get_krock_options(**kwargs):
+def get_krock_0_options(**kwargs):
     """Krock default options"""
-    kwargs_options = get_krock_kwargs_options(**kwargs)
+    kwargs_options = get_krock_0_kwargs_options(**kwargs)
     animat_options = AmphibiousOptions.from_options(kwargs_options)
     return animat_options
 
