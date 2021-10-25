@@ -41,6 +41,12 @@ def get_animat_options_from_model(animat, version, kwargs_only=False, **options)
     )[animat]
     if animat == 'hfsp_robot' and version == 'polypterus_0':
         options['hindlimbs'] = False
+    elif animat == 'krock' and version == '0':
+        options_function = (
+            get_krock_0_kwargs_options
+            if kwargs_only
+            else get_krock_0_options
+        )
     return options_function(**options)
 
 
