@@ -438,6 +438,8 @@ class AmphibiousControlOptions(ControlOptions):
         repeat = partial(np.repeat, repeats=convention.n_legs//2, axis=0)
         if np.ndim(legs_offsets_walking) == 1:
             legs_offsets_walking = repeat([legs_offsets_walking]).tolist()
+        if np.ndim(legs_offsets_swimming) == 1:
+            legs_offsets_swimming = repeat([legs_offsets_swimming]).tolist()
 
         # Joints offsets for walking and swimming
         for leg_i in range(convention.n_legs//2):
@@ -456,7 +458,7 @@ class AmphibiousControlOptions(ControlOptions):
                         'bias': legs_offsets_walking[leg_i][joint_i],
                         'low': 1,
                         'high': 3,
-                        'saturation': legs_offsets_swimming[joint_i],
+                        'saturation': legs_offsets_swimming[leg_i][joint_i],
                     }
 
         # Amphibious joints control
