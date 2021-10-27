@@ -1,9 +1,10 @@
 """Experiments options"""
 
+from typing import List
+
 import numpy as np
 from scipy.spatial.transform import Rotation
 
-import farms_pylog as pylog
 from farms_models.utils import get_sdf_path
 from farms_data.units import SimulationUnitScaling
 from farms_bullet.simulation.options import SimulationOptions
@@ -58,7 +59,13 @@ def set_no_swimming_options(animat_options):
     animat_options.physics.water_height = None
 
 
-def set_swimming_options(animat_options, water_height, water_velocity, viscosity):
+def set_swimming_options(
+        animat_options: AmphibiousOptions,
+        water_height: float,
+        viscosity: float,
+        water_velocity: List[float],
+        water_maps: List[str],
+):
     """Set swimming options"""
     animat_options.physics.sph = False
     animat_options.physics.drag = True
@@ -66,6 +73,7 @@ def set_swimming_options(animat_options, water_height, water_velocity, viscosity
     animat_options.physics.viscosity = viscosity
     animat_options.physics.water_height = water_height
     animat_options.physics.water_velocity = water_velocity
+    animat_options.physics.water_maps = water_maps
 
 
 def get_flat_arena(ground_height, arena_sdf='', meters=1):
@@ -180,6 +188,7 @@ def amphibious_options(animat_options, arena='flat', **kwargs):
     water_sdf = kwargs.pop('water_sdf', '')
     water_height = kwargs.pop('water_height', None)
     water_velocity = kwargs.pop('water_velocity', None)
+    water_maps = kwargs.pop('water_maps', None)
     ground_height = kwargs.pop('ground_height', None)
     arena_sdf = kwargs.pop('arena_sdf', '')
     arena_position = kwargs.pop('arena_position', None)
@@ -225,6 +234,7 @@ def amphibious_options(animat_options, arena='flat', **kwargs):
             animat_options,
             water_height=water_height,
             water_velocity=water_velocity,
+            water_maps=water_maps,
             viscosity=viscosity,
         )
     elif arena == 'water':
@@ -241,6 +251,7 @@ def amphibious_options(animat_options, arena='flat', **kwargs):
             animat_options,
             water_height=water_height,
             water_velocity=water_velocity,
+            water_maps=water_maps,
             viscosity=viscosity,
         )
     elif arena_sdf:
@@ -272,6 +283,7 @@ def amphibious_options(animat_options, arena='flat', **kwargs):
                 animat_options,
                 water_height=water_height,
                 water_velocity=water_velocity,
+                water_maps=water_maps,
                 viscosity=viscosity,
             )
         else:

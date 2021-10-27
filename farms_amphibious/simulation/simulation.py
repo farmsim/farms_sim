@@ -1,5 +1,10 @@
 """Amphibious simulation"""
 
+from typing import Dict
+
+import numpy as np
+from imageio import imread
+
 from farms_bullet.model.animat import Animat
 from farms_bullet.simulation.options import SimulationOptions
 from farms_bullet.simulation.simulation import AnimatSimulation
@@ -8,6 +13,39 @@ from farms_bullet.interface.interface import Interfaces
 from farms_bullet.swimming.drag import SwimmingHandler
 
 from .interface import AmphibiousUserParameters
+
+
+def water_velocity_from_maps(position, water_maps):
+    """Water velocity from maps"""
+    return np.array([
+        (
+            water_maps[png][tuple(
+                (
+                    max(0, min(
+                        water_maps[png].shape[index]-1,
+                        round(water_maps[png].shape[index]*(
+                            (
+                                position[index]
+                                - water_maps['pos_min'][index]
+                            ) / (
+                                water_maps['pos_max'][index]
+                                - water_maps['pos_min'][index]
+                            )
+                        ))
+                    ))
+                )
+                for index in range(2)
+            )]
+            - water_maps['png_min'][png_i]
+        ) * (
+            water_maps['vel_max'][png_i]
+            - water_maps['vel_min'][png_i]
+        ) / (
+            water_maps['png_max'][png_i]
+            - water_maps['png_min'][png_i]
+        )
+        for png_i, png in enumerate(['png_x', 'png_y'])
+    ], dtype=np.double)
 
 
 class AmphibiousSimulation(AnimatSimulation):
@@ -33,7 +71,11 @@ class AmphibiousSimulation(AnimatSimulation):
                 )
             )
         )
-        self.swimming_handler = (
+
+        # Swimming handling
+        self.water_maps: Dict = {}
+        self.constant_velocity: bool = True
+        self.swimming_handler: SwimmingHandler = (
             SwimmingHandler(animat)
             if animat.options.physics.drag
             or animat.options.physics.sph
@@ -43,6 +85,24 @@ class AmphibiousSimulation(AnimatSimulation):
             self.swimming_handler.set_hydrodynamics_scale(
                 animat.options.scale_hydrodynamics
             )
+            self.constant_velocity: bool = (
+                len(animat.options.physics.water_velocity) == 3
+            )
+            if not self.constant_velocity:
+                water_velocity = animat.options.physics.water_velocity
+                water_maps = animat.options.physics.water_maps
+                png_x = np.array(imread(water_maps[0]), dtype=np.double)
+                png_y = np.array(imread(water_maps[1]), dtype=np.double)
+                self.water_maps = {
+                    'vel_min': np.array(water_velocity[0:3]),
+                    'vel_max': np.array(water_velocity[3:6]),
+                    'pos_min': np.array(water_velocity[6:8]),
+                    'pos_max': np.array(water_velocity[8:10]),
+                    'png_x': png_x,
+                    'png_y': png_y,
+                    'png_min': [np.min(png_x), np.min(png_y)],
+                    'png_max': [np.max(png_x), np.max(png_y)],
+                }
 
     def update_controller(self, iteration: int):
         """Update controller"""
@@ -65,6 +125,16 @@ class AmphibiousSimulation(AnimatSimulation):
 
         # Swimming
         if self.swimming_handler is not None:
+            if not self.constant_velocity:
+                self.swimming_handler.set_water_velocity(
+                    water_velocity_from_maps(
+                        position=animat.data.sensors.links.urdf_position(
+                            iteration=iteration,
+                            link_i=0,
+                        ),
+                        water_maps = self.water_maps,
+                    ),
+                )
             self.swimming_handler.step(iteration)
 
         # Update animat controller

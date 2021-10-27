@@ -77,6 +77,7 @@ def setup_from_clargs(clargs=None):
         water_sdf=clargs.water_sdf,
         water_height=clargs.water_height,
         water_velocity=clargs.water_velocity,
+        water_maps=clargs.water_maps,
         viscosity=clargs.viscosity,
         ground_height=clargs.ground_height,
     )

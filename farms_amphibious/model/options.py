@@ -319,6 +319,7 @@ class AmphibiousPhysicsOptions(Options):
         self.water_height = kwargs.pop('water_height')
         self.water_density = kwargs.pop('water_density')
         self.water_velocity = kwargs.pop('water_velocity')
+        self.water_maps = kwargs.pop('water_maps')
         assert not kwargs, 'Unknown kwargs: {}'.format(kwargs)
 
     @classmethod
@@ -338,6 +339,7 @@ class AmphibiousPhysicsOptions(Options):
         options['viscosity'] = kwargs.pop('viscosity', 1.0)
         options['water_density'] = kwargs.pop('water_density', 1000.0)
         options['water_velocity'] = kwargs.pop('water_velocity', [0.0, 0.0, 0.0])
+        options['water_maps'] = kwargs.pop('water_maps', [])
         return cls(**options)
 
 

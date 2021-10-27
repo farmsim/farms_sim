@@ -87,11 +87,18 @@ def argument_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         '--water_velocity',
-        nargs=3,
+        nargs='+',
         type=float,
-        metavar=('x', 'y', 'z'),
         default=(0, 0, 0),
-        help='Water velocity',
+        help='Water velocity (For a constant flow, just provide (vx, vy, vz))',
+    )
+    parser.add_argument(
+        '--water_maps',
+        nargs=2,
+        type=str,
+        metavar=('png_vx', 'png_vy'),
+        default=['', ''],
+        help='Water maps',
     )
     parser.add_argument(
         '--ground_height',
