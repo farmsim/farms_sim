@@ -18,33 +18,24 @@ from .interface import AmphibiousUserParameters
 def water_velocity_from_maps(position, water_maps):
     """Water velocity from maps"""
     return np.array([
-        (
-            water_maps[png][tuple(
-                (
-                    max(0, min(
-                        water_maps[png].shape[index]-1,
-                        round(water_maps[png].shape[index]*(
-                            (
-                                position[index]
-                                - water_maps['pos_min'][index]
-                            ) / (
-                                water_maps['pos_max'][index]
-                                - water_maps['pos_min'][index]
-                            )
-                        ))
+        water_maps[png][tuple(
+            (
+                max(0, min(
+                    water_maps[png].shape[index]-1,
+                    round(water_maps[png].shape[index]*(
+                        (
+                            position[index]
+                            - water_maps['pos_min'][index]
+                        ) / (
+                            water_maps['pos_max'][index]
+                            - water_maps['pos_min'][index]
+                        )
                     ))
-                )
-                for index in range(2)
-            )]
-            - water_maps['png_min'][png_i]
-        ) * (
-            water_maps['vel_max'][png_i]
-            - water_maps['vel_min'][png_i]
-        ) / (
-            water_maps['png_max'][png_i]
-            - water_maps['png_min'][png_i]
-        )
-        for png_i, png in enumerate(['png_x', 'png_y'])
+                ))
+            )
+            for index in range(2)
+        )]
+        for png_i, png in enumerate(['vel_x', 'vel_y'])
     ], dtype=np.double)
 
 
@@ -91,17 +82,23 @@ class AmphibiousSimulation(AnimatSimulation):
             if not self.constant_velocity:
                 water_velocity = animat.options.physics.water_velocity
                 water_maps = animat.options.physics.water_maps
-                png_x = np.array(imread(water_maps[0]), dtype=np.double)
-                png_y = np.array(imread(water_maps[1]), dtype=np.double)
+                pngs = [np.flipud(imread(water_maps[i])).T for i in range(2)]
+                pngs_info = [np.iinfo(png.dtype) for png in pngs]
+                vels = [
+                    (
+                        png.astype(np.double) - info.min
+                    ) * (
+                        water_velocity[3] - water_velocity[0]
+                    ) / (
+                        info.max - info.min
+                    ) +  water_velocity[0]
+                    for png, info in zip(pngs, pngs_info)
+                ]
                 self.water_maps = {
-                    'vel_min': np.array(water_velocity[0:3]),
-                    'vel_max': np.array(water_velocity[3:6]),
                     'pos_min': np.array(water_velocity[6:8]),
                     'pos_max': np.array(water_velocity[8:10]),
-                    'png_x': png_x,
-                    'png_y': png_y,
-                    'png_min': [np.min(png_x), np.min(png_y)],
-                    'png_max': [np.max(png_x), np.max(png_y)],
+                    'vel_x': vels[0],
+                    'vel_y': vels[1],
                 }
 
     def update_controller(self, iteration: int):
