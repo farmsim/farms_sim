@@ -17,7 +17,7 @@ from .interface import AmphibiousUserParameters
 
 def water_velocity_from_maps(position, water_maps):
     """Water velocity from maps"""
-    return np.array([
+    vel = np.array([
         water_maps[png][tuple(
             (
                 max(0, min(
@@ -37,6 +37,8 @@ def water_velocity_from_maps(position, water_maps):
         )]
         for png_i, png in enumerate(['vel_x', 'vel_y'])
     ], dtype=np.double)
+    vel[1] *= -1
+    return vel
 
 
 class AmphibiousSimulation(AnimatSimulation):
