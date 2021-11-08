@@ -24,6 +24,7 @@ def generate_sdf(model_name, model_version, **kwargs):
     scale = kwargs.pop('scale', 0.2)
     use_2d = kwargs.pop('use_2d', False)
     color = kwargs.pop('color', [0.1, 0.7, 0.1, 1.0])
+    color2_multiplier = kwargs.pop('color2_multiplier', 0.7)
     eye_pos = kwargs.pop('eye_pos', [0.04, 0.03, 0.015])
     eye_radius = kwargs.pop('eye_radius', 0.01)
     leg_offset = kwargs.pop('leg_offset')
@@ -63,7 +64,11 @@ def generate_sdf(model_name, model_version, **kwargs):
         link.name = convention.bodylink2name(i)
         links[i] = link
         link.pose = np.array(link.pose, dtype=float).tolist()
-        link.visuals[0].color = color
+        _color = color.copy()
+        if i % 2:
+            for j in range(3):
+                _color[j] *= color2_multiplier
+        link.visuals[0].color = _color
         link.visuals[0].ambient = link.visuals[0].color
         link.visuals[0].diffuse = link.visuals[0].color
         link.visuals[0].specular = link.visuals[0].color
