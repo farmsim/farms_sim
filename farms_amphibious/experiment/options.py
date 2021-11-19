@@ -804,20 +804,20 @@ def get_krock_kwargs_options(**kwargs):
         'T1',
         'T2',
         'T3',
-        'FL_J1',
         'FL_J2',
+        'FL_J1',
         'FL_J3',
         'FL_J4',
-        'FR_J1',
         'FR_J2',
+        'FR_J1',
         'FR_J3',
         'FR_J4',
-        'HL_J1',
         'HL_J2',
+        'HL_J1',
         'HL_J3',
         'HL_J4',
-        'HR_J1',
         'HR_J2',
+        'HR_J1',
         'HR_J3',
         'HR_J4',
     ])
@@ -832,17 +832,14 @@ def get_krock_kwargs_options(**kwargs):
     # Amplitudes gains
     if transform_gain is None:
         transform_gain = [1]*n_joints
-        transform_gain[1] = -1
-        transform_gain[4] = -1
         for leg_i in range(2):
             for side_i in range(2):
                 mirror = (1 if side_i else -1)
                 mirror2 = (1 if leg_i else -1)
                 joint_i = n_joints_body+2*leg_i*4+side_i*4
-                transform_gain[joint_i+0] = mirror2
-                transform_gain[joint_i+1] = mirror2
-                transform_gain[joint_i+2] = 1 if not side_i or not leg_i else -1
-                transform_gain[joint_i+3] = 1
+                transform_gain[joint_i+0] = mirror
+                transform_gain[joint_i+2] = -1 if side_i or leg_i else 1
+                transform_gain[joint_i+3] = -mirror*mirror2
         transform_gain = dict(zip(joints_names, transform_gain))
 
     # Joints joints_offsets
@@ -850,10 +847,14 @@ def get_krock_kwargs_options(**kwargs):
         joints_offsets = [0]*n_joints
         for leg_i in range(2):
             for side_i in range(2):
-                mirror = (-1 if leg_i else 1)
+                mirror = (-1 if side_i else 1)
+                mirror2 = (1 if leg_i else -1)
                 joint_i = n_joints_body+2*leg_i*4+side_i*4
-                # joints_offsets[joint_i+2] = 0.5*np.pi*mirror
-                joints_offsets[joint_i+3] = 0.5*np.pi  # *mirror
+                joints_offsets[joint_i+2] = 0.5*np.pi*(
+                    1 if side_i and not leg_i
+                    else -1
+                )
+                joints_offsets[joint_i+3] = -0.5*np.pi*mirror*mirror2
         joints_offsets = dict(zip(joints_names, joints_offsets))
 
     # Animat options
@@ -891,17 +892,20 @@ def get_krock_kwargs_options(**kwargs):
             for link_name in links_swimming
         ],
         legs_amplitudes=[
-            [np.pi/16, np.pi/5, np.pi/5, np.pi/4],
-            [np.pi/16, np.pi/6, np.pi/5, np.pi/4],
+            [np.pi/6, np.pi/6, np.pi/6, np.pi/6],
+            [np.pi/6, np.pi/6, np.pi/6, np.pi/6],
         ],
         legs_offsets_walking=[
-            [-np.pi/8, np.pi/8, -np.pi/4, 2*np.pi/5],
-            [-np.pi/8, -np.pi/8, np.pi/8, 2*np.pi/5],
+            [+np.pi/6, -np.pi/6, +np.pi/6, 3*np.pi/5],
+            [-np.pi/6, -np.pi/6, -np.pi/6, 3*np.pi/5],
         ],
-        intralimb_phases=[-0.5*np.pi, np.pi, 0, -0.5*np.pi],
+        intralimb_phases=[
+            [0, 0.5*np.pi, 0, 0.5*np.pi],
+            [0, 0.5*np.pi, 0, 0.5*np.pi],
+        ],
         legs_offsets_swimming=[
-            [-np.pi/7, +np.pi/5, -2*np.pi/3, -np.pi/2],
-            [-np.pi/7, -np.pi/5, -np.pi/2, -np.pi/2],
+            [+np.pi/5, np.pi/7, -np.pi/2, -np.pi/2],
+            [-np.pi/5, np.pi/7, -np.pi/2, -np.pi/2],
         ],
         body_walk_amplitude=1,
         body_osc_gain=0.2,
@@ -909,13 +913,13 @@ def get_krock_kwargs_options(**kwargs):
         body_freq_gain=2*np.pi*0.2,
         body_freq_bias=2*np.pi*0.0,
         legs_freq_gain=2*np.pi*0.15,
-        legs_freq_bias=2*np.pi*0.15,
+        legs_freq_bias=2*np.pi*0.25,
         transform_gain=transform_gain,
         transform_bias=joints_offsets,
-        weight_osc_body=1e2,
-        weight_osc_legs_internal=3e2,
-        weight_osc_legs2body=3e2,
-        weight_osc_body2legs=1e2,
+        weight_osc_body=3e1,
+        weight_osc_legs_internal=3e1,
+        weight_osc_legs2body=1e1,
+        weight_osc_body2legs=1e1,
         weight_osc_legs_opposite=0,
         weight_osc_legs_following=0,
         weight_sens_contact_intralimb=0,
@@ -924,6 +928,10 @@ def get_krock_kwargs_options(**kwargs):
         weight_sens_contact_diagonal=0,
         weight_sens_hydro_freq=0,
         weight_sens_hydro_amp=0,
+        modular_phases=(
+            np.array([3*np.pi/2, 0, 3*np.pi/2, 0]) - np.pi/4
+        ).tolist(),
+        modular_amplitudes=np.full(4, 0.5),
         links_names=links_names,
         links_swimming=links_swimming,
         links_no_collisions=links_no_collisions,
