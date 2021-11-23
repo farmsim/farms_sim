@@ -937,6 +937,13 @@ class AmphibiousNetworkOptions(Options):
                 for split_i, split in enumerate(legs_splits)
             ] if legs_splits is not None else []
             standing = kwargs.pop('standing_wave', True)
+            repeat = partial(np.repeat, repeats=convention.n_legs//2, axis=0)
+            intralimb_phases = kwargs.pop(
+                'intralimb_phases',
+                [0, pi2, 0, pi2, 0],
+            )
+            if np.ndim(intralimb_phases) == 1:
+                intralimb_phases = repeat([intralimb_phases]).tolist()
             self.osc2osc = (
                 self.default_osc2osc(
                     convention=convention,
@@ -968,10 +975,7 @@ class AmphibiousNetworkOptions(Options):
                         'weight_osc_body2legs',
                         0,
                     ),
-                    intralimb_phases=kwargs.pop(
-                        'intralimb_phases',
-                        [0, pi2, 0, pi2, 0],
-                    ),
+                    intralimb_phases=intralimb_phases,
                     phase_limb_follow=kwargs.pop(
                         'leg_phase_follow',
                         np.pi,
@@ -1349,8 +1353,8 @@ class AmphibiousNetworkOptions(Options):
                         for joint_i_1 in range(convention.n_dof_legs):
                             if joint_i_0 != joint_i_1:
                                 phase = (
-                                    intralimb_phases[joint_i_1]
-                                    - intralimb_phases[joint_i_0]
+                                    intralimb_phases[leg_i][joint_i_1]
+                                    - intralimb_phases[leg_i][joint_i_0]
                                 )
                                 internal_connectivity.extend([
                                     [[joint_i_1, joint_i_0], 0, phase],
@@ -1456,7 +1460,7 @@ class AmphibiousNetworkOptions(Options):
                                                 + leg_i
                                                 + side_leg_osc
                                             )
-                                            - intralimb_phases[joint_i]
+                                            - intralimb_phases[leg_i][joint_i]
                                         ) % (2*np.pi),
                                     })
 
@@ -1489,7 +1493,7 @@ class AmphibiousNetworkOptions(Options):
                                                 + (leg_i if standing else 0.5)
                                                 + side_leg_osc
                                             )
-                                            - intralimb_phases[joint_i]
+                                            - intralimb_phases[leg_i][joint_i]
                                         )) % (2*np.pi),
                                     })
         return connectivity
