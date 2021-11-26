@@ -729,97 +729,44 @@ def get_krock_kwargs_options(**kwargs):
     links_swimming = [
         # 'base_link',
         'hanginigSupportFront1',
-        'Spine11',
-        'Spine21',
-        'Spine31',
-        'hanginigSupportHind1',
-        'bodyTailHolder1',
-        'tail_J11',
-        'tail_J21',
-        'tail_J31',
+        'Spine11', 'Spine21', 'Spine31',
+        'hanginigSupportHind1', 'bodyTailHolder1',
+        'tail_J11', 'tail_J21', 'tail_J31',
         'magnet_tail1',
-        'FL_1_MX-106R1',
-        'FL_2_MX-64R1',
-        'FL_3_MX-64R1',
-        'FL_4_MX-64R1',
+        'FL_1_MX-106R1', 'FL_2_MX-64R1', 'FL_3_MX-64R1', 'FL_4_MX-64R1',
         'FL_feet1',
-        'FR_1_MX-106R1',
-        'FR_2_MX-64R1',
-        'FR_3_MX-64R1',
-        'FR_4_MX-64R1',
+        'FR_1_MX-106R1', 'FR_2_MX-64R1', 'FR_3_MX-64R1', 'FR_4_MX-64R1',
         'FR_feet1',
-        'HL_1_MX-106R1',
-        'HL_2_MX-64R1',
-        'HL_3_MX-64R1',
-        'HL_4_MX-64R1',
+        'HL_1_MX-106R1', 'HL_2_MX-64R1', 'HL_3_MX-64R1', 'HL_4_MX-64R1',
         'HL_feet1',
-        'HR_1_MX-106R1',
-        'HR_2_MX-64R1',
-        'HR_3_MX-64R1',
-        'HR_4_MX-64R1',
+        'HR_1_MX-106R1', 'HR_2_MX-64R1', 'HR_3_MX-64R1', 'HR_4_MX-64R1',
         'HR_feet1',
     ]
-
     links_names = kwargs.pop(
         'links_names',
         [
             # 'base_link',
             'hanginigSupportFront1',
-            'Spine11',
-            'Spine21',
-            'Spine31',
-            'hanginigSupportHind1',
-            'bodyTailHolder1',
-            'tail_J11',
-            'tail_J21',
-            'tail_J31',
+            'Spine11', 'Spine21', 'Spine31',
+            'hanginigSupportHind1', 'bodyTailHolder1',
+            'tail_J11', 'tail_J21', 'tail_J31',
             'magnet_tail1',
-            'FL_1_MX-106R1',
-            'FL_2_MX-64R1',
-            'FL_3_MX-64R1',
-            'FL_4_MX-64R1',
+            'FL_1_MX-106R1', 'FL_2_MX-64R1', 'FL_3_MX-64R1', 'FL_4_MX-64R1',
             'FL_feet1',
-            'FR_1_MX-106R1',
-            'FR_2_MX-64R1',
-            'FR_3_MX-64R1',
-            'FR_4_MX-64R1',
+            'FR_1_MX-106R1', 'FR_2_MX-64R1', 'FR_3_MX-64R1', 'FR_4_MX-64R1',
             'FR_feet1',
-            'HL_1_MX-106R1',
-            'HL_2_MX-64R1',
-            'HL_3_MX-64R1',
-            'HL_4_MX-64R1',
+            'HL_1_MX-106R1', 'HL_2_MX-64R1', 'HL_3_MX-64R1', 'HL_4_MX-64R1',
             'HL_feet1',
-            'HR_1_MX-106R1',
-            'HR_2_MX-64R1',
-            'HR_3_MX-64R1',
-            'HR_4_MX-64R1',
+            'HR_1_MX-106R1', 'HR_2_MX-64R1', 'HR_3_MX-64R1', 'HR_4_MX-64R1',
             'HR_feet1',
         ]
     )
-    n_links = len(links_names)
-
     joints_names = kwargs.pop('joints_names', [
-        'S1',
-        'S2',
-        'T1',
-        'T2',
-        'T3',
-        'FL_J2',
-        'FL_J1',
-        'FL_J3',
-        'FL_J4',
-        'FR_J2',
-        'FR_J1',
-        'FR_J3',
-        'FR_J4',
-        'HL_J2',
-        'HL_J1',
-        'HL_J3',
-        'HL_J4',
-        'HR_J2',
-        'HR_J1',
-        'HR_J3',
-        'HR_J4',
+        'S1', 'S2', 'T1', 'T2', 'T3',
+        'FL_J2', 'FL_J1', 'FL_J3', 'FL_J4',
+        'FR_J2', 'FR_J1', 'FR_J3', 'FR_J4',
+        'HL_J2', 'HL_J1', 'HL_J3', 'HL_J4',
+        'HR_J2', 'HR_J1', 'HR_J3', 'HR_J4',
     ])
     assert len(joints_names) == n_joints
     feet = kwargs.pop('feet', ['FR_feet1', 'FL_feet1', 'HL_feet1', 'HR_feet1'])
@@ -831,15 +778,17 @@ def get_krock_kwargs_options(**kwargs):
 
     # Amplitudes gains
     if transform_gain is None:
-        transform_gain = [1]*n_joints
+        transform_gain = [-1]*n_joints
+        transform_gain[0] = 1
         for leg_i in range(2):
             for side_i in range(2):
                 mirror = (1 if side_i else -1)
                 mirror2 = (1 if leg_i else -1)
                 joint_i = n_joints_body+2*leg_i*4+side_i*4
-                transform_gain[joint_i+0] = mirror
-                transform_gain[joint_i+2] = -1 if side_i or leg_i else 1
-                transform_gain[joint_i+3] = -mirror*mirror2
+                transform_gain[joint_i+0] = mirror2
+                transform_gain[joint_i+1] = -mirror*mirror2
+                transform_gain[joint_i+2] = mirror
+                transform_gain[joint_i+3] = -1
         transform_gain = dict(zip(joints_names, transform_gain))
 
     # Joints joints_offsets
@@ -848,13 +797,10 @@ def get_krock_kwargs_options(**kwargs):
         for leg_i in range(2):
             for side_i in range(2):
                 mirror = (-1 if side_i else 1)
-                mirror2 = (1 if leg_i else -1)
+                mirror2 = (-1 if leg_i else 1)
                 joint_i = n_joints_body+2*leg_i*4+side_i*4
-                joints_offsets[joint_i+2] = 0.5*np.pi*(
-                    1 if side_i and not leg_i
-                    else -1
-                )
-                joints_offsets[joint_i+3] = -0.5*np.pi*mirror*mirror2
+                joints_offsets[joint_i+2] = 0.5*np.pi*mirror*mirror2
+                joints_offsets[joint_i+3] = 0.5*np.pi
         joints_offsets = dict(zip(joints_names, joints_offsets))
 
     # Animat options
@@ -874,18 +820,11 @@ def get_krock_kwargs_options(**kwargs):
             [
                 [swi, swi, fri]
                 if link_name in [
-                        'hanginigSupportFront1'
-                        'Spine21',
-                        'Spine31',
-                        'bodyTailHolder1',
-                        'tail_J11',
-                        'tail_J21',
-                        'tail_J31',
+                        'hanginigSupportFront1', 'Spine21', 'Spine31',
+                        'bodyTailHolder1', 'tail_J11', 'tail_J21', 'tail_J31',
                 ]
                 else [2*swi, fri, fri]
-                if link_name in [
-                        'magnet_tail1',
-                ]
+                if link_name in ['magnet_tail1']
                 else [fri, fri, fri],
                 [-1e-3]*3,
             ]
@@ -945,6 +884,11 @@ def get_krock_kwargs_options(**kwargs):
         muscle_beta=-1e1,
         muscle_gamma=1e1,
         muscle_delta=-3e-1,
+        mujoco=dict(
+            damping=1e0,
+            act_pos_gain=1e2,
+            act_vel_gain=1e-1,
+        ),
     )
     kwargs_options.update(kwargs)
     return kwargs_options
