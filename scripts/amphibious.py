@@ -6,7 +6,10 @@ import time
 import farms_pylog as pylog
 from farms_bullet.utils.profile import profile
 from farms_amphibious.utils.parse_args import parse_args
-from farms_amphibious.simulation.simulation import AmphibiousSimulation
+from farms_amphibious.simulation.simulation import (
+    Simulator,
+    AmphibiousSimulation,
+)
 from farms_amphibious.experiment.simulation import (
     setup_from_clargs,
     simulation,
@@ -19,6 +22,10 @@ def main():
 
     # Setup
     clargs, sdf, animat_options, simulation_options, arena = setup_from_clargs()
+    simulator = {
+        'MUJOCO': Simulator.MUJOCO,
+        'PYBULLET': Simulator.PYBULLET,
+    }[clargs.simulator]
 
     # Simulation
     sim: AmphibiousSimulation = simulation(
@@ -28,6 +35,7 @@ def main():
         arena=arena,
         use_controller=True,
         drive_config=clargs.drive_config,
+        simulator=simulator,
     )
 
     # Post-processing
@@ -35,6 +43,7 @@ def main():
         sim=sim,
         animat_options=animat_options,
         clargs=clargs,
+        simulator=simulator,
     )
 
 
@@ -43,7 +52,7 @@ def profile_simulation():
     tic = time.time()
     clargs = parse_args()
     profile(function=main, profile_filename=clargs.profile)
-    pylog.info('Total simulation time: {} [s]'.format(time.time() - tic))
+    pylog.info('Total simulation time: %s [s]', time.time() - tic)
 
 
 if __name__ == '__main__':

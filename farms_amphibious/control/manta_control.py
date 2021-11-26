@@ -82,14 +82,14 @@ class MantaController(ModelController):
 
     def __init__(
             self,
-            joints,
+            joints_names,
             animat_options,
             animat_data,
     ):
-        super(MantaController, self).__init__(
-            joints=joints,
-            control_types={joint: ControlType.POSITION for joint in joints},
-            max_torques={joint: 1e3 for joint in joints},
+        super().__init__(
+            joints_names=joints_names,
+            control_types={joint: ControlType.POSITION for joint in joints_names},
+            max_torques={joint: 1e3 for joint in joints_names},
         )
         self.animat_options = animat_options
         self.animat_data = animat_data
@@ -98,7 +98,7 @@ class MantaController(ModelController):
             self.joints_right,
             self.joints_passive_left,
             self.joints_passive_right,
-        ) = joints_sorted(names=self.joints[ControlType.POSITION])
+        ) = joints_sorted(names=self.joints_names[ControlType.POSITION])
 
     def step(self, iteration, time, timestep):
         """Control step"""

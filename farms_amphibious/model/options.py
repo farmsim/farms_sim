@@ -30,6 +30,7 @@ class AmphibiousOptions(ModelOptions):
         self.physics = AmphibiousPhysicsOptions(**kwargs.pop('physics'))
         self.show_hydrodynamics = kwargs.pop('show_hydrodynamics')
         self.scale_hydrodynamics = kwargs.pop('scale_hydrodynamics')
+        self.mujoco = kwargs.pop('mujoco')
         assert not kwargs, 'Unknown kwargs: {}'.format(kwargs)
 
     @classmethod
@@ -54,6 +55,7 @@ class AmphibiousOptions(ModelOptions):
             'physics',
             AmphibiousPhysicsOptions.from_options(kwargs)
         )
+        options['mujoco'] = kwargs.pop('mujoco', {})
         if 'control' in kwargs:
             options['control'] = kwargs.pop('control')
         else:

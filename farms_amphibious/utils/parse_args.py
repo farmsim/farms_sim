@@ -233,6 +233,13 @@ def argument_parser() -> argparse.ArgumentParser:
             default=None,
             help=f'{weight}',
         )
+    parser.add_argument(
+        '--simulator',
+        type=str,
+        choices=('MUJOCO', 'PYBULLET'),
+        default='MUJOCO',
+        help='Simulator',
+    )
     return parser
 
 

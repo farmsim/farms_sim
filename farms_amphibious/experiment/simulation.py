@@ -7,12 +7,14 @@ import farms_pylog as pylog
 from farms_data.amphibious.data import AmphibiousData
 from farms_models.utils import get_sdf_path
 from farms_bullet.model.options import SpawnLoader
+from farms_bullet.model.model import SimulationModels
 from farms_bullet.simulation.options import SimulationOptions
 from farms_bullet.control.kinematics import KinematicsController
+from farms_mujoco.simulation.simulation import Simulation
 
 from ..model.animat import Amphibious
 from ..model.options import AmphibiousOptions
-from ..simulation.simulation import AmphibiousSimulation
+from ..simulation.simulation import AmphibiousSimulation, Simulator
 from ..utils.parse_args import parse_args
 from ..utils.prompt import prompt_postprocessing
 from ..control.controller import AmphibiousController
@@ -99,6 +101,7 @@ def setup_from_clargs(clargs=None):
 def simulation_setup(animat_sdf, animat_options, arena, **kwargs):
     """Simulation setup"""
     # Get options
+    simulator = kwargs.pop('simulator', Simulator.MUJOCO)
     simulation_options = kwargs.pop(
         'simulation_options',
         SimulationOptions.with_clargs()
@@ -157,24 +160,73 @@ def simulation_setup(animat_sdf, animat_options, arena, **kwargs):
     else:
         animat_controller = None
 
-    # Creating animat
-    animat = Amphibious(
-        sdf=animat_sdf,
-        options=animat_options,
-        controller=animat_controller,
-        timestep=simulation_options.timestep,
-        iterations=simulation_options.n_iterations,
-        units=simulation_options.units,
-    )
+    # Pybullet
+    if simulator == Simulator.PYBULLET:
 
-    # Setup simulation
-    assert not kwargs, 'Unknown kwargs:\n{}'.format(kwargs)
-    pylog.info('Creating simulation')
-    sim = AmphibiousSimulation(
-        simulation_options=simulation_options,
-        animat=animat,
-        arena=arena,
-    )
+        # Creating animat
+        animat = Amphibious(
+            sdf=animat_sdf,
+            options=animat_options,
+            controller=animat_controller,
+            timestep=simulation_options.timestep,
+            iterations=simulation_options.n_iterations,
+            units=simulation_options.units,
+        )
+
+        # Setup simulation
+        assert not kwargs, 'Unknown kwargs:\n{}'.format(kwargs)
+        pylog.info('Creating simulation')
+        sim = AmphibiousSimulation(
+            simulation_options=simulation_options,
+            animat=animat,
+            arena=arena,
+        )
+
+    # Mujoco
+    elif simulator == Simulator.MUJOCO:
+
+        # Setup simulation
+        sdf_path_arena = (
+            arena[0].path
+            if isinstance(arena, SimulationModels)
+            else arena.path
+        )
+        # arena_position = arena.spawn_options.posObj
+        arena_options = [
+            {
+                'sdf_path': arena.path,
+                'position': arena.spawn_options['posObj'],
+                'rotation': arena.spawn_options['ornObj'],
+            }
+            for arena in (
+                    arena
+                    if isinstance(arena, SimulationModels)
+                    else [arena]
+            )
+        ]
+
+        sim = Simulation.from_sdf(
+            # Animat
+            sdf_path_animat=animat_sdf,
+            arena_options=arena_options,
+            # spawn_position=animat_options.spawn.position,
+            # spawn_rotation=animat_options.spawn.orientation,
+            controller=animat_controller,
+            data=animat_data,
+            save_mjcf=False,
+            # Simulation
+            animat_options=animat_options,
+            simulation_options=simulation_options,
+            n_iterations=simulation_options.n_iterations,
+            timestep=simulation_options.timestep,
+            pause=not simulation_options.play,
+            fast=simulation_options.fast,
+            restart=False,
+            headless=simulation_options.headless,
+            # save=simulation_options.save,
+            plot=False,
+        )
+
     return sim
 
 
@@ -183,21 +235,30 @@ def simulation(animat_sdf, animat_options, arena, **kwargs):
 
     # Instatiate simulation
     pylog.info('Creating simulation')
+    simulator = kwargs.get('simulator', Simulator.MUJOCO)
     sim = simulation_setup(animat_sdf, animat_options, arena, **kwargs)
 
-    # Run simulation
-    pylog.info('Running simulation')
-    # sim.run(show_progress=show_progress)
-    # contacts = sim.models.animat.data.sensors.contacts
-    for iteration in sim.iterator(show_progress=sim.options.show_progress):
-        # pylog.info(np.asarray(
-        #     contacts.reaction(iteration, 0)
-        # ))
-        assert iteration >= 0
+    if simulator == Simulator.PYBULLET:
 
-    # Terminate simulation
-    pylog.info('Terminating simulation')
-    sim.end()
+        # Run simulation
+        pylog.info('Running simulation')
+        # sim.run(show_progress=show_progress)
+        # contacts = sim.models.animat.data.sensors.contacts
+        for iteration in sim.iterator(show_progress=sim.options.show_progress):
+            # pylog.info(np.asarray(
+            #     contacts.reaction(iteration, 0)
+            # ))
+            assert iteration >= 0
+
+        # Terminate simulation
+        pylog.info('Terminating simulation')
+        sim.end()
+
+    elif simulator == Simulator.MUJOCO:
+
+        # Run simulation
+        pylog.info('Running simulation')
+        sim.run()
 
     return sim
 
@@ -212,10 +273,14 @@ def simulation_post(sim, log_path='', plot=False, video=''):
     )
 
 
-def postprocessing_from_clargs(sim, animat_options, clargs=None):
+def postprocessing_from_clargs(sim, animat_options, simulator, clargs=None):
     """Simulation postproces"""
     if clargs is None:
         clargs = parse_args()
+        simulator = {
+            'MUJOCO': Simulator.MUJOCO,
+            'PYBULLET': Simulator.PYBULLET,
+        }[clargs.simulator]
     prompt_postprocessing(
         animat=clargs.animat,
         version=clargs.version,
@@ -225,4 +290,5 @@ def postprocessing_from_clargs(sim, animat_options, clargs=None):
         save=clargs.save,
         save_to_models=clargs.save_to_models,
         verify=clargs.verify_save,
+        simulator=simulator,
     )

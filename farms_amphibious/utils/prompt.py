@@ -9,6 +9,7 @@ import farms_pylog as pylog
 from farms_models.utils import get_simulation_data_path
 from farms_data.amphibious.animat_data import AnimatData
 from farms_amphibious.utils.network import plot_networks_maps
+from farms_amphibious.simulation.simulation import Simulator
 
 
 def prompt(query, default):
@@ -39,6 +40,7 @@ def prompt_postprocessing(
     verify = kwargs.pop('verify', False)
     save_to_models = kwargs.pop('save_to_models', '')
     extension = kwargs.pop('extension', 'pdf')
+    simulator = kwargs.pop('simulator', Simulator.MUJOCO)
     assert not kwargs, kwargs
 
     # Post-processing
@@ -55,8 +57,13 @@ def prompt_postprocessing(
     if log_path and not os.path.isdir(log_path):
         os.mkdir(log_path)
     show_plots = prompt('Show plots', False) if query else False
+    iteration = (
+        sim.iteration
+        if simulator == Simulator.PYBULLET
+        else sim.task.iteration  # Simulator.MUJOCO
+    )
     sim.postprocess(
-        iteration=sim.iteration,
+        iteration=iteration,
         log_path=log_path if save_data else '',
         plot=show_plots,
         video=(
@@ -68,7 +75,11 @@ def prompt_postprocessing(
     if save_data and verify:
         pylog.debug('Data saved, now loading back to check validity')
         data = AnimatData.from_file(os.path.join(log_path, 'simulation.hdf5'))
-        pylog.debug('Data successfully saved and logged back: {}'.format(data))
+        pylog.debug('Data successfully saved and logged back: %s', data)
+
+    # Save MuJoCo MJCF
+    if simulator == Simulator.MUJOCO:
+        sim.save_mjcf_xml(os.path.join(log_path, 'sim_mjcf.xml'))
 
     # Plot network
     show_connectivity = (
