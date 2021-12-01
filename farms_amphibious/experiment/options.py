@@ -846,6 +846,7 @@ def get_krock_kwargs_options(**kwargs):
             [+np.pi/5, np.pi/7, -np.pi/2, -np.pi/2],
             [-np.pi/5, np.pi/7, -np.pi/2, -np.pi/2],
         ],
+        leg_turn_gain=[-2, 0],
         body_walk_amplitude=1,
         body_osc_gain=0.2,
         body_osc_bias=0.0,
