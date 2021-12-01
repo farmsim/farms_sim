@@ -444,6 +444,10 @@ class AmphibiousControlOptions(ControlOptions):
             legs_offsets_walking = repeat([legs_offsets_walking]).tolist()
         if np.ndim(legs_offsets_swimming) == 1:
             legs_offsets_swimming = repeat([legs_offsets_swimming]).tolist()
+        if np.ndim(leg_side_turn_gain) == 1:
+            leg_side_turn_gain = repeat([leg_side_turn_gain]).tolist()
+        if np.ndim(leg_joint_turn_gain) == 1:
+            leg_joint_turn_gain = repeat([leg_joint_turn_gain]).tolist()
 
         # Joints offsets for walking and swimming
         for leg_i in range(convention.n_legs//2):
@@ -456,8 +460,8 @@ class AmphibiousControlOptions(ControlOptions):
                     )] = {
                         'gain': (
                             leg_turn_gain[leg_i]
-                            *leg_side_turn_gain[side_i]
-                            *leg_joint_turn_gain[joint_i]
+                            *leg_side_turn_gain[leg_i][side_i]
+                            *leg_joint_turn_gain[leg_i][joint_i]
                         ),
                         'bias': legs_offsets_walking[leg_i][joint_i],
                         'low': 1,
