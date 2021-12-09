@@ -2,7 +2,7 @@
 
 import numpy as np
 import argparse
-from farms_bullet.simulation.parse_args import (
+from farms_mujoco.simulation.parse_args import (
     argument_parser as bullet_argument_parser,
 )
 

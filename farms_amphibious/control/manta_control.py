@@ -1,7 +1,7 @@
 """Manta control"""
 
 import numpy as np
-from farms_bullet.model.control import ModelController, ControlType
+from farms_mujoco.model.control import ModelController, ControlType
 
 
 def joints_sorted(names):

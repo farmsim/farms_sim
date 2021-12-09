@@ -4,7 +4,7 @@
 import time
 
 import farms_pylog as pylog
-from farms_bullet.utils.profile import profile
+from farms_mujoco.utils.profile import profile
 from farms_amphibious.utils.parse_args import parse_args
 from farms_amphibious.simulation.simulation import (
     Simulator,

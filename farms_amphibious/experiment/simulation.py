@@ -7,9 +7,9 @@ import farms_pylog as pylog
 from farms_data.amphibious.data import AmphibiousData
 from farms_models.utils import get_sdf_path
 from farms_bullet.model.options import SpawnLoader
-from farms_bullet.model.model import SimulationModels
-from farms_bullet.simulation.options import SimulationOptions
-from farms_bullet.control.kinematics import KinematicsController
+from farms_mujoco.model.model import SimulationModels
+from farms_mujoco.simulation.options import SimulationOptions
+from farms_mujoco.control.kinematics import KinematicsController
 from farms_mujoco.simulation.simulation import Simulation
 
 from ..model.animat import Amphibious
