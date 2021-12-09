@@ -158,23 +158,24 @@ cpdef inline void ode_contacts(
 
     """
     cdef DTYPE contact_reaction
-    cdef unsigned int i, i0, i1
+    cdef unsigned int i, i0, i1, connection_type
     for i in range(contacts_connectivity.c_n_connections()):
         i0 = contacts_connectivity.connections.array[i, 0]
         i1 = contacts_connectivity.connections.array[i, 1]
-        # contact_weight*contact_reaction
-        # contact_reaction = (
-        #     contacts.array[iteration, i1, 0]**2
-        #     + contacts.array[iteration, i1, 1]**2
-        #     + contacts.array[iteration, i1, 2]**2
-        # )**0.5
+        connection_type = contacts_connectivity.connections.array[i, 2]
         contact_reaction = fabs(contacts.c_reaction_z(iteration, i1))
-        dstate[i0] += (
-            contacts_connectivity.c_weight(i)
-            *saturation(contact_reaction, 10)  # Saturation
-            # *cos(state[i0])
-            # *sin(state[i0])  # For Tegotae
-        )
+        if connection_type == ConnectionType.REACTION2FREQ:
+            dstate[i0] += (
+                contacts_connectivity.c_weight(i)
+                *saturation(contact_reaction, 10)  # Saturation
+            )
+        elif connection_type == ConnectionType.REACTION2FREQTEGOTAE:
+            dstate[i0] += (
+                contacts_connectivity.c_weight(i)
+                *saturation(contact_reaction, 10)  # Saturation
+                # *cos(state[i0])
+                *sin(state[i0])  # For Tegotae
+            )
 
 
 cpdef inline void ode_contacts_tegotae(
