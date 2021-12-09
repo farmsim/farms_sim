@@ -82,6 +82,10 @@ def setup_from_clargs(clargs=None):
         water_maps=clargs.water_maps,
         viscosity=clargs.viscosity,
         ground_height=clargs.ground_height,
+        spawn_loader={
+            'FARMS': SpawnLoader.FARMS,
+            'PYBULLET': SpawnLoader.PYBULLET,
+        }[clargs.spawn_loader],
     )
 
     # Test options saving and loading
