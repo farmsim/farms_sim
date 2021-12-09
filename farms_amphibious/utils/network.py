@@ -325,6 +325,7 @@ class NetworkFigure:
     def plot(self, **kwargs):
         """Plot"""
         n_oscillators = 2*self.morphology.n_joints_body
+        n_limbs = self.morphology.n_legs
 
         # Options
         offset = kwargs.pop('offset', 1)
@@ -343,7 +344,7 @@ class NetworkFigure:
         self.axes.cla()
         if show_title:
             plt.title(title)
-        self.axes.set_xlim((-margin_x, n_oscillators-1+margin_x))
+        self.axes.set_xlim((-margin_x, max(n_oscillators, 2.5*n_limbs)-1+margin_x))
         self.axes.set_ylim((-offset-margin_y, offset+margin_y))
         self.axes.set_aspect('equal', adjustable='box')
         self.axes.get_xaxis().set_visible(False)
@@ -359,7 +360,11 @@ class NetworkFigure:
         leg_pos = [
             1+2*split[0]
             for split in np.array_split(
-                np.arange(self.morphology.n_joints_body),
+                np.arange(
+                    self.morphology.n_joints_body
+                    if self.morphology.n_joints_body > 0
+                    else self.morphology.n_legs
+                ),
                 self.morphology.n_legs//2+1,
             )[:-1]
         ]
@@ -372,7 +377,7 @@ class NetworkFigure:
                 [leg_x+osc_side_x+joint_y, joint_y*side_x]
                 for leg_x in leg_pos
                 for side_x in [-1, 1]
-                for joint_y in [3, 4, 5, 6]
+                for joint_y in np.arange(3, 3+n_limbs//2)
                 for osc_side_x in [-1, 1]
             ]
         )
@@ -426,7 +431,11 @@ class NetworkFigure:
         leg_pos = [
             1+6+2*split[0]
             for split in np.array_split(
-                np.arange(self.morphology.n_joints_body),
+                np.arange(
+                    self.morphology.n_joints_body
+                    if self.morphology.n_joints_body > 0
+                    else self.morphology.n_legs
+                ),
                 self.morphology.n_legs//2+1,
             )[:-1]
         ]
@@ -528,14 +537,14 @@ class NetworkFigure:
                     hydro_amplitude_weights
                     and connection[2] == ConnectionType.LATERAL2AMP
                 )
-            ] if self.data.network.hydro_connectivity.connections.array else [],
+            ],
             prefix='H_',
             rad=rads[2],
             color_nodes='C0',
             color_arrows=cmap if use_weights else None,
             alpha=2*alpha,
             **options,
-        )
+        ) if self.data.network.hydro_connectivity.connections.array else [[]]*3
 
         # Show elements
         [
