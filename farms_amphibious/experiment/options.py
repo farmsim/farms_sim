@@ -193,6 +193,7 @@ def amphibious_options(animat_options, arena='flat', **kwargs):
     arena_sdf = kwargs.pop('arena_sdf', '')
     arena_position = kwargs.pop('arena_position', None)
     arena_orientation = kwargs.pop('arena_orientation', None)
+    spawn_loader = kwargs.pop('spawn_loader', SpawnLoader.FARMS)
 
     # Position and orientation handling
     if arena_position is None:
@@ -290,6 +291,11 @@ def amphibious_options(animat_options, arena='flat', **kwargs):
             set_no_swimming_options(animat_options)
     else:
         raise Exception('Unknown arena: "{}"'.format(arena))
+    if isinstance(arena, SimulationModels):
+        for _arena in arena:
+            _arena.load_options['spawn_loader'] = spawn_loader
+    else:
+        arena.load_options['spawn_loader'] = spawn_loader
     return (simulation_options, arena)
 
 
