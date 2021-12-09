@@ -108,6 +108,7 @@ cpdef inline void ode_stretch(
     DTYPEv1 dstate,
     JointSensorArrayCy joints,
     JointsConnectivityCy joints_connectivity,
+    unsigned int n_oscillators,
 ) nogil:
     """Sensory feedback - Stretch
 
@@ -120,19 +121,27 @@ cpdef inline void ode_stretch(
         i1 = joints_connectivity.connections.array[i, 1]
         connection_type = joints_connectivity.connections.array[i, 2]
         if connection_type == ConnectionType.STRETCH2FREQ:
-            # stretch_weight*joint_position*sin(phase)
+            # stretch_weight*joint_position  # *sin(phase)
             dstate[i0] += (
                 joints_connectivity.c_weight(i)
                 *joints.position_cy(iteration, i1)
-                *sin(state[i0])  # For Tegotae
+                # *sin(state[i0])  # For Tegotae
+            )
+        elif connection_type == ConnectionType.STRETCH2AMP:
+            # stretch_weight*joint_position  # *sin(phase)
+            dstate[n_oscillators+i0] += (
+                joints_connectivity.c_weight(i)
+                *joints.position_cy(iteration, i1)
+                # *sin(state[i0])  # For Tegotae
             )
         else:
             printf(
                 'Joint connection %i of type %i is incorrect'
-                ', should be %i\n',
+                ', should be %i or %i\n',
                 i,
                 connection_type,
                 ConnectionType.STRETCH2FREQ,
+                ConnectionType.STRETCH2AMP,
             )
 
 

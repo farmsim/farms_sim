@@ -44,6 +44,7 @@ cpdef inline void ode_stretch(
     DTYPEv1 dstate,
     JointSensorArrayCy joints,
     JointsConnectivityCy joints_connectivity,
+    unsigned int n_oscillators,
 ) nogil
 
 

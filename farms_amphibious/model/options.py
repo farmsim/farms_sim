@@ -1033,7 +1033,12 @@ class AmphibiousNetworkOptions(Options):
         if self.joint2osc is None:
             self.joint2osc = self.default_joint2osc(
                 convention,
-                kwargs.pop('weight_sens_stretch_freq', 0),
+                kwargs.pop('weight_sens_stretch_freq_up', 0),
+                kwargs.pop('weight_sens_stretch_freq_same', 0),
+                kwargs.pop('weight_sens_stretch_freq_down', 0),
+                kwargs.pop('weight_sens_stretch_amp_up', 0),
+                kwargs.pop('weight_sens_stretch_amp_same', 0),
+                kwargs.pop('weight_sens_stretch_amp_down', 0),
             )
         if self.contact2osc is None:
             self.contact2osc = self.default_contact2osc(
@@ -1516,20 +1521,88 @@ class AmphibiousNetworkOptions(Options):
         return connectivity
 
     @staticmethod
-    def default_joint2osc(convention, weight_frequency):
+    def default_joint2osc(
+            convention,
+            weight_frequency_up,
+            weight_frequency_same,
+            weight_frequency_down,
+            weight_amplitude_up,
+            weight_amplitude_same,
+            weight_amplitude_down,
+    ):
         """Default joint sensors to oscillators connectivity"""
         connectivity = []
-        for joint_i in range(1, convention.n_joints_body):
-            for side_osc in range(2):
-                if weight_frequency:
+        if weight_frequency_up:
+            for joint_i in range(convention.n_joints_body-1):
+                for side_osc in range(2):
                     connectivity.append({
                         'in': convention.bodyosc2name(
                             joint_i=joint_i,
-                            side=side_osc
+                            side=side_osc,
                         ),
-                        'out': convention.bodyjoint2name(joint_i-1),
+                        'out': convention.bodyjoint2name(joint_i+1),
                         'type': 'STRETCH2FREQ',
-                        'weight': (1 if side_osc else -1)*weight_frequency,
+                        'weight': (1 if side_osc else 1)*weight_frequency_up,
+                    })
+        if weight_frequency_same:
+            for joint_i in range(convention.n_joints_body):
+                for side_osc in range(2):
+                    connectivity.append({
+                        'in': convention.bodyosc2name(
+                            joint_i=joint_i,
+                            side=side_osc,
+                        ),
+                        'out': convention.bodyjoint2name(joint_i),
+                        'type': 'STRETCH2FREQ',
+                        'weight': (1 if side_osc else 1)*weight_frequency_same,
+                    })
+        if weight_frequency_down:
+            for joint_i in range(convention.n_joints_body-1):
+                for side_osc in range(2):
+                    connectivity.append({
+                        'in': convention.bodyosc2name(
+                            joint_i=joint_i+1,
+                            side=side_osc,
+                        ),
+                        'out': convention.bodyjoint2name(joint_i),
+                        'type': 'STRETCH2FREQ',
+                        'weight': (1 if side_osc else 1)*weight_frequency_down,
+                    })
+        if weight_amplitude_up:
+            for joint_i in range(convention.n_joints_body-1):
+                for side_osc in range(2):
+                    connectivity.append({
+                        'in': convention.bodyosc2name(
+                            joint_i=joint_i,
+                            side=side_osc,
+                        ),
+                        'out': convention.bodyjoint2name(joint_i+1),
+                        'type': 'STRETCH2AMP',
+                        'weight': (1 if side_osc else 1)*weight_amplitude_up,
+                    })
+        if weight_amplitude_same:
+            for joint_i in range(convention.n_joints_body):
+                for side_osc in range(2):
+                    connectivity.append({
+                        'in': convention.bodyosc2name(
+                            joint_i=joint_i,
+                            side=side_osc,
+                        ),
+                        'out': convention.bodyjoint2name(joint_i),
+                        'type': 'STRETCH2AMP',
+                        'weight': (1 if side_osc else 1)*weight_amplitude_same,
+                    })
+        if weight_amplitude_down:
+            for joint_i in range(convention.n_joints_body-1):
+                for side_osc in range(2):
+                    connectivity.append({
+                        'in': convention.bodyosc2name(
+                            joint_i=joint_i+1,
+                            side=side_osc,
+                        ),
+                        'out': convention.bodyjoint2name(joint_i),
+                        'type': 'STRETCH2AMP',
+                        'weight': (1 if side_osc else 1)*weight_amplitude_down,
                     })
         return connectivity
 
