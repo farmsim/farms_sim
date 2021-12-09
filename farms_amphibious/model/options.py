@@ -927,7 +927,7 @@ class AmphibiousNetworkOptions(Options):
             legs_splits = np.array_split(
                 np.arange(convention.n_joints_body),
                 n_leg_pairs
-            ) if convention.n_legs else None
+            ) if convention.n_legs and convention.n_joints_body else None
             empty = np.array([], dtype=int)
             default_legbodyconnections = [  # Body osc to connect to each limb
                 np.concatenate([
