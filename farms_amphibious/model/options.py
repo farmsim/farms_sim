@@ -919,6 +919,7 @@ class AmphibiousNetworkOptions(Options):
                 osc.modular_amplitude = osc_modular_amplitudes[osc_i]
 
         # Connectivity
+        overlap = kwargs.pop('overlap', True)
         if self.osc2osc is None:
             pi2 = 0.5*np.pi
             # body_stand_shift = kwargs.pop('body_stand_shift', pi2)
@@ -940,6 +941,8 @@ class AmphibiousNetworkOptions(Options):
                     and len(split) <= len(legs_splits[split_i+1])
                     else empty,
                 ])
+                if overlap
+                else split
                 for split_i, split in enumerate(legs_splits)
             ] if legs_splits is not None else []
             standing = kwargs.pop('standing_wave', True)

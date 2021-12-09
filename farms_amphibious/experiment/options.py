@@ -323,6 +323,7 @@ def get_salamander_kwargs_options(**kwargs):
         ],
         'drives_init': [2, 0],
         'weight_osc_body': 3e1,
+        'overlap': False,
         'weight_osc_legs_internal': 3e1,
         'weight_osc_legs_opposite': 0,
         'weight_osc_legs_following': 0,
@@ -409,6 +410,7 @@ def get_polypterus_kwargs_options(**kwargs):
         'weight_osc_legs_internal': 1e2,
         'weight_osc_legs_opposite': 0,
         'weight_osc_legs_following': 0,
+        'overlap': False,
         'weight_osc_legs2body': 1e1,
         'weight_osc_body2legs': 1e1,
         'weight_sens_contact_intralimb': 0,  # -1e-1
@@ -493,6 +495,7 @@ def get_centipede_kwargs_options(**kwargs):
         'weight_sens_contact_diagonal': 0,
         'weight_sens_hydro_freq': 0,
         'weight_sens_hydro_amp': 0,
+        'overlap': False,
         'body_walk_amplitude': 1,
         'body_osc_gain': 0.1,
         'body_osc_bias': 0,
