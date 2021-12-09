@@ -956,13 +956,19 @@ class AmphibiousNetworkOptions(Options):
             self.osc2osc = (
                 self.default_osc2osc(
                     convention=convention,
-                    weight_body2body=kwargs.pop(
-                        'weight_osc_body',
+                    weight_body2body_down=kwargs.pop(
+                        'weight_osc_body_down',
+                        0,
+                    ),
+                    weight_body2body_side=kwargs.pop(
+                        'weight_osc_body_side',
                         0,
                     ),
                     phase_body2body=kwargs.pop(
                         'body_phase_bias',
                         2*np.pi/convention.n_joints_body
+                        if convention.n_joints_body > 0
+                        else 0
                     ),
                     weight_intralimb=kwargs.pop(
                         'weight_osc_legs_internal',
@@ -1272,7 +1278,8 @@ class AmphibiousNetworkOptions(Options):
     @staticmethod
     def default_osc2osc(
             convention,
-            weight_body2body,
+            weight_body2body_side,
+            weight_body2body_down,
             phase_body2body,
             weight_intralimb,
             weight_interlimb_opposite,
@@ -1291,7 +1298,7 @@ class AmphibiousNetworkOptions(Options):
         n_body_joints = convention.n_joints_body
 
         # Body
-        if weight_body2body != 0:
+        if weight_body2body_side != 0:
             # Antagonist oscillators
             for i in range(n_body_joints):
                 for sides in [[1, 0], [0, 1]]:
@@ -1305,14 +1312,15 @@ class AmphibiousNetworkOptions(Options):
                             side=sides[1]
                         ),
                         'type': 'OSC2OSC',
-                        'weight': weight_body2body,
+                        'weight': weight_body2body_side,
                         'phase_bias': np.pi,
                     })
+        if weight_body2body_down != 0:
             # Following oscillators
             for i in range(n_body_joints-1):
                 for side in range(2):
                     for osc, phase in [
-                            [[i+1, i], phase_body2body],
+                            [[i+1, i], +phase_body2body],
                             [[i, i+1], -phase_body2body]
                     ]:
                         connectivity.append({
@@ -1325,7 +1333,7 @@ class AmphibiousNetworkOptions(Options):
                                 side=side
                             ),
                             'type': 'OSC2OSC',
-                            'weight': weight_body2body,
+                            'weight': weight_body2body_down,
                             'phase_bias': phase % (2*np.pi),
                         })
 
