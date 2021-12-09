@@ -11,16 +11,17 @@ from .ode import ode_oscillators_sparse
 class NetworkODE(NetworkCy):
     """NetworkODE"""
 
-    def __init__(self, data):
+    def __init__(self, data, **kwargs):
         super().__init__(data=data, dstate=np.zeros_like(data.state.array[0, :]))
-        self.ode: Callable = ode_oscillators_sparse
+        self.ode: Callable = kwargs.pop('ode', ode_oscillators_sparse)
         self.data: AmphibiousData = data
 
         # Adaptive timestep parameters
         self.n_iterations: int = np.shape(self.state_array)[0]
         self.solver = integrate.ode(f=self.ode)
-        self.solver.set_integrator('dopri5', nsteps=100)
+        self.solver.set_integrator('dopri5', nsteps=kwargs.pop('nsteps', 100))
         self.solver.set_initial_value(y=self.state_array[0, :], t=0.0)
+        assert not kwargs, kwargs
 
     def step(
             self,
