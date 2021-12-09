@@ -22,6 +22,7 @@ def get_animat_options_from_model(animat, version, kwargs_only=False, **options)
             'salamander': get_salamander_kwargs_options,
             'polypterus': get_polypterus_kwargs_options,
             'centipede': get_centipede_kwargs_options,
+            'drosophila': get_drosophila_kwargs_options,
             'pleurobot': get_pleurobot_kwargs_options,
             'krock': get_krock_kwargs_options,
             'orobot': get_orobot_kwargs_options,
@@ -32,6 +33,7 @@ def get_animat_options_from_model(animat, version, kwargs_only=False, **options)
             'salamander': get_salamander_options,
             'polypterus': get_polypterus_options,
             'centipede': get_centipede_options,
+            'drosophila': get_drosophila_options,
             'pleurobot': get_pleurobot_options,
             'krock': get_krock_options,
             'orobot': get_orobot_options,
@@ -1827,5 +1829,192 @@ def get_amphibot_options(**kwargs):
     kwargs_options = get_amphibot_kwargs_options(**kwargs)
     options = AmphibiousOptions.from_options(kwargs_options)
     return options
+
+
+def get_drosophila_kwargs_options(**kwargs):
+    """Drosophila options"""
+    n_joints_body = kwargs.pop('n_joints_body', 0)
+    links_names = kwargs.pop(
+        'links_names',
+        [
+            'body',
+            'LFCoxa',
+            'LFFemur',
+            'LFTibia',
+            'RFCoxa',
+            'RFFemur',
+            'RFTibia',
+            'LMCoxa_roll',
+            'LMFemur',
+            'LMTibia',
+            'RMCoxa_roll',
+            'RMFemur',
+            'RMTibia',
+            'LHCoxa_roll',
+            'LHFemur',
+            'LHTibia',
+            'RHCoxa_roll',
+            'RHFemur',
+            'RHTibia',
+        ]
+    )
+    joints_names = kwargs.pop(
+        'joints_names',
+        [
+            'joint_LFCoxa',
+            'joint_LFFemur',
+            'joint_LFTibia',
+            'joint_RFCoxa',
+            'joint_RFFemur',
+            'joint_RFTibia',
+            'joint_LMCoxa_roll',
+            'joint_LMFemur',
+            'joint_LMTibia',
+            'joint_RMCoxa_roll',
+            'joint_RMFemur',
+            'joint_RMTibia',
+            'joint_LHCoxa_roll',
+            'joint_LHFemur',
+            'joint_LHTibia',
+            'joint_RHCoxa_roll',
+            'joint_RHFemur',
+            'joint_RHTibia',
+        ]
+    )
+
+    # Joint options
+    transform_gain = kwargs.pop('transform_gain', None)
+    joints_offsets = kwargs.pop('joints_offsets', None)
+
+    # Amplitudes gains
+    if transform_gain is None:
+        transform_gain = [1]*len(joints_names)
+        transform_gain = dict(zip(joints_names, transform_gain))
+        for i in range(2):
+            side = 1 if i else -1
+            transform_gain[3*i+0] = side
+            transform_gain[3*i+1] = side
+            transform_gain[3*i+2] = side
+
+    # Joints joints_offsets
+    if joints_offsets is None:
+        joints_offsets = [0]*len(joints_names)
+        for i in range(2):
+            joints_offsets[3*i+0] = 0
+            joints_offsets[3*i+1] = -np.pi/2
+            joints_offsets[3*i+2] = +np.pi/4
+        for i in range(2, 4):
+            joints_offsets[3*i+0] = -3*np.pi/4
+            joints_offsets[3*i+1] = +np.pi/4
+            joints_offsets[3*i+2] = +np.pi/4
+        for i in range(4, 6):
+            joints_offsets[3*i+0] = -np.pi/3
+            joints_offsets[3*i+1] = +np.pi/4
+            joints_offsets[3*i+2] = +np.pi/4
+        joints_offsets = dict(zip(joints_names, joints_offsets))
+
+    kwargs_options = {
+        'spawn_loader': SpawnLoader.FARMS,
+        'spawn_position': [0, 0, 0.2*0.07],
+        'spawn_orientation': [0, 0, 0],
+        'use_self_collisions': False,
+        'n_legs': 6,
+        'n_dof_legs': 3,
+        'n_joints_body': n_joints_body,
+        'transform_gain': transform_gain,
+        'transform_bias': joints_offsets,
+        'legs_amplitudes': [
+            [np.pi/16, np.pi/16, np.pi/16],
+            [np.pi/8, np.pi/8, np.pi/8],
+            [np.pi/8, np.pi/8, np.pi/8],
+        ],
+        'legs_offsets_walking': [0]*3,
+        'intralimb_phases': [
+            [0, 0.5*np.pi, 0, 0.5*np.pi],
+            [0.5*np.pi, 0, 0.5*np.pi, 0],
+            [0, 0.5*np.pi, 0, 0.5*np.pi],
+        ],
+        'links_names': links_names,
+        'joints_names': joints_names,
+        'sensors_links': links_names,
+        'sensors_joints': joints_names,
+        'sensors_contacts': links_names,
+        'sensors_hydrodynamics': [],
+        'feet_links': [
+            'LFTibia', 'LMTibia', 'LHTibia',
+            'RFTibia', 'RMTibia', 'RHTibia',
+        ],
+        'drives_init': [2, 0],
+        'body_freq_gain': 2*np.pi*0.25,
+        'body_freq_bias': 2*np.pi*0.0,
         'weight_osc_body_side': 3e1,
         'weight_osc_body_down': 0,
+        'weight_osc_legs_internal': 3e1,
+        'weight_osc_legs_opposite': 1e1,
+        'weight_osc_legs_following': 1e1,
+        'body_walk_amplitude': 0.2,
+        'muscle_alpha': 1e-3,
+        'muscle_beta': -1e-6,
+        'muscle_gamma': 2e3,
+        'muscle_delta': -1e-8,
+        'mujoco': dict(
+            # damping=1e-10,
+            # act_pos_gain=1e-6,
+            damping=1e-9,
+            act_pos_gain=1e-7,
+            act_vel_gain=0,
+            solref=[-1e5, -1e3],
+        ),
+    }
+    kwargs_options.update(kwargs)
+    return kwargs_options
+
+
+def get_drosophila_options(**kwargs):
+    """Drosophila options"""
+    kwargs_options = get_drosophila_kwargs_options(**kwargs)
+    options = AmphibiousOptions.from_options(kwargs_options)
+    # angles = {
+    #     'joint_LFCoxa': 19,
+    #     'joint_LFFemur': -105,
+    #     'joint_LFTibia': 79,
+    #     'joint_LFTarsus1': -39,
+
+    #     'joint_LMCoxa': -0,
+    #     'joint_LMCoxa_yaw': 0.0,
+    #     'joint_LMCoxa_roll': 0,
+    #     'joint_LMFemur': 0,
+
+    #     'joint_LMTibia': 130,
+    #     # 'joint_LMTarsus1': -54,
+
+    #     'joint_LHCoxa': 6.2,
+    #     # 'joint_LHCoxa_yaw': 3.45,
+    #     'joint_LHCoxa_roll': 143,
+    #     'joint_LHFemur': -109,
+    #     'joint_LHTibia': 90,
+    #     'joint_LHTarsus1': -45,
+
+    #     'joint_RFCoxa': 19,
+    #     'joint_RFFemur': -105,
+    #     'joint_RFTibia': 79,
+    #     'joint_RFTarsus1': -39,
+
+    #     'joint_RMCoxa': -0,
+    #     'joint_RMCoxa_yaw': 0.0,
+    #     'joint_RMCoxa_roll': 0,
+    #     'joint_RMFemur': 0,
+
+    #     'joint_RMTibia': 130,
+    #     # 'joint_RMTarsus1': -54,
+
+    #     'joint_RHCoxa': 6.2,
+    #     # 'joint_RHCoxa_yaw': 3.45,
+    #     'joint_RHCoxa_roll': 143,
+    #     'joint_RHFemur': -109,
+    #     'joint_RHTibia': 90,
+    #     'joint_RHTarsus1': -45,
+    # }
+    # for joint in options.morphology.joints:
+    #     joint.initial_position = np.radians(angles[joint.name])
+    return options
