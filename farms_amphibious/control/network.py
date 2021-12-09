@@ -5,11 +5,7 @@ import numpy as np
 from farms_data.amphibious.data import AmphibiousData
 from scipy import integrate
 from .network_cy import NetworkCy
-from .ode import (
-    ode_oscillators_sparse,
-    # ode_oscillators_sparse_no_sensors,
-    # ode_oscillators_sparse_tegotae,
-)
+from .ode import ode_oscillators_sparse
 
 
 class NetworkODE(NetworkCy):

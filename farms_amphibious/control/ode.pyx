@@ -283,6 +283,7 @@ cpdef inline DTYPEv1 ode_oscillators_sparse(
     DTYPEv1 dstate,
     unsigned int iteration,
     AnimatDataCy data,
+    unsigned int nosfb=0,  # No sensory feedback
 ) nogil:
     """Complete CPG network ODE"""
     ode_dphase(
@@ -300,12 +301,23 @@ cpdef inline DTYPEv1 ode_oscillators_sparse(
         drives=data.network.drives,
         oscillators=data.network.oscillators,
     )
+    ode_joints(
+        iteration=iteration,
+        state=state,
+        dstate=dstate,
+        drives=data.network.drives,
+        joints=data.joints,
+        n_oscillators=data.network.oscillators.c_n_oscillators(),
+    )
+    if nosfb:
+        return dstate
     ode_stretch(
         iteration=iteration,
         state=state,
         dstate=dstate,
         joints=data.sensors.joints,
         joints_connectivity=data.network.joints_connectivity,
+        n_oscillators=data.network.oscillators.c_n_oscillators(),
     )
     ode_contacts(
         iteration=iteration,
@@ -322,90 +334,4 @@ cpdef inline DTYPEv1 ode_oscillators_sparse(
         hydro_connectivity=data.network.hydro_connectivity,
         n_oscillators=data.network.oscillators.c_n_oscillators(),
     )
-    ode_joints(
-        iteration=iteration,
-        state=state,
-        dstate=dstate,
-        drives=data.network.drives,
-        joints=data.joints,
-        n_oscillators=data.network.oscillators.c_n_oscillators(),
-    )
-    # data.network.drives.array[iteration+1] = data.network.drives.array[iteration]
-    return dstate
-
-
-cpdef inline DTYPEv1 ode_oscillators_sparse_no_sensors(
-    DTYPE time,
-    DTYPEv1 state,
-    DTYPEv1 dstate,
-    unsigned int iteration,
-    AnimatDataCy data,
-) nogil:
-    """CPG network ODE using no sensors"""
-    ode_dphase(
-        iteration=iteration,
-        state=state,
-        dstate=dstate,
-        drives=data.network.drives,
-        oscillators=data.network.oscillators,
-        connectivity=data.network.osc_connectivity,
-    )
-    ode_damplitude(
-        iteration=iteration,
-        state=state,
-        dstate=dstate,
-        drives=data.network.drives,
-        oscillators=data.network.oscillators,
-    )
-    ode_joints(
-        iteration=iteration,
-        state=state,
-        dstate=dstate,
-        drives=data.network.drives,
-        joints=data.joints,
-        n_oscillators=data.network.oscillators.c_n_oscillators(),
-    )
-    # data.network.drives.array[iteration+1] = data.network.drives.array[iteration]
-    return dstate
-
-
-cpdef inline DTYPEv1 ode_oscillators_sparse_tegotae(
-    DTYPE time,
-    DTYPEv1 state,
-    DTYPEv1 dstate,
-    unsigned int iteration,
-    AnimatDataCy data,
-) nogil:
-    """CPG network ODE using Tegotae"""
-    ode_dphase(
-        iteration=iteration,
-        state=state,
-        dstate=dstate,
-        drives=data.network.drives,
-        oscillators=data.network.oscillators,
-        connectivity=data.network.osc_connectivity,
-    )
-    ode_damplitude(
-        iteration=iteration,
-        state=state,
-        dstate=dstate,
-        drives=data.network.drives,
-        oscillators=data.network.oscillators,
-    )
-    ode_contacts_tegotae(
-        iteration=iteration,
-        state=state,
-        dstate=dstate,
-        contacts=data.sensors.contacts,
-        contacts_connectivity=data.network.contacts_connectivity,
-    )
-    ode_joints(
-        iteration=iteration,
-        state=state,
-        dstate=dstate,
-        drives=data.network.drives,
-        joints=data.joints,
-        n_oscillators=data.network.oscillators.c_n_oscillators(),
-    )
-    # data.network.drives.array[iteration+1] = data.network.drives.array[iteration]
     return dstate

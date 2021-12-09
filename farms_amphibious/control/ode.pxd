@@ -92,22 +92,5 @@ cpdef DTYPEv1 ode_oscillators_sparse(
     DTYPEv1 dstate,
     unsigned int iteration,
     AnimatDataCy data,
-) nogil
-
-
-cpdef DTYPEv1 ode_oscillators_sparse_no_sensors(
-    DTYPE time,
-    DTYPEv1 state,
-    DTYPEv1 dstate,
-    unsigned int iteration,
-    AnimatDataCy data,
-) nogil
-
-
-cpdef DTYPEv1 ode_oscillators_sparse_tegotae(
-    DTYPE time,
-    DTYPEv1 state,
-    DTYPEv1 dstate,
-    unsigned int iteration,
-    AnimatDataCy data,
+    unsigned int nosfb=*,  # No sensory feedback
 ) nogil
