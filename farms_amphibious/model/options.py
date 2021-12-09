@@ -1051,8 +1051,10 @@ class AmphibiousNetworkOptions(Options):
         if self.hydro2osc is None:
             self.hydro2osc = self.default_hydro2osc(
                 convention,
-                kwargs.pop('weight_sens_hydro_freq', 0),
-                kwargs.pop('weight_sens_hydro_amp', 0),
+                kwargs.pop('weight_sens_hydro_freq_up', 0),
+                kwargs.pop('weight_sens_hydro_freq_down', 0),
+                kwargs.pop('weight_sens_hydro_amp_up', 0),
+                kwargs.pop('weight_sens_hydro_amp_down', 0),
             )
 
     def drives_init(self):
@@ -1716,21 +1718,18 @@ class AmphibiousNetworkOptions(Options):
         return connectivity
 
     @staticmethod
-    def default_hydro2osc(convention, weight_frequency, weight_amplitude):
+    def default_hydro2osc(
+            convention,
+            weight_frequency_up,
+            weight_frequency_down,
+            weight_amplitude_up,
+            weight_amplitude_down,
+    ):
         """Default hydrodynamics sensors to oscillators connectivity"""
         connectivity = []
         for joint_i in range(convention.n_joints_body):
             for side_osc in range(2):
-                if weight_frequency:
-                    connectivity.append({
-                        'in': convention.bodyosc2name(
-                            joint_i=joint_i,
-                            side=side_osc
-                        ),
-                        'out': convention.bodylink2name(joint_i),
-                        'type': 'LATERAL2FREQ',
-                        'weight': weight_frequency,
-                    })
+                if weight_frequency_up:
                     connectivity.append({
                         'in': convention.bodyosc2name(
                             joint_i=joint_i,
@@ -1738,18 +1737,19 @@ class AmphibiousNetworkOptions(Options):
                         ),
                         'out': convention.bodylink2name(joint_i+1),
                         'type': 'LATERAL2FREQ',
-                        'weight': weight_frequency,
+                        'weight': weight_frequency_up,
                     })
-                if weight_amplitude:
+                if weight_frequency_down:
                     connectivity.append({
                         'in': convention.bodyosc2name(
                             joint_i=joint_i,
                             side=side_osc
                         ),
                         'out': convention.bodylink2name(joint_i),
-                        'type': 'LATERAL2AMP',
-                        'weight': weight_amplitude,
+                        'type': 'LATERAL2FREQ',
+                        'weight': weight_frequency_down,
                     })
+                if weight_amplitude_up:
                     connectivity.append({
                         'in': convention.bodyosc2name(
                             joint_i=joint_i,
@@ -1757,7 +1757,17 @@ class AmphibiousNetworkOptions(Options):
                         ),
                         'out': convention.bodylink2name(joint_i+1),
                         'type': 'LATERAL2AMP',
-                        'weight': weight_amplitude,
+                        'weight': weight_amplitude_up,
+                    })
+                if weight_amplitude_down:
+                    connectivity.append({
+                        'in': convention.bodyosc2name(
+                            joint_i=joint_i,
+                            side=side_osc
+                        ),
+                        'out': convention.bodylink2name(joint_i),
+                        'type': 'LATERAL2AMP',
+                        'weight': weight_amplitude_down,
                     })
         return connectivity
 
