@@ -427,7 +427,7 @@ class AmphibiousControlOptions(ControlOptions):
             'leg_turn_gain',
             [-1, 1]
             if convention.n_legs == 4
-            else np.zeros(convention.n_legs//2)
+            else (-np.ones(convention.n_legs//2)).tolist()
         )
         leg_side_turn_gain = kwargs.pop(
             'leg_side_turn_gain',
