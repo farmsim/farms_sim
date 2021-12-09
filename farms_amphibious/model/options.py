@@ -435,7 +435,7 @@ class AmphibiousControlOptions(ControlOptions):
         )
         leg_joint_turn_gain = kwargs.pop(
             'leg_joint_turn_gain',
-            [1, 0, 0, 0, 0]
+            [1, -1, 0, -1, 0],
         )
 
         # Augment parameters
