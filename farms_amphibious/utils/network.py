@@ -377,7 +377,7 @@ class NetworkFigure:
                 [leg_x+osc_side_x+joint_y, joint_y*side_x]
                 for leg_x in leg_pos
                 for side_x in [-1, 1]
-                for joint_y in np.arange(3, 3+n_limbs//2)
+                for joint_y in np.arange(3, 3+self.morphology.n_dof_legs)
                 for osc_side_x in [-1, 1]
             ]
         )
