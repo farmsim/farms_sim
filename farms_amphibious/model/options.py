@@ -18,6 +18,34 @@ from farms_mujoco.model.options import (
 from .convention import AmphibiousConvention
 
 
+def options_kwargs_keys():
+    """Options kwargs keys"""
+    return [
+        'overlap',
+        'weight_osc_body_side',
+        'weight_osc_body_down',
+        'weight_osc_legs_internal',
+        'weight_osc_legs_opposite',
+        'weight_osc_legs_following',
+        'weight_osc_legs2body',
+        'weight_osc_body2legs',
+        'weight_sens_stretch_freq_up',
+        'weight_sens_stretch_freq_same',
+        'weight_sens_stretch_freq_down',
+        'weight_sens_stretch_amp_up',
+        'weight_sens_stretch_amp_same',
+        'weight_sens_stretch_amp_down',
+        'weight_sens_contact_intralimb',
+        'weight_sens_contact_opposite',
+        'weight_sens_contact_following',
+        'weight_sens_contact_diagonal',
+        'weight_sens_hydro_freq_up',
+        'weight_sens_hydro_freq_down',
+        'weight_sens_hydro_amp_up',
+        'weight_sens_hydro_amp_down',
+    ]
+
+
 class AmphibiousOptions(ModelOptions):
     """Simulation options"""
 
