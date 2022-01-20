@@ -14,7 +14,7 @@ from moviepy.editor import VideoClip
 import farms_pylog as pylog
 from farms_data.utils.profile import profile
 from farms_data.amphibious.animat_data import AnimatData
-from farms_bullet.simulation.options import SimulationOptions
+from farms_data.simulation.options import SimulationOptions
 from farms_amphibious.model.options import AmphibiousOptions
 from farms_amphibious.utils.network import plot_networks_maps
 

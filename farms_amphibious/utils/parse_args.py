@@ -1,16 +1,14 @@
 """Parse command line arguments"""
 
-import numpy as np
 import argparse
-from farms_mujoco.simulation.parse_args import (
-    argument_parser as bullet_argument_parser,
-)
+import numpy as np
+from farms_data.simulation.parse_args import argument_parser as sim_arg_parser
 from ..model.options import options_kwargs_keys
 
 
 def argument_parser() -> argparse.ArgumentParser:
     """Parse args"""
-    parser = bullet_argument_parser()
+    parser = sim_arg_parser()
     parser.description = 'Amphibious simulation'
     parser.add_argument(
         '--sdf',

@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 
 import farms_pylog as pylog
 from farms_data.amphibious.animat_data import AnimatData
-from farms_bullet.simulation.options import SimulationOptions
+from farms_data.simulation.options import SimulationOptions
 from farms_amphibious.model.options import AmphibiousOptions
 from farms_amphibious.utils.network import plot_networks_maps
 from farms_amphibious.control.drive import drive_from_config, plot_trajectory

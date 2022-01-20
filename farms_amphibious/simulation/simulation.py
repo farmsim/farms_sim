@@ -5,13 +5,14 @@ from typing import Dict
 import numpy as np
 from imageio import imread
 
+from farms_data.simulation.options import SimulationOptions
+
 from farms_bullet.model.animat import Animat
 from farms_bullet.interface.interface import Interfaces
 from farms_bullet.model.model import SimulationModel, SimulationModels
 from farms_bullet.simulation.simulation import (
     AnimatSimulation as AnimatPybulletSimulation
 )
-from farms_mujoco.simulation.options import SimulationOptions
 from farms_mujoco.swimming.drag import SwimmingHandler
 
 from .interface import AmphibiousUserParameters

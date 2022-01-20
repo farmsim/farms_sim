@@ -5,12 +5,12 @@ import numpy as np
 from typing import Union
 
 import farms_pylog as pylog
-from farms_data.amphibious.data import AmphibiousData
 from farms_data.simulation.options import Simulator
+from farms_data.amphibious.data import AmphibiousData
+from farms_data.simulation.options import SimulationOptions
 from farms_models.utils import get_sdf_path
 from farms_bullet.model.options import SpawnLoader
 from farms_bullet.model.model import SimulationModel, SimulationModels
-from farms_mujoco.simulation.options import SimulationOptions
 from farms_mujoco.control.kinematics import KinematicsController
 from farms_mujoco.simulation.simulation import Simulation as MuJoCoSimulation
 
