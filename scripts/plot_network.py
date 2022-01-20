@@ -12,6 +12,7 @@ from PIL import Image
 from moviepy.editor import VideoClip
 
 import farms_pylog as pylog
+from farms_data.utils.profile import profile
 from farms_data.amphibious.animat_data import AnimatData
 from farms_bullet.simulation.options import SimulationOptions
 from farms_amphibious.model.options import AmphibiousOptions
@@ -148,6 +149,5 @@ def main(use_moviepy=True):
 
 
 if __name__ == '__main__':
-    from farms_bullet.utils.profile import profile
     profile(main)
     # main()
