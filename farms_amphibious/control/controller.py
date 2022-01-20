@@ -24,7 +24,7 @@ class AmphibiousController(ModelController):
             drive: DescendingDrive = None,
     ):
         joints_control_types: Dict[str, List[ControlType]] = {
-            joint.joint_name: joint.control_types
+            joint.joint_name: ControlType.from_string_list(joint.control_types)
             for joint in animat_options.control.joints
         }
         super().__init__(
@@ -61,7 +61,7 @@ class AmphibiousController(ModelController):
 
         # Muscles
         muscle_map: MusclesMap = MusclesMap(
-            joints=self.joints_names,
+            joints=joints_names,
             animat_options=animat_options,
             animat_data=animat_data,
         )
@@ -81,13 +81,14 @@ class AmphibiousController(ModelController):
                 self.animat_data.sensors.joints.names,
                 dtype=object,
             )[joints_indices].tolist()
+
             self.network2joints['position'] = PositionMuscleCy(
                 joints_names=joints_names,
                 joints_data=self.animat_data.sensors.joints,
                 indices=joints_indices,
                 network=self.network,
-                parameters=np.array(muscle_map.arrays[ControlType.POSITION], dtype=np.double),
-                osc_indices=np.array(muscle_map.osc_indices[ControlType.POSITION], dtype=np.uintc),
+                parameters=np.array(muscle_map.arrays, dtype=np.double),
+                osc_indices=np.array(muscle_map.osc_indices, dtype=np.uintc),
                 gain=np.array(joints_map.transform_gain, dtype=np.double),
                 bias=np.array(joints_map.transform_bias, dtype=np.double),
             )
@@ -135,8 +136,8 @@ class AmphibiousController(ModelController):
                 joints_data=self.animat_data.sensors.joints,
                 indices=joints_indices,
                 network=self.network,
-                parameters=np.array(muscle_map.arrays[ControlType.TORQUE], dtype=np.double),
-                osc_indices=np.array(muscle_map.osc_indices[ControlType.TORQUE], dtype=np.uintc),
+                parameters=np.array(muscle_map.arrays, dtype=np.double),
+                osc_indices=np.array(muscle_map.osc_indices, dtype=np.uintc),
                 gain=np.array(joints_map.transform_gain, dtype=np.double),
                 bias=np.array(joints_map.transform_bias, dtype=np.double),
             )
@@ -383,34 +384,38 @@ class MusclesMap:
             animat_data: AmphibiousData,
     ):
         super().__init__()
-        control_types = list(ControlType)
         joint_muscle_map = {
             muscle.joint_name: muscle
             for muscle in animat_options.control.muscles
         }
         muscles = [
+            joint_muscle_map[joint]
+            if joint in joint_muscle_map
+            else None
+            for joint in joints
+        ]
+        self.arrays = np.array([
             [
-                joint_muscle_map[joint]
-                for joint in joints[control_type]
-                if joint in joint_muscle_map
+                muscle.alpha, muscle.beta,
+                muscle.gamma, muscle.delta,
+                muscle.epsilon,
             ]
-            for control_type in control_types
-        ]
-        self.arrays = [
-            np.array([
-                [
-                    muscle.alpha, muscle.beta,
-                    muscle.gamma, muscle.delta, muscle.epsilon,
-                ]
-                for muscle in muscles[control_type]
-            ])
-            for control_type in control_types
-        ]
+            if muscle is not None
+            else [np.finfo(np.double).max]*5
+            for muscle in muscles
+        ], dtype=np.double)
         osc_names = animat_data.network.oscillators.names
-        self.osc_indices = [
+        self.osc_indices = np.array([
             [
-                [osc_names.index(muscle.osc1) for muscle in muscles[control_type]],
-                [osc_names.index(muscle.osc2) for muscle in muscles[control_type]],
-            ]
-            for control_type in control_types
-        ]
+                osc_names.index(muscle.osc1)
+                if muscle is not None
+                else np.iinfo(np.uintc).max
+                for muscle in muscles
+            ],
+            [
+                osc_names.index(muscle.osc2)
+                if muscle is not None and muscle.osc2 is not None
+                else np.iinfo(np.uintc).max
+                for muscle in muscles
+             ],
+        ], dtype=np.uintc)

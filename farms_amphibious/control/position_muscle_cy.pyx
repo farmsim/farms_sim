@@ -16,13 +16,13 @@ cdef class PositionMuscleCy(JointsMusclesCy):
         cdef np.ndarray neural_activity = self.network.outputs(iteration)
         cdef DTYPEv1 offsets = self.network.offsets(iteration)
 
-        # For each muscle
+        # For each joint
         for joint_i in range(self.n_joints):
 
             # Data
             joint_data_i = self.indices[joint_i]
-            osc_0 = self.osc_indices[0][joint_i]
-            osc_1 = self.osc_indices[1][joint_i]
+            osc_0 = self.osc_indices[0][joint_data_i]
+            osc_1 = self.osc_indices[1][joint_data_i]
             neural_diff = neural_activity[osc_0] - neural_activity[osc_1]
 
             # Position outputs
