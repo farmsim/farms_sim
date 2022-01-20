@@ -5,6 +5,7 @@ import argparse
 from farms_mujoco.simulation.parse_args import (
     argument_parser as bullet_argument_parser,
 )
+from ..model.options import options_kwargs_keys
 
 
 def argument_parser() -> argparse.ArgumentParser:
@@ -212,26 +213,12 @@ def argument_parser() -> argparse.ArgumentParser:
         action='store_true',
         help='Prompt at end of simulation',
     )
-    for weight in [
-            'weight_osc_body',
-            'weight_osc_legs_internal',
-            'weight_osc_legs_opposite',
-            'weight_osc_legs_following',
-            'weight_osc_legs2body',
-            'weight_osc_body2legs',
-            'weight_sens_stretch_freq',
-            'weight_sens_contact_intralimb',
-            'weight_sens_contact_opposite',
-            'weight_sens_contact_following',
-            'weight_sens_contact_diagonal',
-            'weight_sens_hydro_freq',
-            'weight_sens_hydro_amp',
-    ]:
+    for key in options_kwargs_keys():
         parser.add_argument(
-            f'--{weight}',
+            f'--{key}',
             type=float,
             default=None,
-            help=f'{weight}',
+            help=f'{key}',
         )
     parser.add_argument(
         '--simulator',

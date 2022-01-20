@@ -13,8 +13,8 @@ from farms_mujoco.control.kinematics import KinematicsController
 from farms_mujoco.simulation.simulation import Simulation
 
 from ..model.animat import Amphibious
-from ..model.options import AmphibiousOptions
 from ..simulation.simulation import AmphibiousSimulation, Simulator
+from ..model.options import AmphibiousOptions, options_kwargs_keys
 from ..utils.parse_args import parse_args
 from ..utils.prompt import prompt_postprocessing
 from ..control.controller import AmphibiousController
@@ -42,14 +42,9 @@ def setup_from_clargs(clargs=None):
     kwargs = {}
     if clargs.torque_equation is not None:
         kwargs['torque_equation'] = clargs.torque_equation
-    if clargs.weight_osc_body is not None:
-        kwargs['weight_osc_body'] = clargs.weight_osc_body
-    if clargs.weight_osc_body2legs is not None:
-        kwargs['weight_osc_body2legs'] = clargs.weight_osc_body2legs
-    if clargs.weight_osc_legs2body is not None:
-        kwargs['weight_osc_legs2body'] = clargs.weight_osc_legs2body
-    if clargs.weight_sens_stretch_freq is not None:
-        kwargs['weight_sens_stretch_freq'] = clargs.weight_sens_stretch_freq
+    for key in options_kwargs_keys():
+        if getattr(clargs, key) is not None:
+            kwargs[key] = getattr(clargs, key)
     animat_options = get_animat_options_from_model(
         animat=clargs.animat,
         version=clargs.version,
