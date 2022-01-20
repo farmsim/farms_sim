@@ -7,6 +7,8 @@ class AmphibiousConvention:
     def __init__(self, **kwargs):
         super().__init__()
         self.n_joints_body = kwargs.pop('n_joints_body')
+        self.single_osc_body = kwargs.pop('single_oscillator_body', False)
+        self.single_osc_legs = kwargs.pop('single_oscillator_legs', False)
         self.n_dof_legs = kwargs.pop('n_dof_legs')
         self.n_legs = kwargs.pop('n_legs')
         self.links_names = kwargs.pop(
@@ -38,13 +40,6 @@ class AmphibiousConvention:
             ],
         )
         n_joints = self.n_joints()
-        # assert len(self.links_names) == n_joints + 1, (
-        #     'Provided {} names for links but there should be {}:\n{}'.format(
-        #         len(self.links_names),
-        #         n_joints + 1,
-        #         self.links_names,
-        #     )
-        # )
         assert len(self.joints_names) == n_joints, (
             'Provided {} names for joints but there should be {}:\n{}'.format(
                 len(self.joints_names),
@@ -55,16 +50,47 @@ class AmphibiousConvention:
 
     def n_joints(self):
         """Number of joints"""
-        return self.n_joints_body + self.n_legs*self.n_dof_legs
+        return self.n_joints_body + self.n_joints_legs()
 
-    def bodyosc2index(self, joint_i, side=0):
-        """body2index"""
+    def n_joints_legs(self):
+        """Number of joints"""
+        return self.n_legs*self.n_dof_legs
+
+    def n_osc(self):
+        """Number of oscillators"""
+        return self.n_osc_body() + self.n_osc_legs()
+
+    def n_opbj(self):
+        """Number of oscillators per body joint"""
+        return 1 if self.single_osc_body else 2
+
+    def n_oplj(self):
+        """Number of oscillators per leg joint"""
+        return 1 if self.single_osc_legs else 2
+
+    def n_osc_body(self):
+        """Number of body oscillators"""
+        return self.n_opbj()*(self.n_joints_body)
+
+    def n_osc_legs(self):
+        """Number of legs oscillators"""
+        return self.n_oplj()*(self.n_joints_legs())
+
+    def body_osc_indices(self, joint_i):
+        """Body oscillator indices"""
         n_body_joints = self.n_joints_body
         assert 0 <= joint_i < n_body_joints, 'Joint must be < {}, got {}'.format(
             n_body_joints,
             joint_i
         )
-        return 2*joint_i + side
+        index = self.n_opbj()*joint_i
+        return list(range(index, index + self.n_opbj()))
+
+    def bodyosc2index(self, joint_i, side=0):
+        """body2index"""
+        if self.single_osc_body:
+            assert side == 0, f'No oscillator side for joint {joint_i}'
+        return self.body_osc_indices(joint_i)[side]
 
     def oscindex2name(self, index):
         """Oscillator index to parameters"""
@@ -85,24 +111,75 @@ class AmphibiousConvention:
             n_body_joints,
             joint_i
         )
-        return 'osc_body_{}_{}'.format(joint_i, 'R' if side else 'L')
+        if self.single_osc_body:
+            assert side == 0, f'No oscillator side for joint {joint_i}'
+        return (
+            f'osc_body_{joint_i}'
+            if self.single_osc_body
+            else f'osc_body_{joint_i}_{"R" if side else "L"}'
+        )
+
+    def leg_osc_indices(self, **kwargs):
+        """Leg oscillator indices"""
+        leg_opj = self.n_oplj()
+        if 'index' in kwargs:
+            index = (
+                self.n_osc_body()
+                + leg_opj*(
+                    kwargs.pop('index') - self.n_joints_body
+                )
+            )
+        else:
+            leg_i, side_i, joint_i = (
+                kwargs.pop(key)
+                for key in ('leg_i', 'side_i', 'joint_i')
+            )
+            n_legs = self.n_legs
+            n_legs_dof = self.n_dof_legs
+            assert 0 <= leg_i < n_legs, f'Leg must be < {n_legs//2}, got {leg_i}'
+            assert 0 <= side_i < 2, f'Body side must be < 2, got {side_i}'
+            assert 0 <= joint_i < n_legs_dof, f'Joint must be < {n_legs_dof}, got {joint_i}'
+            index = (
+                self.n_osc_body()
+                + leg_i*2*n_legs_dof*leg_opj  # 2 legs
+                + side_i*n_legs_dof*leg_opj
+                + joint_i*leg_opj
+            )
+        assert not kwargs, kwargs
+        return list(range(index, index + leg_opj))
+
+    def joint2legindices(self, joint_i):
+        """Joint index to leg indices"""
+        assert self.n_joints_body <= joint_i < self.n_joints(), (
+            f'{self.n_joints_body} !<= {joint_i} !< {self.n_joints()}'
+        )
+        j_i = joint_i - self.n_joints_body
+        dof_i = j_i % self.n_dof_legs
+        side_i = ((j_i - dof_i) // self.n_dof_legs) % 2
+        leg_i = (j_i - side_i*self.n_dof_legs - dof_i) // (4*self.n_dof_legs)
+        return (leg_i, side_i, dof_i)
+
+    def osc_indices(self, joint_i):
+        """Joint index to oscillator indices"""
+        return (
+            self.body_osc_indices(joint_i)
+            if joint_i < self.n_joints_body
+            else self.leg_osc_indices(index=joint_i)
+        )
 
     def legosc2index(self, leg_i, side_i, joint_i, side=0):
         """legosc2index"""
-        n_legs = self.n_legs
-        n_body_joints = self.n_joints_body
-        n_legs_dof = self.n_dof_legs
-        assert 0 <= leg_i < n_legs, 'Leg must be < {}, got {}'.format(n_legs//2, leg_i)
-        assert 0 <= side_i < 2, 'Body side must be < 2, got {}'.format(side_i)
-        assert 0 <= joint_i < n_legs_dof, 'Joint must be < {}, got {}'.format(n_legs_dof, joint_i)
-        assert 0 <= side < 2, 'Oscillator side must be < 2, got {}'.format(side)
-        return (
-            2*n_body_joints
-            + leg_i*2*n_legs_dof*2  # 2 oscillators, 2 legs
-            + side_i*n_legs_dof*2  # 2 oscillators
-            + 2*joint_i
-            + side
-        )
+        if self.single_osc_legs:
+            assert side == 0, (
+                f'No oscillator side for legs ({leg_i}, {side_i}, {joint_i})'
+            )
+        else:
+            assert 0 <= side < 2, f'Oscillator side must be < 2, got {side}'
+        return self.leg_osc_indices(
+            leg_i=leg_i,
+            side_i=side_i,
+            joint_i=joint_i,
+        )[side]
 
     def legosc2name(self, leg_i, side_i, joint_i, side=0):
         """legosc2name"""
@@ -112,39 +189,44 @@ class AmphibiousConvention:
         assert 0 <= side_i < 2, 'Body side must be < 2, got {}'.format(side_i)
         assert 0 <= joint_i < n_legs_dof, 'Joint must be < {}, got {}'.format(n_legs_dof, joint_i)
         assert 0 <= side < 2, 'Oscillator side must be < 2, got {}'.format(side)
-        return 'osc_leg_{}_{}_{}_{}'.format(
-            leg_i,
-            'R' if side_i else 'L',
-            joint_i,
-            side,
+        if self.single_osc_legs:
+            assert side == 0, (
+                f'No oscillator side for legs ({leg_i}, {side_i}, {joint_i})'
+            )
+        return (
+            f'osc_leg_{leg_i}_{"R" if side_i else "L"}_{joint_i}'
+            if self.single_osc_legs
+            else f'osc_leg_{leg_i}_{"R" if side_i else "L"}_{joint_i}_{side}'
         )
 
-    def oscindex2information(self, index):
+    def oscindex2information(self, osc_i):
         """Oscillator index information"""
         information = {}
-        n_joints = self.n_joints_body + self.n_legs*self.n_dof_legs
-        n_oscillators = 2*n_joints
-        n_body_oscillators = 2*self.n_joints_body
-        assert 0 <= index < n_oscillators, (
+        n_oscillators = self.n_osc()
+        n_body_oscillators = self.n_osc_body()
+        assert 0 <= osc_i < n_oscillators, (
             'Index {} bigger than number of oscillator (n={})'.format(
-                index,
+                osc_i,
                 n_oscillators,
             )
         )
-        information['body'] = index < n_body_oscillators
-        information['side'] = index % 2
+        information['body'] = osc_i < n_body_oscillators
         if information['body']:
-            information['joint_i'] = index//2
+            information['joint_i'] = osc_i if self.single_osc_body else osc_i//2
+            information['side'] = 0 if self.single_osc_body else (osc_i % 2)
         else:
-            index_i = index - n_body_oscillators
-            n_osc_leg = 2*self.n_dof_legs
+            index_i = osc_i - n_body_oscillators
+            information['side'] = 0 if self.single_osc_legs else (index_i % 2)
+            n_osc_leg = self.n_oplj()*self.n_dof_legs
             n_osc_leg_pair = 2*n_osc_leg
             information['leg'] = index_i // n_osc_leg
             information['leg_i'] = index_i // n_osc_leg_pair
             information['side_i'] = (
                 0 if (index_i % n_osc_leg_pair) < n_osc_leg else 1
             )
-            information['joint_i'] = (index_i % n_osc_leg)//2
+            information['joint_i'] = (
+                (index_i % n_osc_leg) // self.n_oplj()
+            )
         return information
 
     def bodylink2name(self, link_i):
