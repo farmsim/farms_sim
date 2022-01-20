@@ -7,8 +7,8 @@ from scipy.spatial.transform import Rotation
 
 from farms_models.utils import get_sdf_path
 from farms_data.units import SimulationUnitScaling
+from farms_bullet.model.model import SimulationModels, DescriptionFormatModel
 from farms_mujoco.simulation.options import SimulationOptions
-from farms_mujoco.model.model import SimulationModels, DescriptionFormatModel
 from farms_mujoco.model.options import SpawnLoader
 
 from ..model.convention import AmphibiousConvention

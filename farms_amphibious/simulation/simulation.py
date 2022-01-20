@@ -7,10 +7,12 @@ import numpy as np
 from imageio import imread
 
 from farms_bullet.model.animat import Animat
-from farms_bullet.simulation.simulation import AnimatSimulation
+from farms_bullet.interface.interface import Interfaces
+from farms_bullet.model.model import SimulationModel, SimulationModels
+from farms_bullet.simulation.simulation import (
+    AnimatSimulation as AnimatPybulletSimulation
+)
 from farms_mujoco.simulation.options import SimulationOptions
-from farms_mujoco.model.model import SimulationModel, SimulationModels
-from farms_mujoco.interface.interface import Interfaces
 from farms_mujoco.swimming.drag import SwimmingHandler
 
 from .interface import AmphibiousUserParameters
@@ -48,7 +50,7 @@ def water_velocity_from_maps(position, water_maps):
     return vel
 
 
-class AmphibiousSimulation(AnimatSimulation):
+class AmphibiousPybulletSimulation(AnimatPybulletSimulation):
     """Amphibious simulation"""
 
     def __init__(

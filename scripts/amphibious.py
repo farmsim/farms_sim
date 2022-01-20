@@ -2,13 +2,15 @@
 """Run salamander simulation with bullet"""
 
 import time
+from typing import Union
 
 import farms_pylog as pylog
 from farms_mujoco.utils.profile import profile
+from farms_mujoco.simulation.simulation import Simulation as MuJoCoSimulation
 from farms_amphibious.utils.parse_args import parse_args
 from farms_amphibious.simulation.simulation import (
     Simulator,
-    AmphibiousSimulation,
+    AmphibiousPybulletSimulation,
 )
 from farms_amphibious.experiment.simulation import (
     setup_from_clargs,
@@ -28,7 +30,7 @@ def main():
     }[clargs.simulator]
 
     # Simulation
-    sim: AmphibiousSimulation = simulation(
+    sim: Union[MuJoCoSimulation, AmphibiousPybulletSimulation] = simulation(
         animat_sdf=sdf,
         animat_options=animat_options,
         simulation_options=simulation_options,

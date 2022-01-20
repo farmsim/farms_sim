@@ -2,19 +2,20 @@
 """Run salamander simulation with bullet"""
 
 import numpy as np
+from typing import Union
 
 import farms_pylog as pylog
 from farms_data.amphibious.data import AmphibiousData
 from farms_models.utils import get_sdf_path
 from farms_bullet.model.options import SpawnLoader
-from farms_mujoco.model.model import SimulationModels
+from farms_bullet.model.model import SimulationModel, SimulationModels
 from farms_mujoco.simulation.options import SimulationOptions
 from farms_mujoco.control.kinematics import KinematicsController
-from farms_mujoco.simulation.simulation import Simulation
+from farms_mujoco.simulation.simulation import Simulation as MuJoCoSimulation
 
 from ..model.animat import Amphibious
-from ..simulation.simulation import AmphibiousSimulation, Simulator
 from ..model.options import AmphibiousOptions, options_kwargs_keys
+from ..simulation.simulation import AmphibiousPybulletSimulation, Simulator
 from ..utils.parse_args import parse_args
 from ..utils.prompt import prompt_postprocessing
 from ..control.controller import AmphibiousController
@@ -97,7 +98,12 @@ def setup_from_clargs(clargs=None):
     return clargs, sdf, animat_options, simulation_options, arena
 
 
-def simulation_setup(animat_sdf, animat_options, arena, **kwargs):
+def simulation_setup(
+        animat_sdf: str,
+        animat_options: AmphibiousOptions,
+        arena: Union[SimulationModel, SimulationModels],
+        **kwargs,
+):
     """Simulation setup"""
     # Get options
     simulator = kwargs.pop('simulator', Simulator.MUJOCO)
@@ -110,9 +116,9 @@ def simulation_setup(animat_sdf, animat_options, arena, **kwargs):
     animat_data = kwargs.pop(
         'animat_data',
         AmphibiousData.from_options(
-            animat_options.control,
-            simulation_options.n_iterations,
-            simulation_options.timestep,
+            control=animat_options.control,
+            n_iterations=simulation_options.n_iterations,
+            timestep=simulation_options.timestep,
         ),
     )
 
@@ -175,7 +181,7 @@ def simulation_setup(animat_sdf, animat_options, arena, **kwargs):
         # Setup simulation
         assert not kwargs, 'Unknown kwargs:\n{}'.format(kwargs)
         pylog.info('Creating simulation')
-        sim = AmphibiousSimulation(
+        sim = AmphibiousPybulletSimulation(
             simulation_options=simulation_options,
             animat=animat,
             arena=arena,
@@ -184,13 +190,6 @@ def simulation_setup(animat_sdf, animat_options, arena, **kwargs):
     # Mujoco
     elif simulator == Simulator.MUJOCO:
 
-        # Setup simulation
-        sdf_path_arena = (
-            arena[0].path
-            if isinstance(arena, SimulationModels)
-            else arena.path
-        )
-        # arena_position = arena.spawn_options.posObj
         arena_options = [
             {
                 'sdf_path': arena.path,
@@ -203,13 +202,12 @@ def simulation_setup(animat_sdf, animat_options, arena, **kwargs):
                     else [arena]
             )
         ]
-
-        sim = Simulation.from_sdf(
+        sim = MuJoCoSimulation.from_sdf(
             # Animat
             sdf_path_animat=animat_sdf,
             arena_options=arena_options,
-            # spawn_position=animat_options.spawn.position,
-            # spawn_rotation=animat_options.spawn.orientation,
+            spawn_position=animat_options.spawn.position,
+            spawn_rotation=animat_options.spawn.orientation,
             controller=animat_controller,
             data=animat_data,
             save_mjcf=False,
@@ -229,7 +227,12 @@ def simulation_setup(animat_sdf, animat_options, arena, **kwargs):
     return sim
 
 
-def simulation(animat_sdf, animat_options, arena, **kwargs):
+def simulation(
+        animat_sdf: str,
+        animat_options: AmphibiousOptions,
+        arena: Union[SimulationModel, SimulationModels],
+        **kwargs,
+):
     """Simulation"""
 
     # Instatiate simulation
