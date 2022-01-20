@@ -9,6 +9,7 @@ from ..model.options import AmphibiousOptions
 from .drive import DescendingDrive
 from .network import NetworkODE
 from .position_muscle_cy import PositionMuscleCy
+from .position_phase_cy import PositionPhaseCy
 from .passive_cy import PassiveJointCy
 from .ekeberg import EkebergMuscleCy
 
@@ -88,6 +89,28 @@ class AmphibiousController(ModelController):
                 indices=joints_indices,
                 network=self.network,
                 parameters=np.array(muscle_map.arrays, dtype=np.double),
+                osc_indices=np.array(muscle_map.osc_indices, dtype=np.uintc),
+                gain=np.array(joints_map.transform_gain, dtype=np.double),
+                bias=np.array(joints_map.transform_bias, dtype=np.double),
+            )
+
+        # Phase control
+        if 'phase' in equations.values():
+            self.equations[ControlType.POSITION] += [self.phases_network]
+            joints_indices = np.array([
+                joint_i
+                for joint_i, joint in enumerate(animat_options.control.joints)
+                if joint.equation == 'phase'
+            ], dtype=np.uintc)
+            joints_names = np.array(
+                self.animat_data.sensors.joints.names,
+                dtype=object,
+            )[joints_indices].tolist()
+            self.network2joints['phase'] = PositionPhaseCy(
+                joints_names=joints_names,
+                joints_data=self.animat_data.sensors.joints,
+                indices=joints_indices,
+                network=self.network,
                 osc_indices=np.array(muscle_map.osc_indices, dtype=np.uintc),
                 gain=np.array(joints_map.transform_gain, dtype=np.double),
                 bias=np.array(joints_map.transform_bias, dtype=np.double),
@@ -253,6 +276,18 @@ class AmphibiousController(ModelController):
         return dict(zip(
             self.network2joints['position'].joints_names,
             self.network2joints['position'].position_cmds(iteration),
+        ))
+
+    def phases_network(
+            self,
+            iteration: int,
+            time: float,
+            timestep: float,
+    ) -> Dict[str, float]:
+        """Phases network"""
+        return dict(zip(
+            self.network2joints['phase'].joints_names,
+            self.network2joints['phase'].position_cmds(iteration),
         ))
 
     def velocities_ekeberg_damper(
