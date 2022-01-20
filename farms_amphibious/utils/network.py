@@ -85,6 +85,16 @@ def draw_connectivity(sources, destinations, connectivity, **kwargs):
     alpha = kwargs.pop('alpha')
     if isinstance(color, ListedColormap):
         color_values = kwargs.pop('color_values')
+    for connection_i, connection in enumerate(connectivity):
+        assert (
+            int(connection[0]+0.5) < len(destinations)
+            and int(connection[1]+0.5) < len(sources)
+        ), (
+            f'Connection {connection_i=}:'
+            f'\n{connection[1]=} -> {connection[0]=}'
+            f'\n{len(sources)=}, {len(destinations)=}'
+            f'\n{sources=}\n{destinations=}'
+        )
     node_connectivity = [
         patches.FancyArrowPatch(
             *connect_positions(
