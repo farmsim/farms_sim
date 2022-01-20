@@ -6,6 +6,7 @@ from typing import Union
 
 import farms_pylog as pylog
 from farms_data.amphibious.data import AmphibiousData
+from farms_data.simulation.options import Simulator
 from farms_models.utils import get_sdf_path
 from farms_bullet.model.options import SpawnLoader
 from farms_bullet.model.model import SimulationModel, SimulationModels
@@ -15,7 +16,7 @@ from farms_mujoco.simulation.simulation import Simulation as MuJoCoSimulation
 
 from ..model.animat import Amphibious
 from ..model.options import AmphibiousOptions, options_kwargs_keys
-from ..simulation.simulation import AmphibiousPybulletSimulation, Simulator
+from ..simulation.simulation import AmphibiousPybulletSimulation
 from ..utils.parse_args import parse_args
 from ..utils.prompt import prompt_postprocessing
 from ..control.controller import AmphibiousController

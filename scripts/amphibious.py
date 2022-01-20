@@ -5,13 +5,13 @@ import time
 from typing import Union
 
 import farms_pylog as pylog
+from farms_data.simulation.options import Simulator
+
 from farms_mujoco.utils.profile import profile
 from farms_mujoco.simulation.simulation import Simulation as MuJoCoSimulation
+
 from farms_amphibious.utils.parse_args import parse_args
-from farms_amphibious.simulation.simulation import (
-    Simulator,
-    AmphibiousPybulletSimulation,
-)
+from farms_amphibious.simulation.simulation import AmphibiousPybulletSimulation
 from farms_amphibious.experiment.simulation import (
     setup_from_clargs,
     simulation,

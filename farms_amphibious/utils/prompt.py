@@ -6,10 +6,10 @@ from distutils.util import strtobool
 import matplotlib.pyplot as plt
 
 import farms_pylog as pylog
-from farms_models.utils import get_simulation_data_path
+from farms_data.simulation.options import Simulator
 from farms_data.amphibious.animat_data import AnimatData
+from farms_models.utils import get_simulation_data_path
 from farms_amphibious.utils.network import plot_networks_maps
-from farms_amphibious.simulation.simulation import Simulator
 
 
 def prompt(query, default):

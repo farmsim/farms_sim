@@ -1,7 +1,6 @@
 """Amphibious simulation"""
 
 from typing import Dict
-from enum import IntEnum
 
 import numpy as np
 from imageio import imread
@@ -16,12 +15,6 @@ from farms_mujoco.simulation.options import SimulationOptions
 from farms_mujoco.swimming.drag import SwimmingHandler
 
 from .interface import AmphibiousUserParameters
-
-
-class Simulator(IntEnum):
-    """Simulator"""
-    MUJOCO = 0
-    PYBULLET = 1
 
 
 def water_velocity_from_maps(position, water_maps):
