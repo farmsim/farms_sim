@@ -4,8 +4,8 @@ from functools import partial
 import numpy as np
 from numpy.random import MT19937, RandomState, SeedSequence
 from farms_data.options import Options
-from farms_mujoco.model.control import ControlType
-from farms_mujoco.model.options import (
+from farms_data.model.control import ControlType
+from farms_data.model.options import (
     ModelOptions,
     MorphologyOptions,
     LinkOptions,
