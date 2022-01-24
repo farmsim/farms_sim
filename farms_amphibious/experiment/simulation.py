@@ -207,20 +207,12 @@ def simulation_setup(
             # Animat
             sdf_path_animat=animat_sdf,
             arena_options=arena_options,
-            spawn_position=animat_options.spawn.position,
-            spawn_rotation=animat_options.spawn.orientation,
             controller=animat_controller,
             data=animat_data,
-            save_mjcf=False,
             # Simulation
             animat_options=animat_options,
             simulation_options=simulation_options,
-            n_iterations=simulation_options.n_iterations,
-            timestep=simulation_options.timestep,
-            pause=not simulation_options.play,
-            fast=simulation_options.fast,
             restart=False,
-            headless=simulation_options.headless,
             # save=simulation_options.save,
             plot=False,
         )
