@@ -13,7 +13,7 @@ from farms_bullet.model.model import SimulationModel, SimulationModels
 from farms_bullet.simulation.simulation import (
     AnimatSimulation as AnimatPybulletSimulation
 )
-from farms_mujoco.swimming.drag import SwimmingHandler
+from farms_bullet.swimming.drag import SwimmingHandler
 
 from .interface import AmphibiousUserParameters
 
