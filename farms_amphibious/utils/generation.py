@@ -36,10 +36,12 @@ def generate_sdf(model_name, model_version, **kwargs):
     model_path = kwargs.pop('model_path', '')
     body_sdf_path = kwargs.pop('body_sdf_path', '')
     passive_angle = kwargs.pop('passive_angle', np.pi)
+    if isinstance(leg_length, float):
+        leg_length = [leg_length]*convention.n_legs_pair()
     assert not kwargs, kwargs
 
     # Augment parameters
-    repeat = partial(np.repeat, repeats=convention.n_legs//2, axis=0)
+    repeat = partial(np.repeat, repeats=convention.n_legs_pair(), axis=0)
     if np.ndim(leg_offset) == 1:
         leg_offset = repeat([leg_offset])
 
@@ -51,7 +53,8 @@ def generate_sdf(model_name, model_version, **kwargs):
 
     # Scale
     leg_radius *= scale
-    leg_length *= scale
+    for i, val in enumerate(leg_length):
+        leg_length[i] = scale*val
     leg_offset = scale*np.array(leg_offset)
 
     # Original
@@ -111,7 +114,7 @@ def generate_sdf(model_name, model_version, **kwargs):
         joint.axis.limits[3] = max_velocity
 
     # Leg links
-    for leg_i in range(options.morphology.n_legs//2):
+    for leg_i in range(convention.n_legs_pair()):
         for side_i in range(2):
             sign = 1 if side_i else -1
             body_position = np.array(links[legs_parents[leg_i]].pose[:3])
@@ -161,7 +164,7 @@ def generate_sdf(model_name, model_version, **kwargs):
             links[index].inertial.inertias = np.zeros(6)
             # Shoulder 2
             shape_pose = [
-                0, sign*(0.5*leg_length), 0,
+                0, sign*(0.5*leg_length[leg_i]), 0,
                 np.pi/2, 0, 0
             ]
             links[convention.leglink2index(
@@ -174,7 +177,7 @@ def generate_sdf(model_name, model_version, **kwargs):
                     side_i,
                     2
                 ),
-                length=leg_length,
+                length=leg_length[leg_i],
                 radius=leg_radius,
                 pose=pose,
                 # inertial_pose=shape_pose,
@@ -182,7 +185,7 @@ def generate_sdf(model_name, model_version, **kwargs):
             )
             # Elbow
             pose = np.copy(pose)
-            pose[1] += sign*leg_length
+            pose[1] += sign*leg_length[leg_i]
             links[convention.leglink2index(
                 leg_i,
                 side_i,
@@ -193,7 +196,7 @@ def generate_sdf(model_name, model_version, **kwargs):
                     side_i,
                     3
                 ),
-                length=leg_length,
+                length=leg_length[leg_i],
                 radius=leg_radius,
                 pose=pose,
                 # inertial_pose=shape_pose,
@@ -205,7 +208,7 @@ def generate_sdf(model_name, model_version, **kwargs):
             )
 
     # Leg joints
-    for leg_i in range(options.morphology.n_legs//2):
+    for leg_i in range(convention.n_legs_pair()):
         for side_i in range(2):
             sign = 1 if side_i else -1
             for joint_i in range(options.morphology.n_dof_legs):
