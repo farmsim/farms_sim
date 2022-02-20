@@ -131,11 +131,17 @@ class AmphibiousMorphologyOptions(MorphologyOptions):
         feet_friction = kwargs.pop('feet_friction', None)
         if feet_friction is None:
             feet_friction = default_lateral_friction
+        if isinstance(feet_friction, (float, int)):
+            feet_friction = [feet_friction]*convention.n_legs_pair()
+        elif len(feet_friction) < convention.n_legs_pair():
+            feet_friction += [feet_friction[0]]*(
+                convention.n_legs_pair() - len(feet_friction)
+            )
         feet_links = kwargs.pop('feet_links', convention.feet_links_names())
         links_friction_lateral = kwargs.pop(
             'links_friction_lateral',
             [
-                feet_friction
+                feet_friction[feet_links.index(link)//2]
                 if link in feet_links
                 else default_lateral_friction
                 for link in links_names

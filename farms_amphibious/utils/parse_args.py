@@ -178,6 +178,7 @@ def argument_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         '--feet_friction',
+        nargs='+',
         type=float,
         default=None,
         help='Feet friction',
