@@ -1,14 +1,16 @@
 """Oscillator naming convention"""
 
+from farms_data.options import Options
 
-class AmphibiousConvention:
+
+class AmphibiousConvention(Options):
     """Amphibious convention"""
 
     def __init__(self, **kwargs):
         super().__init__()
         self.n_joints_body = kwargs.pop('n_joints_body')
-        self.single_osc_body = kwargs.pop('single_oscillator_body', False)
-        self.single_osc_legs = kwargs.pop('single_oscillator_legs', False)
+        self.single_osc_body = kwargs.pop('single_osc_body', False)
+        self.single_osc_legs = kwargs.pop('single_osc_legs', False)
         self.n_dof_legs = kwargs.pop('n_dof_legs')
         self.n_legs = kwargs.pop('n_legs')
         self.links_names = kwargs.pop(
@@ -16,10 +18,10 @@ class AmphibiousConvention:
             [link['name'] for link in kwargs['links']]
             if 'links' in kwargs
             else [
-                'link_body_{}'.format(link_i)
+                f'link_body_{link_i}'
                 for link_i in range(self.n_joints_body + 1)
             ] + [
-                'link_leg_{}_{}_{}'.format(leg_i, 'R' if side_i else 'L', joint_i)
+                f'link_leg_{leg_i}_{"R" if side_i else "L"}_{joint_i}'
                 for leg_i in range(self.n_legs//2)
                 for side_i in range(2)
                 for joint_i in range(self.n_dof_legs)
@@ -30,10 +32,10 @@ class AmphibiousConvention:
             [joint['name'] for joint in kwargs['joints']]
             if 'joints' in kwargs
             else [
-                'joint_body_{}'.format(joint_i)
+                f'joint_body_{joint_i}'
                 for joint_i in range(self.n_joints_body)
             ] + [
-                'joint_leg_{}_{}_{}'.format(leg_i, 'R' if side_i else 'L', joint_i)
+                f'joint_leg_{leg_i}_{"R" if side_i else "L"}_{joint_i}'
                 for leg_i in range(self.n_legs//2)
                 for side_i in range(2)
                 for joint_i in range(self.n_dof_legs)
@@ -41,11 +43,46 @@ class AmphibiousConvention:
         )
         n_joints = self.n_joints()
         assert len(self.joints_names) == n_joints, (
-            'Provided {} names for joints but there should be {}:\n{}'.format(
-                len(self.joints_names),
-                n_joints,
-                self.joints_names,
-            )
+            f'Provided {len(self.joints_names)} names for joints'
+            f' but there should be {n_joints}:'
+            f'\n{self.joints_names}'
+        )
+        assert not kwargs, kwargs
+
+    @classmethod
+    def from_amphibious_options(cls, animat_options):
+        """From morphology"""
+        network = animat_options.control.network
+        return cls.from_morphology(
+            morphology=animat_options.morphology,
+            single_osc_body=network.single_osc_body,
+            single_osc_legs=network.single_osc_legs,
+        )
+
+    @classmethod
+    def from_morphology(cls, morphology, **kwargs):
+        """From morphology"""
+        return cls(
+            n_joints_body=morphology['n_joints_body'],
+            n_dof_legs=morphology['n_dof_legs'],
+            n_legs=morphology['n_legs'],
+            links_names=morphology.links_names(),
+            joints_names=morphology.joints_names(),
+            **kwargs,
+        )
+
+    def n_links_body(self):
+        """Number of links in body"""
+        return self.n_joints_body+1
+
+    def n_states(self):
+        """Number of states"""
+        n_osc = self.n_osc()
+        n_joints = self.n_joints()
+        return (
+            n_osc  # Phases
+            + n_osc  # Amplitudes
+            + n_joints  # Joints offsets
         )
 
     def n_joints(self):
@@ -55,6 +92,10 @@ class AmphibiousConvention:
     def n_joints_legs(self):
         """Number of joints"""
         return self.n_legs*self.n_dof_legs
+
+    def n_legs_pair(self):
+        """Number of legs pairs"""
+        return self.n_legs//2
 
     def n_osc(self):
         """Number of oscillators"""
@@ -79,9 +120,8 @@ class AmphibiousConvention:
     def body_osc_indices(self, joint_i):
         """Body oscillator indices"""
         n_body_joints = self.n_joints_body
-        assert 0 <= joint_i < n_body_joints, 'Joint must be < {}, got {}'.format(
-            n_body_joints,
-            joint_i
+        assert 0 <= joint_i < n_body_joints, (
+            f'Joint must be < {n_body_joints}, got {joint_i}'
         )
         index = self.n_opbj()*joint_i
         return list(range(index, index + self.n_opbj()))
@@ -107,9 +147,8 @@ class AmphibiousConvention:
     def bodyosc2name(self, joint_i, side=0):
         """body2name"""
         n_body_joints = self.n_joints_body
-        assert 0 <= joint_i < n_body_joints, 'Joint must be < {}, got {}'.format(
-            n_body_joints,
-            joint_i
+        assert 0 <= joint_i < n_body_joints, (
+            f'Joint must be < {n_body_joints}, got {joint_i}'
         )
         if self.single_osc_body:
             assert side == 0, f'No oscillator side for joint {joint_i}'
@@ -185,10 +224,10 @@ class AmphibiousConvention:
         """legosc2name"""
         n_legs = self.n_legs
         n_legs_dof = self.n_dof_legs
-        assert 0 <= leg_i < n_legs, 'Leg must be < {}, got {}'.format(n_legs//2, leg_i)
-        assert 0 <= side_i < 2, 'Body side must be < 2, got {}'.format(side_i)
-        assert 0 <= joint_i < n_legs_dof, 'Joint must be < {}, got {}'.format(n_legs_dof, joint_i)
-        assert 0 <= side < 2, 'Oscillator side must be < 2, got {}'.format(side)
+        assert 0 <= leg_i < n_legs, f'Leg must be < {n_legs//2}, got {leg_i}'
+        assert 0 <= side_i < 2, f'Body side must be < 2, got {side_i}'
+        assert 0 <= joint_i < n_legs_dof, f'Joint must be < {n_legs_dof}, got {joint_i}'
+        assert 0 <= side < 2, f'Oscillator side must be < 2, got {side}'
         if self.single_osc_legs:
             assert side == 0, (
                 f'No oscillator side for legs ({leg_i}, {side_i}, {joint_i})'
@@ -205,10 +244,7 @@ class AmphibiousConvention:
         n_oscillators = self.n_osc()
         n_body_oscillators = self.n_osc_body()
         assert 0 <= osc_i < n_oscillators, (
-            'Index {} bigger than number of oscillator (n={})'.format(
-                osc_i,
-                n_oscillators,
-            )
+            f'Index {osc_i} bigger than number of oscillators ({n_oscillators})'
         )
         information['body'] = osc_i < n_body_oscillators
         if information['body']:
@@ -232,7 +268,7 @@ class AmphibiousConvention:
     def bodylink2name(self, link_i):
         """bodylink2name"""
         n_body = self.n_joints_body + 1
-        assert 0 <= link_i < n_body, 'Body must be < {}, got {}'.format(n_body, link_i)
+        assert 0 <= link_i < n_body, f'Body must be < {n_body}, got {link_i}'
         return self.links_names[link_i]
 
     def body_links_names(self):
@@ -247,9 +283,9 @@ class AmphibiousConvention:
         n_legs = self.n_legs//2
         n_body_links = self.n_joints_body + 1
         n_legs_dof = self.n_dof_legs
-        assert 0 <= leg_i < n_legs, 'Leg must be < {}, got {}'.format(n_legs//2, leg_i)
-        assert 0 <= side_i < 2, 'Body side must be < 2, got {}'.format(side_i)
-        assert 0 <= joint_i < n_legs_dof, 'Joint must be < {}, got {}'.format(n_legs_dof, joint_i)
+        assert 0 <= leg_i < n_legs, f'Leg must be < {n_legs//2}, got {leg_i}'
+        assert 0 <= side_i < 2, f'Body side must be < 2, got {side_i}'
+        assert 0 <= joint_i < n_legs_dof, f'Joint must be < {n_legs_dof}, got {joint_i}'
         return (
             n_body_links
             + leg_i*2*n_legs_dof
@@ -260,7 +296,7 @@ class AmphibiousConvention:
     def bodyjoint2name(self, link_i):
         """bodyjoint2name"""
         n_body = self.n_joints_body + 1
-        assert 0 <= link_i < n_body, 'Body must be < {}, got {}'.format(n_body, link_i)
+        assert 0 <= link_i < n_body, f'Body must be < {n_body}, got {link_i}'
         return self.joints_names[link_i]
 
     def leglink2name(self, leg_i, side_i, joint_i):
@@ -278,7 +314,7 @@ class AmphibiousConvention:
     def bodyjoint2index(self, joint_i):
         """bodyjoint2index"""
         n_body = self.n_joints_body
-        assert 0 <= joint_i < n_body, 'Body joint must be < {}, got {}'.format(n_body, joint_i)
+        assert 0 <= joint_i < n_body, f'Body joint must be < {n_body}, got {joint_i}'
         return joint_i
 
     def legjoint2index(self, leg_i, side_i, joint_i):
@@ -286,9 +322,9 @@ class AmphibiousConvention:
         n_body_joints = self.n_joints_body
         n_legs = self.n_legs
         n_legs_dof = self.n_dof_legs
-        assert 0 <= leg_i < n_legs, 'Leg must be < {}, got {}'.format(n_legs//2, leg_i)
-        assert 0 <= side_i < 2, 'Body side must be < 2, got {}'.format(side_i)
-        assert 0 <= joint_i < n_legs_dof, 'Joint must be < {}, got {}'.format(n_legs_dof, joint_i)
+        assert 0 <= leg_i < n_legs, f'Leg must be < {n_legs//2}, got {leg_i}'
+        assert 0 <= side_i < 2, f'Body side must be < 2, got {side_i}'
+        assert 0 <= joint_i < n_legs_dof, f'Joint must be < {n_legs_dof}, got {joint_i}'
         return (
             n_body_joints
             + leg_i*2*n_legs_dof
@@ -303,8 +339,8 @@ class AmphibiousConvention:
     def contactleglink2index(self, leg_i, side_i):
         """Contact leg link 2 index"""
         n_legs = self.n_legs
-        assert 0 <= leg_i < n_legs, 'Leg must be < {}, got {}'.format(n_legs//2, leg_i)
-        assert 0 <= side_i < 2, 'Body side must be < 2, got {}'.format(side_i)
+        assert 0 <= leg_i < n_legs, f'Leg must be < {n_legs//2}, got {leg_i}'
+        assert 0 <= side_i < 2, f'Body side must be < 2, got {side_i}'
         return 2*leg_i + side_i
 
     def contactleglink2name(self, leg_i, side_i):
