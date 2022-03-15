@@ -2,12 +2,13 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+from numpy.random import MT19937, RandomState, SeedSequence
 
 import farms_pylog as pylog
+from farms_data.utils.profile import profile
 from farms_data.amphibious.data import AmphibiousData
 from farms_amphibious.model.convention import AmphibiousConvention
 from farms_amphibious.control.network import NetworkODE
-from farms_amphibious.experiment.simulation import profile
 from farms_amphibious.utils.network import plot_networks_maps
 from farms_amphibious.utils.prompt import prompt
 from farms_amphibious.model.options import (
@@ -48,9 +49,9 @@ def animat_options():
         'legs_offsets_swimming': [-2*np.pi/5, 0, 0, 0],
     }
     control = AmphibiousControlOptions.from_options(options)
-    convention = AmphibiousConvention(**morphology)
+    convention = AmphibiousConvention.from_morphology(morphology)
     control.defaults_from_convention(convention, options)
-    return morphology, control
+    return morphology, control, convention
 
 
 def run_simulation(network, n_iterations, timestep):
@@ -59,7 +60,7 @@ def run_simulation(network, n_iterations, timestep):
         network.step(iteration, iteration*timestep, timestep)
 
 
-def simulation(times, control):
+def simulation(times, control, convention):
     """Simulation"""
     timestep = times[1] - times[0]
     n_iterations = len(times)
@@ -67,10 +68,12 @@ def simulation(times, control):
     # Animat data
     control.network.drives[0].initial_value = 2
     control.network.drives[1].initial_value = 0
+    random_state = RandomState(MT19937(SeedSequence(123456789)))
     animat_data = AmphibiousData.from_options(
-        control,
-        n_iterations,
-        timestep,
+        control=control,
+        initial_state=1e-1*random_state.rand(convention.n_states()),
+        n_iterations=n_iterations,
+        timestep=timestep,
     )
 
     # Animat network
@@ -97,14 +100,10 @@ def analysis(data, times, morphology):
     if prompt('Show connectivity maps', False):
         sep = '\n  - '
         pylog.info(
-            'Oscillator connectivity information'
-            + sep.join([
-                'O_{} <- O_{} (w={}, theta={})'.format(
-                    connection[0],
-                    connection[1],
-                    weight,
-                    phase,
-                )
+            'Oscillator connectivity information\n%s',
+            sep.join([
+                f'O_{connection[0]} <- O_{connection[1]}'
+                f' (w={weight}, theta={phase})'
                 for connection, weight, phase in zip(
                     data.network.osc_connectivity.connections.array,
                     data.network.osc_connectivity.weights.array,
@@ -113,13 +112,10 @@ def analysis(data, times, morphology):
             ])
         )
         pylog.info(
-            'Contacts connectivity information'
-            + sep.join([
-                'O_{} <- contact_{} (frequency_gain={})'.format(
-                    connection[0],
-                    connection[1],
-                    weight,
-                )
+            'Contacts connectivity information\n%s',
+            sep.join([
+                f'O_{connection[0]} <- contact_{connection[1]}'
+                f' (frequency_gain={weight})'
                 for connection, weight in zip(
                     data.network.contacts_connectivity.connections.array,
                     data.network.contacts_connectivity.weights.array,
@@ -127,14 +123,10 @@ def analysis(data, times, morphology):
             ])
         )
         pylog.info(
-            'Hydrodynamics connectivity information'
-            + sep.join([
-                'O_{} <- link_{} (type={}, weight={})'.format(
-                    connection[0],
-                    connection[1],
-                    connection[2],
-                    weight,
-                )
+            'Hydrodynamics connectivity information\n%s',
+            sep.join([
+                f'O_{connection[0]} <- link_{connection[1]}'
+                f' (type={connection[2]}, weight={weight})'
                 for connection, weight in zip(
                     data.network.hydro_connectivity.connections.array,
                     data.network.hydro_connectivity.weights.array,
@@ -143,7 +135,7 @@ def analysis(data, times, morphology):
         )
         sep = '\n'
         pylog.info(
-            (sep.join([
+            sep.join([
                 'Network infromation:',
                 '  - Oscillators:',
                 '     - Intrinsic frequencies: {}',
@@ -152,14 +144,13 @@ def analysis(data, times, morphology):
                 '  - Connectivity shape: {}',
                 '  - Contacts connectivity shape: {}',
                 '  - Hydro connectivity shape: {}',
-            ])).format(
-                np.shape(data.network.oscillators.intrinsic_frequencies.array),
-                np.shape(data.network.oscillators.nominal_amplitudes.array),
-                np.shape(data.network.oscillators.rates.array),
-                np.shape(data.network.osc_connectivity.connections.array),
-                np.shape(data.network.contacts_connectivity.connections.array),
-                np.shape(data.network.hydro_connectivity.connections.array),
-            )
+            ]),
+            np.shape(data.network.oscillators.intrinsic_frequencies.array),
+            np.shape(data.network.oscillators.nominal_amplitudes.array),
+            np.shape(data.network.oscillators.rates.array),
+            np.shape(data.network.osc_connectivity.connections.array),
+            np.shape(data.network.contacts_connectivity.connections.array),
+            np.shape(data.network.hydro_connectivity.connections.array),
         )
 
         plot_networks_maps(morphology, data)
@@ -168,11 +159,11 @@ def analysis(data, times, morphology):
 def main(filename='cpg_network.h5'):
     """Main"""
     times = np.arange(0, 10, 1e-3)
-    morphology, control = animat_options()
-    _, animat_data = simulation(times, control)
+    morphology, control, convention = animat_options()
+    _, animat_data = simulation(times, control, convention)
 
     # Save data
-    pylog.debug('Saving data to {}'.format(filename))
+    pylog.debug('Saving data to %s', filename)
     animat_data.to_file(filename)
     pylog.debug('Save complete')
 
@@ -187,11 +178,8 @@ def main(filename='cpg_network.h5'):
     control = AmphibiousControlOptions.load(control_filename)
 
     # Load from file
-    pylog.debug('Loading data from {}'.format(filename))
-    data = AmphibiousData.from_file(
-        filename,
-        2*morphology.n_joints()
-    )
+    pylog.debug('Loading data from %s', filename)
+    data = AmphibiousData.from_file(filename)
     pylog.debug('Load complete')
 
     # Post-processing
