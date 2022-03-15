@@ -7,7 +7,7 @@ class AmphibiousUserParameters(UserParameters):
     """Amphibious user parameters"""
 
     def __init__(self, animat_options, simulation_options):
-        super(AmphibiousUserParameters, self).__init__(simulation_options)
+        super().__init__(simulation_options)
         self['drive_speed'] = DebugParameter(
             'Drive speed',
             (
@@ -26,12 +26,6 @@ class AmphibiousUserParameters(UserParameters):
             ),
             -0.2, 0.2
         )
-
-    def init(self):
-        """Initialise"""
-        super().init()
-        self['drive_speed'].init()
-        self['drive_turn'].init()
 
     def drive_speed(self):
         """Drive speed"""

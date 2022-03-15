@@ -1,34 +1,31 @@
 """Amphibious"""
 
-import re
 import pybullet
 
+from farms_data.model.control import ModelController
 from farms_bullet.model.animat import Animat
-
-
-def links_ordering(text):
-    """links ordering"""
-    text = re.sub('version[0-9]_', '', text)
-    text = re.sub('[a-z]', '', text)
-    text = re.sub('_', '', text)
-    text = int(text)
-    return [text]
 
 
 class Amphibious(Animat):
     """Amphibious animat"""
 
-    def __init__(self, sdf, options, controller, timestep, iterations, units):
+    def __init__(
+            self,
+            sdf: str,
+            controller: ModelController,
+            timestep: float,
+            iterations: int,
+            **kwargs,
+    ):
         super().__init__(
-            options=options,
             data=controller.animat_data if controller is not None else None,
-            units=units,
+            **kwargs,
         )
-        self.sdf = sdf
-        self.timestep = timestep
-        self.n_iterations = iterations
-        self.controller = controller
-        self.hydrodynamics_plot = None
+        self.sdf: str = sdf
+        self.timestep: float = timestep
+        self.n_iterations: int = iterations
+        self.controller: ModelController = controller
+        self.hydrodynamics_plot: bool = None
 
     def spawn(self):
         """Spawn amphibious"""

@@ -1,19 +1,25 @@
 """Amphibious simulation"""
 
+import os
 from typing import Dict
 
 import numpy as np
 from imageio import imread
+from scipy.spatial.transform import Rotation
 
+from farms_data.model.options import ArenaOptions
 from farms_data.simulation.options import SimulationOptions
+
 
 from farms_bullet.model.animat import Animat
 from farms_bullet.interface.interface import Interfaces
-from farms_bullet.model.model import SimulationModel, SimulationModels
+from farms_bullet.model.model import SimulationModels, DescriptionFormatModel
 from farms_bullet.simulation.simulation import (
     AnimatSimulation as AnimatPybulletSimulation
 )
-from farms_bullet.swimming.drag import SwimmingHandler
+from farms_bullet.swimming.drag import (
+    SwimmingHandler,  # pylint: disable=no-name-in-module
+)
 
 from .interface import AmphibiousUserParameters
 
@@ -44,6 +50,57 @@ def water_velocity_from_maps(position, water_maps):
     return vel
 
 
+def get_arena(
+        arena_options: ArenaOptions,
+        simulation_options: SimulationOptions,
+) -> SimulationModels:
+    """Get arena from options"""
+
+    # Options
+    meters = simulation_options.units.meters
+    orientation = Rotation.from_euler(
+        seq='xyz',
+        angles=arena_options.orientation,
+        degrees=False,
+    ).as_quat()
+
+    # Main arena
+    arena = DescriptionFormatModel(
+        path=arena_options.sdf,
+        spawn_options={
+            'posObj': [pos*meters for pos in arena_options.position],
+            'ornObj': orientation,
+        },
+        load_options={'units': simulation_options.units},
+    )
+
+    # Ground
+    if arena_options.ground_height is not None:
+        arena.spawn_options['posObj'][2] += (
+            arena_options.ground_height*meters
+        )
+
+    # Water
+    if arena_options.water.height is not None:
+        assert os.path.isfile(arena_options.water.sdf), (
+            'Must provide a proper sdf file for water:'
+            f'\n{arena_options.water.sdf} is not a file'
+        )
+        arena = SimulationModels(models=[
+            arena,
+            DescriptionFormatModel(
+                path=arena_options.water.sdf,
+                spawn_options={
+                    'posObj': [0, 0, arena_options.water.height*meters],
+                    'ornObj': [0, 0, 0, 1],
+                },
+                load_options={'units': simulation_options.units},
+            ),
+        ])
+
+    return arena
+
+
 class AmphibiousPybulletSimulation(AnimatPybulletSimulation):
     """Amphibious simulation"""
 
@@ -51,12 +108,14 @@ class AmphibiousPybulletSimulation(AnimatPybulletSimulation):
             self,
             simulation_options: SimulationOptions,
             animat: Animat,
-            arena: SimulationModel = None,
+            arena_options: ArenaOptions = None,
     ):
+        if arena_options is not None:
+            arena = get_arena(arena_options, simulation_options)
         super().__init__(
             models=SimulationModels(
                 [animat, arena]
-                if arena is not None
+                if arena_options is not None
                 else [animat]
             ),
             options=simulation_options,
@@ -96,7 +155,7 @@ class AmphibiousPybulletSimulation(AnimatPybulletSimulation):
                         water_velocity[3] - water_velocity[0]
                     ) / (
                         info.max - info.min
-                    ) +  water_velocity[0]
+                    ) + water_velocity[0]
                     for png, info in zip(pngs, pngs_info)
                 ]
                 self.water_maps = {
@@ -134,7 +193,7 @@ class AmphibiousPybulletSimulation(AnimatPybulletSimulation):
                             iteration=iteration,
                             link_i=0,
                         ),
-                        water_maps = self.water_maps,
+                        water_maps=self.water_maps,
                     ),
                 )
             self.swimming_handler.step(iteration)
