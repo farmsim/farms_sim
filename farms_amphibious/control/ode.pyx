@@ -159,7 +159,7 @@ cpdef inline void ode_contacts(
     """
     cdef DTYPE contact_reaction
     cdef unsigned int i, i0, i1, connection_type
-    for i in range(contacts_connectivity.c_n_connections()):
+    for i in range(contacts_connectivity.n_connections):
         i0 = contacts_connectivity.connections.array[i, 0]
         i1 = contacts_connectivity.connections.array[i, 1]
         connection_type = contacts_connectivity.connections.array[i, 2]
@@ -192,7 +192,7 @@ cpdef inline void ode_contacts_tegotae(
     """
     cdef DTYPE contact_reaction
     cdef unsigned int i, i0, i1
-    for i in range(contacts_connectivity.c_n_connections()):
+    for i in range(contacts_connectivity.n_connections):
         i0 = contacts_connectivity.connections.array[i, 0]
         i1 = contacts_connectivity.connections.array[i, 1]
         # contact_weight*contact_reaction
@@ -224,7 +224,7 @@ cpdef inline void ode_hydro(
     """
     cdef DTYPE hydro_force
     cdef unsigned int i, i0, i1, connection_type
-    for i in range(hydro_connectivity.c_n_connections()):
+    for i in range(hydro_connectivity.n_connections):
         i0 = hydro_connectivity.connections.array[i, 0]
         i1 = hydro_connectivity.connections.array[i, 1]
         connection_type = hydro_connectivity.connections.array[i, 2]
@@ -275,8 +275,6 @@ cpdef inline void ode_joints(
         )
 
 
-## ODEs
-
 cpdef inline DTYPEv1 ode_oscillators_sparse(
     DTYPE time,
     DTYPEv1 state,
@@ -307,7 +305,7 @@ cpdef inline DTYPEv1 ode_oscillators_sparse(
         dstate=dstate,
         drives=data.network.drives,
         joints=data.joints,
-        n_oscillators=data.network.oscillators.c_n_oscillators(),
+        n_oscillators=data.network.oscillators.n_oscillators,
     )
     if nosfb:
         return dstate
@@ -317,7 +315,7 @@ cpdef inline DTYPEv1 ode_oscillators_sparse(
         dstate=dstate,
         joints=data.sensors.joints,
         joints_connectivity=data.network.joints_connectivity,
-        n_oscillators=data.network.oscillators.c_n_oscillators(),
+        n_oscillators=data.network.oscillators.n_oscillators,
     )
     ode_contacts(
         iteration=iteration,
@@ -332,6 +330,6 @@ cpdef inline DTYPEv1 ode_oscillators_sparse(
         dstate=dstate,
         hydrodynamics=data.sensors.hydrodynamics,
         hydro_connectivity=data.network.hydro_connectivity,
-        n_oscillators=data.network.oscillators.c_n_oscillators(),
+        n_oscillators=data.network.oscillators.n_oscillators,
     )
     return dstate

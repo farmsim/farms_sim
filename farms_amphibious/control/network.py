@@ -12,7 +12,10 @@ class NetworkODE(NetworkCy):
     """NetworkODE"""
 
     def __init__(self, data, **kwargs):
-        super().__init__(data=data, dstate=np.zeros_like(data.state.array[0, :]))
+        super().__init__(
+            data=data,
+            dstate=np.zeros_like(data.state.array[0, :]),
+        )
         self.ode: Callable = kwargs.pop('ode', ode_oscillators_sparse)
         self.data: AmphibiousData = data
 
@@ -48,8 +51,6 @@ class NetworkODE(NetworkCy):
         if checks:
             assert self.solver.successful()
             assert abs(time+timestep-self.solver.t) < 1e-6*timestep, (
-                'ODE solver time: {} [s] != Simulation time: {} [s]'.format(
-                    self.solver.t,
-                    time+timestep,
-                )
+                'ODE solver time: '
+                f'{self.solver.t} [s] != Simulation time: {time+timestep} [s]'
             )

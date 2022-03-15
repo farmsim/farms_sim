@@ -133,7 +133,7 @@ class OrientationFollower(DescendingDrive):
         super().__init__(drives=animat_data.network.drives)
         self.indices = np.array(kwargs.pop('links_indices', [0]))
         self.heading_offset = kwargs.pop('heading_offset', 0)
-        self.contact_threshold = kwargs.pop('contact_threshold', 5e-3)
+        self.contact_threshold = kwargs.pop('contact_threshold', 0)
         self.pid = PID(
             Kp=kwargs.pop('pid_p', 0.2),
             Ki=kwargs.pop('pid_i', 0.0),
