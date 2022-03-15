@@ -6,14 +6,14 @@ from setuptools.extension import Extension
 from setuptools import dist
 
 dist.Distribution().fetch_build_eggs(['numpy'])
-import numpy as np
+import numpy as np  # pylint: disable=wrong-import-position
 
 dist.Distribution().fetch_build_eggs(['Cython>=0.15.1'])
-from Cython.Build import cythonize
-from Cython.Compiler import Options
+from Cython.Build import cythonize  # pylint: disable=wrong-import-position
+from Cython.Compiler import Options  # pylint: disable=wrong-import-position
 
 dist.Distribution().fetch_build_eggs(['farms_data'])
-from farms_data import get_include_paths
+from farms_data import get_include_paths  # pylint: disable=wrong-import-position
 
 
 # Cython options
@@ -64,8 +64,8 @@ setup(
     ext_modules=cythonize(
         [
             Extension(
-                'farms_amphibious.{}*'.format(folder.replace('/', '_') + '.' if folder else ''),
-                sources=['farms_amphibious/{}*.pyx'.format(folder + '/' if folder else '')],
+                f'farms_amphibious.{folder}.*',
+                sources=[f'farms_amphibious/{folder}/*.pyx'],
                 extra_compile_args=['-O3'],  # , '-fopenmp'
                 extra_link_args=['-O3']  # , '-fopenmp'
             )
@@ -103,10 +103,12 @@ setup(
         }
     ),
     zip_safe=False,
-    # install_requires=[
-    #     'cython',
-    #     'numpy',
-    #     'trimesh',
-    #     'pyamphibious'
-    # ],
+    install_requires=[
+        'farms_pylog',
+        'farms_data',
+        'farms_mujoco',
+        'cython',
+        'numpy',
+        'trimesh',
+    ],
 )

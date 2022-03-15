@@ -3,5 +3,7 @@ numpy
 scipy
 matplotlib
 tqdm
-trimesh
 pyyaml
+trimesh
+imageio
+simple_pid
