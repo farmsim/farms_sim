@@ -6,6 +6,8 @@ from farms_data.options import Options
 class AmphibiousConvention(Options):
     """Amphibious convention"""
 
+    # pylint: disable=too-many-public-methods
+
     def __init__(self, **kwargs):
         super().__init__()
         self.n_joints_body = kwargs.pop('n_joints_body')
