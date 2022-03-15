@@ -1,20 +1,14 @@
 #!/usr/bin/env python3
 """Run salamander simulation with bullet"""
 
-import os
-from typing import Union
-
 import numpy as np
-from scipy.spatial.transform import Rotation
 
 import farms_pylog as pylog
 from farms_data.model.options import ArenaOptions
 from farms_data.amphibious.data import AmphibiousData
 from farms_data.simulation.options import Simulator, SimulationOptions
 
-from ..model.animat import Amphibious
 from ..model.options import AmphibiousOptions
-from ..simulation.simulation import AmphibiousPybulletSimulation
 from ..utils.parse_args import parse_args
 from ..utils.prompt import prompt_postprocessing
 from ..control.amphibious import AmphibiousController
@@ -35,11 +29,8 @@ except ImportError as err:
     ENGINE_MUJOCO = False
 ENGINE_BULLET = False
 try:
-    from farms_bullet.model.model import (
-        SimulationModel,
-        SimulationModels,
-        DescriptionFormatModel,
-    )
+    from ..bullet.animat import Amphibious
+    from ..bullet.simulation import AmphibiousPybulletSimulation
     ENGINE_BULLET = True
 except ImportError as err:
     pylog.error(err)
@@ -47,43 +38,6 @@ except ImportError as err:
 
 if not ENGINE_MUJOCO and not ENGINE_BULLET:
     raise ImportError('Neither MuJoCo nor Bullet are installed')
-
-
-def get_arena(arena_options, simulation_options):
-    """Get arena from options"""
-    meters = simulation_options.units.meters
-    orientation = Rotation.from_euler(
-        seq='xyz',
-        angles=arena_options.orientation,
-        degrees=False,
-    ).as_quat()
-    arena = DescriptionFormatModel(
-        path=arena_options.sdf,
-        spawn_options={
-            'posObj': [pos*meters for pos in arena_options.position],
-            'ornObj': orientation,
-        },
-        load_options={'units': simulation_options.units},
-    )
-    if arena_options.ground_height is not None:
-        arena.spawn_options['posObj'][2] += arena_options.ground_height*meters
-    if arena_options.water.height is not None:
-        assert os.path.isfile(arena_options.water.sdf), (
-            'Must provide a proper sdf file for water:'
-            f'\n{arena_options.water.sdf} is not a file'
-        )
-        arena = SimulationModels(models=[
-            arena,
-            DescriptionFormatModel(
-                path=arena_options.water.sdf,
-                spawn_options={
-                    'posObj': [0, 0, arena_options.water.height*meters],
-                    'ornObj': [0, 0, 0, 1],
-                },
-                load_options={'units': simulation_options.units},
-            ),
-        ])
-    return arena
 
 
 def setup_from_clargs(clargs=None):
@@ -111,13 +65,6 @@ def setup_from_clargs(clargs=None):
     assert clargs.arena_config, 'No arena config provided'
     arena_options = ArenaOptions.load(clargs.arena_config)
 
-    # Arena
-    pylog.info('Getting arena')
-    arena = get_arena(
-        arena_options=arena_options,
-        simulation_options=sim_options,
-    )
-
     # Test options saving and loading
     if clargs.test_configs:
         # Save options
@@ -129,13 +76,13 @@ def setup_from_clargs(clargs=None):
         animat_options = AmphibiousOptions.load(animat_options_filename)
         sim_options = SimulationOptions.load(sim_options_filename)
 
-    return clargs, sdf, animat_options, sim_options, arena
+    return clargs, sdf, animat_options, sim_options, arena_options
 
 
 def simulation_setup(
         animat_sdf: str,
         animat_options: AmphibiousOptions,
-        arena: Union[SimulationModel, SimulationModels],
+        arena_options: ArenaOptions,
         **kwargs,
 ):
     """Simulation setup"""
@@ -200,7 +147,7 @@ def simulation_setup(
     else:
         animat_controller = None
 
-    # Kwargs
+    # Kwargs check
     assert not kwargs, kwargs
 
     # Pybullet
@@ -221,24 +168,11 @@ def simulation_setup(
         sim = AmphibiousPybulletSimulation(
             simulation_options=sim_options,
             animat=animat,
-            arena=arena,
+            arena_options=arena_options,
         )
 
     # Mujoco
     elif simulator == Simulator.MUJOCO:
-
-        arena_options = [
-            {
-                'sdf_path': arena.path,
-                'position': arena.spawn_options['posObj'],
-                'rotation': arena.spawn_options['ornObj'],
-            }
-            for arena in (
-                    arena
-                    if isinstance(arena, SimulationModels)
-                    else [arena]
-            )
-        ]
 
         # Callbacks
         callbacks = []
@@ -251,10 +185,10 @@ def simulation_setup(
             # Models
             sdf_path_animat=animat_sdf,
             arena_options=arena_options,
-            controller=animat_controller,
             data=animat_data,
-            # Simulation
+            controller=animat_controller,
             animat_options=animat_options,
+            # Simulation
             simulation_options=sim_options,
             restart=False,
             # Task
@@ -267,7 +201,7 @@ def simulation_setup(
 def simulation(
         animat_sdf: str,
         animat_options: AmphibiousOptions,
-        arena: Union[SimulationModel, SimulationModels],
+        arena_options: ArenaOptions,
         **kwargs,
 ):
     """Simulation"""
@@ -275,7 +209,7 @@ def simulation(
     # Instatiate simulation
     pylog.info('Creating simulation')
     simulator = kwargs.get('simulator', Simulator.MUJOCO)
-    sim = simulation_setup(animat_sdf, animat_options, arena, **kwargs)
+    sim = simulation_setup(animat_sdf, animat_options, arena_options, **kwargs)
 
     if simulator == Simulator.PYBULLET:
 
