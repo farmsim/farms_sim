@@ -1,31 +1,89 @@
 #!/usr/bin/env python3
 """Run salamander simulation with bullet"""
 
-import numpy as np
+import os
 from typing import Union
 
+import numpy as np
+from scipy.spatial.transform import Rotation
+
 import farms_pylog as pylog
-from farms_data.model.options import SpawnLoader
-from farms_data.simulation.options import Simulator
+from farms_data.model.options import ArenaOptions
 from farms_data.amphibious.data import AmphibiousData
-from farms_data.simulation.options import SimulationOptions
-from farms_models.utils import get_sdf_path
-from farms_bullet.model.model import SimulationModel, SimulationModels
-from farms_mujoco.control.kinematics import KinematicsController
-from farms_mujoco.simulation.simulation import Simulation as MuJoCoSimulation
+from farms_data.simulation.options import Simulator, SimulationOptions
 
 from ..model.animat import Amphibious
-from ..model.options import AmphibiousOptions, options_kwargs_keys
+from ..model.options import AmphibiousOptions
 from ..simulation.simulation import AmphibiousPybulletSimulation
 from ..utils.parse_args import parse_args
 from ..utils.prompt import prompt_postprocessing
-from ..control.controller import AmphibiousController
+from ..control.amphibious import AmphibiousController
+from ..control.kinematics import KinematicsController
 from ..control.manta_control import MantaController
 from ..control.drive import drive_from_config
-from .options import (
-    amphibious_options,
-    get_animat_options_from_model,
-)
+
+from .callbacks import SwimmingCallback
+
+ENGINE_MUJOCO = False
+try:
+    from farms_mujoco.simulation.simulation import (
+        Simulation as MuJoCoSimulation,
+    )
+    ENGINE_MUJOCO = True
+except ImportError as err:
+    pylog.error(err)
+    ENGINE_MUJOCO = False
+ENGINE_BULLET = False
+try:
+    from farms_bullet.model.model import (
+        SimulationModel,
+        SimulationModels,
+        DescriptionFormatModel,
+    )
+    ENGINE_BULLET = True
+except ImportError as err:
+    pylog.error(err)
+    ENGINE_BULLET = False
+
+if not ENGINE_MUJOCO and not ENGINE_BULLET:
+    raise ImportError('Neither MuJoCo nor Bullet are installed')
+
+
+def get_arena(arena_options, simulation_options):
+    """Get arena from options"""
+    meters = simulation_options.units.meters
+    orientation = Rotation.from_euler(
+        seq='xyz',
+        angles=arena_options.orientation,
+        degrees=False,
+    ).as_quat()
+    arena = DescriptionFormatModel(
+        path=arena_options.sdf,
+        spawn_options={
+            'posObj': [pos*meters for pos in arena_options.position],
+            'ornObj': orientation,
+        },
+        load_options={'units': simulation_options.units},
+    )
+    if arena_options.ground_height is not None:
+        arena.spawn_options['posObj'][2] += arena_options.ground_height*meters
+    if arena_options.water.height is not None:
+        assert os.path.isfile(arena_options.water.sdf), (
+            'Must provide a proper sdf file for water:'
+            f'\n{arena_options.water.sdf} is not a file'
+        )
+        arena = SimulationModels(models=[
+            arena,
+            DescriptionFormatModel(
+                path=arena_options.water.sdf,
+                spawn_options={
+                    'posObj': [0, 0, arena_options.water.height*meters],
+                    'ornObj': [0, 0, 0, 1],
+                },
+                load_options={'units': simulation_options.units},
+            ),
+        ])
+    return arena
 
 
 def setup_from_clargs(clargs=None):
@@ -36,53 +94,28 @@ def setup_from_clargs(clargs=None):
         clargs = parse_args()
 
     # Options
-    sdf = (
-        clargs.sdf
-        if clargs.sdf
-        else get_sdf_path(name=clargs.animat, version=clargs.version)
-    )
-    kwargs = {}
-    if clargs.torque_equation is not None:
-        kwargs['torque_equation'] = clargs.torque_equation
-    for key in options_kwargs_keys():
-        if getattr(clargs, key) is not None:
-            kwargs[key] = getattr(clargs, key)
-    animat_options = get_animat_options_from_model(
-        animat=clargs.animat,
-        version=clargs.version,
-        default_max_torque=clargs.max_torque,
-        # max_torque=clargs.max_torque,
-        max_velocity=clargs.max_velocity,
-        default_lateral_friction=clargs.lateral_friction,
-        feet_friction=clargs.feet_friction,
-        default_restitution=clargs.default_restitution,
-        use_self_collisions=clargs.self_collisions,
-        spawn_loader={
-            'FARMS': SpawnLoader.FARMS,
-            'PYBULLET': SpawnLoader.PYBULLET,
-        }[clargs.spawn_loader],
-        drives_init=clargs.drives,
-        spawn_position=clargs.position,
-        spawn_orientation=clargs.orientation,
-        default_equation=clargs.control_type,
-        **kwargs,
-    )
-    simulation_options, arena = amphibious_options(
-        animat_options=animat_options,
-        arena=clargs.arena,
-        arena_sdf=clargs.arena_sdf,
-        arena_position=clargs.arena_position,
-        arena_orientation=clargs.arena_orientation,
-        water_sdf=clargs.water_sdf,
-        water_height=clargs.water_height,
-        water_velocity=clargs.water_velocity,
-        water_maps=clargs.water_maps,
-        viscosity=clargs.viscosity,
-        ground_height=clargs.ground_height,
-        spawn_loader={
-            'FARMS': SpawnLoader.FARMS,
-            'PYBULLET': SpawnLoader.PYBULLET,
-        }[clargs.spawn_loader],
+    sdf = clargs.sdf
+
+    # Animat options
+    pylog.info('Getting animat options')
+    assert clargs.animat_config, 'No animat config provided'
+    animat_options = AmphibiousOptions.load(clargs.animat_config)
+
+    # Simulation options
+    pylog.info('Getting simulation options')
+    assert clargs.simulation_config, 'No simulation config provided'
+    sim_options = SimulationOptions.load(clargs.simulation_config)
+
+    # Arena options
+    pylog.info('Getting arena options')
+    assert clargs.arena_config, 'No arena config provided'
+    arena_options = ArenaOptions.load(clargs.arena_config)
+
+    # Arena
+    pylog.info('Getting arena')
+    arena = get_arena(
+        arena_options=arena_options,
+        simulation_options=sim_options,
     )
 
     # Test options saving and loading
@@ -90,13 +123,13 @@ def setup_from_clargs(clargs=None):
         # Save options
         animat_options_filename = 'animat_options.yaml'
         animat_options.save(animat_options_filename)
-        simulation_options_filename = 'simulation_options.yaml'
-        simulation_options.save(simulation_options_filename)
+        sim_options_filename = 'simulation_options.yaml'
+        sim_options.save(sim_options_filename)
         # Load options
         animat_options = AmphibiousOptions.load(animat_options_filename)
-        simulation_options = SimulationOptions.load(simulation_options_filename)
+        sim_options = SimulationOptions.load(sim_options_filename)
 
-    return clargs, sdf, animat_options, simulation_options, arena
+    return clargs, sdf, animat_options, sim_options, arena
 
 
 def simulation_setup(
@@ -108,7 +141,7 @@ def simulation_setup(
     """Simulation setup"""
     # Get options
     simulator = kwargs.pop('simulator', Simulator.MUJOCO)
-    simulation_options = kwargs.pop(
+    sim_options = kwargs.pop(
         'simulation_options',
         SimulationOptions.with_clargs()
     )
@@ -118,8 +151,9 @@ def simulation_setup(
         'animat_data',
         AmphibiousData.from_options(
             control=animat_options.control,
-            n_iterations=simulation_options.n_iterations,
-            timestep=simulation_options.timestep,
+            initial_state=animat_options.state_init(),
+            n_iterations=sim_options.n_iterations,
+            timestep=sim_options.timestep,
         ),
     )
 
@@ -133,8 +167,8 @@ def simulation_setup(
                 joints_names=animat_options.morphology.joints_names(),
                 kinematics=np.genfromtxt(animat_options.control.kinematics_file),
                 sampling=animat_options.control.kinematics_sampling,
-                timestep=simulation_options.timestep,
-                n_iterations=simulation_options.n_iterations,
+                timestep=sim_options.timestep,
+                n_iterations=sim_options.n_iterations,
                 animat_data=animat_data,
                 max_torques={
                     joint.joint: joint.max_torque
@@ -156,7 +190,7 @@ def simulation_setup(
                     drive_from_config(
                         filename=drive_config,
                         animat_data=animat_data,
-                        simulation_options=simulation_options,
+                        simulation_options=sim_options,
                     )
                     if drive_config
                     else None
@@ -166,6 +200,9 @@ def simulation_setup(
     else:
         animat_controller = None
 
+    # Kwargs
+    assert not kwargs, kwargs
+
     # Pybullet
     if simulator == Simulator.PYBULLET:
 
@@ -174,16 +211,15 @@ def simulation_setup(
             sdf=animat_sdf,
             options=animat_options,
             controller=animat_controller,
-            timestep=simulation_options.timestep,
-            iterations=simulation_options.n_iterations,
-            units=simulation_options.units,
+            timestep=sim_options.timestep,
+            iterations=sim_options.n_iterations,
+            units=sim_options.units,
         )
 
         # Setup simulation
-        assert not kwargs, 'Unknown kwargs:\n{}'.format(kwargs)
         pylog.info('Creating simulation')
         sim = AmphibiousPybulletSimulation(
-            simulation_options=simulation_options,
+            simulation_options=sim_options,
             animat=animat,
             arena=arena,
         )
@@ -203,18 +239,26 @@ def simulation_setup(
                     else [arena]
             )
         ]
+
+        # Callbacks
+        callbacks = []
+
+        # Hydrodynamics
+        if animat_options.physics.drag or animat_options.physics.sph:
+            callbacks += [SwimmingCallback(animat_options=animat_options)]
+
         sim = MuJoCoSimulation.from_sdf(
-            # Animat
+            # Models
             sdf_path_animat=animat_sdf,
             arena_options=arena_options,
             controller=animat_controller,
             data=animat_data,
             # Simulation
             animat_options=animat_options,
-            simulation_options=simulation_options,
+            simulation_options=sim_options,
             restart=False,
-            # save=simulation_options.save,
-            plot=False,
+            # Task
+            callbacks=callbacks,
         )
 
     return sim
@@ -277,13 +321,10 @@ def postprocessing_from_clargs(sim, animat_options, simulator, clargs=None):
             'PYBULLET': Simulator.PYBULLET,
         }[clargs.simulator]
     prompt_postprocessing(
-        animat=clargs.animat,
-        version=clargs.version,
         sim=sim,
         animat_options=animat_options,
         query=clargs.prompt,
-        save=clargs.save,
-        save_to_models=clargs.save_to_models,
+        log_path=clargs.log_path,
         verify=clargs.verify_save,
         simulator=simulator,
     )

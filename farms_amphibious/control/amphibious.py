@@ -1,5 +1,4 @@
-"""Network controller"""
-
+"""Amphibious controller"""
 
 from typing import Dict, List, Tuple, Callable, Union
 import numpy as np
@@ -114,6 +113,9 @@ class AmphibiousController(ModelController):
                 osc_indices=np.array(muscle_map.osc_indices, dtype=np.uintc),
                 gain=np.array(joints_map.transform_gain, dtype=np.double),
                 bias=np.array(joints_map.transform_bias, dtype=np.double),
+                weight=-1e6,
+                offset=0.25*np.pi,
+                threshold=1e-2,
             )
 
         # Ekeberg muscle model control

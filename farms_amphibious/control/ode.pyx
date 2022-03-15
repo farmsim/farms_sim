@@ -61,7 +61,7 @@ cpdef inline void ode_dphase(
     )
 
     """
-    cdef unsigned int i, i0, i1, n_oscillators = oscillators.c_n_oscillators()
+    cdef unsigned int i, i0, i1, n_oscillators = oscillators.n_oscillators
     for i in range(n_oscillators):
         # Intrinsic frequency
         dstate[i] = oscillators.c_angular_frequency(i, drives.c_speed(iteration))
@@ -71,7 +71,7 @@ cpdef inline void ode_dphase(
                     phase(state, i) + oscillators.c_modular_phases(i)
                 )
             )
-    for i in range(connectivity.c_n_connections()):
+    for i in range(connectivity.n_connections):
         # Neural couplings
         i0 = connectivity.connections.array[i, 0]
         i1 = connectivity.connections.array[i, 1]
@@ -93,7 +93,7 @@ cpdef inline void ode_damplitude(
     d_amplitude = rate*(nominal_amplitude - amplitude)
 
     """
-    cdef unsigned int i, n_oscillators = oscillators.c_n_oscillators()
+    cdef unsigned int i, n_oscillators = oscillators.n_oscillators
     for i in range(n_oscillators):  # , nogil=True):
         # rate*(nominal_amplitude - amplitude)
         dstate[n_oscillators+i] = oscillators.c_rate(i)*(
@@ -116,7 +116,7 @@ cpdef inline void ode_stretch(
 
     """
     cdef unsigned int i, i0, i1, connection_type
-    for i in range(joints_connectivity.c_n_connections()):
+    for i in range(joints_connectivity.n_connections):
         i0 = joints_connectivity.connections.array[i, 0]
         i1 = joints_connectivity.connections.array[i, 1]
         connection_type = joints_connectivity.connections.array[i, 2]

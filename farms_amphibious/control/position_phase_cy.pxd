@@ -14,5 +14,8 @@ cdef class PositionPhaseCy(JointsControlCy):
 
     cdef public NetworkCy network
     cdef public UITYPEv2 osc_indices
+    cdef public double weight
+    cdef public double offset
+    cdef public double threshold
 
     cpdef void step(self, unsigned int iteration)
