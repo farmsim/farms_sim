@@ -61,7 +61,7 @@ def argument_parser() -> argparse.ArgumentParser:
         nargs=3,
         type=float,
         metavar=('x', 'y', 'z'),
-        default=None,
+        default=(0, 0, 0),
         help='Arena position',
     )
     parser.add_argument(
@@ -69,7 +69,7 @@ def argument_parser() -> argparse.ArgumentParser:
         nargs=3,
         type=float,
         metavar=('alpha', 'beta', 'gamma'),
-        default=None,
+        default=(0, 0, 0),
         help='Arena orientation',
     )
     parser.add_argument(
@@ -124,10 +124,10 @@ def argument_parser() -> argparse.ArgumentParser:
         help='Descending drive method',
     )
     parser.add_argument(
-        '-s', '--save',
+        '--log_path',
         type=str,
         default='',
-        help='Save simulation data to provided path',
+        help='Log simulation data to provided folder path',
     )
     parser.add_argument(
         '--save_to_models',
@@ -235,7 +235,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def parse_args_model_gen(description='Generate model'):
+def parser_model_gen(description='Generate model'):
     """Parse args"""
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument(
@@ -268,4 +268,10 @@ def parse_args_model_gen(description='Generate model'):
         default='',
         help='Original file',
     )
+    return parser
+
+
+def parse_args_model_gen(*args, **kwargs):
+    """Parse args"""
+    parser = parser_model_gen(*args, **kwargs)
     return parser.parse_args()

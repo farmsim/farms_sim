@@ -8,54 +8,36 @@ import matplotlib.pyplot as plt
 import farms_pylog as pylog
 from farms_data.simulation.options import Simulator
 from farms_data.amphibious.animat_data import AnimatData
-from farms_models.utils import get_simulation_data_path
 from farms_amphibious.utils.network import plot_networks_maps
 
 
 def prompt(query, default):
     """Prompt"""
-    val = input('{} [{}]: '.format(
-        query,
-        'Y/n' if default else 'y/N',
-    ))
+    val = input(f'{query} [{"Y/n" if default else "y/N"}]: ')
     try:
         ret = strtobool(val) if val != '' else default
     except ValueError:
-        print('Dit not recognise \'{}\', please reply with a y/n'.format(val))
+        pylog.error('Did not recognise \'%s\', please reply with a y/n', val)
         return prompt(query, default)
     return ret
 
 
-def prompt_postprocessing(
-        animat,
-        version,
-        sim,
-        animat_options,
-        query=True,
-        **kwargs
-):
+def prompt_postprocessing(sim, animat_options, query=True, **kwargs):
     """Prompt postprocessing"""
     # Arguments
-    save = kwargs.pop('save', '')
+    log_path = kwargs.pop('log_path', '')
     verify = kwargs.pop('verify', False)
-    save_to_models = kwargs.pop('save_to_models', '')
     extension = kwargs.pop('extension', 'pdf')
     simulator = kwargs.pop('simulator', Simulator.MUJOCO)
     assert not kwargs, kwargs
 
     # Post-processing
     pylog.info('Simulation post-processing')
-    log_path = get_simulation_data_path(
-        name=animat,
-        version=version,
-        simulation_name=save if save else 'default',
-    ) if save_to_models else save
     save_data = (
         (query and prompt('Save data', False))
-        or (save or save_to_models) and not query
+        or log_path and not query
     )
-    if log_path and not os.path.isdir(log_path):
-        os.mkdir(log_path)
+    os.makedirs(log_path, exist_ok=True)
     show_plots = prompt('Show plots', False) if query else False
     iteration = (
         sim.iteration
@@ -74,8 +56,8 @@ def prompt_postprocessing(
     )
     if save_data and verify:
         pylog.debug('Data saved, now loading back to check validity')
-        data = AnimatData.from_file(os.path.join(log_path, 'simulation.hdf5'))
-        pylog.debug('Data successfully saved and logged back: %s', data)
+        AnimatData.from_file(os.path.join(log_path, 'simulation.hdf5'))
+        pylog.debug('Data successfully saved and logged back')
 
     # Save MuJoCo MJCF
     if simulator == Simulator.MUJOCO:
@@ -90,20 +72,20 @@ def prompt_postprocessing(
     if show_connectivity:
         plot_networks_maps(animat_options.morphology, sim.animat().data)
 
-    # Plot
+    # Save plots
     if (
             (show_plots or show_connectivity)
             and query
             and prompt('Save plots', False)
     ):
         for fig in [plt.figure(num) for num in plt.get_fignums()]:
-            filename = '{}.{}'.format(
-                os.path.join(log_path, fig.canvas.get_window_title()),
-                extension,
-            )
+            path = os.path.join(log_path, fig.canvas.get_window_title())
+            filename = f'{path}.{extension}'
             filename = filename.replace(' ', '_')
-            pylog.debug('Saving to {}'.format(filename))
+            pylog.debug('Saving to %s', filename)
             fig.savefig(filename, format=extension)
+
+    # Show plots
     if show_plots or (
             show_connectivity
             and query
