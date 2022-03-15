@@ -6,7 +6,7 @@ import argparse
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
-import matplotlib.animation as animation
+from matplotlib import animation
 
 from PIL import Image
 from moviepy.editor import VideoClip
@@ -14,7 +14,6 @@ from moviepy.editor import VideoClip
 import farms_pylog as pylog
 from farms_data.utils.profile import profile
 from farms_data.amphibious.animat_data import AnimatData
-from farms_data.simulation.options import SimulationOptions
 from farms_amphibious.model.options import AmphibiousOptions
 from farms_amphibious.utils.network import plot_networks_maps
 
@@ -52,6 +51,18 @@ def parse_args():
         default='network.mp4',
         help='Output path',
     )
+    parser.add_argument(
+        '--single_frame',
+        action='store_true',
+        default=False,
+        help='Render single frame',
+    )
+    parser.add_argument(
+        '--no_text',
+        action='store_true',
+        default=False,
+        help='No text',
+    )
     return parser.parse_args()
 
 
@@ -62,11 +73,15 @@ def main(use_moviepy=True):
     args = parse_args()
     # Setup
     animat_options = AmphibiousOptions.load(args.animat)
-    simulation_options = SimulationOptions.load(args.simulation)
+    # simulation_options = SimulationOptions.load(args.simulation)
     data = AnimatData.from_file(args.data)
-    network_anim = plot_networks_maps(animat_options.morphology, data)[0]
+    network_anim = plot_networks_maps(
+        data=data,
+        animat_options=animat_options,
+        show_text=True,  # not args.no_text,
+    )[0]
     fig = plt.gcf()
-    ax = plt.gca()
+    cax = plt.gca()
     fig.tight_layout()
     fig.set_size_inches(14, 7)
     # Draw to save background
@@ -78,21 +93,23 @@ def main(use_moviepy=True):
     _, extension = os.path.splitext(args.output)
     if extension == '.png':
         # Save every frame
-        for frame in range(network_anim.n_frames):
-            pylog.debug('Saving frame {}'.format(frame))
+        for frame in range(1 if args.single_frame else network_anim.n_frames):
+            pylog.debug('Saving frame %s', frame)
             # Restore
             fig.canvas.restore_region(background)
             # Update
             network_anim.animation_update(frame)
             # Draw
             for element in elements:
-                ax.draw_artist(element)
+                if element is not None:
+                    cax.draw_artist(element)
             # Save
             img = Image.frombytes(
                 'RGB',
                 fig.canvas.get_width_height(),
                 fig.canvas.tostring_rgb(),
             )
+            os.makedirs(os.path.dirname(args.output), exist_ok=True)
             img.save(args.output.format(frame=frame))
     elif extension == '.mp4':
         if use_moviepy:
@@ -100,34 +117,35 @@ def main(use_moviepy=True):
             fps = 1/(1e-3*network_anim.interval)
             duration = network_anim.timestep*network_anim.n_iterations
             n_frames = network_anim.n_frames
-            def make_frame(t):
+
+            def make_frame(current_time):
                 """Make frame"""
-                frame = min([int(t*fps), network_anim.n_frames])
-                pylog.debug('Saving frame {frame}/{total}'.format(
-                    frame=frame,
-                    total=n_frames,
-                ))
+                frame = min([int(current_time*fps), network_anim.n_frames])
+                pylog.debug('Saving frame %s/%s', frame, n_frames)
                 # Restore
                 fig.canvas.restore_region(background)
                 # Update
                 network_anim.animation_update(frame)
                 # Draw
                 for element in elements:
-                    ax.draw_artist(element)
-                return np.array(fig.canvas.renderer.buffer_rgba())[:,:,:3]
+                    if element is not None:
+                        cax.draw_artist(element)
+                return np.array(fig.canvas.renderer.buffer_rgba())[:, :, :3]
+
             anim = VideoClip(make_frame, duration=duration)
+            assert fps is not None
             anim.write_videofile(
                 filename=args.output,
                 fps=fps,
                 codec='libx264',
-                logger=None,
+                logger='bar',
             )
             anim.close()
         else:
             # Use Matplotlib
             moviewriter = animation.writers['ffmpeg'](
                 fps=1/(1e-3*network_anim.interval),
-                metadata = dict(
+                metadata=dict(
                     title='FARMS network',
                     artist='FARMS',
                     comment='FARMS network',
@@ -140,12 +158,12 @@ def main(use_moviepy=True):
                     dpi=100,
             ):
                 for frame in range(network_anim.n_frames):
-                    pylog.debug('Saving frame {}'.format(frame))
+                    pylog.debug('Saving frame %s', frame)
                     network_anim.animation_update(frame)
                     moviewriter.grab_frame()
     else:
-        raise Exception('Unknown file extension {}'.format(extension))
-    pylog.info('Saved to {}'.format(args.output))
+        raise Exception(f'Unknown file extension {extension}')
+    pylog.info('Saved to %s', args.output)
 
 
 if __name__ == '__main__':
