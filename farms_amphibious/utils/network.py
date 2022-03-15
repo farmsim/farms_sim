@@ -1,5 +1,6 @@
 """Network"""
 
+from functools import partial
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm, patches
@@ -8,9 +9,11 @@ from matplotlib.colors import colorConverter, Normalize, ListedColormap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 import farms_pylog as pylog
+from farms_data.amphibious.data import AmphibiousData
 from farms_data.amphibious.animat_data_cy import ConnectionType
 
 from ..model.convention import AmphibiousConvention
+from ..model.options import AmphibiousOptions  # AmphibiousMorphologyOptions
 from ..control.network import NetworkODE
 
 
@@ -43,7 +46,7 @@ def connect_positions(source, destination, dir_shift, perp_shift):
     return new_source, new_destination
 
 
-def draw_nodes(positions, radius, color, prefix):
+def draw_nodes(positions, radius, color, prefix, show_text=True):
     """Draw nodes"""
     nodes = [
         plt.Circle(
@@ -61,7 +64,7 @@ def draw_nodes(positions, radius, color, prefix):
         plt.text(
             # position[0]+radius, position[1]+radius,
             position[0], position[1],
-            '{}{}'.format(prefix, i),
+            f'{prefix}{i}',
             # transform=axes.transAxes,
             # va='bottom',
             # ha='left',
@@ -70,7 +73,7 @@ def draw_nodes(positions, radius, color, prefix):
             fontsize=8,
             color='k',
             animated=True,
-        )
+        ) if show_text else None
         for i, position in enumerate(positions)
     ]
 
@@ -90,10 +93,11 @@ def draw_connectivity(sources, destinations, connectivity, **kwargs):
             int(connection[0]+0.5) < len(destinations)
             and int(connection[1]+0.5) < len(sources)
         ), (
-            f'Connection {connection_i=}:'
-            f'\n{connection[1]=} -> {connection[0]=}'
-            f'\n{len(sources)=}, {len(destinations)=}'
-            f'\n{sources=}\n{destinations=}'
+            f'Connection connection_i={connection_i}:'
+            f'\nconnection[1]={connection[1]} -> connection[0]={connection[0]}'
+            f'\nlen(sources)={len(sources)},'
+            f' len(destinations)={len(destinations)}'
+            f'\nsources={sources}\ndestinations={destinations}'
         )
     node_connectivity = [
         patches.FancyArrowPatch(
@@ -137,6 +141,7 @@ def draw_network(source, destination, radius, connectivity, **kwargs):
     rad = kwargs.pop('rad')
     color_nodes = kwargs.pop('color_nodes')
     color_arrows = kwargs.pop('color_arrows', None)
+    show_text = kwargs.pop('show_text', True)
     options = {}
     alpha = kwargs.pop('alpha')
     if color_arrows is None:
@@ -161,6 +166,7 @@ def draw_network(source, destination, radius, connectivity, **kwargs):
         radius=radius,
         color=color_nodes,
         prefix=prefix,
+        show_text=show_text,
     )
     node_connectivity = draw_connectivity(
         sources=source,
@@ -194,7 +200,7 @@ class NetworkFigure:
     """Network figure"""
 
     def __init__(self, morphology, data):
-        super(NetworkFigure, self).__init__()
+        super().__init__()
         self.data = data
         self.morphology = morphology
 
@@ -224,13 +230,22 @@ class NetworkFigure:
         self.cmap_hydro = plt.get_cmap('Blues')
         self.cmap_hydro_max = 2e-2
 
-    def animate(self):
+    def animate(self, convention, **kwargs):
         """Setup animation"""
+
+        # Options
+        is_large = convention.n_joints_body < convention.n_legs
+        leg_y_offset = kwargs.pop('leg_y_offset', 5 if is_large else 3)
+        leg_y_space = kwargs.pop('leg_y_space', 4 if is_large else 1)
+        margin_x = kwargs.pop('margin_x', 4-0.2)
+        margin_y = kwargs.pop('margin_y', 0.5-0.2)
+
         plt.figure(num=self.figure.number)
         self.time = plt.text(
-            x=-1, y=-7,
-            s='Time: {:02.1f} [s]'.format(0),
-            va='center',
+            x=0,
+            y=-leg_y_offset-convention.n_dof_legs*leg_y_space-margin_y,
+            s=f'Time: {0:02.1f} [s]',
+            va='bottom',
             ha='left',
             fontsize=16,
             color='k',
@@ -302,7 +317,7 @@ class NetworkFigure:
         """Animation update"""
         # Time
         iteration = np.rint(frame/self.n_frames*self.n_iterations).astype(int)
-        self.time.set_text('Time: {:02.1f} [s]'.format(frame*1e-3*self.interval))
+        self.time.set_text(f'Time: {frame*1e-3*self.interval:02.1f} [s]')
 
         # Oscillator
         phases = self.network.phases(iteration)
@@ -311,12 +326,19 @@ class NetworkFigure:
             oscillator.set_facecolor(self.cmap_phases(value))
 
         # Contacts sensors
+        contacts = self.data.sensors.contacts
+        assert (
+            len(self.contact_sensors) == np.shape(contacts.array)[1]
+        ), (
+            'Contacts sensors dimensions do not correspond:'
+            f'\n{len(self.contact_sensors)}'
+            f' != {np.shape(contacts.array)[1]}'
+        )
         for sensor_i, contact in enumerate(self.contact_sensors):
             value = np.clip(
-                np.linalg.norm(
-                    self.data.sensors.contacts.total(iteration, sensor_i)
-                ),
-                0, self.cmap_contact_max,
+                a=np.linalg.norm(contacts.total(iteration, sensor_i)),
+                a_min=0,
+                a_max=self.cmap_contact_max,
             )
             contact.set_facecolor(self.cmap_contacts(value/self.cmap_contact_max))
 
@@ -332,21 +354,28 @@ class NetworkFigure:
 
         return self.animation_elements()
 
-    def plot(self, **kwargs):
+    def plot(self, animat_options, **kwargs):
         """Plot"""
-        n_oscillators = 2*self.morphology.n_joints_body
-        n_limbs = self.morphology.n_legs
+        convention = AmphibiousConvention.from_amphibious_options(animat_options)
+        is_large = convention.n_joints_body < convention.n_legs
 
         # Options
-        offset = kwargs.pop('offset', 1)
-        radius = kwargs.pop('radius', 0.3)
-        margin_x = kwargs.pop('margin_x', 4)
-        margin_y = kwargs.pop('margin_y', 7)
+        body_y_offset = kwargs.pop('body_y_offset', 1.5 if is_large else 1)
+        body_x_space = kwargs.pop('body_x_space', 4 if is_large else 2)
+        leg_x_offset = kwargs.pop('leg_x_offset', 1 if is_large else 3)
+        leg_y_offset = kwargs.pop('leg_y_offset', 5 if is_large else 3)
+        leg_y_space = kwargs.pop('leg_y_space', 4 if is_large else 1)
+        contact_y_space = kwargs.pop('contact_y_space', 2 if is_large else 1)
+        radius = kwargs.pop('radius', 0.5 if is_large else 0.3)
+        margin_x = kwargs.pop('margin_x', 4.5)
+        margin_y = kwargs.pop('margin_y', 0.5)
         alpha = kwargs.pop('alpha', 0.3)
         title = kwargs.pop('title', 'Network')
         show_title = kwargs.pop('show_title', True)
-        rads = kwargs.pop('rads', [0.2, 0.0, 0.0])
+        rads = kwargs.pop('rads', [0.02 if is_large else 0.2, 0.0, 0.0])
         use_colorbar = kwargs.pop('use_colorbar', False)
+        show_text = kwargs.pop('show_text', True)
+        leg_osc_width = kwargs.pop('leg_osc_width', 1 if is_large else 1)
 
         # Create figure
         self.figure = plt.figure(num=title, figsize=(12, 10))
@@ -354,8 +383,15 @@ class NetworkFigure:
         self.axes.cla()
         if show_title:
             plt.title(title)
-        self.axes.set_xlim((-margin_x, max(n_oscillators, 2.5*n_limbs)-1+margin_x))
-        self.axes.set_ylim((-offset-margin_y, offset+margin_y))
+        xlim = (-body_x_space*(convention.n_joints_body-1)-margin_x, margin_x)
+        self.axes.set_xlim(xlim)
+        self.axes.set_ylim((
+            sign*max(
+                0.35*(xlim[1] - xlim[0]),
+                leg_y_offset+convention.n_dof_legs*leg_y_space+margin_y,
+            )
+            for sign in [-1, 1]
+        ))
         self.axes.set_aspect('equal', adjustable='box')
         self.axes.get_xaxis().set_visible(False)
         self.axes.get_yaxis().set_visible(False)
@@ -366,44 +402,52 @@ class NetworkFigure:
             cmap = plt.get_cmap(kwargs.pop('cmap', 'viridis'))
 
         # Oscillators
-        # leg_pos = [1, 11][:min(2, self.morphology.n_legs//2)]
         leg_pos = [
-            1+2*split[0]
+            1+(4 if is_large else 2)*split[0]
             for split in np.array_split(
                 np.arange(
-                    self.morphology.n_joints_body
-                    if self.morphology.n_joints_body > 0
-                    else self.morphology.n_legs
+                    convention.n_joints_body
+                    if convention.n_joints_body > 0
+                    else convention.n_legs
                 ),
-                self.morphology.n_legs//2+1,
+                convention.n_legs_pair()+1,
             )[:-1]
         ]
         oscillator_positions = np.array(
             [
-                [2*osc_x, side_y]
-                for osc_x in range(n_oscillators//2)
-                for side_y in [-offset, offset]
+                [-body_x_space*osc_x, side_y]
+                for osc_x in range(convention.n_joints_body)
+                for side_y in [body_y_offset, -body_y_offset]
             ] + [
-                [leg_x+osc_side_x+joint_y, joint_y*side_x]
+                [
+                    -(leg_x+joint_y+leg_x_offset+osc_side_x),
+                    -(leg_y_offset+leg_y_space*joint_y)*side_x,
+                ]
                 for leg_x in leg_pos
                 for side_x in [-1, 1]
-                for joint_y in np.arange(3, 3+self.morphology.n_dof_legs)
-                for osc_side_x in [-1, 1]
+                for joint_y in np.arange(convention.n_dof_legs)
+                for osc_side_x in (
+                        [0]
+                        if convention.single_osc_legs
+                        else [-leg_osc_width, leg_osc_width]
+                )
             ]
         )
-        osc_conn_cond = kwargs.pop(
-            'osc_conn_cond',
-            lambda osc0, osc1: True
+        osc_conn_cond = kwargs.pop('osc_conn_cond', lambda osc0, osc1: True)
+        connections = (
+            np.array([
+                [connection[0], connection[1], weight, phase]
+                for connection, weight, phase in zip(
+                    self.data.network.osc_connectivity.connections.array,
+                    self.data.network.osc_connectivity.weights.array,
+                    self.data.network.osc_connectivity.desired_phases.array,
+                )
+                if osc_conn_cond(connection[0], connection[1])
+            ])
+            if self.data.network.osc_connectivity.connections.array
+            else np.empty(0)
         )
-        connections = np.array([
-            [connection[0], connection[1], weight, phase]
-            for connection, weight, phase in zip(
-                self.data.network.osc_connectivity.connections.array,
-                self.data.network.osc_connectivity.weights.array,
-                self.data.network.osc_connectivity.desired_phases.array,
-            )
-            if osc_conn_cond(connection[0], connection[1])
-        ]) if self.data.network.osc_connectivity.connections.array else np.empty(0)
+
         options = {}
         use_weights = use_colorbar and kwargs.pop('oscillator_weights', False)
         if use_weights:
@@ -414,6 +458,7 @@ class NetworkFigure:
             else:
                 options['weights'] = []
                 vmin, vmax = 0, 1
+
         options = {}
         use_weights = use_colorbar and kwargs.pop('oscillator_phases', False)
         if use_weights:
@@ -424,6 +469,7 @@ class NetworkFigure:
             else:
                 options['weights'] = []
                 vmin, vmax = 0, 1
+
         self.oscillators, self.oscillators_texts, oscillators_connectivity = draw_network(
             source=oscillator_positions,
             destination=oscillator_positions,
@@ -434,26 +480,26 @@ class NetworkFigure:
             color_nodes='C2',
             color_arrows=cmap if use_weights else None,
             alpha=alpha,
+            show_text=show_text,
             **options,
         )
 
         # Contacts
-        leg_pos = [
-            1+6+2*split[0]
-            for split in np.array_split(
-                np.arange(
-                    self.morphology.n_joints_body
-                    if self.morphology.n_joints_body > 0
-                    else self.morphology.n_legs
-                ),
-                self.morphology.n_legs//2+1,
-            )[:-1]
-        ]
-        contacts_positions = np.array([
-            [leg_x, side_y]
-            for leg_x in leg_pos
-            for side_y in [-7, 7]
-        ])
+        contacts_positions = np.array(
+            [
+                [
+                    -(leg_x+convention.n_dof_legs-1+leg_x_offset),
+                    side_y*(leg_y_offset+(
+                        convention.n_dof_legs-1
+                    )*leg_y_space+contact_y_space),
+                ]
+                for leg_x in leg_pos
+                for side_y in [1, -1]
+            ] + [
+                [-(2*osc_x+1), 0]
+                for osc_x in range(-1, convention.n_joints_body)
+            ]
+        ) if animat_options.control.sensors.contacts else []
         contact_conn_cond = kwargs.pop(
             'contact_conn_cond',
             lambda osc0, osc1: True
@@ -486,13 +532,14 @@ class NetworkFigure:
             color_nodes='C1',
             color_arrows=cmap if use_weights else None,
             alpha=alpha,
+            show_text=show_text,
             **options,
         )
 
         # Hydrodynamics
         hydrodynamics_positions = np.array([
-            [2*osc_x+1, 0]
-            for osc_x in range(-1, n_oscillators//2)
+            [-(2*osc_x+1), 0]
+            for osc_x in range(-1, convention.n_joints_body)
         ])
         hydro_conn_cond = kwargs.pop(
             'hydro_conn_cond',
@@ -553,6 +600,7 @@ class NetworkFigure:
             color_nodes='C0',
             color_arrows=cmap if use_weights else None,
             alpha=2*alpha,
+            show_text=show_text,
             **options,
         ) if self.data.network.hydro_connectivity.connections.array else [[]]*3
 
@@ -585,49 +633,86 @@ class NetworkFigure:
             for arrow in hydro_connectivity:
                 self.axes.add_artist(arrow)
         if show_oscillators:
-            for circle, text in zip(self.oscillators, self.oscillators_texts):
+            for circle, text in zip(
+                    self.oscillators,
+                    self.oscillators_texts,
+            ):
                 self.axes.add_artist(circle)
-                self.axes.add_artist(text)
+                if show_text:
+                    self.axes.add_artist(text)
         if show_contacts:
-            for circle, text in zip(self.contact_sensors, self.contact_sensor_texts):
+            for circle, text in zip(
+                    self.contact_sensors,
+                    self.contact_sensor_texts,
+            ):
                 self.axes.add_artist(circle)
-                self.axes.add_artist(text)
+                if show_text:
+                    self.axes.add_artist(text)
         if show_hydrodynamics:
-            for circle, text in zip(self.hydro_sensors, self.hydro_sensor_texts):
+            for circle, text in zip(
+                    self.hydro_sensors,
+                    self.hydro_sensor_texts,
+            ):
                 self.axes.add_artist(circle)
-                self.axes.add_artist(text)
+                if show_text:
+                    self.axes.add_artist(text)
         if use_colorbar:
-            pylog.debug('{}: {}, {}'.format(title, vmin, vmax))
+            pylog.debug('%s: %s, %s', title, vmin, vmax)
             create_colorbar(self.axes, cmap, vmin, vmax)
 
         return self.figure
 
 
-def plot_networks_maps(morphology, data, show_all=False):
+def conn_body2body(info, osc0, osc1):
+    """Body to body"""
+    return info(osc0)['body'] and info(osc1)['body']
+
+
+def conn_leg2body(info, osc0, osc1):
+    """Leg to body"""
+    return info(osc0)['body'] and not info(osc1)['body']
+
+
+def conn_body2leg(info, osc0, osc1):
+    """Body to leg"""
+    return not info(osc0)['body'] and info(osc1)['body']
+
+
+def conn_leg2leg(info, osc0, osc1):
+    """Leg to leg"""
+    return not info(osc0)['body'] and not info(osc1)['body']
+
+
+def plot_networks_maps(
+        data: AmphibiousData,
+        animat_options: AmphibiousOptions,
+        show_all: bool = False,
+        show_text: bool = True,
+):
     """Plot network maps"""
     # Plots
     plots = {}
 
-    # Plot tools
-    convention = AmphibiousConvention(**morphology)
-
     # Plot network
+    morphology = animat_options.morphology
+    convention = AmphibiousConvention.from_amphibious_options(animat_options)
     network_anim = NetworkFigure(morphology, data)
     plots['network_complete'] = network_anim.plot(
         title='Complete network',
+        animat_options=animat_options,
         show_title=False,
+        show_text=show_text,
     )
-    network_anim.animate()
+    network_anim.animate(convention)
 
     if show_all:
 
         info = convention.oscindex2information
-        body2body = lambda osc0, osc1: info(osc0)['body'] and info(osc1)['body']
-        leg2body = lambda osc0, osc1: info(osc0)['body'] and not info(osc1)['body']
-        body2leg = lambda osc0, osc1: not info(osc0)['body'] and info(osc1)['body']
-        leg2leg = (
-            lambda osc0, osc1: not info(osc0)['body'] and not info(osc1)['body']
-        )
+        body2body = partial(conn_body2body, info)
+        leg2body = partial(conn_leg2body, info)
+        body2leg = partial(conn_body2leg, info)
+        leg2leg = partial(conn_leg2leg, info)
+
         leg2sameleg = (
             lambda osc0, osc1: (
                 not info(osc0)['body']
@@ -661,6 +746,7 @@ def plot_networks_maps(morphology, data, show_all=False):
         network = NetworkFigure(morphology, data)
         plots['network_oscillators'] = network.plot(
             title='Oscillators complete connectivity',
+            animat_options=animat_options,
             show_contacts_connectivity=False,
             show_hydrodynamics_connectivity=False,
             use_colorbar=True,
@@ -668,6 +754,7 @@ def plot_networks_maps(morphology, data, show_all=False):
         )
         plots['network_oscillators_body2body'] = network.plot(
             title='Oscillators body2body connectivity',
+            animat_options=animat_options,
             show_contacts_connectivity=False,
             show_hydrodynamics_connectivity=False,
             osc_conn_cond=body2body,
@@ -676,6 +763,7 @@ def plot_networks_maps(morphology, data, show_all=False):
         )
         plots['network_oscillators_body2limb'] = network.plot(
             title='Oscillators body2limb connectivity',
+            animat_options=animat_options,
             show_contacts_connectivity=False,
             show_hydrodynamics_connectivity=False,
             osc_conn_cond=body2leg,
@@ -684,6 +772,7 @@ def plot_networks_maps(morphology, data, show_all=False):
         )
         plots['network_oscillators_limb2body'] = network.plot(
             title='Oscillators limb2body connectivity',
+            animat_options=animat_options,
             show_contacts_connectivity=False,
             show_hydrodynamics_connectivity=False,
             osc_conn_cond=leg2body,
@@ -693,6 +782,7 @@ def plot_networks_maps(morphology, data, show_all=False):
         )
         plots['network_oscillators_limb2limb'] = network.plot(
             title='Oscillators limb2limb connectivity',
+            animat_options=animat_options,
             show_contacts_connectivity=False,
             show_hydrodynamics_connectivity=False,
             osc_conn_cond=leg2leg,
@@ -702,6 +792,7 @@ def plot_networks_maps(morphology, data, show_all=False):
         )
         plots['network_oscillators_intralimb'] = network.plot(
             title='Oscillators intralimb connectivity',
+            animat_options=animat_options,
             show_contacts_connectivity=False,
             show_hydrodynamics_connectivity=False,
             osc_conn_cond=leg2sameleg,
@@ -711,6 +802,7 @@ def plot_networks_maps(morphology, data, show_all=False):
         )
         plots['network_oscillators_interlimb'] = network.plot(
             title='Oscillators interlimb connectivity',
+            animat_options=animat_options,
             show_contacts_connectivity=False,
             show_hydrodynamics_connectivity=False,
             osc_conn_cond=leg2diffleg,
@@ -722,6 +814,7 @@ def plot_networks_maps(morphology, data, show_all=False):
         # Plot network oscillator phases connectivity
         plots['network_phases'] = network.plot(
             title='Oscillators complete phases',
+            animat_options=animat_options,
             show_contacts_connectivity=False,
             show_hydrodynamics_connectivity=False,
             use_colorbar=True,
@@ -729,6 +822,7 @@ def plot_networks_maps(morphology, data, show_all=False):
         )
         plots['network_phases_body2body'] = network.plot(
             title='Oscillators body2body phases',
+            animat_options=animat_options,
             show_contacts_connectivity=False,
             show_hydrodynamics_connectivity=False,
             osc_conn_cond=body2body,
@@ -737,6 +831,7 @@ def plot_networks_maps(morphology, data, show_all=False):
         )
         plots['network_phases_body2limb'] = network.plot(
             title='Oscillators body2limb phases',
+            animat_options=animat_options,
             show_contacts_connectivity=False,
             show_hydrodynamics_connectivity=False,
             osc_conn_cond=body2leg,
@@ -745,6 +840,7 @@ def plot_networks_maps(morphology, data, show_all=False):
         )
         plots['network_phases_limb2body'] = network.plot(
             title='Oscillators limb2body phases',
+            animat_options=animat_options,
             show_contacts_connectivity=False,
             show_hydrodynamics_connectivity=False,
             osc_conn_cond=leg2body,
@@ -754,6 +850,7 @@ def plot_networks_maps(morphology, data, show_all=False):
         )
         plots['network_phases_limb2limb'] = network.plot(
             title='Oscillators limb2limb phases',
+            animat_options=animat_options,
             show_contacts_connectivity=False,
             show_hydrodynamics_connectivity=False,
             osc_conn_cond=leg2leg,
@@ -763,6 +860,7 @@ def plot_networks_maps(morphology, data, show_all=False):
         )
         plots['network_phases_intralimb'] = network.plot(
             title='Oscillators intralimb phases',
+            animat_options=animat_options,
             show_contacts_connectivity=False,
             show_hydrodynamics_connectivity=False,
             osc_conn_cond=leg2sameleg,
@@ -772,6 +870,7 @@ def plot_networks_maps(morphology, data, show_all=False):
         )
         plots['network_phases_interlimb'] = network.plot(
             title='Oscillators interlimb phases',
+            animat_options=animat_options,
             show_contacts_connectivity=False,
             show_hydrodynamics_connectivity=False,
             osc_conn_cond=leg2diffleg,
@@ -783,6 +882,7 @@ def plot_networks_maps(morphology, data, show_all=False):
         # Plot contacts connectivity
         plots['network_contacts'] = network.plot(
             title='Contacts complete connectivity',
+            animat_options=animat_options,
             show_oscillators_connectivity=False,
             show_hydrodynamics_connectivity=False,
             use_colorbar=True,
@@ -790,6 +890,7 @@ def plot_networks_maps(morphology, data, show_all=False):
         )
         plots['network_contacts_intralimb'] = network.plot(
             title='Contacts intralimb connectivity',
+            animat_options=animat_options,
             show_oscillators_connectivity=False,
             show_hydrodynamics_connectivity=False,
             contact_conn_cond=contact2sameleg,
@@ -798,6 +899,7 @@ def plot_networks_maps(morphology, data, show_all=False):
         )
         plots['network_contacts_interlimb'] = network.plot(
             title='Contacts interlimb connectivity',
+            animat_options=animat_options,
             show_oscillators_connectivity=False,
             show_hydrodynamics_connectivity=False,
             contact_conn_cond=contact2diffleg,
@@ -808,11 +910,13 @@ def plot_networks_maps(morphology, data, show_all=False):
         # Plot hydrodynamics connectivity
         plots['network_hydro'] = network.plot(
             title='Hydrodynamics complete connectivity',
+            animat_options=animat_options,
             show_oscillators_connectivity=False,
             show_contacts_connectivity=False,
         )
         plots['network_hydro_frequency'] = network.plot(
             title='Hydrodynamics frequency connectivity',
+            animat_options=animat_options,
             show_oscillators_connectivity=False,
             show_contacts_connectivity=False,
             use_colorbar=True,
@@ -820,6 +924,7 @@ def plot_networks_maps(morphology, data, show_all=False):
         )
         plots['network_hydro_amplitude'] = network.plot(
             title='Hydrodynamics amplitude connectivity',
+            animat_options=animat_options,
             show_oscillators_connectivity=False,
             show_contacts_connectivity=False,
             use_colorbar=True,
