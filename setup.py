@@ -106,6 +106,7 @@ setup(
     install_requires=[
         'farms_pylog',
         'farms_data',
+        'farms_sdf',
         'farms_mujoco',
         'cython',
         'numpy',
