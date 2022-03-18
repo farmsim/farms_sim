@@ -65,6 +65,7 @@ class AmphibiousOptions(ModelOptions):
             control=AmphibiousControlOptions(**kwargs.pop('control')),
         )
         self.name = kwargs.pop('name')
+        self.sdf_path = kwargs.pop('sdf_path')
         self.physics = AmphibiousPhysicsOptions(**kwargs.pop('physics'))
         self.show_hydrodynamics = kwargs.pop('show_hydrodynamics')
         self.scale_hydrodynamics = kwargs.pop('scale_hydrodynamics')
@@ -81,6 +82,7 @@ class AmphibiousOptions(ModelOptions):
         """From options"""
         options = {}
         options['name'] = kwargs.pop('name', 'Animat')
+        options['sdf_path'] = kwargs.pop('sdf_path')
         options['morphology'] = kwargs.pop(
             'morphology',
             AmphibiousMorphologyOptions.from_options(kwargs),

@@ -11,7 +11,6 @@ class Amphibious(Animat):
 
     def __init__(
             self,
-            sdf: str,
             controller: ModelController,
             timestep: float,
             iterations: int,
@@ -21,7 +20,6 @@ class Amphibious(Animat):
             data=controller.animat_data if controller is not None else None,
             **kwargs,
         )
-        self.sdf: str = sdf
         self.timestep: float = timestep
         self.n_iterations: int = iterations
         self.controller: ModelController = controller

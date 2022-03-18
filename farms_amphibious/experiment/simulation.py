@@ -47,9 +47,6 @@ def setup_from_clargs(clargs=None):
     if clargs is None:
         clargs = parse_args()
 
-    # Options
-    sdf = clargs.sdf
-
     # Animat options
     pylog.info('Getting animat options')
     assert clargs.animat_config, 'No animat config provided'
@@ -76,11 +73,10 @@ def setup_from_clargs(clargs=None):
         animat_options = AmphibiousOptions.load(animat_options_filename)
         sim_options = SimulationOptions.load(sim_options_filename)
 
-    return clargs, sdf, animat_options, sim_options, arena_options
+    return clargs, animat_options, sim_options, arena_options
 
 
 def simulation_setup(
-        animat_sdf: str,
         animat_options: AmphibiousOptions,
         arena_options: ArenaOptions,
         **kwargs,
@@ -155,7 +151,6 @@ def simulation_setup(
 
         # Creating animat
         animat = Amphibious(
-            sdf=animat_sdf,
             options=animat_options,
             controller=animat_controller,
             timestep=sim_options.timestep,
@@ -183,11 +178,10 @@ def simulation_setup(
 
         sim = MuJoCoSimulation.from_sdf(
             # Models
-            sdf_path_animat=animat_sdf,
-            arena_options=arena_options,
+            animat_options=animat_options,
             data=animat_data,
             controller=animat_controller,
-            animat_options=animat_options,
+            arena_options=arena_options,
             # Simulation
             simulation_options=sim_options,
             restart=False,
@@ -199,7 +193,6 @@ def simulation_setup(
 
 
 def simulation(
-        animat_sdf: str,
         animat_options: AmphibiousOptions,
         arena_options: ArenaOptions,
         **kwargs,
@@ -209,7 +202,7 @@ def simulation(
     # Instatiate simulation
     pylog.info('Creating simulation')
     simulator = kwargs.get('simulator', Simulator.MUJOCO)
-    sim = simulation_setup(animat_sdf, animat_options, arena_options, **kwargs)
+    sim = simulation_setup(animat_options, arena_options, **kwargs)
 
     if simulator == Simulator.PYBULLET:
 

@@ -32,7 +32,6 @@ def main():
     pylog.info('Loading options from clargs')
     (
         clargs,
-        sdf,
         animat_options,
         sim_options,
         arena_options,
@@ -48,7 +47,6 @@ def main():
     # Simulation
     pylog.info('Creating simulation environment')
     sim: Union[MuJoCoSimulation, AmphibiousPybulletSimulation] = simulation(
-        animat_sdf=sdf,
         animat_options=animat_options,
         simulation_options=sim_options,
         arena_options=arena_options,
