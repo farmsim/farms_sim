@@ -11,13 +11,13 @@ cdef class JointsMusclesCy(JointsControlCy):
 
     def __init__(
             self,
-            NetworkCy network,
+            OscillatorNetworkStateCy state,
             DTYPEv2 parameters,
             UITYPEv2 osc_indices,
             **kwargs,
     ):
         super().__init__(**kwargs)
-        self.network = network
+        self.state = state
         self.parameters = parameters
         self.osc_indices = osc_indices
 

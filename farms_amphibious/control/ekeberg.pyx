@@ -32,9 +32,9 @@ cdef class EkebergMuscleCy(JointsMusclesCy):
         cdef DTYPE neural_diff, neural_sum
         cdef DTYPE active_torque, stiffness_intermediate
         cdef DTYPE active_stiffness, passive_stiffness, damping, friction
-        cdef np.ndarray neural_activity = self.network.outputs(iteration)
+        cdef np.ndarray neural_activity = self.state.outputs(iteration)
         cdef np.ndarray joints_offsets = np.zeros(self.n_joints, dtype=np.double)
-        cdef DTYPEv1 offsets = self.network.offsets(iteration)
+        cdef DTYPEv1 offsets = self.state.offsets(iteration)
         cdef DTYPEv1 positions = self.joints_data.positions(iteration)
         cdef DTYPEv1 velocities = self.joints_data.velocities(iteration)
 

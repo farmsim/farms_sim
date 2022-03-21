@@ -106,8 +106,8 @@ class AmphibiousPybulletSimulation(AnimatPybulletSimulation):
 
     def __init__(
             self,
-            simulation_options: SimulationOptions,
             animat: Animat,
+            simulation_options: SimulationOptions,
             arena_options: ArenaOptions = None,
     ):
         if arena_options is not None:

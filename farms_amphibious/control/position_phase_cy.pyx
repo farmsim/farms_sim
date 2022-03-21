@@ -11,11 +11,11 @@ cdef class PositionPhaseCy(JointsControlCy):
 
     def __init__(
             self,
-            NetworkCy network,
+            OscillatorNetworkStateCy state,
             UITYPEv2 osc_indices,
             **kwargs,
     ):
-        self.network = network
+        self.state = state
         self.osc_indices = osc_indices
         self.weight = kwargs.pop('weight', 0)
         self.offset = kwargs.pop('offset', 0)
@@ -25,9 +25,9 @@ cdef class PositionPhaseCy(JointsControlCy):
     cpdef void step(self, unsigned int iteration):
         """Step"""
         cdef unsigned int joint_i, joint_data_i, osc_i
-        cdef DTYPEv1 offsets = self.network.offsets(iteration)
-        cdef DTYPEv1 phases = self.network.phases(iteration)
-        cdef DTYPEv1 amplitudes = self.network.amplitudes(iteration)
+        cdef DTYPEv1 offsets = self.state.offsets(iteration)
+        cdef DTYPEv1 phases = self.state.phases(iteration)
+        cdef DTYPEv1 amplitudes = self.state.amplitudes(iteration)
 
         # For each joint
         for joint_i in range(self.n_joints):

@@ -13,8 +13,8 @@ cdef class PositionMuscleCy(JointsMusclesCy):
         """Step"""
         cdef unsigned int joint_i, joint_data_i, osc_0, osc_1
         cdef DTYPE neural_diff
-        cdef np.ndarray neural_activity = self.network.outputs(iteration)
-        cdef DTYPEv1 offsets = self.network.offsets(iteration)
+        cdef np.ndarray neural_activity = self.state.outputs(iteration)
+        cdef DTYPEv1 offsets = self.state.offsets(iteration)
 
         # For each joint
         for joint_i in range(self.n_joints):

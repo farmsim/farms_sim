@@ -5,14 +5,14 @@ include 'types.pxd'
 cimport numpy as np
 import numpy as np
 from farms_data.sensors.data_cy cimport JointSensorArrayCy
+from farms_data.amphibious.animat_data_cy cimport OscillatorNetworkStateCy
 from .joints_control_cy cimport JointsControlCy
-from .network_cy cimport NetworkCy
 
 
 cdef class PositionPhaseCy(JointsControlCy):
     """Position phase model"""
 
-    cdef public NetworkCy network
+    cdef public OscillatorNetworkStateCy state
     cdef public UITYPEv2 osc_indices
     cdef public double weight
     cdef public double offset
