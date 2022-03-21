@@ -37,7 +37,8 @@ def prompt_postprocessing(sim, animat_options, query=True, **kwargs):
         (query and prompt('Save data', False))
         or log_path and not query
     )
-    os.makedirs(log_path, exist_ok=True)
+    if log_path:
+        os.makedirs(log_path, exist_ok=True)
     show_plots = prompt('Show plots', False) if query else False
     iteration = (
         sim.iteration
