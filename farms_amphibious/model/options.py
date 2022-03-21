@@ -423,6 +423,7 @@ class AmphibiousControlOptions(ControlOptions):
             ],
         )
         self.n_oscillators = kwargs.pop('n_oscillators')
+        self.drive_config = kwargs.pop('drive_config')
         self.kinematics_file = kwargs.pop('kinematics_file')
         self.manta_controller = kwargs.pop('manta_controller', False)
         self.kinematics_sampling = kwargs.pop('kinematics_sampling')
@@ -452,6 +453,7 @@ class AmphibiousControlOptions(ControlOptions):
             'joints': kwargs.pop('joints', {}),
         })
         options['n_oscillators'] = kwargs.pop('n_oscillators', None)
+        options['drive_config'] = kwargs.pop('drive_config', '')
         options['kinematics_file'] = kwargs.pop('kinematics_file', '')
         options['kinematics_sampling'] = kwargs.pop('kinematics_sampling', 0)
         options['network'] = kwargs.pop(

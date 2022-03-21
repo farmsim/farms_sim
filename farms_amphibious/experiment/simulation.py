@@ -9,7 +9,7 @@ from farms_data.amphibious.data import AmphibiousData
 from farms_data.simulation.options import Simulator, SimulationOptions
 
 from ..model.options import AmphibiousOptions
-from ..utils.parse_args import parse_args
+from ..utils.parse_args import sim_parse_args
 from ..utils.prompt import prompt_postprocessing
 from ..control.amphibious import AmphibiousController
 from ..control.kinematics import KinematicsController
@@ -45,7 +45,7 @@ def setup_from_clargs(clargs=None):
 
     # Arguments
     if clargs is None:
-        clargs = parse_args()
+        clargs = sim_parse_args()
 
     # Animat options
     pylog.info('Getting animat options')
@@ -242,7 +242,7 @@ def simulation_post(sim, log_path='', plot=False, video=''):
 def postprocessing_from_clargs(sim, animat_options, simulator, clargs=None):
     """Simulation postproces"""
     if clargs is None:
-        clargs = parse_args()
+        clargs = sim_parse_args()
         simulator = {
             'MUJOCO': Simulator.MUJOCO,
             'PYBULLET': Simulator.PYBULLET,

@@ -9,7 +9,7 @@ from farms_data.utils.profile import profile
 from farms_data.simulation.options import Simulator
 
 from farms_mujoco.simulation.simulation import Simulation as MuJoCoSimulation
-from farms_amphibious.utils.parse_args import parse_args
+from farms_amphibious.utils.parse_args import sim_parse_args
 from farms_amphibious.experiment.simulation import (
     setup_from_clargs,
     simulation,
@@ -51,7 +51,7 @@ def main():
         simulation_options=sim_options,
         arena_options=arena_options,
         use_controller=True,
-        drive_config=clargs.drive_config,
+        drive_config=animat_options.control.drive_config,
         simulator=simulator,
     )
 
@@ -68,7 +68,7 @@ def main():
 def profile_simulation():
     """Profile simulation"""
     tic = time.time()
-    clargs = parse_args()
+    clargs = sim_parse_args()
     profile(function=main, profile_filename=clargs.profile)
     pylog.info('Total simulation time: %s [s]', time.time() - tic)
 

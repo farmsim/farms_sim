@@ -2,14 +2,62 @@
 
 import argparse
 import numpy as np
-from farms_data.simulation.parse_args import argument_parser as sim_arg_parser
+from farms_data.simulation.parse_args import (
+    sim_argument_parser as farms_data_sim_argument_parser,
+    config_argument_parser as farms_data_config_argument_parser,
+)
 from ..model.options import options_kwargs_keys
 
 
-def argument_parser() -> argparse.ArgumentParser:
+def sim_argument_parser() -> argparse.ArgumentParser:
+    """Argument parser"""
+    parser = farms_data_sim_argument_parser()
+    parser.description = 'FARMS amphibious simulation'
+
+    # Logging and profiling
+    parser.add_argument(
+        '--log_path',
+        type=str,
+        default='',
+        help='Log simulation data to provided folder path',
+    )
+    parser.add_argument(
+        '--profile',
+        type=str,
+        default='',
+        help='Save simulation profile to given filename',
+    )
+    parser.add_argument(
+        '--test_configs',
+        action='store_true',
+        help='Test simulation configuration files',
+    )
+    parser.add_argument(
+        '--prompt',
+        action='store_true',
+        help='Prompt at end of simulation',
+    )
+    parser.add_argument(
+        '--verify_save',
+        action='store_true',
+        help='Verify if saved simulation data can be loaded',
+    )
+
+    return parser
+
+
+def sim_parse_args():
+    """Parse arguments"""
+    parser = sim_argument_parser()
+    # return parser.parse_args()
+    args, _ = parser.parse_known_args()
+    return args
+
+
+def config_argument_parser() -> argparse.ArgumentParser:
     """Parse args"""
-    parser = sim_arg_parser()
-    parser.description = 'Amphibious simulation'
+    parser = farms_data_config_argument_parser()
+    parser.description = 'Amphibious simulation config generation'
     parser.add_argument(
         '--sdf',
         type=str,
@@ -118,37 +166,9 @@ def argument_parser() -> argparse.ArgumentParser:
         help='Torque equation',
     )
     parser.add_argument(
-        '--drive_config',
-        type=str,
-        default='',
-        help='Descending drive method',
-    )
-    parser.add_argument(
-        '--log_path',
-        type=str,
-        default='',
-        help='Log simulation data to provided folder path',
-    )
-    parser.add_argument(
         '--save_to_models',
         action='store_true',
         help='Save data to farms_models_data',
-    )
-    parser.add_argument(
-        '--verify_save',
-        action='store_true',
-        help='Verify if saved simulation data can be loaded',
-    )
-    parser.add_argument(
-        '--profile',
-        type=str,
-        default='',
-        help='Save simulation profile to given filename',
-    )
-    parser.add_argument(
-        '--test_configs',
-        action='store_true',
-        help='Test simulation configuration files',
     )
     parser.add_argument(
         '--drives',
@@ -157,6 +177,12 @@ def argument_parser() -> argparse.ArgumentParser:
         metavar=('forward', 'turn'),
         default=(2, 0),
         help='Animat descending drives',
+    )
+    parser.add_argument(
+        '--drive_config',
+        type=str,
+        default='',
+        help='Descending drive config',
     )
     parser.add_argument(
         '--max_torque',
@@ -207,11 +233,6 @@ def argument_parser() -> argparse.ArgumentParser:
         default='FARMS',
         help='Spawn loader',
     )
-    parser.add_argument(
-        '--prompt',
-        action='store_true',
-        help='Prompt at end of simulation',
-    )
     for key in options_kwargs_keys():
         parser.add_argument(
             f'--{key}',
@@ -229,9 +250,9 @@ def argument_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def parse_args():
+def config_parse_args():
     """Parse args"""
-    parser = argument_parser()
+    parser = config_argument_parser()
     return parser.parse_args()
 
 

@@ -82,8 +82,8 @@ def main():
     # Plot connectivity
     plots_network = (
         plot_networks_maps(
-            morphology=animat_options.morphology,
             data=animat_data,
+            animat_options=animat_options,
             show_all=True,
         )[1]
         if animat_options.morphology.n_dof_legs <= 4
@@ -91,10 +91,10 @@ def main():
     )
 
     # Plot descending drive
-    if clargs.drive_config:
+    if animat_options.control.drive_config:
         pos = np.array(animat_data.sensors.links.urdf_positions()[:, 0])
         drive = drive_from_config(
-            filename=clargs.drive_config,
+            filename=animat_options.control.drive_config,
             animat_data=animat_data,
             simulation_options=simulation_options,
         )
@@ -106,7 +106,7 @@ def main():
     # Save plots
     extension = 'pdf'
     for name, fig in {**plots_sim, **plots_network, **plots_drive}.items():
-        filename = os.path.join(clargs.output, '{}.{}'.format(name, extension))
+        filename = os.path.join(clargs.output, f'{name}.{extension}')
         pylog.debug('Saving to %s', filename)
         fig.savefig(filename, format=extension, bbox_inches='tight')
 
