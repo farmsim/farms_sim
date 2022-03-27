@@ -38,15 +38,15 @@ Options.closure_freelist_size = 8
 
 
 setup(
-    name='farms_amphibious',
+    name='farms_sim',
     version='0.1',
     author='farmsdev',
     author_email='biorob-farms@groupes.epfl.ch',
-    description='FARMS package for amphibious simulations',
+    description='FARMS package for sim simulations',
     # license='BSD-3',
-    keywords='farms amphibious control simulation',
+    keywords='farms control simulation',
     # url='',
-    # packages=['farms_amphibious'],
+    # packages=['farms_sim'],
     packages=find_packages(),
     # long_description=read('README'),
     # classifiers=[
@@ -55,21 +55,21 @@ setup(
     #     'License :: OSI Approved :: BSD License',
     # ],
     scripts=[],
-    # package_data={'farms_amphibious': [
-    #     'farms_amphibious/templates/*',
-    #     'farms_amphibious/config/*'
+    # package_data={'farms_sim': [
+    #     'farms_sim/templates/*',
+    #     'farms_sim/config/*'
     # ]},
     include_package_data=True,
     include_dirs=[np.get_include()],
     ext_modules=cythonize(
         [
             Extension(
-                f'farms_amphibious.{folder}.*',
-                sources=[f'farms_amphibious/{folder}/*.pyx'],
+                f'farms_sim.{folder}.*',
+                sources=[f'farms_sim/{folder}/*.pyx'],
                 extra_compile_args=['-O3'],  # , '-fopenmp'
                 extra_link_args=['-O3']  # , '-fopenmp'
             )
-            for folder in ['control']
+            for folder in []
         ],
         include_path=[np.get_include()] + get_include_paths(),
         compiler_directives={
