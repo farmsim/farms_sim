@@ -2,7 +2,7 @@
 
 import numpy as np
 from scipy.interpolate import interp1d
-from farms_data.model.control import ModelController, ControlType
+from farms_data.model.control import AnimatController, ControlType
 
 
 def kinematics_interpolation(
@@ -30,7 +30,7 @@ def kinematics_interpolation(
     )(interp_xn)
 
 
-class KinematicsController(ModelController):
+class KinematicsController(AnimatController):
     """Amphibious kinematics"""
 
     def __init__(

@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 import farms_pylog as pylog
 from farms_data.simulation.options import Simulator
-from farms_data.model.data import ModelData
+from farms_data.model.data import AnimatData
 
 
 def prompt(query, default):
@@ -28,7 +28,7 @@ def prompt_postprocessing(sim, query=True, **kwargs):
     verify = kwargs.pop('verify', False)
     extension = kwargs.pop('extension', 'pdf')
     simulator = kwargs.pop('simulator', Simulator.MUJOCO)
-    data_loader = kwargs.pop('animat_data_loader', ModelData)
+    data_loader = kwargs.pop('animat_data_loader', AnimatData)
     assert not kwargs, kwargs
 
     # Post-processing

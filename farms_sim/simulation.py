@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Run salamander simulation with bullet"""
 
+from typing import Union
 import farms_pylog as pylog
+from farms_data.model.data import AnimatData
 from farms_data.model.options import ArenaOptions
-from farms_data.amphibious.data import AmphibiousData
 from farms_data.simulation.options import Simulator, SimulationOptions
-from farms_data.model.options import ModelOptions
+from farms_data.model.options import AnimatOptions
 
 from .utils.parse_args import sim_parse_args
 from .utils.prompt import prompt_postprocessing
@@ -21,9 +22,9 @@ except ImportError as err:
 
 ENGINE_BULLET = False
 try:
-    from farms_bullet.simulation.simulation import AnimatSimulation
-    # from ..bullet.animat import Amphibious
-    # from ..bullet.simulation import AmphibiousPybulletSimulation
+    from farms_bullet.simulation.simulation import (
+        AnimatSimulation as PybulletSimulation
+    )
     ENGINE_BULLET = True
 except ImportError as err:
     pylog.error(err)
@@ -39,12 +40,11 @@ def setup_from_clargs(clargs=None, **kwargs):
     if clargs is None:
         clargs = sim_parse_args()
 
-    model_options_loader = kwargs.pop('model_options_loader', ModelOptions)
-
     # Animat options
     pylog.info('Getting animat options')
     assert clargs.animat_config, 'No animat config provided'
-    animat_options = model_options_loader.load(clargs.animat_config)
+    animat_options_loader = kwargs.pop('animat_options_loader', AnimatOptions)
+    animat_options = animat_options_loader.load(clargs.animat_config)
 
     # Simulation options
     pylog.info('Getting simulation options')
@@ -64,17 +64,17 @@ def setup_from_clargs(clargs=None, **kwargs):
         sim_options_filename = 'simulation_options.yaml'
         sim_options.save(sim_options_filename)
         # Load options
-        animat_options = model_options_loader.load(animat_options_filename)
+        animat_options = animat_options_loader.load(animat_options_filename)
         sim_options = SimulationOptions.load(sim_options_filename)
 
     return clargs, animat_options, sim_options, arena_options
 
 
 def simulation_setup(
-        animat_options: ModelOptions,
+        animat_options: AnimatOptions,
         arena_options: ArenaOptions,
         **kwargs,
-):
+) -> Union[MuJoCoSimulation, PybulletSimulation]:
     """Simulation setup"""
 
     # Get options
@@ -85,13 +85,12 @@ def simulation_setup(
     )
 
     # Animat data
+    animat_data_class = kwargs.pop('animat_data_class', AnimatData)
     animat_data = kwargs.pop(
         'animat_data',
-        AmphibiousData.from_options(
-            control=animat_options.control,
-            initial_state=animat_options.state_init(),
-            n_iterations=sim_options.n_iterations,
-            timestep=sim_options.timestep,
+        animat_data_class.from_options(
+            animat_options=animat_options,
+            simulation_options=sim_options,
         ),
     )
 
@@ -103,7 +102,7 @@ def simulation_setup(
         callbacks = kwargs.pop('callbacks', [])
     elif simulator == Simulator.PYBULLET:
         animat = kwargs.pop('animat', None)
-        sim_loader = kwargs.pop('sim_loader', AnimatSimulation)
+        sim_loader = kwargs.pop('sim_loader', PybulletSimulation)
 
     # Kwargs check
     assert not kwargs, kwargs
@@ -139,10 +138,10 @@ def simulation_setup(
 
 
 def simulation(
-        animat_options: ModelOptions,
+        animat_options: AnimatOptions,
         arena_options: ArenaOptions,
         **kwargs,
-):
+) -> Union[MuJoCoSimulation, PybulletSimulation]:
     """Simulation"""
 
     # Instatiate simulation

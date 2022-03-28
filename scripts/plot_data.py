@@ -8,8 +8,8 @@ from cycler import cycler
 import matplotlib.pyplot as plt
 
 import farms_pylog as pylog
-from farms_data.model.data import ModelData
-# from farms_data.model.options import ModelOptions
+from farms_data.model.data import AnimatData
+# from farms_data.model.options import AnimatOptions
 from farms_data.simulation.options import SimulationOptions
 
 
@@ -64,9 +64,9 @@ def main():
     clargs = parse_args()
 
     # Load data
-    # animat_options = ModelOptions.load(clargs.animat)
+    # animat_options = AnimatOptions.load(clargs.animat)
     simulation_options = SimulationOptions.load(clargs.simulation)
-    animat_data = ModelData.from_file(clargs.data)
+    animat_data = AnimatData.from_file(clargs.data)
 
     # Plot simulation data
     times = np.arange(
