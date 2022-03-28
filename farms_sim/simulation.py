@@ -1,22 +1,14 @@
 #!/usr/bin/env python3
 """Run salamander simulation with bullet"""
 
-import numpy as np
-
 import farms_pylog as pylog
 from farms_data.model.options import ArenaOptions
 from farms_data.amphibious.data import AmphibiousData
 from farms_data.simulation.options import Simulator, SimulationOptions
+from farms_data.model.options import ModelOptions
 
-from ..model.options import AmphibiousOptions
-from ..utils.parse_args import sim_parse_args
-from ..utils.prompt import prompt_postprocessing
-from ..control.amphibious import AmphibiousController
-from ..control.kinematics import KinematicsController
-from ..control.manta_control import MantaController
-from ..control.drive import drive_from_config
-
-from .callbacks import SwimmingCallback
+from .utils.parse_args import sim_parse_args
+from .utils.prompt import prompt_postprocessing
 
 ENGINE_MUJOCO = False
 try:
@@ -26,31 +18,33 @@ try:
     ENGINE_MUJOCO = True
 except ImportError as err:
     pylog.error(err)
-    ENGINE_MUJOCO = False
+
 ENGINE_BULLET = False
 try:
-    from ..bullet.animat import Amphibious
-    from ..bullet.simulation import AmphibiousPybulletSimulation
+    from farms_bullet.simulation.simulation import AnimatSimulation
+    # from ..bullet.animat import Amphibious
+    # from ..bullet.simulation import AmphibiousPybulletSimulation
     ENGINE_BULLET = True
 except ImportError as err:
     pylog.error(err)
-    ENGINE_BULLET = False
 
 if not ENGINE_MUJOCO and not ENGINE_BULLET:
     raise ImportError('Neither MuJoCo nor Bullet are installed')
 
 
-def setup_from_clargs(clargs=None):
+def setup_from_clargs(clargs=None, **kwargs):
     """Simulation setup from clargs"""
 
     # Arguments
     if clargs is None:
         clargs = sim_parse_args()
 
+    model_options_loader = kwargs.pop('model_options_loader', ModelOptions)
+
     # Animat options
     pylog.info('Getting animat options')
     assert clargs.animat_config, 'No animat config provided'
-    animat_options = AmphibiousOptions.load(clargs.animat_config)
+    animat_options = model_options_loader.load(clargs.animat_config)
 
     # Simulation options
     pylog.info('Getting simulation options')
@@ -70,23 +64,24 @@ def setup_from_clargs(clargs=None):
         sim_options_filename = 'simulation_options.yaml'
         sim_options.save(sim_options_filename)
         # Load options
-        animat_options = AmphibiousOptions.load(animat_options_filename)
+        animat_options = model_options_loader.load(animat_options_filename)
         sim_options = SimulationOptions.load(sim_options_filename)
 
     return clargs, animat_options, sim_options, arena_options
 
 
 def simulation_setup(
-        animat_options: AmphibiousOptions,
+        animat_options: ModelOptions,
         arena_options: ArenaOptions,
         **kwargs,
 ):
     """Simulation setup"""
+
     # Get options
     simulator = kwargs.pop('simulator', Simulator.MUJOCO)
     sim_options = kwargs.pop(
         'simulation_options',
-        SimulationOptions.with_clargs()
+        SimulationOptions.with_clargs(),
     )
 
     # Animat data
@@ -101,47 +96,14 @@ def simulation_setup(
     )
 
     # Animat controller
-    if kwargs.pop('use_controller', False) or 'animat_controller' in kwargs:
-        drive_config = kwargs.pop('drive_config', None)
-        animat_controller = (
-            kwargs.pop('animat_controller')
-            if 'animat_controller' in kwargs
-            else KinematicsController(
-                joints_names=animat_options.morphology.joints_names(),
-                kinematics=np.genfromtxt(animat_options.control.kinematics_file),
-                sampling=animat_options.control.kinematics_sampling,
-                timestep=sim_options.timestep,
-                n_iterations=sim_options.n_iterations,
-                animat_data=animat_data,
-                max_torques={
-                    joint.joint: joint.max_torque
-                    for joint in animat_options.control.joints
-                },
-            )
-            if animat_options.control.kinematics_file
-            else MantaController(
-                joints_names=animat_options.morphology.joints_names(),
-                animat_options=animat_options,
-                animat_data=animat_data,
-            )
-            if animat_options.control.manta_controller
-            else AmphibiousController(
-                joints_names=animat_options.control.joints_names(),
-                animat_options=animat_options,
-                animat_data=animat_data,
-                drive=(
-                    drive_from_config(
-                        filename=drive_config,
-                        animat_data=animat_data,
-                        simulation_options=sim_options,
-                    )
-                    if drive_config
-                    else None
-                ),
-            )
-        )
-    else:
-        animat_controller = None
+    animat_controller = kwargs.pop('animat_controller', None)
+
+    # Simulator specific options
+    if simulator == Simulator.MUJOCO:
+        callbacks = kwargs.pop('callbacks', [])
+    elif simulator == Simulator.PYBULLET:
+        animat = kwargs.pop('animat', None)
+        sim_loader = kwargs.pop('sim_loader', AnimatSimulation)
 
     # Kwargs check
     assert not kwargs, kwargs
@@ -149,18 +111,9 @@ def simulation_setup(
     # Pybullet
     if simulator == Simulator.PYBULLET:
 
-        # Creating animat
-        animat = Amphibious(
-            options=animat_options,
-            controller=animat_controller,
-            timestep=sim_options.timestep,
-            iterations=sim_options.n_iterations,
-            units=sim_options.units,
-        )
-
         # Setup simulation
         pylog.info('Creating simulation')
-        sim = AmphibiousPybulletSimulation(
+        sim = sim_loader(
             simulation_options=sim_options,
             animat=animat,
             arena_options=arena_options,
@@ -168,13 +121,6 @@ def simulation_setup(
 
     # Mujoco
     elif simulator == Simulator.MUJOCO:
-
-        # Callbacks
-        callbacks = []
-
-        # Hydrodynamics
-        if animat_options.physics.drag or animat_options.physics.sph:
-            callbacks += [SwimmingCallback(animat_options=animat_options)]
 
         sim = MuJoCoSimulation.from_sdf(
             # Models
@@ -193,7 +139,7 @@ def simulation_setup(
 
 
 def simulation(
-        animat_options: AmphibiousOptions,
+        animat_options: ModelOptions,
         arena_options: ArenaOptions,
         **kwargs,
 ):
@@ -239,19 +185,18 @@ def simulation_post(sim, log_path='', plot=False, video=''):
     )
 
 
-def postprocessing_from_clargs(sim, animat_options, simulator, clargs=None):
+def postprocessing_from_clargs(sim, clargs=None, **kwargs):
     """Simulation postproces"""
     if clargs is None:
         clargs = sim_parse_args()
-        simulator = {
+        kwargs['simulator'] = {
             'MUJOCO': Simulator.MUJOCO,
             'PYBULLET': Simulator.PYBULLET,
         }[clargs.simulator]
     prompt_postprocessing(
         sim=sim,
-        animat_options=animat_options,
         query=clargs.prompt,
         log_path=clargs.log_path,
         verify=clargs.verify_save,
-        simulator=simulator,
+        **kwargs,
     )

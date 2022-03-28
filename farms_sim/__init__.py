@@ -1,1 +1,1 @@
-"""FARMS_AMPHIBIOUS"""
+"""FARMS simulation"""

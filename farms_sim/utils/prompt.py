@@ -7,8 +7,7 @@ import matplotlib.pyplot as plt
 
 import farms_pylog as pylog
 from farms_data.simulation.options import Simulator
-from farms_data.amphibious.animat_data import AnimatData
-from farms_amphibious.utils.network import plot_networks_maps
+from farms_data.model.data import ModelData
 
 
 def prompt(query, default):
@@ -22,13 +21,14 @@ def prompt(query, default):
     return ret
 
 
-def prompt_postprocessing(sim, animat_options, query=True, **kwargs):
+def prompt_postprocessing(sim, query=True, **kwargs):
     """Prompt postprocessing"""
     # Arguments
     log_path = kwargs.pop('log_path', '')
     verify = kwargs.pop('verify', False)
     extension = kwargs.pop('extension', 'pdf')
     simulator = kwargs.pop('simulator', Simulator.MUJOCO)
+    data_loader = kwargs.pop('animat_data_loader', ModelData)
     assert not kwargs, kwargs
 
     # Post-processing
@@ -57,28 +57,15 @@ def prompt_postprocessing(sim, animat_options, query=True, **kwargs):
     )
     if save_data and verify:
         pylog.debug('Data saved, now loading back to check validity')
-        AnimatData.from_file(os.path.join(log_path, 'simulation.hdf5'))
+        data_loader.from_file(os.path.join(log_path, 'simulation.hdf5'))
         pylog.debug('Data successfully saved and logged back')
 
     # Save MuJoCo MJCF
-    if simulator == Simulator.MUJOCO:
+    if save_data and simulator == Simulator.MUJOCO:
         sim.save_mjcf_xml(os.path.join(log_path, 'sim_mjcf.xml'))
 
-    # Plot network
-    show_connectivity = (
-        prompt('Show connectivity maps', False)
-        if query
-        else False
-    )
-    if show_connectivity:
-        plot_networks_maps(animat_options.morphology, sim.animat().data)
-
     # Save plots
-    if (
-            (show_plots or show_connectivity)
-            and query
-            and prompt('Save plots', False)
-    ):
+    if show_plots and query and prompt('Save plots', False):
         for fig in [plt.figure(num) for num in plt.get_fignums()]:
             path = os.path.join(log_path, fig.canvas.get_window_title())
             filename = f'{path}.{extension}'
@@ -87,9 +74,5 @@ def prompt_postprocessing(sim, animat_options, query=True, **kwargs):
             fig.savefig(filename, format=extension)
 
     # Show plots
-    if show_plots or (
-            show_connectivity
-            and query
-            and prompt('Show connectivity plots', False)
-    ):
+    if show_plots or query and prompt('Show connectivity plots', False):
         plt.show()

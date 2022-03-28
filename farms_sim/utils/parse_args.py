@@ -6,7 +6,7 @@ from farms_data.simulation.parse_args import (
     sim_argument_parser as farms_data_sim_argument_parser,
     config_argument_parser as farms_data_config_argument_parser,
 )
-from ..model.options import options_kwargs_keys
+# from ..model.options import options_kwargs_keys
 
 
 def sim_argument_parser() -> argparse.ArgumentParser:
@@ -233,13 +233,13 @@ def config_argument_parser() -> argparse.ArgumentParser:
         default='FARMS',
         help='Spawn loader',
     )
-    for key in options_kwargs_keys():
-        parser.add_argument(
-            f'--{key}',
-            type=float,
-            default=None,
-            help=f'{key}',
-        )
+    # for key in options_kwargs_keys():
+    #     parser.add_argument(
+    #         f'--{key}',
+    #         type=float,
+    #         default=None,
+    #         help=f'{key}',
+    #     )
     parser.add_argument(
         '--simulator',
         type=str,

@@ -8,16 +8,14 @@ from cycler import cycler
 import matplotlib.pyplot as plt
 
 import farms_pylog as pylog
-from farms_data.amphibious.animat_data import AnimatData
+from farms_data.model.data import ModelData
+# from farms_data.model.options import ModelOptions
 from farms_data.simulation.options import SimulationOptions
-from farms_amphibious.model.options import AmphibiousOptions
-from farms_amphibious.utils.network import plot_networks_maps
-from farms_amphibious.control.drive import drive_from_config, plot_trajectory
 
 
 plt.rc('axes', prop_cycle=(
     cycler(linestyle=['-', '--', '-.', ':'])
-    *cycler(color=plt.rcParams['axes.prop_cycle'].by_key()['color'])
+    * cycler(color=plt.rcParams['axes.prop_cycle'].by_key()['color'])
 ))
 
 
@@ -35,11 +33,11 @@ def parse_args():
         type=str,
         help='Data',
     )
-    parser.add_argument(
-        '--animat',
-        type=str,
-        help='Animat options',
-    )
+    # parser.add_argument(
+    #     '--animat',
+    #     type=str,
+    #     help='Animat options',
+    # )
     parser.add_argument(
         '--simulation',
         type=str,
@@ -66,9 +64,9 @@ def main():
     clargs = parse_args()
 
     # Load data
-    animat_options = AmphibiousOptions.load(clargs.animat)
+    # animat_options = ModelOptions.load(clargs.animat)
     simulation_options = SimulationOptions.load(clargs.simulation)
-    animat_data = AnimatData.from_file(clargs.data)
+    animat_data = ModelData.from_file(clargs.data)
 
     # Plot simulation data
     times = np.arange(
@@ -77,35 +75,11 @@ def main():
         step=simulation_options.timestep,
     )
     assert len(times) == simulation_options.n_iterations
-    plots_sim = animat_data.plot(times)
-
-    # Plot connectivity
-    plots_network = (
-        plot_networks_maps(
-            data=animat_data,
-            animat_options=animat_options,
-            show_all=True,
-        )[1]
-        if animat_options.morphology.n_dof_legs <= 4
-        else {}
-    )
-
-    # Plot descending drive
-    if animat_options.control.drive_config:
-        pos = np.array(animat_data.sensors.links.urdf_positions()[:, 0])
-        drive = drive_from_config(
-            filename=animat_options.control.drive_config,
-            animat_data=animat_data,
-            simulation_options=simulation_options,
-        )
-        fig3 = plot_trajectory(drive.strategy, pos)
-        plots_drive = {'trajectory': fig3}
-    else:
-        plots_drive = {}
+    plots_sim = animat_data.plot_sensors(times)
 
     # Save plots
     extension = 'pdf'
-    for name, fig in {**plots_sim, **plots_network, **plots_drive}.items():
+    for name, fig in {**plots_sim}.items():
         filename = os.path.join(clargs.output, f'{name}.{extension}')
         pylog.debug('Saving to %s', filename)
         fig.savefig(filename, format=extension, bbox_inches='tight')

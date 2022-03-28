@@ -9,8 +9,8 @@ from farms_data.utils.profile import profile
 from farms_data.simulation.options import Simulator
 
 from farms_mujoco.simulation.simulation import Simulation as MuJoCoSimulation
-from farms_amphibious.utils.parse_args import sim_parse_args
-from farms_amphibious.experiment.simulation import (
+from farms_sim.utils.parse_args import sim_parse_args
+from farms_sim.simulation import (
     setup_from_clargs,
     simulation,
     postprocessing_from_clargs,
@@ -18,7 +18,7 @@ from farms_amphibious.experiment.simulation import (
 
 ENGINE_BULLET = False
 try:
-    from farms_amphibious.bullet.simulation import AmphibiousPybulletSimulation
+    from farms_bullet.simulation.simulation import AnimatSimulation
     ENGINE_BULLET = True
 except ImportError as err:
     pylog.error(err)
@@ -46,7 +46,7 @@ def main():
 
     # Simulation
     pylog.info('Creating simulation environment')
-    sim: Union[MuJoCoSimulation, AmphibiousPybulletSimulation] = simulation(
+    sim: Union[MuJoCoSimulation, AnimatSimulation] = simulation(
         animat_options=animat_options,
         simulation_options=sim_options,
         arena_options=arena_options,
