@@ -19,6 +19,7 @@ try:
     ENGINE_MUJOCO = True
 except ImportError as err:
     pylog.error(err)
+    MuJoCoSimulation = None
 
 ENGINE_BULLET = False
 try:
@@ -28,6 +29,7 @@ try:
     ENGINE_BULLET = True
 except ImportError as err:
     pylog.error(err)
+    PybulletSimulation = None
 
 if not ENGINE_MUJOCO and not ENGINE_BULLET:
     raise ImportError('Neither MuJoCo nor Bullet are installed')

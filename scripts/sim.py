@@ -22,7 +22,7 @@ try:
     ENGINE_BULLET = True
 except ImportError as err:
     pylog.error(err)
-    ENGINE_BULLET = False
+    AnimatSimulation = None
 
 
 def main():
