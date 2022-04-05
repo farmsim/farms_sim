@@ -8,9 +8,9 @@ from cycler import cycler
 import matplotlib.pyplot as plt
 
 import farms_pylog as pylog
-from farms_data.model.data import AnimatData
-# from farms_data.model.options import AnimatOptions
-from farms_data.simulation.options import SimulationOptions
+from farms_core.model.data import AnimatData
+# from farms_core.model.options import AnimatOptions
+from farms_core.simulation.options import SimulationOptions
 
 
 plt.rc('axes', prop_cycle=(

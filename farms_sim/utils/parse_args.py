@@ -2,16 +2,16 @@
 
 import argparse
 import numpy as np
-from farms_data.simulation.parse_args import (
-    sim_argument_parser as farms_data_sim_argument_parser,
-    config_argument_parser as farms_data_config_argument_parser,
+from farms_core.simulation.parse_args import (
+    sim_argument_parser as farms_core_sim_argument_parser,
+    config_argument_parser as farms_core_config_argument_parser,
 )
 # from ..model.options import options_kwargs_keys
 
 
 def sim_argument_parser() -> argparse.ArgumentParser:
     """Argument parser"""
-    parser = farms_data_sim_argument_parser()
+    parser = farms_core_sim_argument_parser()
     parser.description = 'FARMS amphibious simulation'
 
     # Logging and profiling
@@ -56,7 +56,7 @@ def sim_parse_args():
 
 def config_argument_parser() -> argparse.ArgumentParser:
     """Parse args"""
-    parser = farms_data_config_argument_parser()
+    parser = farms_core_config_argument_parser()
     parser.description = 'Amphibious simulation config generation'
     parser.add_argument(
         '--sdf',

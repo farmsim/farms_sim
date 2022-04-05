@@ -6,8 +6,8 @@ from distutils.util import strtobool
 import matplotlib.pyplot as plt
 
 import farms_pylog as pylog
-from farms_data.simulation.options import Simulator
-from farms_data.model.data import AnimatData
+from farms_core.simulation.options import Simulator
+from farms_core.model.data import AnimatData
 
 
 def prompt(query, default):

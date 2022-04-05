@@ -3,10 +3,10 @@
 
 from typing import Union
 import farms_pylog as pylog
-from farms_data.model.data import AnimatData
-from farms_data.model.options import ArenaOptions
-from farms_data.simulation.options import Simulator, SimulationOptions
-from farms_data.model.options import AnimatOptions
+from farms_core.model.data import AnimatData
+from farms_core.model.options import ArenaOptions
+from farms_core.simulation.options import Simulator, SimulationOptions
+from farms_core.model.options import AnimatOptions
 
 from .utils.parse_args import sim_parse_args
 from .utils.prompt import prompt_postprocessing
