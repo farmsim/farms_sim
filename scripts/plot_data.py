@@ -7,7 +7,7 @@ import numpy as np
 from cycler import cycler
 import matplotlib.pyplot as plt
 
-import farms_pylog as pylog
+from farms_core import pylog
 from farms_core.model.data import AnimatData
 # from farms_core.model.options import AnimatOptions
 from farms_core.simulation.options import SimulationOptions

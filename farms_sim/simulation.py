@@ -2,7 +2,7 @@
 """Run salamander simulation with bullet"""
 
 from typing import Union
-import farms_pylog as pylog
+from farms_core import pylog
 from farms_core.model.data import AnimatData
 from farms_core.model.options import ArenaOptions
 from farms_core.simulation.options import Simulator, SimulationOptions

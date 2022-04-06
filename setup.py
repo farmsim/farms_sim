@@ -104,7 +104,6 @@ setup(
     ),
     zip_safe=False,
     install_requires=[
-        'farms_pylog',
         'farms_core',
         'farms_mujoco',
         'cython',

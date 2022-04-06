@@ -4,7 +4,7 @@
 import time
 from typing import Union
 
-import farms_pylog as pylog
+from farms_core import pylog
 from farms_core.utils.profile import profile
 from farms_core.simulation.options import Simulator
 
