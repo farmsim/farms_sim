@@ -1,7 +1,7 @@
-Welcome to farms_amphibious's documentation!
-============================================
+Welcome to farms_sim's documentation!
+=====================================
 
-.. figure:: figures/amphibious_0000.png
+.. figure:: figures/farms_HD_cycles.png
    :align: center
 
 .. toctree::

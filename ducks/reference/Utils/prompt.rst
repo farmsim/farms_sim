@@ -1,7 +1,7 @@
 Prompt
 ------
 
-.. automodule:: farms_amphibious.utils.prompt
+.. automodule:: farms_sim.utils.prompt
    :members:
    :show-inheritance:
    :noindex:

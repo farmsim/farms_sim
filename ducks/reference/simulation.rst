@@ -1,7 +1,7 @@
 Simulation
 ----------
 
-.. automodule:: farms_amphibious.experiment.simulation
+.. automodule:: farms_sim.simulation
    :members:
    :show-inheritance:
    :noindex:
