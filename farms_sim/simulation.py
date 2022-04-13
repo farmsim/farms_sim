@@ -17,8 +17,7 @@ try:
         Simulation as MuJoCoSimulation,
     )
     ENGINE_MUJOCO = True
-except ImportError as err:
-    pylog.debug(err)
+except ImportError:
     MuJoCoSimulation = None
 
 ENGINE_BULLET = False
@@ -27,8 +26,7 @@ try:
         AnimatSimulation as PybulletSimulation
     )
     ENGINE_BULLET = True
-except ImportError as err:
-    pylog.debug(err)
+except ImportError:
     PybulletSimulation = None
 
 if not ENGINE_MUJOCO and not ENGINE_BULLET:

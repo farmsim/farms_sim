@@ -20,8 +20,7 @@ ENGINE_BULLET = False
 try:
     from farms_bullet.simulation.simulation import AnimatSimulation
     ENGINE_BULLET = True
-except ImportError as err:
-    pylog.debug(err)
+except ImportError:
     AnimatSimulation = None
 
 
