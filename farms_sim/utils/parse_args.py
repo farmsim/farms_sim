@@ -1,10 +1,6 @@
 """Parse command line arguments"""
 
-from argparse import (
-    ArgumentParser,
-    ArgumentDefaultsHelpFormatter,
-    Namespace,
-)
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter, Namespace
 
 
 def sim_argument_parser() -> ArgumentParser:

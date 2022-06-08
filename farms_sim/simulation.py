@@ -56,6 +56,12 @@ def setup_from_clargs(clargs=None, **kwargs):
     assert clargs.arena_config, 'No arena config provided'
     arena_options = ArenaOptions.load(clargs.arena_config)
 
+    # Simulator
+    simulator = {
+        'MUJOCO': Simulator.MUJOCO,
+        'PYBULLET': Simulator.PYBULLET,
+    }[clargs.simulator]
+
     # Test options saving and loading
     if clargs.test_configs:
         # Save options
@@ -67,7 +73,7 @@ def setup_from_clargs(clargs=None, **kwargs):
         animat_options = animat_options_loader.load(animat_options_filename)
         sim_options = SimulationOptions.load(sim_options_filename)
 
-    return clargs, animat_options, sim_options, arena_options
+    return clargs, animat_options, sim_options, arena_options, simulator
 
 
 def simulation_setup(
