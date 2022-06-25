@@ -85,6 +85,7 @@ def simulation_setup(
 
     # Get options
     simulator = kwargs.pop('simulator', Simulator.MUJOCO)
+    handle_exceptions = kwargs.pop('handle_exceptions', False)
     sim_options = kwargs.pop(
         'simulation_options',
         SimulationOptions.with_clargs(),
@@ -138,6 +139,7 @@ def simulation_setup(
             restart=False,
             # Task
             callbacks=callbacks,
+            handle_exceptions=handle_exceptions,
         )
 
     return sim
