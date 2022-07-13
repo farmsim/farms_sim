@@ -145,7 +145,7 @@ def simulation_setup(
     return sim
 
 
-def simulation(
+def run_simulation(
         animat_options: AnimatOptions,
         arena_options: ArenaOptions,
         **kwargs,
