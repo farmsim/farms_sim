@@ -4,9 +4,8 @@
 from typing import Union
 from farms_core import pylog
 from farms_core.model.data import AnimatData
-from farms_core.model.options import ArenaOptions
+from farms_core.model.options import AnimatOptions, ArenaOptions
 from farms_core.simulation.options import Simulator, SimulationOptions
-from farms_core.model.options import AnimatOptions
 
 from .utils.parse_args import sim_parse_args
 from .utils.prompt import prompt_postprocessing
@@ -54,7 +53,8 @@ def setup_from_clargs(clargs=None, **kwargs):
     # Arena options
     pylog.info('Getting arena options')
     assert clargs.arena_config, 'No arena config provided'
-    arena_options = ArenaOptions.load(clargs.arena_config)
+    arena_options_loader = kwargs.pop('arena_options_loader', ArenaOptions)
+    arena_options = arena_options_loader.load(clargs.arena_config)
 
     # Simulator
     simulator = {
