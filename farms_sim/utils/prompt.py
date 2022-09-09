@@ -62,11 +62,6 @@ def prompt_postprocessing(sim, query=True, **kwargs):
         iteration=iteration,
         log_path=log_path if save_data else '',
         plot=show_plots,
-        video=(
-            os.path.join(log_path, 'simulation.mp4')
-            if sim.options.record
-            else ''
-        ),
     )
     if save_data and verify:
         pylog.debug('Data saved, now loading back to check validity')
