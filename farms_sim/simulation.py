@@ -107,6 +107,7 @@ def simulation_setup(
     # Simulator specific options
     if simulator == Simulator.MUJOCO:
         callbacks = kwargs.pop('callbacks', [])
+        save_mjcf = kwargs.pop('save_mjcf', False)
     elif simulator == Simulator.PYBULLET:
         animat = kwargs.pop('animat', None)
         sim_loader = kwargs.pop('sim_loader', PybulletSimulation)
@@ -140,6 +141,8 @@ def simulation_setup(
             # Task
             callbacks=callbacks,
             handle_exceptions=handle_exceptions,
+            # Save XML directly
+            save_mjcf=save_mjcf,
         )
 
     return sim
