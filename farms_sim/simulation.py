@@ -143,6 +143,7 @@ def simulation_setup(
             handle_exceptions=handle_exceptions,
             # Save XML directly
             save_mjcf=save_mjcf,
+            buffer_size=sim_options.buffer_size,
         )
 
     return sim
