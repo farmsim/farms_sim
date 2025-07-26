@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Run salamander simulation with bullet"""
 
-from typing import Union
 from farms_core import pylog
-from farms_core.model.data import AnimatData
+from farms_core.experiment.data import ExperimentData
 from farms_core.model.options import AnimatOptions, ArenaOptions
 from farms_core.simulation.options import Simulator, SimulationOptions
+from farms_core.experiment.options import ExperimentOptions
 
 from .utils.parse_args import sim_parse_args
 from .utils.prompt import prompt_postprocessing
@@ -39,22 +39,19 @@ def setup_from_clargs(clargs=None, **kwargs):
     if clargs is None:
         clargs = sim_parse_args()
 
-    # Animat options
-    pylog.info('Getting animat options')
-    assert clargs.animat_config, 'No animat config provided'
+    # Experiment options
+    pylog.info('Getting experiment options')
+    assert clargs.experiment_config, 'No experiment config provided'
+    exp_loader = kwargs.pop('experiment_options_loader', ExperimentOptions)
     animat_options_loader = kwargs.pop('animat_options_loader', AnimatOptions)
-    animat_options = animat_options_loader.load(clargs.animat_config)
-
-    # Simulation options
-    pylog.info('Getting simulation options')
-    assert clargs.simulation_config, 'No simulation config provided'
-    sim_options = SimulationOptions.load(clargs.simulation_config)
-
-    # Arena options
-    pylog.info('Getting arena options')
-    assert clargs.arena_config, 'No arena config provided'
     arena_options_loader = kwargs.pop('arena_options_loader', ArenaOptions)
-    arena_options = arena_options_loader.load(clargs.arena_config)
+    experiment_options = exp_loader.load(
+        clargs.experiment_config,
+        animat_class=animat_options_loader,
+        arena_class=arena_options_loader,
+    )
+
+
 
     # Simulator
     simulator = {
@@ -64,6 +61,8 @@ def setup_from_clargs(clargs=None, **kwargs):
 
     # Test options saving and loading
     if clargs.test_configs:
+        sim_options = experiment_options.simulation
+        animat_options = experiment_options.animats[0]
         # Save options
         animat_options_filename = 'animat_options.yaml'
         animat_options.save(animat_options_filename)
@@ -73,36 +72,30 @@ def setup_from_clargs(clargs=None, **kwargs):
         animat_options = animat_options_loader.load(animat_options_filename)
         sim_options = SimulationOptions.load(sim_options_filename)
 
-    return clargs, animat_options, sim_options, arena_options, simulator
+    return clargs, experiment_options, simulator
 
 
 def simulation_setup(
-        animat_options: AnimatOptions,
-        arena_options: ArenaOptions,
+        experiment_options: ExperimentOptions,
         **kwargs,
-) -> Union[MuJoCoSimulation, PybulletSimulation]:
+) -> MuJoCoSimulation | PybulletSimulation:
     """Simulation setup"""
 
     # Get options
     simulator = kwargs.pop('simulator', Simulator.MUJOCO)
     handle_exceptions = kwargs.pop('handle_exceptions', False)
-    sim_options = kwargs.pop(
-        'simulation_options',
-        SimulationOptions.with_clargs(),
-    )
 
-    # Animat data
-    animat_data_class = kwargs.pop('animat_data_class', AnimatData)
-    animat_data = kwargs.pop(
-        'animat_data',
-        animat_data_class.from_options(
-            animat_options=animat_options,
-            simulation_options=sim_options,
-        ),
+    # Experiment data
+    experiment_data_class = kwargs.pop('experiment_data_class', ExperimentData)
+    experiment_data = kwargs.pop(
+        'experiment_data',
+        experiment_data_class.from_options(experiment_options),
     )
+    sim_options = experiment_options.simulation
+    arena_options = experiment_options.arenas[0]
 
     # Animat controller
-    animat_controller = kwargs.pop('animat_controller', None)
+    animats_controllers = kwargs.pop('animats_controllers', [])
 
     # Simulator specific options
     if simulator == Simulator.MUJOCO:
@@ -130,13 +123,12 @@ def simulation_setup(
     elif simulator == Simulator.MUJOCO:
 
         sim = MuJoCoSimulation.from_sdf(
+            # Experiment
+            experiment_options=experiment_options,
             # Models
-            animat_options=animat_options,
-            data=animat_data,
-            controller=animat_controller,
-            arena_options=arena_options,
+            data=experiment_data,
+            controllers=animats_controllers,
             # Simulation
-            simulation_options=sim_options,
             restart=False,
             # Task
             callbacks=callbacks,
@@ -150,16 +142,15 @@ def simulation_setup(
 
 
 def run_simulation(
-        animat_options: AnimatOptions,
-        arena_options: ArenaOptions,
+        experiment_options: ExperimentOptions,
         **kwargs,
-) -> Union[MuJoCoSimulation, PybulletSimulation]:
+) -> MuJoCoSimulation | PybulletSimulation:
     """Simulation"""
 
     # Instatiate simulation
     pylog.info('Creating simulation')
     simulator = kwargs.get('simulator', Simulator.MUJOCO)
-    sim = simulation_setup(animat_options, arena_options, **kwargs)
+    sim = simulation_setup(experiment_options, **kwargs)
 
     if simulator == Simulator.PYBULLET:
 
@@ -199,7 +190,7 @@ def simulation_post(sim, log_path='', plot=False, video=''):
 def postprocessing_from_clargs(sim, clargs=None, **kwargs):
     """Simulation postproces"""
     if clargs is None:
-        clargs = sim_parse_args()
+        clargs = sim_parse_args()  # Parse command-line arguments
         kwargs['simulator'] = {
             'MUJOCO': Simulator.MUJOCO,
             'PYBULLET': Simulator.PYBULLET,
