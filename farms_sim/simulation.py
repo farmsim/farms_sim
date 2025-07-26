@@ -16,8 +16,12 @@ try:
         Simulation as MuJoCoSimulation,
     )
     ENGINE_MUJOCO = True
-except ImportError:
+except ModuleNotFoundError:
+    # Package not installed - this is expected
     MuJoCoSimulation = None
+except ImportError as e:
+    # Package exists but has internal import issues - re-raise with context
+    raise ImportError(f"farms_mujoco is installed but failed to import: {e}") from e
 
 ENGINE_BULLET = False
 try:
@@ -25,11 +29,15 @@ try:
         AnimatSimulation as PybulletSimulation
     )
     ENGINE_BULLET = True
-except ImportError:
+except ModuleNotFoundError:
+    # Package not installed - this is expected
     PybulletSimulation = None
+except ImportError as e:
+    # Package exists but has internal import issues - re-raise with context
+    raise ImportError(f"farms_bullet is installed but failed to import: {e}") from e
 
 if not ENGINE_MUJOCO and not ENGINE_BULLET:
-    raise ImportError('Neither MuJoCo nor Bullet are installed')
+    raise ModuleNotFoundError('Neither MuJoCo nor Bullet packages are installed')
 
 
 def setup_from_clargs(clargs=None, **kwargs):
