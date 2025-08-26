@@ -59,8 +59,6 @@ def setup_from_clargs(clargs=None, **kwargs):
         arena_class=arena_options_loader,
     )
 
-
-
     # Simulator
     simulator = {
         'MUJOCO': Simulator.MUJOCO,
@@ -143,7 +141,7 @@ def simulation_setup(
             handle_exceptions=handle_exceptions,
             # Save XML directly
             save_mjcf=save_mjcf,
-            buffer_size=sim_options.buffer_size,
+            buffer_size=sim_options.runtime.buffer_size,
         )
 
     return sim
