@@ -51,13 +51,7 @@ def setup_from_clargs(clargs=None, **kwargs):
     pylog.info('Getting experiment options')
     assert clargs.experiment_config, 'No experiment config provided'
     exp_loader = kwargs.pop('experiment_options_loader', ExperimentOptions)
-    animat_options_loader = kwargs.pop('animat_options_loader', AnimatOptions)
-    arena_options_loader = kwargs.pop('arena_options_loader', ArenaOptions)
-    experiment_options = exp_loader.load(
-        clargs.experiment_config,
-        animat_class=animat_options_loader,
-        arena_class=arena_options_loader,
-    )
+    experiment_options = exp_loader.load(clargs.experiment_config)
 
     # Simulator
     simulator = {
