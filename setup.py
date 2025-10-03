@@ -50,7 +50,7 @@ setup(
     #     'Topic :: Utilities',
     #     'License :: OSI Approved :: BSD License',
     # ],
-    scripts=[],
+    scripts=['scripts/farmsim'],
     # package_data={'farms_sim': [
     #     'farms_sim/templates/*',
     #     'farms_sim/config/*'

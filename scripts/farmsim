@@ -35,7 +35,7 @@ def main():
 
     # Setup
     pylog.info('Loading options from clargs')
-    clargs, exp_options, simulator  = setup_from_clargs()
+    clargs, exp_options, simulator = setup_from_clargs()
     if simulator == Simulator.PYBULLET and not ENGINE_BULLET:
         raise ImportError('Pybullet or farms_bullet not installed')
     sim_options: SimulationOptions = exp_options.simulation
