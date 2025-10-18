@@ -99,7 +99,7 @@ def simulation_setup(
 
     # Simulator specific options
     if simulator == Simulator.MUJOCO:
-        callbacks = kwargs.pop('callbacks', [])
+        extensions = kwargs.pop('extensions', [])
         save_mjcf = kwargs.pop('save_mjcf', False)
     elif simulator == Simulator.PYBULLET:
         animat = kwargs.pop('animat', None)
@@ -122,7 +122,7 @@ def simulation_setup(
     # Mujoco
     elif simulator == Simulator.MUJOCO:
 
-        sim = MuJoCoSimulation.from_sdf(
+        sim = MuJoCoSimulation.from_experiment(
             # Experiment
             experiment_options=experiment_options,
             # Models
@@ -131,7 +131,7 @@ def simulation_setup(
             # Simulation
             restart=False,
             # Task
-            callbacks=callbacks,
+            extensions=extensions,
             handle_exceptions=handle_exceptions,
             # Save XML directly
             save_mjcf=save_mjcf,
