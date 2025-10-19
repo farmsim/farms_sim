@@ -1,3 +1,11 @@
+[project]
+name = "farms_sim"
+version = "0.1"
+requires-python = ">= 3.10"
+
+[project.scripts]
+farmsim = "farms_sim._bootstrap:main"
+
 [build-system]
 requires = ["setuptools>=64", "wheel", "Cython", "numpy"]
 build-backend = "setuptools.build_meta"
