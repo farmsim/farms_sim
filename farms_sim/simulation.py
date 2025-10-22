@@ -94,9 +94,6 @@ def simulation_setup(
     sim_options = experiment_options.simulation
     arena_options = experiment_options.arenas[0]
 
-    # Animat controller
-    animats_controllers = kwargs.pop('animats_controllers', [])
-
     # Simulator specific options
     if simulator == Simulator.MUJOCO:
         extensions = kwargs.pop('extensions', [])
@@ -127,7 +124,6 @@ def simulation_setup(
             experiment_options=experiment_options,
             # Models
             data=experiment_data,
-            controllers=animats_controllers,
             # Simulation
             restart=False,
             # Task
