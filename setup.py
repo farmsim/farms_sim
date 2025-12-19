@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """ Setup script """
 
-from setuptools import setup, find_packages
+from setuptools import setup
 from setuptools.extension import Extension
 
 import numpy as np  # pylint: disable=wrong-import-position
@@ -34,27 +34,6 @@ Options.closure_freelist_size = 8
 
 
 setup(
-    name='farms_sim',
-    version='0.1',
-    author='farmsdev',
-    author_email='biorob-farms@groupes.epfl.ch',
-    description='FARMS package for sim simulations',
-    # license='BSD-3',
-    keywords='farms control simulation',
-    # url='',
-    # packages=['farms_sim'],
-    packages=find_packages(),
-    # long_description=read('README'),
-    # classifiers=[
-    #     'Development Status :: 3 - Alpha',
-    #     'Topic :: Utilities',
-    #     'License :: OSI Approved :: BSD License',
-    # ],
-    # package_data={'farms_sim': [
-    #     'farms_sim/templates/*',
-    #     'farms_sim/config/*'
-    # ]},
-    include_package_data=True,
     include_dirs=[np.get_include()],
     ext_modules=cythonize(
         [
@@ -98,11 +77,4 @@ setup(
         }
     ),
     zip_safe=False,
-    install_requires=[
-        'farms_core',
-        'farms_mujoco',
-        'cython',
-        'numpy',
-        'trimesh',
-    ],
 )
