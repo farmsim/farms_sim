@@ -34,6 +34,7 @@ Options.closure_freelist_size = 8
 
 
 setup(
+    name='farms_sim',
     include_dirs=[np.get_include()],
     ext_modules=cythonize(
         [
