@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run salamander simulation with bullet"""
+""" Run simulation with bullet or mujoco """
 
 from farms_core import pylog
 from farms_core.experiment.data import ExperimentData
