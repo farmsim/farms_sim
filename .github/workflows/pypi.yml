@@ -4,6 +4,9 @@ on:
   push:
     branches: [merge_v0.2]
 
+env:
+  PIP_EXTRA_INDEX_URL: https://test.pypi.org/simple/
+
 jobs:
   build_wheels:
     runs-on: ${{ matrix.os }}
