@@ -8,12 +8,8 @@ env:
   PIP_EXTRA_INDEX_URL: https://test.pypi.org/simple/
 
 jobs:
-  build_wheels:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest, macos-15-intel, windows-latest]
-
+  build:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
         with:
@@ -21,25 +17,12 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: "3.x"
-      - run: pip install cibuildwheel
-      - run: cibuildwheel --output-dir wheelhouse
-      - uses: actions/upload-artifact@v5
-        with:
-          name: wheels-${{ matrix.os }}
-          path: wheelhouse/*.whl
-
-  build_sdist:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          persist-credentials: false
       - run: pip install build
-      - run: python -m build --sdist
+      - run: python -m build
       - uses: actions/upload-artifact@v5
         with:
-          name: sdist
-          path: dist/*.tar.gz
+          name: dist
+          path: dist/
 
   publish_to_testpypi:
     name: >-
