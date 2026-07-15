@@ -1,3 +1,7 @@
 """FARMS simulation"""
 
-__version__ = "0.1.1"
+
+from importlib import metadata
+
+
+__version__: str = metadata.version("farms_sim")
