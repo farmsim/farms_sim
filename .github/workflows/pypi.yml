@@ -5,7 +5,8 @@ on:
     branches: [merge_v0.2]
 
 env:
-  PIP_EXTRA_INDEX_URL: https://test.pypi.org/simple/
+  PIP_INDEX_URL: https://test.pypi.org/simple/
+  PIP_EXTRA_INDEX_URL: https://pypi.org/simple/
 
 jobs:
   build:
