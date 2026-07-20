@@ -28,7 +28,7 @@ jobs:
   publish_to_testpypi:
     name: >-
       Publish Python 🐍 distribution 📦 to TestPyPI
-    needs: [build_wheels, build_sdist]
+    needs: [build]
     runs-on: ubuntu-latest
     if: github.event_name == 'release'
     environment:
